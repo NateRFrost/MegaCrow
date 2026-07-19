@@ -18,6 +18,7 @@ export enum SyntaxKind {
   TEMPORARY = 12,
   FOR_EACH = 13,
   DYNAMIC_STRING = 14,
+  GRENADE_COUNT = 15,
 }
 
 export type ASTNode<K extends SyntaxKind> = {

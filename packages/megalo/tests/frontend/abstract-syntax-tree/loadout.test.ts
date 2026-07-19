@@ -60,8 +60,12 @@ end
     expect(element.items[4]).toMatchObject({
       identifier: "grenades",
       parameters: [
-        { kind: SyntaxKind.KEYWORD, value: "2" },
-        { kind: SyntaxKind.KEYWORD, value: "frag" },
+        {
+          kind: SyntaxKind.GRENADE_COUNT,
+          form: "typed",
+          count: { kind: SyntaxKind.INTEGER, value: 2 },
+          grenadeType: { kind: SyntaxKind.KEYWORD, value: "frag" },
+        },
       ],
     });
 
@@ -87,7 +91,13 @@ end
 
     expect(element.items[0]).toMatchObject({
       identifier: "grenades",
-      parameters: [{ kind: SyntaxKind.KEYWORD, value: "none" }],
+      parameters: [
+        {
+          kind: SyntaxKind.GRENADE_COUNT,
+          form: "preset",
+          value: { kind: SyntaxKind.KEYWORD, value: "none" },
+        },
+      ],
     });
   });
 

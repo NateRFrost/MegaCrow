@@ -15,15 +15,19 @@ import { locationSpan } from "./game_options/shared";
 type ConstantEntryNodeType = { value: "number"; location: SourceCodeLocation };
 type ConstantEntryNodeName = { value: string; location: SourceCodeLocation };
 
-export type NumericInitialValue =
+export type IntegerInitialValue =
   | (ASTNode<SyntaxKind.INTEGER> & { value: number })
   | ASTReferenceNode
   | ASTErrorNode;
 
+export type NumericInitialValue =
+  | IntegerInitialValue
+  | (ASTNode<SyntaxKind.FLOATING_POINT> & { value: number });
+
 export type ConstantEntryNode = {
   type: ConstantEntryNodeType | ASTErrorNode;
   name: ConstantEntryNodeName | ASTErrorNode;
-  value: NumericInitialValue;
+  value: IntegerInitialValue;
   location: SourceCodeLocation;
 };
 
@@ -33,6 +37,53 @@ export type ConstantsElementNode = ASTElementBase<ElementKind.CONSTANTS> & {
 
 const isMissingInitial = (token: Token | undefined): boolean =>
   !token || (token.kind === TokenKind.Identifier && token.value === "end");
+
+export const parseIntegerInitialValue = (
+  ctx: ParserContext,
+  anchor: Token
+): IntegerInitialValue => {
+  const valuePeek = ctx.peekToken();
+  if (isMissingInitial(valuePeek)) {
+    ctx.diagnostics.addError(
+      diagnosticMessages.expectedConstantValue(valuePeek?.value ?? ""),
+      anchor.location
+    );
+    return {
+      kind: SyntaxKind.INVALID,
+      location: anchor.location,
+    };
+  }
+
+  if (valuePeek?.kind === TokenKind.FloatingPoint) {
+    const valueToken = ctx.getToken();
+    ctx.diagnostics.addError(
+      diagnosticMessages.expectedConstantValue(valueToken.value),
+      valueToken.location
+    );
+    return {
+      kind: SyntaxKind.INVALID,
+      location: valueToken.location,
+    };
+  }
+
+  const node = tryParseParameterValue(ctx, ParameterType.Number);
+  if (
+    node !== undefined &&
+    (node.kind === SyntaxKind.INTEGER || node.kind === SyntaxKind.REFERENCE)
+  ) {
+    return node;
+  }
+
+  const valueToken = ctx.getToken();
+  ctx.diagnostics.addError(
+    diagnosticMessages.expectedConstantValue(valueToken.value),
+    valueToken.location
+  );
+  return {
+    kind: SyntaxKind.INVALID,
+    location: valueToken.location,
+  };
+};
 
 export const parseNumericInitialValue = (
   ctx: ParserContext,
@@ -53,7 +104,9 @@ export const parseNumericInitialValue = (
   const node = tryParseParameterValue(ctx, ParameterType.Number);
   if (
     node !== undefined &&
-    (node.kind === SyntaxKind.INTEGER || node.kind === SyntaxKind.REFERENCE)
+    (node.kind === SyntaxKind.INTEGER ||
+      node.kind === SyntaxKind.FLOATING_POINT ||
+      node.kind === SyntaxKind.REFERENCE)
   ) {
     return node;
   }
@@ -101,7 +154,7 @@ const parseConstantEntry = (ctx: ParserContext): ConstantEntryNode => {
   }
 
   const nameToken = ctx.getToken();
-  const value = parseNumericInitialValue(ctx, nameToken);
+  const value = parseIntegerInitialValue(ctx, nameToken);
   let name: ConstantEntryNode["name"];
   if (nameToken.kind === TokenKind.Identifier) {
     name = {

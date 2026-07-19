@@ -1,9 +1,10 @@
 import type { SourceCodeLocation } from "../../../diagnostics";
+import type { PlayerTraitsOverrideOption } from "../../../language-configuration/omni/game_options";
 import type { ASTErrorNode, ASTReferenceNode } from "../..";
 import type { ASTKeywordParameterNode } from "../../parameters";
 import type { ASTStringLiteralOrReference } from "../../parameters/string_literal_or_reference";
 import type { ASTElementBase, ElementKind } from "..";
-import type { NumericInitialValue } from "../constants";
+import type { IntegerInitialValue, NumericInitialValue } from "../constants";
 import type {
   PlayerTraitOptionNode,
   PlayerTraitsElementNode,
@@ -30,7 +31,7 @@ export type GameOptionModifiers = {
 };
 
 export type UserDefinedOptionValueNode = {
-  value: NumericInitialValue;
+  value: IntegerInitialValue;
   name?: ASTStringLiteralOrReference;
   description?: ASTStringLiteralOrReference;
   location: SourceCodeLocation;
@@ -42,7 +43,7 @@ export type UserDefinedOptionNode = {
   name: { value: string; location: SourceCodeLocation } | ASTErrorNode;
   displayName: ASTStringLiteralOrReference;
   description: ASTStringLiteralOrReference;
-  defaultValue: NumericInitialValue;
+  defaultValue: IntegerInitialValue;
   values: UserDefinedOptionValueNode[];
   location: SourceCodeLocation;
 };
@@ -66,9 +67,23 @@ export type OverrideNestedBodyNode = {
   };
 };
 
+/** `override loadout_palette <tier> <palette>` — not a GameOption symbol. */
+export type OverrideLoadoutPaletteNameNode = {
+  kind: "loadout_palette";
+  location: SourceCodeLocation;
+};
+
+/** Nested player-traits override target — not a GameOption symbol. */
+export type OverridePlayerTraitsNameNode = {
+  kind: "player_traits_override";
+  option: PlayerTraitsOverrideOption;
+  location: SourceCodeLocation;
+};
+
 export type OverrideNameNode =
   | ASTReferenceNode
-  | ASTKeywordParameterNode
+  | OverrideLoadoutPaletteNameNode
+  | OverridePlayerTraitsNameNode
   | ASTErrorNode;
 
 export type OverrideEntryNode = {

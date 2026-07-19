@@ -70,7 +70,7 @@ export class Lowerer {
     ast.elements.forEach((element) => {
       const elementLowerer = ELEMENT_LOWERERS.get(element.elementKind);
       if (elementLowerer) {
-        elementLowerer(element, ast, ir, diagnostics);
+        elementLowerer(element, ast.symbolTable, ir, diagnostics);
       }
       else {
         console.warn(`lowerer for ${element.elementKind} NYI`);

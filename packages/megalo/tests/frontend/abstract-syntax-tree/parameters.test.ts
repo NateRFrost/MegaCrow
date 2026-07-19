@@ -5,8 +5,10 @@ import {
   KeywordParameter,
   OptionalParameter,
   ParameterType,
+  grenadeCountParser,
   parameterParserBuilder,
 } from "../../../frontend/abstract-syntax-tree/parameters";
+import type { ParameterParser } from "../../../frontend/abstract-syntax-tree/parameters";
 import { BUILT_IN_LOCATION, Diagnostics } from "../../../frontend/diagnostics";
 import {
   SymbolBinder,
@@ -16,10 +18,7 @@ import {
 import { Lexer } from "../../../frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../version";
 
-const parseParameters = (
-  source: string,
-  parser: ReturnType<typeof parameterParserBuilder>
-) => {
+const parseParameters = (source: string, parser: ParameterParser) => {
   const diagnostics = new Diagnostics();
   const version = MEGALO_VERSIONS["107-mcc"];
   const tokens = new Lexer(version).lex(source, diagnostics);
@@ -534,5 +533,56 @@ describe("parameterParserBuilder", () => {
       kind: SyntaxKind.REFERENCE,
       identifier: "the_hill",
     });
+  });
+});
+
+describe("grenadeCountParser", () => {
+  it("returns one typed GRENADE_COUNT node with INTEGER and KEYWORD parts", () => {
+    const { parameters, diagnostics } = parseParameters(
+      "2 frag",
+      grenadeCountParser
+    );
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(parameters).toHaveLength(1);
+    const node = parameters[0]!;
+    expect(node).toMatchObject({
+      kind: SyntaxKind.GRENADE_COUNT,
+      form: "typed",
+      count: { kind: SyntaxKind.INTEGER, value: 2 },
+      grenadeType: { kind: SyntaxKind.KEYWORD, value: "frag" },
+    });
+    if (node.kind !== SyntaxKind.GRENADE_COUNT || node.form !== "typed") {
+      return;
+    }
+    expect(node.location.start).toEqual(node.count.location.start);
+    expect(node.location.end).toEqual(node.grenadeType.location.end);
+  });
+
+  it("returns one preset GRENADE_COUNT node for none", () => {
+    const { parameters, diagnostics } = parseParameters(
+      "none",
+      grenadeCountParser
+    );
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(parameters).toHaveLength(1);
+    expect(parameters[0]).toMatchObject({
+      kind: SyntaxKind.GRENADE_COUNT,
+      form: "preset",
+      value: { kind: SyntaxKind.KEYWORD, value: "none" },
+    });
+  });
+
+  it("reports when a typed count is missing its grenade type", () => {
+    const { parameters, diagnostics } = parseParameters(
+      "3",
+      grenadeCountParser
+    );
+
+    expect(diagnostics.hasErrors()).toBe(true);
+    expect(parameters).toEqual([
+      expect.objectContaining({ kind: SyntaxKind.INVALID }),
+    ]);
   });
 });

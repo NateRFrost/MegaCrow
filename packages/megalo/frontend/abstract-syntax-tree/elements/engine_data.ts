@@ -90,10 +90,17 @@ export class EngineDataParserRepository {
   }
 
   private registerParsers(_megaloVersion: MegaloVersion) {
-    this.registerParser("name", buildParameterParser([ParameterType.String]));
+    this.registerParser(
+      "name",
+      buildParameterParser([
+        [ParameterType.QuotedString, ParameterType.String],
+      ])
+    );
     this.registerParser(
       "description",
-      buildParameterParser([ParameterType.String])
+      buildParameterParser([
+        [ParameterType.QuotedString, ParameterType.String],
+      ])
     );
     this.registerParser("icon", buildParameterParser([ParameterType.Number]));
     this.registerParser("category", parseEngineCategoryParameter);

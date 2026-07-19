@@ -1,11 +1,16 @@
-import { T } from "vitest/dist/chunks/reporters.d.BuRON0I0.js";
-import { ASTElementBase, ASTElementNode, ElementKind } from "../../abstract-syntax-tree/elements";
+import { ASTElementNode, ElementKind } from "../../abstract-syntax-tree/elements";
 import { IR } from "..";
 import { Diagnostics } from "../../diagnostics";
-import { AST } from "../../abstract-syntax-tree";
+import type { SymbolTable } from "../../symbol-table";
 import { engineDataLowerer } from "./engine_data";
+import { gameOptionsLowerer } from "./game_options";
 
-export type ElementLowerer<T extends ASTElementNode> = (element: T, ast: AST, ir: IR, diagnostics: Diagnostics) => void;
+export type ElementLowerer<T extends ASTElementNode> = (
+  element: T,
+  symbolTable: SymbolTable,
+  ir: IR,
+  diagnostics: Diagnostics
+) => void;
 
 export const NULL_LOWERER: ElementLowerer<any> = () => {};
 
@@ -17,3 +22,4 @@ ELEMENT_LOWERERS.set(ElementKind.STRING_TABLE, NULL_LOWERER);
 ELEMENT_LOWERERS.set(ElementKind.CONSTANTS, NULL_LOWERER);
 
 ELEMENT_LOWERERS.set(ElementKind.ENGINE_DATA, engineDataLowerer);
+ELEMENT_LOWERERS.set(ElementKind.GAME_OPTIONS, gameOptionsLowerer);

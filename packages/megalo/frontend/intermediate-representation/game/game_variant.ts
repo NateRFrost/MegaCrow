@@ -47,7 +47,7 @@ export type GameEngineCustomVariant = {
     showInScoreboard: ValueWithLocation<boolean>;
   }>;
   scoreToWinRound?: ValueWithLocation<number>;
-  fireTeamsEnabled?: ValueWithLocation<boolean>;
+  fireTeamsEnabled?: ValueWithLocation<number>;
   symmetricGametype?: ValueWithLocation<boolean>;
   baseVariantParametersLocked: BuiltInGameOptionFlags;
   baseVariantParametersHidden: BuiltInGameOptionFlags;

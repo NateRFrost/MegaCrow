@@ -41,23 +41,26 @@ export enum TeamScoringMethod {
 }
 
 export type GameEngineSocialOptions = Partial<{
-  friendlyFireEnabled: ValueWithLocation<boolean>;
-  betrayalBootingEnabled: ValueWithLocation<boolean>;
-  enemyVoiceEnabled: ValueWithLocation<boolean>;
-  openChannelVoiceEnabled: ValueWithLocation<boolean>;
-  deadPlayerVoiceEnabled: ValueWithLocation<boolean>;
+  friendlyFireEnabled: ValueWithLocation<number>;
+  betrayalBootingEnabled: ValueWithLocation<number>;
+  enemyVoiceEnabled: ValueWithLocation<number>;
+  openChannelVoiceEnabled: ValueWithLocation<number>;
+  deadPlayerVoiceEnabled: ValueWithLocation<number>;
 }>;
 
+export type WeaponSet = "none" | "default" | "random" | number;
+export type VehicleSet = "none" | "default" | "random" | number;
+
 export type GameEngineMapOverrideOptions = Partial<{
-  grenadesOnMap: ValueWithLocation<boolean>;
+  grenadesOnMap: ValueWithLocation<number>;
   shortcutsOnMap: ValueWithLocation<boolean>;
   equipmentOnMap: ValueWithLocation<boolean>;
   powerupsOnMap: ValueWithLocation<boolean>;
   turretsOnMap: ValueWithLocation<boolean>;
-  indestructibleVehicles: ValueWithLocation<boolean>;
+  indestructibleVehicles: ValueWithLocation<number>;
   basePlayerTraits: PlayerTraits;
-  weaponSetAbsoluteIndex: ValueWithLocation<number>; // object_lists/weapon_sets.txt
-  vehicleSetAbsoluteIndex: ValueWithLocation<number>; // object_lists/vehicle_sets.txt
+  weaponSetAbsoluteIndex: ValueWithLocation<WeaponSet>; // object_lists/weapon_sets.txt
+  vehicleSetAbsoluteIndex: ValueWithLocation<VehicleSet>; // object_lists/vehicle_sets.txt
   redPowerupTraits: PlayerTraits;
   bluePowerupTraits: PlayerTraits;
   yellowPowerupTraits: PlayerTraits;

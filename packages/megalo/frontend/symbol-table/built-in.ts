@@ -8,16 +8,16 @@ export const addBuiltInConstants = (
   megaloVersion: MegaloVersion,
   symbolParser: ParserSymbolContext
 ): void => {
-  const addBuiltInConstant = (name: string) => {
+  const addBuiltInConstant = (name: string, value: number) => {
     symbolParser.addConstantToScope({
       name,
       declaration: BUILT_IN_LOCATION,
+      value,
     });
   };
 
-  // Halo: Reach
-  addBuiltInConstant("true");
-  addBuiltInConstant("false");
+  addBuiltInConstant("true", 1);
+  addBuiltInConstant("false", 0);
 };
 
 export const addBuiltInVariables = (
@@ -106,8 +106,31 @@ export const addBuiltInGameOptions = (
   addBuiltInGameOption("open_channel_voice_enabled");
   addBuiltInGameOption("dead_player_voice_enabled");
   addBuiltInGameOption("grenades_on_map");
+  addBuiltInGameOption("shortcuts_on_map");
+  addBuiltInGameOption("equipment_on_map");
+  addBuiltInGameOption("powerups_on_map");
+  addBuiltInGameOption("turrets_on_map");
   addBuiltInGameOption("indestructible_vehicles");
+  addBuiltInGameOption("weapon_set");
+  addBuiltInGameOption("vehicle_set");
   addBuiltInGameOption("red_powerup_duration");
   addBuiltInGameOption("blue_powerup_duration");
   addBuiltInGameOption("yellow_powerup_duration");
+  addBuiltInGameOption("team_scoring_mode");
+
+  if (megaloVersion.version >= 107) {
+    addBuiltInGameOption("tu1_always_spillover_damage");
+    addBuiltInGameOption("tu1_armor_lock_stickies_remain");
+    addBuiltInGameOption("tu1_attached_damage_bypass_shields");
+    addBuiltInGameOption("tu1_active_camo_override_energy_curve");
+    addBuiltInGameOption("tu1_sword_gun_clang_kills");
+    addBuiltInGameOption("tu1_magnum_is_automatic");
+    addBuiltInGameOption("tu1_headshot_weapon_reticule_bloom_multiplier");
+    addBuiltInGameOption("tu1_armor_lock_damage_to_energy_transfer");
+    addBuiltInGameOption("tu1_armor_lock_damage_to_energy_cap");
+    addBuiltInGameOption("tu1_active_camo_override_energy_curve_min");
+    addBuiltInGameOption("tu1_active_camo_override_energy_curve_max");
+    addBuiltInGameOption("tu1_magnum_damage_multiplier");
+    addBuiltInGameOption("tu1_magnum_fire_recovery_time_multiplier");
+  }
 };

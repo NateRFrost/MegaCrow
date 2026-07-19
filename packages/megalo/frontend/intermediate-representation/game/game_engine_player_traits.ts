@@ -1,7 +1,12 @@
 import type { ValueWithLocation } from "..";
 
+/** Script percentage, or `invulnerable` (wire setting chosen at compile). */
+export type DamageResistance = "invulnerable" | number;
+/** Script percentage, or `fatality` (wire value chosen at compile). */
+export type DamageModifier = "fatality" | number;
+
 export type PlayerTraitShieldVitality = Partial<{
-  damageResistancePercentage: ValueWithLocation<number>;
+  damageResistancePercentage: ValueWithLocation<DamageResistance>;
   bodyMultiplierPercentage: ValueWithLocation<number>;
   bodyRechargeRatePercentage: ValueWithLocation<number>;
   shieldMultiplierPercentage: ValueWithLocation<number>;
@@ -31,19 +36,20 @@ export enum GrenadeCountSetting {
 }
 
 export enum InfiniteAmmoSetting {
-  Disabled = 0,
-  Enabled = 1,
-  BottomlessClip = 2,
+  Unchanged = 0,
+  Disabled = 1,
+  Enabled = 2,
+  BottomlessClip = 3,
 }
 
 export type PlayerTraitWeapons = Partial<{
-  damageModifierPercentageSetting: ValueWithLocation<number>;
-  meleeDamageModifierPercentageSetting: ValueWithLocation<number>;
+  damageModifierPercentageSetting: ValueWithLocation<DamageModifier>;
+  meleeDamageModifierPercentageSetting: ValueWithLocation<DamageModifier>;
   initialPrimaryWeaponAbsoluteIndex: ValueWithLocation<number>; // object_lists/weapons.txt
   initialSecondaryWeaponAbsoluteIndex: ValueWithLocation<number>; // object_lists/weapons.txt
   initialGrenadeCount: ValueWithLocation<GrenadeCountSetting>;
   rechargingGrenades: ValueWithLocation<boolean>;
-  infiniteAmmo: InfiniteAmmoSetting;
+  infiniteAmmo: ValueWithLocation<InfiniteAmmoSetting>;
   weaponPickup: ValueWithLocation<boolean>;
   equipmentUsage: ValueWithLocation<boolean>;
   dropEquipment: ValueWithLocation<boolean>;
@@ -52,6 +58,7 @@ export type PlayerTraitWeapons = Partial<{
 }>;
 
 export enum VehicleUsage {
+  Unchanged = 0,
   None = 1,
   Full = 2,
   Passenger = 3,
@@ -67,23 +74,28 @@ export type PlayerTraitMovement = Partial<{
   gravityPercentage: ValueWithLocation<number>;
   vehicleUsage: ValueWithLocation<VehicleUsage>;
   jumpModifier: ValueWithLocation<number>; // % expressed as an integer
+  /** Reach ≤73 wire field; absence means unchanged. */
+  sprinting: ValueWithLocation<boolean>;
 }>;
 
 export enum ActiveCamo {
   Off = 0,
-  Poor = 1,
-  Good = 2,
-  Excellent = 3,
-  Invisible = 4,
+  On = 1,
+  Poor = 2,
+  Good = 3,
+  Excellent = 4,
+  Invisible = 5,
 }
 
 export enum WaypointVisibility {
+  Unchanged = 0,
   Off = 1,
   Allies = 2,
   All = 3,
 }
 
 export enum ForcedChangeColor {
+  Unchanged = 0,
   Off = 1,
   Red = 2,
   Blue = 3,
@@ -107,10 +119,11 @@ export type PlayerTraitAppearance = Partial<{
 }>;
 
 export enum MotionTrackerMode {
-  Off = 0,
-  Allies = 1,
-  Normal = 2,
-  Enhanced = 3,
+  Unchanged = 0,
+  Off = 1,
+  Allies = 2,
+  Normal = 3,
+  Enhanced = 4,
 }
 
 export type PlayerTraitSensors = Partial<{

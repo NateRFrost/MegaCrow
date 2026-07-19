@@ -22,7 +22,7 @@ export type RangedUserDefinedOption = UserDefinedOptionBase & {
   currentValue: ValueWithLocation<number>;
 };
 
-export type NormalUserDefinedOption = UserDefinedOptionBase & {
+export type SelectUserDefinedOption = UserDefinedOptionBase & {
   values: ValueWithLocation<UserDefinedOptionValue>[];
   defaultValueIndex: ValueWithLocation<number>;
   currentValueIndex: ValueWithLocation<number>;
@@ -30,4 +30,4 @@ export type NormalUserDefinedOption = UserDefinedOptionBase & {
 
 export type UserDefinedOption =
   | RangedUserDefinedOption
-  | NormalUserDefinedOption;
+  | SelectUserDefinedOption;

@@ -1,39 +1,134 @@
-import type { SourceCodeLocation } from "../../../diagnostics";
+import {
+  type SourceCodeLocation,
+  SourceLocationType,
+} from "../../../diagnostics";
+import { diagnosticMessages } from "../../../diagnostics/messages";
 import { TokenKind } from "../../../tokens";
 import type { ParserContext } from "../../context";
-import { SyntaxKind } from "../../kinds";
-import type { ASTParameterNode, ParameterParser } from "..";
+import {
+  type ASTIntegerNode,
+  type ASTNode,
+  SyntaxKind,
+} from "../../kinds";
+import type { ASTKeywordParameterNode, ParameterParser } from "..";
+
+export type ASTGrenadeCountNode = ASTNode<SyntaxKind.GRENADE_COUNT> &
+  (
+    | {
+        /** `"none"` | `"default"` */
+        form: "preset";
+        value: ASTKeywordParameterNode;
+      }
+    | {
+        /** `"3 each"` | `"2 frag"` | `"1 plasma"` */
+        form: "typed";
+        count: ASTIntegerNode;
+        grenadeType: ASTKeywordParameterNode;
+      }
+  );
+
+const GRENADE_TYPES = new Set(["frag", "plasma", "each"]);
+const GRENADE_PRESETS = new Set(["none", "default"]);
+
+const locationSpan = (
+  start: SourceCodeLocation,
+  end: SourceCodeLocation
+): SourceCodeLocation => ({
+  type: SourceLocationType.SOURCE_CODE,
+  start: start.start,
+  end: end.end,
+});
 
 export const grenadeCountParser: ParameterParser = (
   ctx: ParserContext,
   anchor: SourceCodeLocation
 ) => {
-  const countToken = ctx.getToken();
-  const parameters: ASTParameterNode[] = [];
+  const firstToken = ctx.getToken();
 
-  if (countToken.kind === TokenKind.Integer) {
-    // "2 frag" is a grenade-count preset (enum-like), not a numeric parameter + type.
-    parameters.push({
-      kind: SyntaxKind.KEYWORD,
-      value: countToken.value,
-      location: countToken.location,
-    });
+  if (firstToken.kind === TokenKind.Integer) {
+    const count: ASTIntegerNode = {
+      kind: SyntaxKind.INTEGER,
+      value: Number(firstToken.value),
+      location: firstToken.location,
+    };
 
-    const grenadeTypeToken = ctx.getToken();
-    if (grenadeTypeToken.kind === TokenKind.Identifier) {
-      parameters.push({
-        kind: SyntaxKind.KEYWORD,
-        value: grenadeTypeToken.value,
-        location: grenadeTypeToken.location,
-      });
+    const typeToken = ctx.peekToken();
+    if (
+      typeToken === undefined ||
+      typeToken.kind !== TokenKind.Identifier ||
+      !GRENADE_TYPES.has(typeToken.value)
+    ) {
+      ctx.diagnostics.addError(
+        diagnosticMessages.expectedParameterType(
+          "grenade type (frag|plasma|each)",
+          typeToken?.value ?? ""
+        ),
+        typeToken?.location ?? firstToken.location
+      );
+      return [
+        {
+          kind: SyntaxKind.INVALID,
+          location: firstToken.location,
+        },
+      ];
     }
-  } else if (countToken.kind === TokenKind.Identifier) {
-    parameters.push({
+
+    ctx.getToken();
+    const grenadeType: ASTKeywordParameterNode = {
       kind: SyntaxKind.KEYWORD,
-      value: countToken.value,
-      location: countToken.location,
-    });
+      value: typeToken.value,
+      location: typeToken.location,
+    };
+
+    const node: ASTGrenadeCountNode = {
+      kind: SyntaxKind.GRENADE_COUNT,
+      form: "typed",
+      count,
+      grenadeType,
+      location: locationSpan(count.location, grenadeType.location),
+    };
+    return [node];
   }
 
-  return parameters;
+  if (firstToken.kind === TokenKind.Identifier) {
+    if (!GRENADE_PRESETS.has(firstToken.value)) {
+      ctx.diagnostics.addError(
+        diagnosticMessages.expectedParameterType(
+          "grenade_count (none|default|<n> frag|plasma|each)",
+          firstToken.value
+        ),
+        firstToken.location
+      );
+      return [
+        {
+          kind: SyntaxKind.INVALID,
+          location: firstToken.location,
+        },
+      ];
+    }
+
+    const value: ASTKeywordParameterNode = {
+      kind: SyntaxKind.KEYWORD,
+      value: firstToken.value,
+      location: firstToken.location,
+    };
+    const node: ASTGrenadeCountNode = {
+      kind: SyntaxKind.GRENADE_COUNT,
+      form: "preset",
+      value,
+      location: value.location,
+    };
+    return [node];
+  }
+
+  ctx.diagnostics.addError(
+    diagnosticMessages.expectedConstantValue(firstToken.value),
+    firstToken.location ?? anchor
+  );
+  return [
+    {
+      kind: SyntaxKind.INVALID,
+      location: firstToken.location ?? anchor,
+    },
+  ];
 };

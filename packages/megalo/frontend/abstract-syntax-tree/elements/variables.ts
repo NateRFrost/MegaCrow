@@ -19,8 +19,8 @@ import {
 import type { ParserContext } from "../context";
 import { type ASTElementBase, ElementKind } from ".";
 import {
-  type NumericInitialValue,
-  parseNumericInitialValue,
+  type IntegerInitialValue,
+  parseIntegerInitialValue,
 } from "./constants";
 import { locationSpan } from "./game_options/shared";
 
@@ -31,7 +31,7 @@ type VariableEntryNodeType = {
 };
 type VariableEntryNodeName = { value: string; location: SourceCodeLocation };
 type IdentifierInitialValue = ASTReferenceNode | ASTErrorNode;
-type VariableEntryNodeInitial = NumericInitialValue | IdentifierInitialValue;
+type VariableEntryNodeInitial = IntegerInitialValue | IdentifierInitialValue;
 
 const isMissingInitial = (token: Token | undefined): boolean =>
   !token || (token.kind === TokenKind.Identifier && token.value === "end");
@@ -245,7 +245,7 @@ const parseVariableEntry = (
 
   const initial =
     !isAstErrorNode(type) && isNumericVariableType(type.value)
-      ? parseNumericInitialValue(ctx, nameToken)
+      ? parseIntegerInitialValue(ctx, nameToken)
       : parseIdentifierInitialValue(ctx, nameToken);
 
   return {

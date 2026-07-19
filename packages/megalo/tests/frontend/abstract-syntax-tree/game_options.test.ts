@@ -261,8 +261,8 @@ end
     }
 
     expect(element.entries[0]?.name).toMatchObject({
-      kind: SyntaxKind.KEYWORD,
-      value: "base_player_traits",
+      kind: "player_traits_override",
+      option: "base_player_traits",
     });
     expect(element.entries[0]?.value).toMatchObject({
       kind: OverrideValueKind.NESTED,
@@ -298,16 +298,16 @@ end
     }
 
     expect(element.entries[0]?.name).toMatchObject({
-      kind: SyntaxKind.KEYWORD,
-      value: "weapon_set",
+      kind: SyntaxKind.REFERENCE,
+      identifier: "weapon_set",
     });
     expect(element.entries[0]?.value).toMatchObject({
       kind: OverrideValueKind.SIMPLE,
       value: { kind: SyntaxKind.REFERENCE, identifier: "none" },
     });
     expect(element.entries[1]?.name).toMatchObject({
-      kind: SyntaxKind.KEYWORD,
-      value: "vehicle_set",
+      kind: SyntaxKind.REFERENCE,
+      identifier: "vehicle_set",
     });
     expect(element.entries[1]?.value).toMatchObject({
       kind: OverrideValueKind.SIMPLE,
@@ -331,12 +331,39 @@ end
     }
 
     expect(element.entries[0]?.name).toMatchObject({
-      kind: SyntaxKind.KEYWORD,
-      value: "loadout_palette",
+      kind: "loadout_palette",
     });
     expect(element.entries[0]?.value).toMatchObject({
+      kind: OverrideValueKind.LOADOUT_PALETTE,
       tier: { value: "spartan_tier1" },
       palette: { value: "slayer_loadouts" },
+    });
+  });
+
+  it("parses floating-point override values", () => {
+    const source = `game_options
+\toverride tu1_magnum_damage_multiplier 1.25
+\toverride tu1_armor_lock_damage_to_energy_cap 0.5
+end
+`;
+
+    const { ast, diagnostics } = parse(source);
+
+    expect(diagnostics.getErrors().map((error) => error.message)).toEqual([]);
+    expect(diagnostics.hasErrors()).toBe(false);
+
+    const element = ast.elements[0]!;
+    if (element.elementKind !== ElementKind.GAME_OPTIONS) {
+      return;
+    }
+
+    expect(element.entries[0]?.value).toMatchObject({
+      kind: OverrideValueKind.SIMPLE,
+      value: { kind: SyntaxKind.FLOATING_POINT, value: 1.25 },
+    });
+    expect(element.entries[1]?.value).toMatchObject({
+      kind: OverrideValueKind.SIMPLE,
+      value: { kind: SyntaxKind.FLOATING_POINT, value: 0.5 },
     });
   });
 
@@ -433,8 +460,12 @@ end
     expect(entry.options[3]).toMatchObject({
       identifier: "initial_grenades",
       parameters: [
-        { kind: SyntaxKind.KEYWORD, value: "2" },
-        { kind: SyntaxKind.KEYWORD, value: "frag" },
+        {
+          kind: SyntaxKind.GRENADE_COUNT,
+          form: "typed",
+          count: { kind: SyntaxKind.INTEGER, value: 2 },
+          grenadeType: { kind: SyntaxKind.KEYWORD, value: "frag" },
+        },
       ],
     });
   });

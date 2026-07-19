@@ -11,6 +11,7 @@ import { TokenKind } from "../../tokens";
 import type { ParserContext } from "../context";
 import {
   type ASTErrorNode,
+  type ASTFloatingPointNode,
   type ASTIntegerNode,
   type ASTMemberReferenceNode,
   type ASTNode,
@@ -22,9 +23,12 @@ import {
   parseDynamicString,
   tryParseDynamicString,
 } from "./types/dynamic-string";
+import type { ASTGrenadeCountNode } from "./types/grenade-count";
 
 export type { ASTDynamicStringNode } from "./types/dynamic-string";
 export { scanDynamicStringPlaceholders } from "./types/dynamic-string";
+export type { ASTGrenadeCountNode } from "./types/grenade-count";
+export { grenadeCountParser } from "./types/grenade-count";
 
 export enum ParameterType {
   Keyword = 0,
@@ -103,9 +107,11 @@ export type ASTQuotedStringNode = ASTNode<SyntaxKind.QUOTED_STRING> & {
 export type ASTParameterNode =
   | ASTKeywordParameterNode
   | ASTIntegerNode
+  | ASTFloatingPointNode
   | ASTReferenceNode
   | ASTMemberReferenceNode
   | ASTDynamicStringNode
+  | ASTGrenadeCountNode
   | ASTQuotedStringNode
   | ASTErrorNode;
 
@@ -288,6 +294,14 @@ const consumeLenientParameter = (
     };
   }
 
+  if (consumed.kind === TokenKind.FloatingPoint) {
+    return {
+      kind: SyntaxKind.FLOATING_POINT,
+      value: Number.parseFloat(consumed.value),
+      location: consumed.location,
+    };
+  }
+
   if (
     consumed.kind === TokenKind.Operator ||
     consumed.kind === TokenKind.Identifier
@@ -331,6 +345,15 @@ const parseVariableParameter = (
       kind: SyntaxKind.INTEGER,
       value: Number.parseInt(integerToken.value, 10),
       location: integerToken.location,
+    };
+  }
+
+  if (type === ParameterType.Number && token?.kind === TokenKind.FloatingPoint) {
+    const floatToken = ctx.getToken();
+    return {
+      kind: SyntaxKind.FLOATING_POINT,
+      value: Number.parseFloat(floatToken.value),
+      location: floatToken.location,
     };
   }
 

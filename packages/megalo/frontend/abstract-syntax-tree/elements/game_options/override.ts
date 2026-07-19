@@ -1,8 +1,5 @@
 import { diagnosticMessages } from "../../../diagnostics/messages";
-import {
-  isBuiltInNonNumericOverrideOption,
-  isPlayerTraitsOverrideOption,
-} from "../../../language-configuration/omni/game_options";
+import { isPlayerTraitsOverrideOption } from "../../../language-configuration/omni/game_options";
 import { SymbolKind } from "../../../symbol-table";
 import { type Token, TokenKind } from "../../../tokens";
 import { isAstErrorNode, SyntaxKind } from "../..";
@@ -38,6 +35,21 @@ const parseOverrideName = (
     };
   }
 
+  if (nameToken.value === "loadout_palette") {
+    return {
+      kind: "loadout_palette",
+      location: nameToken.location,
+    };
+  }
+
+  if (isPlayerTraitsOverrideOption(nameToken.value)) {
+    return {
+      kind: "player_traits_override",
+      option: nameToken.value,
+      location: nameToken.location,
+    };
+  }
+
   const symbolId = ctx.symbolParser.lookupSymbol(nameToken.value);
   if (symbolId !== undefined) {
     const entry = ctx.symbolParser.getSymbolEntry(symbolId);
@@ -52,14 +64,6 @@ const parseOverrideName = (
     }
   }
 
-  if (isBuiltInNonNumericOverrideOption(nameToken.value)) {
-    return {
-      kind: SyntaxKind.KEYWORD,
-      value: nameToken.value,
-      location: nameToken.location,
-    };
-  }
-
   ctx.diagnostics.addError(
     diagnosticMessages.expectedParameterType("game option", nameToken.value),
     nameToken.location
@@ -71,20 +75,22 @@ const parseOverrideName = (
 };
 
 const isNestedPlayerTraitsOverride = (
-  nameToken: Token,
+  name: OverrideNameNode,
   peek: Token | undefined
 ): boolean =>
-  nameToken.kind === TokenKind.Identifier &&
-  isPlayerTraitsOverrideOption(nameToken.value) &&
+  name.kind === "player_traits_override" &&
   peek !== undefined &&
-  peek.location.start.line !== nameToken.location.start.line;
+  peek.location.start.line !== name.location.start.line;
 
 const parseOverrideSimpleValue = (
   ctx: ParserContext,
   anchor: Token
 ): OverrideSimpleValueNode["value"] => {
   const token = ctx.peekToken();
-  if (token?.kind === TokenKind.Integer) {
+  if (
+    token?.kind === TokenKind.Integer ||
+    token?.kind === TokenKind.FloatingPoint
+  ) {
     return parseNumericInitialValue(ctx, anchor);
   }
 
@@ -129,10 +135,7 @@ export const overrideParser = (
   let value: OverrideEntryNode["value"];
   const peek = ctx.peekToken();
 
-  if (
-    nameToken.kind === TokenKind.Identifier &&
-    nameToken.value === "loadout_palette"
-  ) {
+  if (name.kind === "loadout_palette") {
     const tier = parseIdentifier(ctx, nameToken);
     const palette = parseIdentifier(ctx, nameToken);
     value = {
@@ -140,7 +143,7 @@ export const overrideParser = (
       tier,
       palette,
     };
-  } else if (isNestedPlayerTraitsOverride(nameToken, peek)) {
+  } else if (isNestedPlayerTraitsOverride(name, peek)) {
     const body = parsePlayerTraitOptions(ctx, nameToken);
     value = {
       kind: OverrideValueKind.NESTED,
@@ -149,6 +152,7 @@ export const overrideParser = (
   } else if (
     peek &&
     (peek.kind === TokenKind.Integer ||
+      peek.kind === TokenKind.FloatingPoint ||
       (peek.kind === TokenKind.Identifier && peek.value !== "end"))
   ) {
     value = {

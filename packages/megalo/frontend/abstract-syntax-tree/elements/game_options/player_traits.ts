@@ -1,6 +1,7 @@
 import type { MegaloVersion } from "../../../../version";
 import type { SourceCodeLocation } from "../../../diagnostics";
 import { diagnosticMessages } from "../../../diagnostics/messages";
+import { ObjectListType } from "../../../object-lists";
 import type { Token } from "../../../tokens";
 import type { ParserContext } from "../../context";
 import {
@@ -11,6 +12,7 @@ import {
 } from "../../kinds";
 import {
   type ASTParameterNode,
+  ObjectListParameter,
   parameterParserBuilder as buildParameterParser,
   type ParameterParser,
   ParameterType,
@@ -162,15 +164,15 @@ export class PlayerTraitParserRepository {
     );
     this.registerParser(
       "initial_primary_weapon",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser([ObjectListParameter(ObjectListType.Weapons)])
     );
     this.registerParser(
       "initial_secondary_weapon",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser([ObjectListParameter(ObjectListType.Weapons)])
     );
     this.registerParser(
       "initial_equipment",
-      buildParameterParser([ParameterType.Keyword])
+      buildParameterParser([ObjectListParameter(ObjectListType.Equipment)])
     );
     this.registerParser("initial_grenades", grenadeCountParser);
     this.registerParser(

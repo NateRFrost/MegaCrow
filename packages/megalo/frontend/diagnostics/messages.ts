@@ -131,6 +131,10 @@ export const diagnosticMessages = {
     return translate("unknown_engine_data_property", { got });
   },
 
+  unknownGameOptionOverride(got: string): string {
+    return translate("unknown_game_option_override", { got });
+  },
+
   unknownCondition(got: string): string {
     return `Unknown condition '${got}'.`;
   },

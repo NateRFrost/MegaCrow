@@ -116,6 +116,19 @@ end
     });
   });
 
+  it("reports floating-point constant values", () => {
+    const source = `constants
+\tnumber k_bad 1.5
+end
+`;
+
+    const { symbolTable, diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(true);
+    expect(diagnostics.getErrors()[0]?.message).toContain("1.5");
+    expect(userConstantSymbols(symbolTable)).toHaveLength(0);
+  });
+
   it("reports unexpected tokens inside the block", () => {
     const source = `constants
 \ttimer k_bad 0

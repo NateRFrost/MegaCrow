@@ -7,7 +7,7 @@ import {
   parseStringLiteralOrReference,
   stringLiteralOrReferenceLocation,
 } from "../../parameters/string_literal_or_reference";
-import { parseNumericInitialValue } from "../constants";
+import { parseIntegerInitialValue } from "../constants";
 import { isEndToken, locationSpan } from "./shared";
 import {
   GameOptionEntryKind,
@@ -21,7 +21,7 @@ const parseUserDefinedOptionValue = (
   ranged: boolean,
   anchor: Token
 ): UserDefinedOptionValueNode => {
-  const value = parseNumericInitialValue(ctx, anchor);
+  const value = parseIntegerInitialValue(ctx, anchor);
   if (ranged) {
     return {
       value,
@@ -78,7 +78,7 @@ export const parseUserDefinedOption = (
 
   const displayName = parseStringLiteralOrReference(ctx, nameToken);
   const description = parseStringLiteralOrReference(ctx, nameToken);
-  const defaultValue = parseNumericInitialValue(ctx, nameToken);
+  const defaultValue = parseIntegerInitialValue(ctx, nameToken);
   const values: UserDefinedOptionValueNode[] = [];
 
   while (ctx.hasMore()) {
