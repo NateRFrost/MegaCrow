@@ -1,6 +1,7 @@
 import { Parser } from "../../frontend/abstract-syntax-tree/index";
 import { getCompilerForVersion } from "../../frontend/compile";
-import { Diagnostics } from "../../frontend/diagnostics";
+import { BUILT_IN_LOCATION, Diagnostics } from "../../frontend/diagnostics";
+import { FrontendError } from "../../frontend/error";
 import { Lowerer } from "../../frontend/intermediate-representation";
 import { setLocale } from "../../frontend/localization";
 import {
@@ -18,6 +19,7 @@ import {
   type SymbolTableVariableEntry,
 } from "../../frontend/symbol-table";
 import { Lexer, type Token, TokenKind } from "../../frontend/tokens/index";
+import { getConfigurationForVersion } from "../../frontend/version-configuration";
 import { MEGALO_VERSIONS } from "../../version";
 import type {
   AnalyzeRequest,
@@ -31,8 +33,16 @@ import type {
 const MEGALO_VERSION = MEGALO_VERSIONS["107-mcc"];
 const lexer = new Lexer(MEGALO_VERSION);
 const parser = new Parser(MEGALO_VERSION);
-const lowerer = new Lowerer(MEGALO_VERSION);
+const versionConfiguration = getConfigurationForVersion(MEGALO_VERSION);
+const lowerer = new Lowerer(versionConfiguration);
 const compiler = getCompilerForVersion(MEGALO_VERSION);
+
+const debugLog = (event: string, details: Record<string, unknown> = {}): void => {
+  console.log(`[megalo-worker] ${event}`, {
+    at: performance.now().toFixed(1),
+    ...details,
+  });
+};
 
 const formatTokens = (tokens: Token[]): unknown =>
   tokens.map((token) => ({
@@ -163,6 +173,12 @@ const toPlainJson = (value: unknown): unknown =>
 
 const analyze = (request: AnalyzeRequest): AnalyzeResponse => {
   const { id, source, locale, objectLists } = request;
+  const analyzeStart = performance.now();
+  debugLog("analyze-start", {
+    generation: id,
+    sourceLength: source.length,
+    locale,
+  });
 
   setLocale(locale);
 
@@ -171,22 +187,72 @@ const analyze = (request: AnalyzeRequest): AnalyzeResponse => {
   const lexStart = performance.now();
   const tokens = lexer.lex(source, diagnostics);
   const lexDuration = performance.now() - lexStart;
+  debugLog("lex-complete", {
+    generation: id,
+    durationMs: lexDuration,
+    tokens: tokens.length,
+    errors: diagnostics.getErrors().length,
+    warnings: diagnostics.getWarnings().length,
+  });
 
   const parseStart = performance.now();
   const ast = parser.parse(tokens, diagnostics, objectLists);
   const parseDuration = performance.now() - parseStart;
+  debugLog("parse-complete", {
+    generation: id,
+    durationMs: parseDuration,
+    astFailed: ast.failed,
+    errors: diagnostics.getErrors().length,
+    warnings: diagnostics.getWarnings().length,
+  });
 
   const lowerStart = performance.now();
   const ir = lowerer.lower(ast, diagnostics, { objectLists });
   const lowerDuration = performance.now() - lowerStart;
+  debugLog("lower-complete", {
+    generation: id,
+    durationMs: lowerDuration,
+    errors: diagnostics.getErrors().length,
+    warnings: diagnostics.getWarnings().length,
+  });
 
-  try {
-    compiler.dryRun(ir, diagnostics);
-  } catch (error) {
-    console.error("Compile dry run failed", error);
+  const dryRunStart = performance.now();
+  if (!diagnostics.hasErrors()) {
+    try {
+      compiler.dryRun(ir, diagnostics);
+      debugLog("dry-run-complete", {
+        generation: id,
+        durationMs: performance.now() - dryRunStart,
+        errors: diagnostics.getErrors().length,
+        warnings: diagnostics.getWarnings().length,
+      });
+    } catch (error) {
+      // FrontendError is a critical invariant failure — let it escape to the
+      // worker boundary. Other unexpected throws still surface as diagnostics.
+      if (error instanceof FrontendError) {
+        throw error;
+      }
+      console.error("Compile dry run failed", error);
+      diagnostics.addError(
+        error instanceof Error ? error.message : String(error),
+        BUILT_IN_LOCATION
+      );
+      debugLog("dry-run-threw", {
+        generation: id,
+        durationMs: performance.now() - dryRunStart,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  } else {
+    debugLog("dry-run-skipped", {
+      generation: id,
+      reason: "diagnostics.hasErrors",
+      errors: diagnostics.getErrors().length,
+    });
   }
 
-  return {
+  const serializationStart = performance.now();
+  const response: AnalyzeResponse = {
     type: "analyze",
     id,
     tokens: formatTokens(tokens),
@@ -200,6 +266,15 @@ const analyze = (request: AnalyzeRequest): AnalyzeResponse => {
     lowerDuration,
     diagnostics: [...diagnostics.getErrors(), ...diagnostics.getWarnings()],
   };
+  debugLog("analyze-response-ready", {
+    generation: id,
+    serializationMs: performance.now() - serializationStart,
+    totalMs: performance.now() - analyzeStart,
+    diagnostics: response.diagnostics.length,
+    errors: diagnostics.getErrors().length,
+    warnings: diagnostics.getWarnings().length,
+  });
+  return response;
 };
 
 const saveGametype = (request: SaveGametypeRequest): SaveGametypeResponse => {
@@ -213,6 +288,14 @@ const saveGametype = (request: SaveGametypeRequest): SaveGametypeResponse => {
     const tokens = lexer.lex(source, diagnostics);
     const ast = parser.parse(tokens, diagnostics, objectLists);
     const ir = lowerer.lower(ast, diagnostics, { objectLists });
+    if (diagnostics.hasErrors()) {
+      return {
+        type: "saveGametype",
+        id,
+        error: "Cannot save gametype while diagnostics have errors",
+        diagnostics: [...diagnostics.getErrors(), ...diagnostics.getWarnings()],
+      };
+    }
     const bytes = compiler.writeMegaloFile(ir, diagnostics);
     const data = bytes.buffer.slice(
       bytes.byteOffset,
@@ -249,5 +332,9 @@ self.onmessage = (event: MessageEvent<WorkerRequest>): void => {
     response = analyze(request);
   }
 
+  debugLog("response-posted", {
+    type: response.type,
+    generation: response.id,
+  });
   self.postMessage(response);
 };

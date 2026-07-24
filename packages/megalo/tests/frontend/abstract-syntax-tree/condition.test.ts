@@ -49,6 +49,7 @@ const parseConditionLine = (source: string) => {
   ctx.symbolParser.addConstantToScope({
     name: "true",
     declaration: BUILT_IN_LOCATION,
+    value: 1,
   });
 
   const conditionToken = tokens.find((token) => token.value === "condition")!;

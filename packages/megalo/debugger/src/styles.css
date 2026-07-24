@@ -72,6 +72,11 @@ body,
   opacity: 0.5;
 }
 
+.toolbar-button[aria-pressed="true"] {
+  background: #3d4048;
+  border-color: #5f6368;
+}
+
 .locale-toggle {
   display: inline-flex;
   padding: 2px;
@@ -125,6 +130,15 @@ body,
   grid-template-columns: 1fr 1fr;
   min-width: 0;
   min-height: 0;
+}
+
+.app.is-debug-panes-hidden [data-debug-pane] {
+  display: none;
+}
+
+.app.is-debug-panes-hidden .panes {
+  grid-template-rows: 1fr;
+  grid-template-columns: 1fr;
 }
 
 .pane-symbols {

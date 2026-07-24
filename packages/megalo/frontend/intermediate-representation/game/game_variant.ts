@@ -77,10 +77,19 @@ export type CustomGameEngineDefinition = {
   actions: Action[];
   triggers: Trigger[];
   statistics: MegaloGameStatistic[];
-  globalVariableMetadata: VariableMetadata;
-  playerVariableMetadata: VariableMetadata;
-  objectVariableMetadata: VariableMetadata;
-  teamVariableMetadata: VariableMetadata;
+  // This is a deviation from blam
+  // Ordinarily, temporary variables are not included in the variable metadata.
+  // We add temporary variable metadata here because if a compiler hits its temporary limit,
+  // which in some cases is zero, it maps the temporary variables to the global variables.
+  // so temporary metadata exists at IR but does not exist in a compiled gametype unless
+  // mapped to the global variables.
+  variableMetadata: {
+    global: VariableMetadata;
+    player: VariableMetadata;
+    object: VariableMetadata;
+    team: VariableMetadata;
+    temporary: VariableMetadata;
+  };
   hudWidgets: ValueWithLocation<HudWidgetPosition>[];
   initializationTriggerIndex: number;
   localInitializationTriggerIndex: number;

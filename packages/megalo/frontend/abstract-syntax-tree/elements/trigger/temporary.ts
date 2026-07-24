@@ -115,7 +115,7 @@ export const parseTemporary = (
       name: name.value,
       type: variableTypeFromName(storage.value),
       declaration: name.location,
-      scope: VariableScope.Global,
+      scope: VariableScope.Temporary,
     });
   }
 

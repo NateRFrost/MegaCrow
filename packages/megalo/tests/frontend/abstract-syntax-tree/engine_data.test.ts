@@ -18,6 +18,7 @@ describe("engineDataParser", () => {
     const source = `string_table english
 \tslayer_title "Slayer"
 \tslayer_description "Slayer description"
+\tengine_category_slayer "Slayer"
 end
 constants number
 \tk_engine_icon_slayer 5
@@ -60,7 +61,7 @@ end
     });
     expect(element.properties[3]).toMatchObject({
       identifier: "category",
-      parameters: [{ kind: SyntaxKind.KEYWORD, value: "slayer" }],
+      parameters: [{ kind: SyntaxKind.REFERENCE, identifier: "slayer" }],
     });
   });
 
@@ -68,6 +69,7 @@ end
     const source = `string_table english
 \tengine_name "Custom"
 \tengine_description "Custom description"
+\tengine_category_invasion "Invasion"
 end
 constants number
 \tk_engine_icon_slayer 5
@@ -97,7 +99,7 @@ end
     });
     expect(element.properties[3]).toMatchObject({
       identifier: "category",
-      parameters: [{ kind: SyntaxKind.KEYWORD, value: "invasion" }],
+      parameters: [{ kind: SyntaxKind.REFERENCE, identifier: "invasion" }],
     });
   });
 

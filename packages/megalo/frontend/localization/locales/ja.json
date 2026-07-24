@@ -15,5 +15,6 @@
   "unknown_engine_data_property": "engine_data property が必要ですが、'{{got}}' が見つかりました",
   "unknown_game_option_override": "game option override が必要ですが、'{{got}}' が見つかりました",
   "string_already_defined": "言語 {{language}} の string table には、トークン {{identifier}} 用の文字列が既に定義されています",
-  "invalid_parameter_count": "{{expected}} パラメータが必要ですが、{{got}} パラメータが見つかりました"
+  "invalid_parameter_count": "{{expected}} パラメータが必要ですが、{{got}} パラメータが見つかりました",
+  "too_many_variables": "{{scope}} {{type}} 変数が多すぎます（上限 {{limit}}）"
 }

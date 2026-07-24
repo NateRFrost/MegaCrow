@@ -13,10 +13,10 @@ export function assertValueInRange(
   max: number,
   diagnostics: Diagnostics
 ): void {
-  if (!isWithinRange(value.valueOf(), min, max)) {
+  if (!isWithinRange(value.value, min, max)) {
     // TODO: Add a more specific error message.
     diagnostics.addError(
-      `Value ${value.valueOf()} is out of range for range ${min} to ${max}.`,
+      `Value ${value.value} is out of range for range ${min} to ${max}.`,
       value.location
     );
   }

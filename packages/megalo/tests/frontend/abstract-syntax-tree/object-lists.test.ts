@@ -101,7 +101,7 @@ end
       return;
     }
 
-    expect(ast.symbolTable[value.symbolId]).toMatchObject({
+    expect(ast.symbolTable.getSymbol(value.symbolId)).toMatchObject({
       kind: SymbolKind.ObjectListItem,
       objectType: ObjectListType.Objects,
       index: 1,

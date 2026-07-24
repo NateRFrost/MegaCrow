@@ -14,7 +14,7 @@ export function applyBaseName(ir: IR) {
     throw new FrontendError("NYI", BUILT_IN_LOCATION);
   }
   else if (ir.gameVariant.localizedName) {
-    baseName = ir.gameVariant.localizedName.toArray()[0];
+    baseName = ir.gameVariant.localizedName.value.toArray()[0];
   }
   
   ir.gameVariant.baseNameStringIndex = ir.gameVariant.scriptStrings?.addEntry(baseName) ?? 0;

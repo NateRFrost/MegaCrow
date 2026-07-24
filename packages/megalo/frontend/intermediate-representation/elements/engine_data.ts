@@ -11,14 +11,14 @@ import { dxAssertionScope } from "../diagnostics";
 import { EngineDataElementNode } from "../../abstract-syntax-tree/elements/engine_data";
 import { parseEnumCategory as parseEngineCategory } from "../engine-categories";
 import { ENGINE_CATEGORY_STRING_PREFIX } from "../../language-configuration/omni/engine_data";
+import { lowerConstantNumber } from "../parameters/constantNumber";
 import { resolveStringTableEntry } from "../parameters/resolveScriptStringTableReference";
 
 export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
   element,
-  symbolTable,
-  ir,
-  diagnostics
+  ctx
 ) => {
+  const { symbolTable, ir, diagnostics } = ctx;
   for (const property of element.properties) {
     switch (property.identifier) {
       case "name":
@@ -63,19 +63,7 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
             SyntaxKind.REFERENCE,
             SyntaxKind.INTEGER,
           ]);
-          if (parameter.kind === SyntaxKind.REFERENCE) {
-            const symbol = symbolTable.getSymbol(parameter.symbolId);
-            assertSymbolKind(symbol, SymbolKind.Constant);
-            ir.gameVariant.engineIcon = valueWithLocation(
-              symbol.value,
-              parameter.location
-            );
-          } else {
-            ir.gameVariant.engineIcon = valueWithLocation(
-              parameter.value,
-              parameter.location
-            );
-          }
+          ir.gameVariant.engineIcon = lowerConstantNumber(parameter, ctx);
         });
         break;
       case "category":

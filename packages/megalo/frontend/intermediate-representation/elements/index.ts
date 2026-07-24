@@ -1,15 +1,14 @@
-import { ASTElementNode, ElementKind } from "../../abstract-syntax-tree/elements";
-import { IR } from "..";
-import { Diagnostics } from "../../diagnostics";
-import type { SymbolTable } from "../../symbol-table";
+import { type ASTElementNode, ElementKind } from "../../abstract-syntax-tree/elements";
+import type { ElementLowerContext } from "../parameters/context";
 import { engineDataLowerer } from "./engine_data";
 import { gameOptionsLowerer } from "./game_options";
+import { loadoutLowerer } from "./loadout";
+import { loadoutPaletteLowerer } from "./loadout_palette";
+import { variablesLowerer } from "./variables";
 
 export type ElementLowerer<T extends ASTElementNode> = (
   element: T,
-  symbolTable: SymbolTable,
-  ir: IR,
-  diagnostics: Diagnostics
+  ctx: ElementLowerContext
 ) => void;
 
 export const NULL_LOWERER: ElementLowerer<any> = () => {};
@@ -23,3 +22,6 @@ ELEMENT_LOWERERS.set(ElementKind.CONSTANTS, NULL_LOWERER);
 
 ELEMENT_LOWERERS.set(ElementKind.ENGINE_DATA, engineDataLowerer);
 ELEMENT_LOWERERS.set(ElementKind.GAME_OPTIONS, gameOptionsLowerer);
+ELEMENT_LOWERERS.set(ElementKind.LOADOUT, loadoutLowerer);
+ELEMENT_LOWERERS.set(ElementKind.LOADOUT_PALETTE, loadoutPaletteLowerer);
+ELEMENT_LOWERERS.set(ElementKind.VARIABLES, variablesLowerer);

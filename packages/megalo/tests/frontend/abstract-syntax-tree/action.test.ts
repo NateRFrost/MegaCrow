@@ -45,6 +45,7 @@ const parseActionParameters = (source: string, actionName: string) => {
   ctx.symbolParser.addConstantToScope({
     name: "true",
     declaration: BUILT_IN_LOCATION,
+    value: 1,
   });
   ctx.symbolParser.addStringToScope({
     name: "you_are_vip",
@@ -312,6 +313,6 @@ describe("ActionParserRepository", () => {
       diagnostics,
       new SymbolBinder(version, diagnostics)
     );
-    expect(parser!(ctx, BUILT_IN_LOCATION)).toEqual([]);
+    expect(parser!(ctx, tokens[0]!.location)).toEqual([]);
   });
 });

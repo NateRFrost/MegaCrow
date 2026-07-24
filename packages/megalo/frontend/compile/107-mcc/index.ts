@@ -13,6 +13,7 @@ import type { StringTable } from "../../intermediate-representation/game/string_
 import { STRING_TABLE_LANGUAGES } from "../../language-configuration/omni/strings";
 import { Compiler } from "../compiler";
 import { FrontendError } from "../../error";
+import { compileGameOptions } from "./game_options";
 
 export class Compiler107MCC extends Compiler {
   private compileStringTable(
@@ -49,7 +50,11 @@ export class Compiler107MCC extends Compiler {
     return gametype;
   }
 
-  private compile(ir: IR): c_game_engine_custom_variant {
+  private compile(
+    ir: IR,
+    diagnostics: Diagnostics
+  ): c_game_engine_custom_variant {
+    void diagnostics;
     const gametype = this.makeDefaultGametype();
 
     gametype.m_script_strings = this.compileStringTable(
@@ -63,7 +68,7 @@ export class Compiler107MCC extends Compiler {
 
     if (ir.gameVariant.localizedName) {
       (gametype.m_localized_name = this.compileStringTable(
-        ir.gameVariant.localizedName,
+        ir.gameVariant.localizedName.value,
         1,
         0x1_80,
         9,
@@ -73,7 +78,7 @@ export class Compiler107MCC extends Compiler {
     }
     ir.gameVariant.localizedDescription &&
       (gametype.m_localized_description = this.compileStringTable(
-        ir.gameVariant.localizedDescription,
+        ir.gameVariant.localizedDescription.value,
         1,
         0xc_00,
         12,
@@ -82,7 +87,7 @@ export class Compiler107MCC extends Compiler {
       ));
     ir.gameVariant.localizedCategory &&
       (gametype.m_localized_category = this.compileStringTable(
-        ir.gameVariant.localizedCategory,
+        ir.gameVariant.localizedCategory.value,
         1,
         0x1_80,
         9,
@@ -90,21 +95,21 @@ export class Compiler107MCC extends Compiler {
         1
       ));
     if (ir.gameVariant.engineIcon !== undefined) {
-      gametype.m_engine_icon = Number(ir.gameVariant.engineIcon);
+      gametype.m_engine_icon = ir.gameVariant.engineIcon.value;
       gametype.m_base_variant.m_metadata.file_type_data = new s_content_item_game_variant_metadata();
-      gametype.m_base_variant.m_metadata.file_type_data.icon_index = ir.gameVariant.engineIcon;
+      gametype.m_base_variant.m_metadata.file_type_data.icon_index = ir.gameVariant.engineIcon.value;
     }
     if (ir.gameVariant.engineCategory !== undefined) {
         // this is actually an enum, we havent mapped it yet
         // TODO add e_game_engine_category to blf-ts
-      gametype.m_engine_category = ir.gameVariant.engineCategory;
-      gametype.m_base_variant.m_metadata.display.megalo_category_index = ir.gameVariant.engineCategory;
+      gametype.m_engine_category = ir.gameVariant.engineCategory.value;
+      gametype.m_base_variant.m_metadata.display.megalo_category_index = ir.gameVariant.engineCategory.value;
     }
     if (ir.gameVariant.baseVariant.metadata.name) {
-      gametype.m_base_variant.m_metadata.name = ir.gameVariant.baseVariant.metadata.name;
+      gametype.m_base_variant.m_metadata.name = ir.gameVariant.baseVariant.metadata.name.value;
     }
     if (ir.gameVariant.baseVariant.metadata.description) {
-      gametype.m_base_variant.m_metadata.description = ir.gameVariant.baseVariant.metadata.description;
+      gametype.m_base_variant.m_metadata.description = ir.gameVariant.baseVariant.metadata.description.value;
     }
 
     // TODO: Move
@@ -115,15 +120,23 @@ export class Compiler107MCC extends Compiler {
 
     gametype.m_base_name_string_index = ir.gameVariant.baseNameStringIndex;
 
+    compileGameOptions(ir, gametype);
+
     return gametype;
   }
 
   public dryRun(ir: IR, diagnostics: Diagnostics): void {
-    this.compile(ir);
+    this.compile(ir, diagnostics);
   }
 
   public writeMegaloFile(ir: IR, diagnostics: Diagnostics): Uint8Array {
-    const gametype = this.compile(ir);
+    if (diagnostics.hasErrors()) {
+      throw new FrontendError(
+        "Cannot write megalo file while diagnostics have errors",
+        BUILT_IN_LOCATION
+      );
+    }
+    const gametype = this.compile(ir, diagnostics);
     const bitstreamWriter = c_bitstream_writer.new(
       0,
       e_bitstream_byte_order._bitstream_byte_order_big_endian

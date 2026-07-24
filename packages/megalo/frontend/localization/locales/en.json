@@ -15,5 +15,6 @@
   "unknown_engine_data_property": "Expected engine_data property, got '{{got}}'",
   "unknown_game_option_override": "Expected game option override, got '{{got}}'",
   "string_already_defined": "String table for language {{language}} already has a string for token {{identifier}} defined",
-  "invalid_parameter_count": "Expected {{expected}} parameters but got {{got}}"
+  "invalid_parameter_count": "Expected {{expected}} parameters but got {{got}}",
+  "too_many_variables": "Too many {{scope}} {{type}} variables (limit {{limit}})"
 }

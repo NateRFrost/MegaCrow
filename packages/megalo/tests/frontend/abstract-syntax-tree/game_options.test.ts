@@ -260,11 +260,15 @@ end
       return;
     }
 
-    expect(element.entries[0]?.name).toMatchObject({
+    const entry = element.entries[0];
+    if (entry?.kind !== GameOptionEntryKind.OVERRIDE) {
+      throw new Error("expected override entry");
+    }
+    expect(entry.name).toMatchObject({
       kind: "player_traits_override",
       option: "base_player_traits",
     });
-    expect(element.entries[0]?.value).toMatchObject({
+    expect(entry.value).toMatchObject({
       kind: OverrideValueKind.NESTED,
       body: {
         options: [
@@ -297,19 +301,27 @@ end
       return;
     }
 
-    expect(element.entries[0]?.name).toMatchObject({
+    const weaponEntry = element.entries[0];
+    if (weaponEntry?.kind !== GameOptionEntryKind.OVERRIDE) {
+      throw new Error("expected override entry");
+    }
+    expect(weaponEntry.name).toMatchObject({
       kind: SyntaxKind.REFERENCE,
       identifier: "weapon_set",
     });
-    expect(element.entries[0]?.value).toMatchObject({
+    expect(weaponEntry.value).toMatchObject({
       kind: OverrideValueKind.SIMPLE,
       value: { kind: SyntaxKind.REFERENCE, identifier: "none" },
     });
-    expect(element.entries[1]?.name).toMatchObject({
+    const vehicleEntry = element.entries[1];
+    if (vehicleEntry?.kind !== GameOptionEntryKind.OVERRIDE) {
+      throw new Error("expected override entry");
+    }
+    expect(vehicleEntry.name).toMatchObject({
       kind: SyntaxKind.REFERENCE,
       identifier: "vehicle_set",
     });
-    expect(element.entries[1]?.value).toMatchObject({
+    expect(vehicleEntry.value).toMatchObject({
       kind: OverrideValueKind.SIMPLE,
       value: { kind: SyntaxKind.KEYWORD, value: "no_vehicles" },
     });
@@ -330,10 +342,14 @@ end
       return;
     }
 
-    expect(element.entries[0]?.name).toMatchObject({
+    const paletteEntry = element.entries[0];
+    if (paletteEntry?.kind !== GameOptionEntryKind.OVERRIDE) {
+      throw new Error("expected override entry");
+    }
+    expect(paletteEntry.name).toMatchObject({
       kind: "loadout_palette",
     });
-    expect(element.entries[0]?.value).toMatchObject({
+    expect(paletteEntry.value).toMatchObject({
       kind: OverrideValueKind.LOADOUT_PALETTE,
       tier: { value: "spartan_tier1" },
       palette: { value: "slayer_loadouts" },
@@ -357,11 +373,19 @@ end
       return;
     }
 
-    expect(element.entries[0]?.value).toMatchObject({
+    const firstEntry = element.entries[0];
+    if (firstEntry?.kind !== GameOptionEntryKind.OVERRIDE) {
+      throw new Error("expected override entry");
+    }
+    expect(firstEntry.value).toMatchObject({
       kind: OverrideValueKind.SIMPLE,
       value: { kind: SyntaxKind.FLOATING_POINT, value: 1.25 },
     });
-    expect(element.entries[1]?.value).toMatchObject({
+    const secondEntry = element.entries[1];
+    if (secondEntry?.kind !== GameOptionEntryKind.OVERRIDE) {
+      throw new Error("expected override entry");
+    }
+    expect(secondEntry.value).toMatchObject({
       kind: OverrideValueKind.SIMPLE,
       value: { kind: SyntaxKind.FLOATING_POINT, value: 0.5 },
     });

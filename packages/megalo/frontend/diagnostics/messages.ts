@@ -155,6 +155,14 @@ export const diagnosticMessages = {
     return "Expected temporary variable initial value.";
   },
 
+  tooManyVariables(scope: string, type: string, limit: number): string {
+    return translate("too_many_variables", {
+      scope,
+      type,
+      limit: String(limit),
+    });
+  },
+
   expectedLoadoutPaletteItemOrEnd(got: string): string {
     return translate("expected_parameter_type", {
       expected: "item or end",

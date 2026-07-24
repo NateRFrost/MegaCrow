@@ -4,6 +4,7 @@ import { ElementKind } from "../../../frontend/abstract-syntax-tree/elements";
 import { Diagnostics } from "../../../frontend/diagnostics";
 import {
   SymbolKind,
+  type SymbolTableEntry,
   type SymbolTableStringEntry,
 } from "../../../frontend/symbol-table";
 import { Lexer } from "../../../frontend/tokens";
@@ -17,15 +18,10 @@ const parse = (source: string) => {
   return { ast, symbolTable: ast.symbolTable.toArray(), diagnostics };
 };
 
-const stringSymbols = (symbolTable: {
-  toArray(): readonly { kind: SymbolKind; name: string }[];
-}) =>
-  symbolTable
-    .toArray()
-    .filter(
-      (entry): entry is SymbolTableStringEntry =>
-        entry.kind === SymbolKind.String
-    );
+const stringSymbols = (symbolTable: readonly SymbolTableEntry[]) =>
+  symbolTable.filter(
+    (entry): entry is SymbolTableStringEntry => entry.kind === SymbolKind.String
+  );
 
 describe("stringTableParser", () => {
   it("parses a string_table block with language and entries", () => {

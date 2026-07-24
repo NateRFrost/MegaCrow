@@ -1,6 +1,7 @@
 import type { MegaloVersion } from "../../version";
 import type { ParserSymbolContext } from "../abstract-syntax-tree/symbol-context";
 import { BUILT_IN_LOCATION } from "../diagnostics";
+import type { BuiltInGameOptionName } from "../language-configuration/omni/game_options";
 import { TEAM_DESIGNATORS } from "../language-configuration/omni/teams";
 import { VariableScope, VariableType } from ".";
 
@@ -74,7 +75,7 @@ export const addBuiltInGameOptions = (
   megaloVersion: MegaloVersion,
   symbolParser: ParserSymbolContext
 ): void => {
-  const addBuiltInGameOption = (name: string) => {
+  const addBuiltInGameOption = (name: BuiltInGameOptionName) => {
     symbolParser.addGameOptionToScope({
       name,
       declaration: BUILT_IN_LOCATION,

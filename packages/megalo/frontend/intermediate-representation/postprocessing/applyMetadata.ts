@@ -4,14 +4,14 @@ export function applyMetadata(ir: IR) {
     if (ir.gameVariant.localizedName) {
         ir.gameVariant.baseVariant.metadata.name 
             = valueWithLocation(
-                ir.gameVariant.localizedName.toArray()[0]?.english ?? "", 
+                ir.gameVariant.localizedName.value.toArray()[0]?.english ?? "", 
                 ir.gameVariant.localizedName.location
             );
     }
     if (ir.gameVariant.localizedDescription) {
         ir.gameVariant.baseVariant.metadata.description 
             = valueWithLocation(
-                ir.gameVariant.localizedDescription.toArray()[0]?.english ?? "", 
+                ir.gameVariant.localizedDescription.value.toArray()[0]?.english ?? "", 
                 ir.gameVariant.localizedDescription.location
             );
     }

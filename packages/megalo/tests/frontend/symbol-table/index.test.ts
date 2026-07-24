@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ParserSymbolContext } from "../../../frontend/abstract-syntax-tree/symbol-context";
 import {
   Diagnostics,
+  BUILT_IN_LOCATION,
   type SourceCodeLocation,
   SourceLocationType,
 } from "../../../frontend/diagnostics";
@@ -10,12 +11,20 @@ import {
   SymbolBinder,
   SymbolKind,
   type SymbolTableStringEntry,
+  type SymbolTableVariableEntry,
   VariableScope,
   VariableType,
+  isBuiltInVariable,
 } from "../../../frontend/symbol-table";
+import { VersionConfiguration107MCC } from "../../../frontend/version-configuration";
+import {
+  buildVariableSlotMap,
+  findVariableBySlot,
+} from "../../../frontend/intermediate-representation/preprocessing/symbols";
 import { ParserScopeKind } from "../../../frontend/symbol-table/scope";
 import { MEGALO_VERSIONS } from "../../../version";
 
+const VARIABLE_LIMITS_107_MCC = new VersionConfiguration107MCC().limits;
 const version = MEGALO_VERSIONS["107-mcc"];
 
 const loc = (line: number, column = 1): SourceCodeLocation => ({
@@ -181,6 +190,72 @@ describe("SymbolBinder", () => {
       .getSymbolTable()
       .toArray()[0] as SymbolTableStringEntry;
     expect(stringEntry.references).toEqual([reference]);
+  });
+
+  it("buildVariableSlotMap assigns sequential slots per (scope, type) and skips built-ins", () => {
+    const diagnostics = new Diagnostics();
+    const binder = new SymbolBinder(version, diagnostics);
+
+    const first = binder.addVariable({
+      name: "a",
+      type: VariableType.Number,
+      declaration: loc(1),
+      scope: VariableScope.Global,
+    });
+    const second = binder.addVariable({
+      name: "b",
+      type: VariableType.Number,
+      declaration: loc(2),
+      scope: VariableScope.Global,
+    });
+    const builtIn = binder.addVariable({
+      name: "current_player",
+      type: VariableType.Player,
+      declaration: BUILT_IN_LOCATION,
+      scope: VariableScope.Global,
+    });
+    const playerScoped = binder.addVariable({
+      name: "c",
+      type: VariableType.Number,
+      declaration: loc(4),
+      scope: VariableScope.Player,
+    });
+    const timer = binder.addVariable({
+      name: "t",
+      type: VariableType.Timer,
+      declaration: loc(5),
+      scope: VariableScope.Global,
+    });
+
+    const table = binder.getSymbolTable();
+    const slots = buildVariableSlotMap(
+      table,
+      VARIABLE_LIMITS_107_MCC,
+      diagnostics
+    );
+
+    expect(slots.get(first)?.index).toBe(0);
+    expect(slots.get(second)?.index).toBe(1);
+    expect(slots.has(builtIn)).toBe(false);
+    expect(
+      isBuiltInVariable(table.getSymbol(builtIn) as SymbolTableVariableEntry)
+    ).toBe(true);
+    expect(slots.get(playerScoped)?.index).toBe(0);
+    expect(slots.get(timer)?.index).toBe(0);
+
+    expect(
+      findVariableBySlot(
+        table,
+        slots,
+        VariableScope.Global,
+        VariableType.Number,
+        1
+      )?.name
+    ).toBe("b");
+    expect(table.variablesOf(VariableScope.Global, VariableType.Number)).toHaveLength(2);
+    expect(
+      isBuiltInVariable(table.findVariableByName("current_player")!)
+    ).toBe(true);
   });
 
   it("registers built-in timers in the global scope", () => {

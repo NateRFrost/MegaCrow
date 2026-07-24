@@ -7,7 +7,7 @@ export function applyDefaultLoadoutCameraTime(ir: IR) {
   const hasNoLoadoutCamTime =
     ir.gameVariant.baseVariant.respawnOptions?.loadoutCamTime == undefined;
   const usesSetLoadoutPalette = ir.gameVariant.gameEngine.actions.some(
-    (action) => action.type === ActionType.SetLoadoutPalette
+    (action) => action.type.value === ActionType.SetLoadoutPalette
   );
   if (hasNoBaseFilePath && hasNoLoadoutCamTime && usesSetLoadoutPalette) {
     ir.gameVariant.baseVariant.respawnOptions.loadoutCamTime =

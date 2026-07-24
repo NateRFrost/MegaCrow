@@ -1,27 +1,26 @@
-import type { MegaloVersion } from "../../version";
-import { type AST } from "../abstract-syntax-tree";
+import type { AST } from "../abstract-syntax-tree";
 import {
   BUILT_IN_LOCATION,
   type Diagnostics,
   type SourceLocation,
 } from "../diagnostics";
 import type { ObjectLists } from "../object-lists";
+import type { VersionConfiguration } from "../version-configuration";
 import { ELEMENT_LOWERERS } from "./elements";
+import type { ElementLowerContext } from "./parameters";
 import type { GameEngineCustomVariant } from "./game/game_variant";
 import { StringTable } from "./game/string_table";
+import type { VariableMetadata } from "./game/megalogamengine/megalogamengine_variable_metadata";
 import { applyBaseName } from "./postprocessing/applyBaseName";
 import { applyDefaultLoadoutCameraTime } from "./postprocessing/applyDefaultLoadoutCameraTime";
 import { applyMetadata } from "./postprocessing/applyMetadata";
+import { applyVariableMetadata } from "./postprocessing/applyVariableMetadata";
+import { buildVariableSlotMap } from "./preprocessing/symbols";
 
-type LocationMeta = { location: SourceLocation };
-export type ValueWithLocation<T> =
-  // Enforce that the provided T doesnt already have a location property.
-  // Then enforce that a SourceLocation is provided.
-  T extends object
-    ? "location" extends keyof T
-      ? never
-      : T & LocationMeta
-    : T & LocationMeta;
+export type ValueWithLocation<T> = {
+  value: T;
+  location: SourceLocation;
+};
 
 export type IR = {
   baseFilePath?: string;
@@ -35,25 +34,24 @@ export type LowerContext = {
 export const valueWithLocation = <T>(
   value: T,
   location: SourceLocation
-): ValueWithLocation<T> => {
-  if (value !== null && typeof value === "object") {
-    const proto = Object.getPrototypeOf(value);
-    // Keep class instances (e.g. StringTable) intact; only clone plain objects.
-    if (proto !== Object.prototype && proto !== null) {
-      return Object.assign(value as object, {
-        location,
-      }) as ValueWithLocation<T>;
-    }
-    return { ...value, location } as ValueWithLocation<T>;
-  }
-  // Box primitives so they can carry .location
-  return Object.assign(Object(value), { location }) as ValueWithLocation<T>;
-};
+): ValueWithLocation<T> => ({ value, location });
+
+export const getIRValue = <T>(
+  value: ValueWithLocation<T> | undefined
+): T | undefined => (value === undefined ? undefined : value.value);
+
+const emptyVariableMetadata = (): VariableMetadata => ({
+  numericVariables: [],
+  timerVariables: [],
+  teamVariables: [],
+  playerVariables: [],
+  objectVariables: [],
+});
 
 export class Lowerer {
-  private readonly megaloVersion: MegaloVersion;
-  public constructor(megaloVersion: MegaloVersion) {
-    this.megaloVersion = megaloVersion;
+  private readonly versionConfiguration: VersionConfiguration;
+  public constructor(versionConfiguration: VersionConfiguration) {
+    this.versionConfiguration = versionConfiguration;
   }
 
   public lower(
@@ -61,31 +59,43 @@ export class Lowerer {
     diagnostics: Diagnostics,
     context: LowerContext = {}
   ): IR {
-    void ast;
     void context;
-    void this.megaloVersion;
 
     const ir = this.buildDefaultIR();
+    const lowerContext: ElementLowerContext = {
+      symbolTable: ast.symbolTable,
+      variableSlots: buildVariableSlotMap(
+        ast.symbolTable,
+        this.versionConfiguration.limits,
+        diagnostics
+      ),
+      ir,
+      diagnostics,
+      loadoutsByName: new Map(),
+      loadoutPalettesByName: new Map(),
+      variableDeclarations: new Map(),
+    };
 
     ast.elements.forEach((element) => {
       const elementLowerer = ELEMENT_LOWERERS.get(element.elementKind);
       if (elementLowerer) {
-        elementLowerer(element, ast.symbolTable, ir, diagnostics);
+        elementLowerer(element, lowerContext);
       }
       else {
         console.warn(`lowerer for ${element.elementKind} NYI`);
       }
     });
 
-    this.postprocess(ir);
+    this.postprocess(ir, lowerContext);
 
     return ir;
   }
 
-  private postprocess(ir: IR) {
+  private postprocess(ir: IR, ctx: ElementLowerContext) {
     applyDefaultLoadoutCameraTime(ir);
     applyBaseName(ir);
     applyMetadata(ir);
+    applyVariableMetadata(ir, ctx);
   }
 
   private buildDefaultIR(): IR {
@@ -116,7 +126,7 @@ export class Lowerer {
               isOnline: false,
             },
           },
-          builtIn: valueWithLocation(false, BUILT_IN_LOCATION),
+          builtIn: false,
           miscellaneousOptions: {},
           respawnOptions: {},
           socialOptions: {},
@@ -127,10 +137,7 @@ export class Lowerer {
         playerTraits: [],
         userDefinedOptions: [],
         scriptStrings,
-        baseNameStringIndex: valueWithLocation(
-          defaultNameIndex,
-          BUILT_IN_LOCATION
-        ),
+        baseNameStringIndex: defaultNameIndex,
         localizedName: undefined,
         localizedDescription: undefined,
         localizedCategory: undefined,
@@ -148,33 +155,12 @@ export class Lowerer {
           actions: [],
           triggers: [],
           statistics: [],
-          globalVariableMetadata: {
-            numericVariables: [],
-            timerVariables: [],
-            teamVariables: [],
-            playerVariables: [],
-            objectVariables: [],
-          },
-          playerVariableMetadata: {
-            numericVariables: [],
-            timerVariables: [],
-            teamVariables: [],
-            playerVariables: [],
-            objectVariables: [],
-          },
-          objectVariableMetadata: {
-            numericVariables: [],
-            timerVariables: [],
-            teamVariables: [],
-            playerVariables: [],
-            objectVariables: [],
-          },
-          teamVariableMetadata: {
-            numericVariables: [],
-            timerVariables: [],
-            teamVariables: [],
-            playerVariables: [],
-            objectVariables: [],
+          variableMetadata: {
+            global: emptyVariableMetadata(),
+            player: emptyVariableMetadata(),
+            object: emptyVariableMetadata(),
+            team: emptyVariableMetadata(),
+            temporary: emptyVariableMetadata(),
           },
           hudWidgets: [],
           initializationTriggerIndex: 0,

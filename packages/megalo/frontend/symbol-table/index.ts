@@ -41,6 +41,7 @@ export enum VariableScope {
   Team = 1,
   Player = 2,
   Object = 3,
+  Temporary = 4,
 }
 
 export type SymbolId = number;
@@ -88,6 +89,11 @@ export type SymbolTableVariableEntry = SymbolTableEntryBase & {
   declaration: SourceLocation;
   scope: VariableScope;
 };
+
+/** True when the variable was injected by the compiler (not user-declared). */
+export const isBuiltInVariable = (
+  symbol: SymbolTableVariableEntry
+): boolean => symbol.declaration.type === SourceLocationType.BUILT_IN;
 
 export type SymbolTableGameOptionEntry = SymbolTableEntryBase & {
   kind: SymbolKind.GameOption;
@@ -159,6 +165,28 @@ export class SymbolTable {
 
   public toArray(): readonly SymbolTableEntry[] {
     return this.table;
+  }
+
+  public findVariableByName(
+    name: string
+  ): SymbolTableVariableEntry | undefined {
+    return this.table.find(
+      (symbol): symbol is SymbolTableVariableEntry =>
+        symbol.kind === SymbolKind.Variable && symbol.name === name
+    );
+  }
+
+  public variablesOf(
+    scope: VariableScope,
+    type: VariableType
+  ): readonly SymbolTableVariableEntry[] {
+    return this.table.filter(
+      (symbol): symbol is SymbolTableVariableEntry =>
+        symbol.kind === SymbolKind.Variable &&
+        !isBuiltInVariable(symbol) &&
+        symbol.scope === scope &&
+        symbol.type === type
+    );
   }
 }
 

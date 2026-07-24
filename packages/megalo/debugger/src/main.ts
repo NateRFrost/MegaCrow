@@ -26,11 +26,19 @@ import { loadObjectLists } from "./object-lists";
 import { createSourceEditor } from "./source-editor";
 
 const LOCALE_STORAGE_KEY = "megalo-debugger-locale";
+const DEBUG_PANES_STORAGE_KEY = "megalo-debugger-debug-panes";
 
 const PARSE_DEBOUNCE_MS = 150;
 const DOM_DEBOUNCE_MS = 400;
 const SOURCE_SETTLE_MS = 250;
 const MAX_DISPLAYED_DIAGNOSTICS = 200;
+
+const debugLog = (event: string, details: Record<string, unknown> = {}): void => {
+  console.log(`[megalo-debugger] ${event}`, {
+    at: performance.now().toFixed(1),
+    ...details,
+  });
+};
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) {
@@ -43,6 +51,12 @@ app.innerHTML = `
       <h1>Megalo Debugger</h1>
       <a class="toolbar-link" href="/inspector">Inspector</a>
       <button type="button" class="toolbar-button" data-role="save-gametype">Save Gametype</button>
+      <button
+        type="button"
+        class="toolbar-button"
+        data-role="debug-panes-toggle"
+        aria-pressed="true"
+      >Debug Panes</button>
       <div
         class="locale-toggle"
         data-role="locale-toggle"
@@ -61,27 +75,27 @@ app.innerHTML = `
           <div class="pane-header">Source</div>
           <div class="source-editor" data-role="source-editor"></div>
         </section>
-        <section class="pane">
+        <section class="pane" data-debug-pane>
           <div class="pane-header">
             Tokens
             <span class="pane-header-meta" data-role="token-time"></span>
           </div>
           <div class="output-view json-tree" data-role="tokens"></div>
         </section>
-        <section class="pane">
+        <section class="pane" data-debug-pane>
           <div class="pane-header">AST
             <span class="pane-header-meta" data-role="ast-time"></span>
           </div>
           <div class="output-view json-tree" data-role="ast"></div>
         </section>
-        <section class="pane">
+        <section class="pane" data-debug-pane>
           <div class="pane-header">IR
             <span class="pane-header-meta" data-role="ir-time"></span>
           </div>
           <div class="output-view json-tree" data-role="ir"></div>
         </section>
       </div>
-      <section class="pane pane-symbols">
+      <section class="pane pane-symbols" data-debug-pane>
         <div class="pane-header">
           Symbol Table
           <span class="pane-header-meta" data-role="symbol-count"></span>
@@ -126,6 +140,9 @@ const localeToggle = app.querySelector<HTMLElement>(
 const saveGametypeButton = app.querySelector<HTMLButtonElement>(
   '[data-role="save-gametype"]'
 );
+const debugPanesToggle = app.querySelector<HTMLButtonElement>(
+  '[data-role="debug-panes-toggle"]'
+);
 
 if (
   !(
@@ -143,7 +160,8 @@ if (
     diagnosticsView &&
     diagnosticsCount &&
     localeToggle &&
-    saveGametypeButton
+    saveGametypeButton &&
+    debugPanesToggle
   )
 ) {
   throw new Error("Debugger layout failed to initialize.");
@@ -152,6 +170,33 @@ if (
 const localeButtons =
   localeToggle.querySelectorAll<HTMLButtonElement>("[data-locale]");
 const sourceEditor = createSourceEditor(sourceEditorHost, DEFAULT_SOURCE);
+
+const appContainer = app.querySelector<HTMLElement>(".app");
+if (!appContainer) {
+  throw new Error("Debugger layout failed to initialize.");
+}
+
+let debugPanesVisible = true;
+
+const setDebugPanesVisible = (visible: boolean): void => {
+  const changed = visible !== debugPanesVisible;
+  debugPanesVisible = visible;
+  appContainer.classList.toggle("is-debug-panes-hidden", !visible);
+  debugPanesToggle.setAttribute("aria-pressed", String(visible));
+  localStorage.setItem(DEBUG_PANES_STORAGE_KEY, visible ? "1" : "0");
+  sourceEditor.layout();
+
+  // Panes are not kept up to date while hidden; rebuild them on reveal.
+  if (changed && visible) {
+    scheduleDomFlush(true);
+  }
+};
+
+debugPanesToggle.addEventListener("click", () => {
+  setDebugPanesVisible(
+    debugPanesToggle.getAttribute("aria-pressed") !== "true"
+  );
+});
 
 const severityLabel = (severity: DiagnosticSeverity): string =>
   DiagnosticSeverity[severity] ?? String(severity);
@@ -331,6 +376,7 @@ let sourceSettleTimer: ReturnType<typeof setTimeout> | null = null;
 let latestResult: AnalyzeResponse | null = null;
 let sourceEditorActive = false;
 let domFlushPending = false;
+const updateStartedAt = new Map<number, number>();
 
 type UpdateOptions = {
   /** Re-translate diagnostics without re-rendering tokens/AST panes. */
@@ -343,6 +389,9 @@ let pendingOptions: UpdateOptions = {};
 let pendingSourceChanged = false;
 
 const setSourceEditorActive = (active: boolean): void => {
+  if (sourceEditorActive !== active) {
+    debugLog("source-editor-active", { active });
+  }
   sourceEditorActive = active;
   app.classList.toggle("is-editing-source", active);
 };
@@ -360,6 +409,9 @@ const markSourceEditorActive = (): void => {
     setSourceEditorActive(false);
 
     if (domFlushPending) {
+      debugLog("source-settled-flush-pending", {
+        generation: updateGeneration,
+      });
       domFlushPending = false;
       scheduleDomFlush();
     }
@@ -381,10 +433,18 @@ const diagnosticsSignature = (diagnostics: Diagnostic[]): string =>
 const flushDom = (): void => {
   const result = latestResult;
   if (!result || result.id !== updateGeneration) {
+    debugLog("flush-skipped-no-current-result", {
+      resultId: result?.id,
+      generation: updateGeneration,
+    });
     return;
   }
 
   if (sourceEditorActive) {
+    debugLog("flush-deferred-editor-active", {
+      generation: updateGeneration,
+      diagnostics: result.diagnostics.length,
+    });
     domFlushPending = true;
     return;
   }
@@ -392,79 +452,105 @@ const flushDom = (): void => {
   const options = pendingOptions;
   const sourceChanged = pendingSourceChanged;
 
-  scheduleIdleChain(
-    [
-      () => {
-        tokenCount.textContent = `${result.tokenCount} token${result.tokenCount === 1 ? "" : "s"}`;
-        tokenTime.textContent = formatDuration(result.lexDuration);
-        astTime.textContent = formatDuration(result.parseDuration);
-        totalTime.textContent = formatDuration(
-          result.lexDuration + result.parseDuration
-        );
-      },
-      () => {
-        if (!latestResult || latestResult.id !== updateGeneration) {
-          return;
-        }
+  const isCurrent = (): boolean =>
+    !!latestResult && latestResult.id === updateGeneration;
 
-        if (!options.diagnosticsOnly || sourceChanged) {
+  const steps: Array<() => void> = [
+    () => {
+      debugLog("timings-applied", {
+        generation: result.id,
+        lexMs: result.lexDuration,
+        parseMs: result.parseDuration,
+        lowerMs: result.lowerDuration,
+      });
+      tokenCount.textContent = `${result.tokenCount} token${result.tokenCount === 1 ? "" : "s"}`;
+      tokenTime.textContent = formatDuration(result.lexDuration);
+      astTime.textContent = formatDuration(result.parseDuration);
+      irTime.textContent = formatDuration(result.lowerDuration);
+      totalTime.textContent = formatDuration(
+        result.lexDuration + result.parseDuration + result.lowerDuration
+      );
+    },
+    // Diagnostics drive the source editor highlighting, so apply them before
+    // the (optional, expensive) debug pane trees are rebuilt.
+    () => {
+      if (!isCurrent()) {
+        return;
+      }
+
+      const signature = diagnosticsSignature(result.diagnostics);
+      if (cachedDiagnosticsSignature !== signature) {
+        debugLog("diagnostics-applying", {
+          generation: result.id,
+          count: result.diagnostics.length,
+          diagnostics: result.diagnostics.map((diagnostic) => ({
+            severity: diagnostic.severity,
+            message: diagnostic.message,
+            location: diagnostic.location,
+          })),
+        });
+        renderDiagnostics(result.diagnostics);
+        sourceEditor.setDiagnostics(result.diagnostics);
+        cachedDiagnosticsSignature = signature;
+        debugLog("diagnostics-applied", {
+          generation: result.id,
+          count: result.diagnostics.length,
+        });
+      } else {
+        debugLog("diagnostics-skipped-same-signature", {
+          generation: result.id,
+          count: result.diagnostics.length,
+        });
+      }
+
+      const diagnosticsSummary = formatDiagnosticsSummary(result.diagnostics);
+      if (cachedDiagnosticsSummary.value !== diagnosticsSummary) {
+        diagnosticsCount.textContent = diagnosticsSummary;
+        cachedDiagnosticsSummary.value = diagnosticsSummary;
+      }
+    },
+  ];
+
+  // Building the debug pane trees is only useful when the panes are visible.
+  if (debugPanesVisible) {
+    steps.push(
+      () => {
+        if (isCurrent() && (!options.diagnosticsOnly || sourceChanged)) {
           setTreeIfChanged(tokensView, result.tokens, cachedTokens);
         }
       },
       () => {
-        if (!latestResult || latestResult.id !== updateGeneration) {
-          return;
-        }
-
-        if (!options.diagnosticsOnly || sourceChanged) {
+        if (isCurrent() && (!options.diagnosticsOnly || sourceChanged)) {
           setTreeIfChanged(astView, result.ast, cachedAst);
         }
       },
       () => {
-        if (!latestResult || latestResult.id !== updateGeneration) {
-          return;
-        }
-
-        if (!options.diagnosticsOnly || sourceChanged) {
+        if (isCurrent() && (!options.diagnosticsOnly || sourceChanged)) {
           setTreeIfChanged(symbolsView, result.symbolTable, cachedSymbolTable);
           symbolCount.textContent = `${result.symbolCount} symbol${result.symbolCount === 1 ? "" : "s"}`;
         }
       },
       () => {
-        if (!latestResult || latestResult.id !== updateGeneration) {
-          return;
-        }
-
-        if (!options.diagnosticsOnly || sourceChanged) {
+        if (isCurrent() && (!options.diagnosticsOnly || sourceChanged)) {
           setTreeIfChanged(irView, result.ir, cachedIr);
-          irTime.textContent = formatDuration(result.lowerDuration);
         }
-      },
-      () => {
-        if (!latestResult || latestResult.id !== updateGeneration) {
-          return;
-        }
+      }
+    );
+  }
 
-        const signature = diagnosticsSignature(result.diagnostics);
-        if (cachedDiagnosticsSignature !== signature) {
-          renderDiagnostics(result.diagnostics);
-          sourceEditor.setDiagnostics(result.diagnostics);
-          cachedDiagnosticsSignature = signature;
-        }
-
-        const diagnosticsSummary = formatDiagnosticsSummary(result.diagnostics);
-        if (cachedDiagnosticsSummary.value !== diagnosticsSummary) {
-          diagnosticsCount.textContent = diagnosticsSummary;
-          cachedDiagnosticsSummary.value = diagnosticsSummary;
-        }
-      },
-    ],
-    500
-  );
+  debugLog("flush-scheduled-idle-chain", {
+    generation: result.id,
+    steps: steps.length,
+    debugPanesVisible,
+  });
+  scheduleIdleChain(steps, 500);
 };
 
 const scheduleDomFlush = (immediate = false): void => {
   if (!immediate && sourceEditorActive) {
+    debugLog("dom-flush-held-for-editor", {
+      generation: updateGeneration,
+    });
     domFlushPending = true;
     return;
   }
@@ -475,10 +561,15 @@ const scheduleDomFlush = (immediate = false): void => {
   }
 
   if (immediate) {
+    debugLog("dom-flush-immediate", { generation: updateGeneration });
     flushDom();
     return;
   }
 
+  debugLog("dom-flush-debounced", {
+    generation: updateGeneration,
+    delayMs: DOM_DEBOUNCE_MS,
+  });
   domDebounceTimer = setTimeout(() => {
     domDebounceTimer = null;
     flushDom();
@@ -501,9 +592,29 @@ analyzeWorker.onmessage = (event: MessageEvent<WorkerResponse>) => {
   }
 
   if (response.id !== updateGeneration) {
+    debugLog("worker-response-stale", {
+      responseId: response.id,
+      generation: updateGeneration,
+    });
+    updateStartedAt.delete(response.id);
     return;
   }
 
+  const startedAt = updateStartedAt.get(response.id);
+  updateStartedAt.delete(response.id);
+  debugLog("worker-response-current", {
+    generation: response.id,
+    elapsedMs:
+      startedAt === undefined ? undefined : performance.now() - startedAt,
+    diagnostics: response.diagnostics.length,
+    errors: response.diagnostics.filter(
+      (diagnostic) => diagnostic.severity === DiagnosticSeverity.Error
+    ).length,
+    warnings: response.diagnostics.filter(
+      (diagnostic) => diagnostic.severity === DiagnosticSeverity.Warning
+    ).length,
+    sourceEditorActive,
+  });
   latestResult = response;
   scheduleDomFlush(pendingOptions.immediate === true);
 };
@@ -586,11 +697,19 @@ const runUpdate = (options: UpdateOptions = {}): void => {
     objectLists,
   };
 
+  updateStartedAt.set(generation, performance.now());
+  debugLog("worker-request", {
+    generation,
+    sourceLength: source.length,
+    sourceChanged: pendingSourceChanged,
+    options,
+  });
   analyzeWorker.postMessage(request);
 };
 
 const scheduleUpdate = (options: UpdateOptions = {}): void => {
   if (options.immediate) {
+    debugLog("update-scheduled-immediate", { options });
     if (parseDebounceTimer !== null) {
       clearTimeout(parseDebounceTimer);
       parseDebounceTimer = null;
@@ -600,9 +719,16 @@ const scheduleUpdate = (options: UpdateOptions = {}): void => {
   }
 
   if (parseDebounceTimer !== null) {
+    debugLog("update-debounce-replaced", {
+      generation: updateGeneration,
+    });
     clearTimeout(parseDebounceTimer);
   }
 
+  debugLog("update-scheduled-debounced", {
+    generation: updateGeneration + 1,
+    delayMs: PARSE_DEBOUNCE_MS,
+  });
   parseDebounceTimer = setTimeout(() => {
     parseDebounceTimer = null;
     runUpdate(options);
@@ -636,6 +762,9 @@ for (const button of localeButtons) {
 }
 
 sourceEditor.onDidChangeContent(() => {
+  debugLog("source-content-changed", {
+    sourceLength: sourceEditor.getValue().length,
+  });
   markSourceEditorActive();
   scheduleUpdate();
 });
@@ -649,6 +778,9 @@ const initialLocale: SupportedLocale =
   storedLocale === "en" || storedLocale === "ja" ? storedLocale : "en";
 
 applyLocale(initialLocale);
+
+const storedDebugPanes = localStorage.getItem(DEBUG_PANES_STORAGE_KEY);
+setDebugPanesVisible(storedDebugPanes !== "0");
 
 objectLists = loadObjectLists("107-mcc");
 scheduleUpdate({ immediate: true });

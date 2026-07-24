@@ -40,6 +40,7 @@ const parseParameters = (source: string, parser: ParameterParser) => {
   ctx.symbolParser.addConstantToScope({
     name: "k_max_count",
     declaration: BUILT_IN_LOCATION,
+    value: 42,
   });
   ctx.symbolParser.addHudWidgetToScope("health_meter", tokens[0]!.location);
   ctx.symbolParser.addVariableToScope({
@@ -306,7 +307,7 @@ describe("parameterParserBuilder", () => {
       new SymbolBinder(version, diagnostics)
     );
 
-    expect(parser(ctx, BUILT_IN_LOCATION)).toEqual([]);
+    expect(parser(ctx, tokens[0]!.location)).toEqual([]);
     expect(diagnostics.hasErrors()).toBe(false);
   });
 

@@ -47,6 +47,7 @@ export enum CustomVariableType {
   BluePowerupDuration = 41,
   YellowPowerupDuration = 42,
   ObjectDeathDamageType = 43,
+  TemporaryNumber = 44,
 }
 
 type ConstantCustomVariableReference = {
@@ -74,6 +75,11 @@ type TeamNumberCustomVariableReference = {
 
 type GlobalNumberCustomVariableReference = {
   type: CustomVariableType.GlobalNumber;
+  variableIndex: number;
+};
+
+type TemporaryNumberCustomVariableReference = {
+  type: CustomVariableType.TemporaryNumber;
   variableIndex: number;
 };
 
@@ -119,12 +125,49 @@ type TeamStatCustomVariableReference = {
   statisticIndex: number;
 };
 
+/** Built-in globals and game options that are identified only by their type. */
+export type TypeOnlyCustomVariableReference = {
+  type:
+    | CustomVariableType.RoundIndex
+    | CustomVariableType.SymmetricGametype
+    | CustomVariableType.SymmetricGametypePregame
+    | CustomVariableType.ScoreToWinRound
+    | CustomVariableType.FireTeamsEnabled
+    | CustomVariableType.TeamsEnabled
+    | CustomVariableType.RoundTimeLimit
+    | CustomVariableType.RoundCount
+    | CustomVariableType.PerfectionEnabled
+    | CustomVariableType.EarlyVictoryWinCount
+    | CustomVariableType.SuddenDeathTimeLimit
+    | CustomVariableType.GracePeriodTimeLimit
+    | CustomVariableType.LivesPerRound
+    | CustomVariableType.TeamLivesPerRound
+    | CustomVariableType.RespawnTime
+    | CustomVariableType.SuicideRespawnPenalty
+    | CustomVariableType.BetrayalRespawnPenalty
+    | CustomVariableType.RespawnTimeGrowth
+    | CustomVariableType.LoadoutSelectionTime
+    | CustomVariableType.RespawnTraitsDuration
+    | CustomVariableType.friendly_fire_enabled
+    | CustomVariableType.BetrayalBootingEnabled
+    | CustomVariableType.EnemyVoiceEnabled
+    | CustomVariableType.OpenChannelVoiceEnabled
+    | CustomVariableType.DeadPlayerVoiceEnabled
+    | CustomVariableType.GrenadesOnMap
+    | CustomVariableType.IndestructibleVehicles
+    | CustomVariableType.RedPowerupDuration
+    | CustomVariableType.BluePowerupDuration
+    | CustomVariableType.YellowPowerupDuration
+    | CustomVariableType.ObjectDeathDamageType;
+};
+
 export type CustomVariableReference =
   | ConstantCustomVariableReference
   | PlayerNumberCustomVariableReference
   | ObjectNumberCustomVariableReference
   | TeamNumberCustomVariableReference
   | GlobalNumberCustomVariableReference
+  | TemporaryNumberCustomVariableReference
   | OptionCustomVariableReference
   | SpawnObjectCustomVariableReference
   | TeamScoreCustomVariableReference
@@ -132,7 +175,8 @@ export type CustomVariableReference =
   | PlayerMoneyCustomVariableReference
   | PlayerRatingCustomVariableReference
   | PlayerStatCustomVariableReference
-  | TeamStatCustomVariableReference;
+  | TeamStatCustomVariableReference
+  | TypeOnlyCustomVariableReference;
 
 export enum PlayerReferenceType {
   GlobalPlayer = 0,

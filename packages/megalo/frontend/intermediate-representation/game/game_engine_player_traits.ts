@@ -1,8 +1,6 @@
 import type { ValueWithLocation } from "..";
 
-/** Script percentage, or `invulnerable` (wire setting chosen at compile). */
 export type DamageResistance = "invulnerable" | number;
-/** Script percentage, or `fatality` (wire value chosen at compile). */
 export type DamageModifier = "fatality" | number;
 
 export type PlayerTraitShieldVitality = Partial<{
@@ -74,7 +72,6 @@ export type PlayerTraitMovement = Partial<{
   gravityPercentage: ValueWithLocation<number>;
   vehicleUsage: ValueWithLocation<VehicleUsage>;
   jumpModifier: ValueWithLocation<number>; // % expressed as an integer
-  /** Reach ≤73 wire field; absence means unchanged. */
   sprinting: ValueWithLocation<boolean>;
 }>;
 

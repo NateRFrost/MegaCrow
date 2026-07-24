@@ -1,24 +1,22 @@
-import { isAstErrorNode, SyntaxKind } from "../../../abstract-syntax-tree";
+import { SyntaxKind } from "../../../abstract-syntax-tree";
 import type {
   PlayerTraitOptionNode,
   PlayerTraitsElementNode,
 } from "../../../abstract-syntax-tree/elements/game_options/player_traits";
 import type {
-  ASTGrenadeCountNode,
   ASTParameterNode,
 } from "../../../abstract-syntax-tree/parameters";
 import type { Diagnostics, SourceCodeLocation } from "../../../diagnostics";
 import { diagnosticMessages } from "../../../diagnostics/messages";
 import { ObjectListType } from "../../../object-lists";
-import { SymbolKind, type SymbolTable } from "../../../symbol-table";
-import { type IR, type ValueWithLocation, valueWithLocation } from "../..";
+import { type ValueWithLocation, valueWithLocation } from "../..";
 import { dxAssertionScope } from "../../diagnostics";
+import { assertNotErrorNode } from "../../diagnostics/assertNotErrorNode";
 import { markCurrentValueUnused } from "../../diagnostics/markCurrentValueUnused";
 import { LowerError } from "../../error";
 import {
   ActiveCamo,
   ForcedChangeColor,
-  GrenadeCountSetting,
   InfiniteAmmoSetting,
   MotionTrackerMode,
   type PlayerTraits,
@@ -26,43 +24,25 @@ import {
   WaypointVisibility,
 } from "../../game/game_engine_player_traits";
 import type { PlayerTraitOption } from "../../game/game_engine_traits";
+import {
+  asParameterLoweringContext,
+  buildParameterLowerer,
+  keywordParam,
+  lowerBooleanParam,
+  lowerNumberParam,
+  numberParam,
+  objectTypeParam,
+  type ElementLowerContext,
+  type ParameterLoweringContext,
+} from "../../parameters";
+import { lowerGrenadeCount } from "../../parameters/grenadeCount";
 import { resolveScriptStringTableReference } from "../../parameters/resolveScriptStringTableReference";
-import { emptyPlayerTraits, resolveNumericValue } from "./shared";
+import { emptyPlayerTraits } from "./shared";
 
 const parameterLocation = (
   parameters: ASTParameterNode[],
   fallback: SourceCodeLocation
 ): SourceCodeLocation => parameters[0]?.location ?? fallback;
-
-const resolveIntegerParameter = (
-  node: ASTParameterNode,
-  symbolTable: SymbolTable
-): ValueWithLocation<number> => {
-  if (node.kind === SyntaxKind.INTEGER) {
-    return valueWithLocation(node.value, node.location);
-  }
-  if (node.kind === SyntaxKind.REFERENCE) {
-    return resolveNumericValue(node, symbolTable);
-  }
-  if (node.kind === SyntaxKind.KEYWORD) {
-    const asNumber = Number(node.value);
-    if (!Number.isNaN(asNumber)) {
-      return valueWithLocation(asNumber, node.location);
-    }
-  }
-  throw new LowerError(
-    diagnosticMessages.expectedParameterType("number", ""),
-    node.location
-  );
-};
-
-const resolveBooleanParameter = (
-  node: ASTParameterNode,
-  symbolTable: SymbolTable
-): ValueWithLocation<boolean> => {
-  const value = resolveIntegerParameter(node, symbolTable);
-  return valueWithLocation(Number(value) !== 0, value.location);
-};
 
 const resolveKeyword = (node: ASTParameterNode | undefined): string | undefined => {
   if (node === undefined) {
@@ -75,58 +55,6 @@ const resolveKeyword = (node: ASTParameterNode | undefined): string | undefined 
     return node.identifier;
   }
   return undefined;
-};
-
-const resolveObjectListIndex = (
-  node: ASTParameterNode,
-  symbolTable: SymbolTable,
-  objectType: ObjectListType.Weapons | ObjectListType.Equipment
-): ValueWithLocation<number> => {
-  if (node.kind === SyntaxKind.REFERENCE) {
-    const symbol = symbolTable.getSymbol(node.symbolId);
-    if (
-      symbol?.kind === SymbolKind.ObjectListItem &&
-      symbol.objectType === objectType
-    ) {
-      return valueWithLocation(symbol.index, node.location);
-    }
-  }
-
-  const name =
-    node.kind === SyntaxKind.KEYWORD
-      ? node.value
-      : node.kind === SyntaxKind.REFERENCE
-        ? node.identifier
-        : undefined;
-  if (name !== undefined) {
-    const match = symbolTable
-      .toArray()
-      .find(
-        (entry) =>
-          entry.kind === SymbolKind.ObjectListItem &&
-          entry.objectType === objectType &&
-          entry.name === name
-      );
-    if (match !== undefined && match.kind === SymbolKind.ObjectListItem) {
-      return valueWithLocation(match.index, node.location);
-    }
-  }
-
-  throw new LowerError(
-    diagnosticMessages.expectedParameterType(objectType, name ?? ""),
-    node.location
-  );
-};
-
-const resolvePercentageOrKeyword = <K extends string>(
-  node: ASTParameterNode,
-  symbolTable: SymbolTable,
-  keyword: K
-): ValueWithLocation<K | number> => {
-  if (node.kind === SyntaxKind.KEYWORD && node.value === keyword) {
-    return valueWithLocation(keyword, node.location);
-  }
-  return resolveIntegerParameter(node, symbolTable);
 };
 
 const resolveEnumKeyword = <T extends number>(
@@ -142,92 +70,6 @@ const resolveEnumKeyword = <T extends number>(
     );
   }
   return valueWithLocation(mapping[name]!, node.location);
-};
-
-const lowerGrenadeCount = (
-  node: ASTGrenadeCountNode
-): ValueWithLocation<GrenadeCountSetting> => {
-  if (node.form === "preset") {
-    switch (node.value.value) {
-      case "none":
-        return valueWithLocation(GrenadeCountSetting.Zero, node.location);
-      case "default":
-        return valueWithLocation(GrenadeCountSetting.Default, node.location);
-      default:
-        throw new LowerError(
-          diagnosticMessages.expectedParameterType(
-            "grenade_count",
-            node.value.value
-          ),
-          node.location
-        );
-    }
-  }
-
-  const count = node.count.value;
-  const grenadeType = node.grenadeType.value;
-  let setting: GrenadeCountSetting | undefined;
-  switch (grenadeType) {
-    case "frag":
-      switch (count) {
-        case 1:
-          setting = GrenadeCountSetting.Frag1;
-          break;
-        case 2:
-          setting = GrenadeCountSetting.Frag2;
-          break;
-        case 3:
-          setting = GrenadeCountSetting.Frag3;
-          break;
-        case 4:
-          setting = GrenadeCountSetting.Frag4;
-          break;
-      }
-      break;
-    case "plasma":
-      switch (count) {
-        case 1:
-          setting = GrenadeCountSetting.Plasma1;
-          break;
-        case 2:
-          setting = GrenadeCountSetting.Plasma2;
-          break;
-        case 3:
-          setting = GrenadeCountSetting.Plasma3;
-          break;
-        case 4:
-          setting = GrenadeCountSetting.Plasma4;
-          break;
-      }
-      break;
-    case "each":
-      switch (count) {
-        case 1:
-          setting = GrenadeCountSetting.Each1;
-          break;
-        case 2:
-          setting = GrenadeCountSetting.Each2;
-          break;
-        case 3:
-          setting = GrenadeCountSetting.Each3;
-          break;
-        case 4:
-          setting = GrenadeCountSetting.Each4;
-          break;
-      }
-      break;
-  }
-
-  if (setting === undefined) {
-    throw new LowerError(
-      diagnosticMessages.expectedParameterType(
-        "grenade_count",
-        `${count} ${grenadeType}`
-      ),
-      node.location
-    );
-  }
-  return valueWithLocation(setting, node.location);
 };
 
 const VEHICLE_USAGE: Record<string, VehicleUsage> = {
@@ -299,7 +141,7 @@ const setField = <T>(
     "location" in current
   ) {
     markCurrentValueUnused(
-      current as ValueWithLocation<unknown>,
+      current as unknown as ValueWithLocation<unknown>,
       diagnostics
     );
   }
@@ -308,11 +150,11 @@ const setField = <T>(
 
 export const lowerPlayerTraitOptions = (
   options: PlayerTraitOptionNode[],
-  symbolTable: SymbolTable,
-  diagnostics: Diagnostics,
+  ctx: ParameterLoweringContext,
   fallbackLocation: SourceCodeLocation
 ): PlayerTraits => {
   const traits = emptyPlayerTraits();
+  const { diagnostics } = ctx;
 
   for (const option of options) {
     const { identifier, parameters } = option;
@@ -321,7 +163,18 @@ export const lowerPlayerTraitOptions = (
 
     switch (identifier) {
       case "damage_resistance": {
-        if (first === undefined) {
+        const result = buildParameterLowerer(
+          [keywordParam("mode", "invulnerable")],
+          [numberParam("value")]
+        )(parameters, ctx);
+        const mode = result.byName("mode");
+        const value =
+          mode !== undefined
+            ? valueWithLocation("invulnerable" as const, mode.location)
+            : (result.byName("value") as
+                | ValueWithLocation<number>
+                | undefined);
+        if (value === undefined) {
           throw new LowerError(
             diagnosticMessages.expectedParameterType("percentage", ""),
             location
@@ -330,110 +183,79 @@ export const lowerPlayerTraitOptions = (
         traits.shieldVitality.damageResistancePercentage = setField(
           diagnostics,
           traits.shieldVitality.damageResistancePercentage,
-          resolvePercentageOrKeyword(first, symbolTable, "invulnerable")
+          value
         );
         break;
       }
       case "body_recharge": {
-        if (first === undefined) {
-          throw new LowerError(
-            diagnosticMessages.expectedParameterType("percentage", ""),
-            location
-          );
-        }
         traits.shieldVitality.bodyRechargeRatePercentage = setField(
           diagnostics,
           traits.shieldVitality.bodyRechargeRatePercentage,
-          resolveIntegerParameter(first, symbolTable)
+          lowerNumberParam(parameters, ctx, "percentage", location)
         );
         break;
       }
       case "shield_recharge": {
-        if (first === undefined) {
-          throw new LowerError(
-            diagnosticMessages.expectedParameterType("percentage", ""),
-            location
-          );
-        }
         traits.shieldVitality.shieldRechargeRatePercentage = setField(
           diagnostics,
           traits.shieldVitality.shieldRechargeRatePercentage,
-          resolveIntegerParameter(first, symbolTable)
+          lowerNumberParam(parameters, ctx, "percentage", location)
         );
         break;
       }
       case "vampirism": {
-        if (first === undefined) {
-          throw new LowerError(
-            diagnosticMessages.expectedParameterType("percentage", ""),
-            location
-          );
-        }
         traits.shieldVitality.vampirismPercentage = setField(
           diagnostics,
           traits.shieldVitality.vampirismPercentage,
-          resolveIntegerParameter(first, symbolTable)
+          lowerNumberParam(parameters, ctx, "percentage", location)
         );
         break;
       }
       case "headshot_immunity": {
-        if (first === undefined) {
-          throw new LowerError(
-            diagnosticMessages.expectedParameterType("boolean", ""),
-            location
-          );
-        }
         traits.shieldVitality.headshotImmunity = setField(
           diagnostics,
           traits.shieldVitality.headshotImmunity,
-          resolveBooleanParameter(first, symbolTable)
+          lowerBooleanParam(parameters, ctx, location)
         );
         break;
       }
       case "body_multiplier": {
-        if (first === undefined) {
-          throw new LowerError(
-            diagnosticMessages.expectedParameterType("percentage", ""),
-            location
-          );
-        }
         traits.shieldVitality.bodyMultiplierPercentage = setField(
           diagnostics,
           traits.shieldVitality.bodyMultiplierPercentage,
-          resolveIntegerParameter(first, symbolTable)
+          lowerNumberParam(parameters, ctx, "percentage", location)
         );
         break;
       }
       case "shield_multiplier": {
-        if (first === undefined) {
-          throw new LowerError(
-            diagnosticMessages.expectedParameterType("percentage", ""),
-            location
-          );
-        }
         traits.shieldVitality.shieldMultiplierPercentage = setField(
           diagnostics,
           traits.shieldVitality.shieldMultiplierPercentage,
-          resolveIntegerParameter(first, symbolTable)
+          lowerNumberParam(parameters, ctx, "percentage", location)
         );
         break;
       }
       case "assassination_immunity": {
-        if (first === undefined) {
-          throw new LowerError(
-            diagnosticMessages.expectedParameterType("boolean", ""),
-            location
-          );
-        }
         traits.shieldVitality.assasinationImmunity = setField(
           diagnostics,
           traits.shieldVitality.assasinationImmunity,
-          resolveBooleanParameter(first, symbolTable)
+          lowerBooleanParam(parameters, ctx, location)
         );
         break;
       }
       case "damage_modifier": {
-        if (first === undefined) {
+        const result = buildParameterLowerer(
+          [keywordParam("mode", "fatality")],
+          [numberParam("value")]
+        )(parameters, ctx);
+        const mode = result.byName("mode");
+        const value =
+          mode !== undefined
+            ? valueWithLocation("fatality" as const, mode.location)
+            : (result.byName("value") as
+                | ValueWithLocation<number>
+                | undefined);
+        if (value === undefined) {
           throw new LowerError(
             diagnosticMessages.expectedParameterType("percentage", ""),
             location
@@ -442,12 +264,23 @@ export const lowerPlayerTraitOptions = (
         traits.weapons.damageModifierPercentageSetting = setField(
           diagnostics,
           traits.weapons.damageModifierPercentageSetting,
-          resolvePercentageOrKeyword(first, symbolTable, "fatality")
+          value
         );
         break;
       }
       case "melee_damage_modifier": {
-        if (first === undefined) {
+        const result = buildParameterLowerer(
+          [keywordParam("mode", "fatality")],
+          [numberParam("value")]
+        )(parameters, ctx);
+        const mode = result.byName("mode");
+        const value =
+          mode !== undefined
+            ? valueWithLocation("fatality" as const, mode.location)
+            : (result.byName("value") as
+                | ValueWithLocation<number>
+                | undefined);
+        if (value === undefined) {
           throw new LowerError(
             diagnosticMessages.expectedParameterType("percentage", ""),
             location
@@ -456,12 +289,18 @@ export const lowerPlayerTraitOptions = (
         traits.weapons.meleeDamageModifierPercentageSetting = setField(
           diagnostics,
           traits.weapons.meleeDamageModifierPercentageSetting,
-          resolvePercentageOrKeyword(first, symbolTable, "fatality")
+          value
         );
         break;
       }
       case "initial_primary_weapon": {
-        if (first === undefined) {
+        const result = buildParameterLowerer([
+          objectTypeParam("weapon", ObjectListType.Weapons),
+        ])(parameters, ctx);
+        const value = result.byName("weapon") as
+          | ValueWithLocation<number>
+          | undefined;
+        if (value === undefined) {
           throw new LowerError(
             diagnosticMessages.expectedParameterType(
               ObjectListType.Weapons,
@@ -473,12 +312,18 @@ export const lowerPlayerTraitOptions = (
         traits.weapons.initialPrimaryWeaponAbsoluteIndex = setField(
           diagnostics,
           traits.weapons.initialPrimaryWeaponAbsoluteIndex,
-          resolveObjectListIndex(first, symbolTable, ObjectListType.Weapons)
+          value
         );
         break;
       }
       case "initial_secondary_weapon": {
-        if (first === undefined) {
+        const result = buildParameterLowerer([
+          objectTypeParam("weapon", ObjectListType.Weapons),
+        ])(parameters, ctx);
+        const value = result.byName("weapon") as
+          | ValueWithLocation<number>
+          | undefined;
+        if (value === undefined) {
           throw new LowerError(
             diagnosticMessages.expectedParameterType(
               ObjectListType.Weapons,
@@ -490,12 +335,18 @@ export const lowerPlayerTraitOptions = (
         traits.weapons.initialSecondaryWeaponAbsoluteIndex = setField(
           diagnostics,
           traits.weapons.initialSecondaryWeaponAbsoluteIndex,
-          resolveObjectListIndex(first, symbolTable, ObjectListType.Weapons)
+          value
         );
         break;
       }
       case "initial_equipment": {
-        if (first === undefined) {
+        const result = buildParameterLowerer([
+          objectTypeParam("equipment", ObjectListType.Equipment),
+        ])(parameters, ctx);
+        const value = result.byName("equipment") as
+          | ValueWithLocation<number>
+          | undefined;
+        if (value === undefined) {
           throw new LowerError(
             diagnosticMessages.expectedParameterType(
               ObjectListType.Equipment,
@@ -507,7 +358,7 @@ export const lowerPlayerTraitOptions = (
         traits.weapons.initialEquipmentAbsoluteIndex = setField(
           diagnostics,
           traits.weapons.initialEquipmentAbsoluteIndex,
-          resolveObjectListIndex(first, symbolTable, ObjectListType.Equipment)
+          value
         );
         break;
       }
@@ -535,124 +386,78 @@ export const lowerPlayerTraitOptions = (
         break;
       }
       case "recharging_grenades": {
-        if (first === undefined) {
-          throw new LowerError(
-            diagnosticMessages.expectedParameterType("boolean", ""),
-            location
-          );
-        }
         traits.weapons.rechargingGrenades = setField(
           diagnostics,
           traits.weapons.rechargingGrenades,
-          resolveBooleanParameter(first, symbolTable)
+          lowerBooleanParam(parameters, ctx, location)
         );
         break;
       }
       case "infinite_ammo": {
-        if (first === undefined) {
-          throw new LowerError(
-            diagnosticMessages.expectedParameterType("boolean", ""),
-            location
-          );
-        }
-        const enabled = Number(resolveIntegerParameter(first, symbolTable)) !== 0;
+        const enabled = lowerNumberParam(parameters, ctx, "boolean", location);
         traits.weapons.infiniteAmmo = setField(
           diagnostics,
           traits.weapons.infiniteAmmo,
           valueWithLocation(
-            enabled ? InfiniteAmmoSetting.Enabled : InfiniteAmmoSetting.Disabled,
-            first.location
+            enabled.value !== 0
+              ? InfiniteAmmoSetting.Enabled
+              : InfiniteAmmoSetting.Disabled,
+            enabled.location
           )
         );
         break;
       }
       case "bottomless_clip": {
-        if (first === undefined) {
-          throw new LowerError(
-            diagnosticMessages.expectedParameterType("boolean", ""),
-            location
-          );
-        }
-        const enabled = Number(resolveIntegerParameter(first, symbolTable)) !== 0;
+        const enabled = lowerNumberParam(parameters, ctx, "boolean", location);
         traits.weapons.infiniteAmmo = setField(
           diagnostics,
           traits.weapons.infiniteAmmo,
           valueWithLocation(
-            enabled
+            enabled.value !== 0
               ? InfiniteAmmoSetting.BottomlessClip
               : InfiniteAmmoSetting.Disabled,
-            first.location
+            enabled.location
           )
         );
         break;
       }
       case "weapon_pickup": {
-        if (first === undefined) {
-          throw new LowerError(
-            diagnosticMessages.expectedParameterType("boolean", ""),
-            location
-          );
-        }
         traits.weapons.weaponPickup = setField(
           diagnostics,
           traits.weapons.weaponPickup,
-          resolveBooleanParameter(first, symbolTable)
+          lowerBooleanParam(parameters, ctx, location)
         );
         break;
       }
       case "drop_equipment": {
-        if (first === undefined) {
-          throw new LowerError(
-            diagnosticMessages.expectedParameterType("boolean", ""),
-            location
-          );
-        }
         traits.weapons.dropEquipment = setField(
           diagnostics,
           traits.weapons.dropEquipment,
-          resolveBooleanParameter(first, symbolTable)
+          lowerBooleanParam(parameters, ctx, location)
         );
         break;
       }
       case "infinite_equipment": {
-        if (first === undefined) {
-          throw new LowerError(
-            diagnosticMessages.expectedParameterType("boolean", ""),
-            location
-          );
-        }
         traits.weapons.infiniteEquipment = setField(
           diagnostics,
           traits.weapons.infiniteEquipment,
-          resolveBooleanParameter(first, symbolTable)
+          lowerBooleanParam(parameters, ctx, location)
         );
         break;
       }
       case "speed": {
-        if (first === undefined) {
-          throw new LowerError(
-            diagnosticMessages.expectedParameterType("percentage", ""),
-            location
-          );
-        }
         traits.movement.speedPercentage = setField(
           diagnostics,
           traits.movement.speedPercentage,
-          resolveIntegerParameter(first, symbolTable)
+          lowerNumberParam(parameters, ctx, "percentage", location)
         );
         break;
       }
       case "gravity": {
-        if (first === undefined) {
-          throw new LowerError(
-            diagnosticMessages.expectedParameterType("percentage", ""),
-            location
-          );
-        }
         traits.movement.gravityPercentage = setField(
           diagnostics,
           traits.movement.gravityPercentage,
-          resolveIntegerParameter(first, symbolTable)
+          lowerNumberParam(parameters, ctx, "percentage", location)
         );
         break;
       }
@@ -671,16 +476,10 @@ export const lowerPlayerTraitOptions = (
         break;
       }
       case "jump_modifier": {
-        if (first === undefined) {
-          throw new LowerError(
-            diagnosticMessages.expectedParameterType("integer", ""),
-            location
-          );
-        }
         traits.movement.jumpModifier = setField(
           diagnostics,
           traits.movement.jumpModifier,
-          resolveIntegerParameter(first, symbolTable)
+          lowerNumberParam(parameters, ctx, "integer", location)
         );
         break;
       }
@@ -824,16 +623,10 @@ export const lowerPlayerTraitOptions = (
         break;
       }
       case "tracker_range": {
-        if (first === undefined) {
-          throw new LowerError(
-            diagnosticMessages.expectedParameterType("percentage", ""),
-            location
-          );
-        }
         traits.sensors.motionTrackerRange = setField(
           diagnostics,
           traits.sensors.motionTrackerRange,
-          resolveIntegerParameter(first, symbolTable)
+          lowerNumberParam(parameters, ctx, "percentage", location)
         );
         break;
       }
@@ -848,33 +641,40 @@ export const lowerPlayerTraitOptions = (
   return traits;
 };
 
+
+/**
+ * @link https://blam-network.github.io/megalo/language/elements/game-options/player-traits
+ */
 export const lowerPlayerTraits = (
   entry: PlayerTraitsElementNode,
-  symbolTable: SymbolTable,
-  ir: IR,
-  diagnostics: Diagnostics
+  ctx: ElementLowerContext
 ) => {
-  dxAssertionScope(diagnostics, () => {
-    if (isAstErrorNode(entry.name)) {
-      return;
-    }
+  dxAssertionScope(ctx.diagnostics, () => {
+    assertNotErrorNode(entry.name);
     const traits = lowerPlayerTraitOptions(
       entry.options,
-      symbolTable,
-      diagnostics,
+      asParameterLoweringContext(ctx),
       entry.location
     );
     const option: PlayerTraitOption = {
       name: valueWithLocation(
-        resolveScriptStringTableReference(entry.displayName, ir, symbolTable),
+        resolveScriptStringTableReference(
+          entry.displayName,
+          ctx.ir,
+          ctx.symbolTable
+        ),
         entry.displayName.location
       ),
       description: valueWithLocation(
-        resolveScriptStringTableReference(entry.description, ir, symbolTable),
+        resolveScriptStringTableReference(
+          entry.description,
+          ctx.ir,
+          ctx.symbolTable
+        ),
         entry.description.location
       ),
       traits: valueWithLocation(traits, entry.location),
     };
-    ir.gameVariant.playerTraits.push(option);
+    ctx.ir.gameVariant.playerTraits.push(option);
   });
 };
