@@ -214,6 +214,14 @@ const sourceSpan = (
       endOffset: location.end.offset,
     };
   }
+  if (location.type === SourceLocationType.INCLUDE) {
+    return {
+      offset: location.declaration.start.offset,
+      line: location.declaration.start.line,
+      column: location.declaration.start.column,
+      endOffset: location.declaration.end.offset,
+    };
+  }
   if (location.type === SourceLocationType.OBJECT_LIST) {
     return {
       offset: location.source.offset,

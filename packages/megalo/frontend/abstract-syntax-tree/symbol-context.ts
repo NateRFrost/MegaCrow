@@ -38,7 +38,7 @@ import {
 // Analysis lifecycle - we build a new one each analysis pass.
 export class ParserSymbolContext {
   private readonly megaloVersion: MegaloVersion;
-  public readonly diagnostics: Diagnostics;
+  public diagnostics: Diagnostics;
 
   private readonly symbolScopes: Map<string, SymbolId>[] = [new Map()];
   private readonly scopeSymbolIds: SymbolId[][] = [[]];

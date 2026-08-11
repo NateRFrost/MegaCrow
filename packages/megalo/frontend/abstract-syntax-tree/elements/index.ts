@@ -8,6 +8,9 @@ import { type ConstantsElementNode, constantsParser } from "./constants";
 import { type GameOptionsElementNode, gameOptionsParser } from "./game_options";
 
 export { GameOptionEntryKind, OverrideValueKind } from "./game_options";
+export type { IncludeElementNode } from "./include";
+export type { LocalizedIncludeElementNode } from "./localized_include";
+export type { BaseElementNode } from "./base";
 
 import { type BaseElementNode, baseParser } from "./base";
 import { type EngineDataElementNode, engineDataParser } from "./engine_data";

@@ -33,11 +33,17 @@ const diagnosticToMarker = (
   model: monaco.editor.ITextModel,
   diagnostic: Diagnostic
 ): monaco.editor.IMarkerData | undefined => {
-  if (diagnostic.location.type !== SourceLocationType.SOURCE_CODE) {
+  const location =
+    diagnostic.location.type === SourceLocationType.INCLUDE
+      ? diagnostic.location.declaration
+      : diagnostic.location.type === SourceLocationType.SOURCE_CODE
+        ? diagnostic.location
+        : undefined;
+  if (!location) {
     return;
   }
 
-  const { start, end } = diagnostic.location;
+  const { start, end } = location;
   const valueLength = model.getValueLength();
   const startOffset = Math.min(Math.max(0, start.offset), valueLength);
   const endOffset = Math.min(Math.max(startOffset, end.offset), valueLength);

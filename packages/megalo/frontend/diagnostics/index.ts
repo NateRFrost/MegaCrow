@@ -29,14 +29,16 @@ export type SourceCodeLocation = {
   end: SourcePosition;
 };
 
-// TODO
-// export type IncludeLocation = {
-//     type: SourceLocationType.INCLUDE;
-//     file: string;
-// }
+// Location of a diagnostic that originated inside an included file.
+// Hosts should surface these on `declaration` in the parent document;
+// `source` is the span within `file`.
 export type IncludeLocation = {
   type: SourceLocationType.INCLUDE;
   file: string;
+  // the "include foo.txt" line
+  declaration: SourceCodeLocation;
+  // the location within the foo.txt included file
+  source: SourceCodeLocation;
 };
 
 export type BuiltInLocation = {

@@ -5,6 +5,7 @@ import {
 import { bitstream } from "@blamnetwork/blf";
 
 const { c_bitstream_writer, e_bitstream_byte_order } = bitstream;
+import { decodeMglo } from "../../../decode-mglo";
 import { BUILT_IN_LOCATION, type Diagnostics } from "../../diagnostics";
 import type { IR } from "../../intermediate-representation";
 import type { StringTable } from "../../intermediate-representation/game/string_table";
@@ -93,13 +94,47 @@ export class Compiler107MCC extends Compiler {
     return gametype;
   }
 
+  private decodeBaseGametype(
+    ir: IR,
+    diagnostics: Diagnostics
+  ): c_game_engine_custom_variant {
+    if (!ir.baseFileBytes) {
+      return this.makeDefaultGametype();
+    }
+
+    const location = ir.locations.get(ir, "baseFilePath") ?? BUILT_IN_LOCATION;
+    const version = this.getMegaloVersion();
+
+    try {
+      const decoded = decodeMglo(ir.baseFileBytes);
+      if (decoded.version.encodingVersion !== version.version) {
+        diagnostics.addError(
+          `Base file encoding version ${decoded.version.encodingVersion} does not match compile target ${version.version}`,
+          location
+        );
+        return this.makeDefaultGametype();
+      }
+      return decoded.gametype as c_game_engine_custom_variant;
+    } catch (error) {
+      diagnostics.addError(
+        error instanceof Error
+          ? error.message
+          : `Failed to decode base file${
+              ir.baseFilePath ? ` "${ir.baseFilePath}"` : ""
+            }`,
+        location
+      );
+      return this.makeDefaultGametype();
+    }
+  }
+
   private compile(
     ir: IR,
     diagnostics: Diagnostics
   ): c_game_engine_custom_variant {
     assertCompatibleIR(ir, this, diagnostics);
 
-    const gametype = this.makeDefaultGametype();
+    const gametype = this.decodeBaseGametype(ir, diagnostics);
     const variant = ir.gameVariant;
 
     gametype.m_script_strings = this.compileStringTable(

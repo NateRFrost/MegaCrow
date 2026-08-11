@@ -1,6 +1,4 @@
 import type { IR } from "..";
-import { FrontendError } from "../../error";
-import { BUILT_IN_LOCATION } from "../../diagnostics";
 import type { StringTableEntry } from "../game/string_table";
 
 export function applyBaseName(ir: IR) {
@@ -9,8 +7,10 @@ export function applyBaseName(ir: IR) {
   };
 
   if (ir.baseFilePath) {
-    // lookup base name
-    throw new FrontendError("NYI", BUILT_IN_LOCATION);
+    // Prefer the script's localized name when present; otherwise keep the default.
+    if (ir.gameVariant.localizedName) {
+      baseName = ir.gameVariant.localizedName.toArray()[0]!;
+    }
   } else if (ir.gameVariant.localizedName) {
     baseName = ir.gameVariant.localizedName.toArray()[0]!;
   }

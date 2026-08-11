@@ -29,8 +29,8 @@ export type Located<T> = {
 
 export type IR = {
   baseFilePath?: string;
+  baseFileBytes?: Uint8Array;
   gameVariant: GameEngineCustomVariant;
-  /** Source locations for IR leaves (diagnostics / unused-override warnings). */
   locations: FieldLocations;
 };
 

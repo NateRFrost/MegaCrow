@@ -1,10 +1,10 @@
 import type { ObjectLists } from "../../frontend/object-lists";
-import objectListsHaloReachMccDefault from "../../object-lists/haloreach_mcc/default";
+import { loadObjectListsForVersion } from "../../load-object-lists";
+import { MEGALO_VERSIONS } from "../../version";
 
-const OBJECT_LISTS_BY_VERSION: Readonly<Record<string, ObjectLists>> = {
-  "107-mcc": objectListsHaloReachMccDefault,
+/** @deprecated Prefer `loadObjectListsForVersion` from `@megacrow/megalo`. */
+export const loadObjectLists = (versionId: string): ObjectLists => {
+  const version =
+    MEGALO_VERSIONS[versionId as keyof typeof MEGALO_VERSIONS];
+  return version ? loadObjectListsForVersion(version) : {};
 };
-
-/** Load the bundled object lists for a given megalo version (e.g. "107-mcc"). */
-export const loadObjectLists = (versionId: string): ObjectLists =>
-  OBJECT_LISTS_BY_VERSION[versionId] ?? {};

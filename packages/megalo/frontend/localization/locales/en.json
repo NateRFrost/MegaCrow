@@ -27,6 +27,7 @@
   "object_filter_min_out_of_range": "object filter min out of range (0, 0x7f)",
   "fireteam_count_out_of_range": "Fireteam count of {{value}} is outside the valid range of 0 to {{max}}",
   "unsupported_field": "'{{fieldPath}}' is not supported by {{versionLabel}}.",
+  "only_one_base_directive_allowed": "Only one base directive is allowed",
   "version_label_107_mcc": "Halo: Reach - The Master Chief Collection",
   "version_label_107": "Halo: Reach - Title Update 1",
   "version_label_106": "Halo: Reach - Release",

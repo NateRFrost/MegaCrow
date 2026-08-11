@@ -38,16 +38,20 @@ export class ParserContext {
     megaloVersion: MegaloVersion,
     diagnostics: Diagnostics,
     symbolTable: SymbolBinder,
-    objectLists: ObjectLists = {}
+    objectLists: ObjectLists = {},
+    /** When set, reuse scopes so include expansion shares the parent symbol table. */
+    sharedSymbolParser?: ParserSymbolContext
   ) {
     this.diagnostics = diagnostics;
     this.tokens = tokens;
-    this.symbolParser = new ParserSymbolContext(
-      megaloVersion,
-      diagnostics,
-      symbolTable,
-      objectLists
-    );
+    this.symbolParser =
+      sharedSymbolParser ??
+      new ParserSymbolContext(
+        megaloVersion,
+        diagnostics,
+        symbolTable,
+        objectLists
+      );
     this.playerTraitParserRepository = new PlayerTraitParserRepository(
       megaloVersion
     );

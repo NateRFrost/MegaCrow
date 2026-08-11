@@ -213,4 +213,8 @@ export const diagnosticMessages = {
     // MegaloEdit.exe: This is not a valid object type.
     return "This is not a valid object type.";
   },
+
+  onlyOneBaseDirectiveAllowed(): string {
+    return translate("only_one_base_directive_allowed");
+  },
 };

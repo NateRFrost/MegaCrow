@@ -27,6 +27,7 @@
   "object_filter_min_out_of_range": "object filter の min が範囲外です（0～0x7f）",
   "fireteam_count_out_of_range": "fireteam_count {{value}} は有効範囲 0～{{max}} の外です",
   "unsupported_field": "'{{fieldPath}}' は {{versionLabel}} ではサポートされていません。",
+  "only_one_base_directive_allowed": "base ディレクティブは1つだけ許可されています",
   "version_label_107_mcc": "Halo: Reach - Master Chief Collection",
   "version_label_107": "Halo: Reach - タイトルアップデート1",
   "version_label_106": "Halo: Reach - 製品版",

@@ -1,0 +1,175 @@
+import {
+  compileSource,
+  DiagnosticSeverity as MegaloSeverity,
+  SourceLocationType,
+  type CompileSourceOptions,
+  type Diagnostic as MegaloDiagnostic,
+  type ObjectLists,
+  type SupportedMegaloVersion,
+} from "@megacrow/megalo";
+import {
+  DiagnosticSeverity,
+  type Diagnostic,
+} from "vscode-languageserver/browser";
+
+export const MEGACROW_COMPILE_METHOD = "megacrow/compile";
+export const MEGACROW_RESOLVE_INCLUDE_METHOD = "megacrow/resolveInclude";
+export const MEGACROW_RESOLVE_BASE_FILE_METHOD = "megacrow/resolveBaseFile";
+
+export type MegacrowCompileParams = {
+  textDocument: { uri: string };
+  /** When omitted, the server uses the last synced document text for the URI. */
+  text?: string;
+  objectLists?: ObjectLists;
+};
+
+export type MegacrowCompileResult = {
+  ok: boolean;
+  diagnostics: Diagnostic[];
+  /** Base64-encoded `.mglo` bytes when compilation succeeded. */
+  dataBase64?: string;
+  error?: string;
+};
+
+export type MegacrowResolveIncludeParams = {
+  path: string;
+  kind: "include" | "localized_include";
+  fromUri?: string;
+};
+
+export type MegacrowResolveIncludeResult =
+  | { text: string; uri: string }
+  | { error: string };
+
+export type MegacrowResolveBaseFileParams = {
+  path: string;
+  fromUri?: string;
+};
+
+export type MegacrowResolveBaseFileResult =
+  | { dataBase64: string }
+  | { error: string };
+
+export type CompileResolvers = Pick<
+  CompileSourceOptions,
+  "resolveInclude" | "resolveBaseFile"
+>;
+
+export const toLspDiagnostics = (
+  diagnostics: MegaloDiagnostic[]
+): Diagnostic[] =>
+  diagnostics.map((d) => {
+    const severity =
+      d.severity === MegaloSeverity.Error
+        ? DiagnosticSeverity.Error
+        : d.severity === MegaloSeverity.Warning
+          ? DiagnosticSeverity.Warning
+          : DiagnosticSeverity.Information;
+
+    if (d.location.type === SourceLocationType.SOURCE_CODE) {
+      const { start, end } = d.location;
+      return {
+        severity,
+        message: d.message,
+        range: {
+          start: {
+            line: Math.max(0, start.line - 1),
+            character: Math.max(0, start.column - 1),
+          },
+          end: {
+            line: Math.max(0, end.line - 1),
+            character: Math.max(0, end.column - 1),
+          },
+        },
+      };
+    }
+
+    if (d.location.type === SourceLocationType.INCLUDE) {
+      const { start, end } = d.location.declaration;
+      return {
+        severity,
+        message: d.message,
+        range: {
+          start: {
+            line: Math.max(0, start.line - 1),
+            character: Math.max(0, start.column - 1),
+          },
+          end: {
+            line: Math.max(0, end.line - 1),
+            character: Math.max(0, end.column - 1),
+          },
+        },
+      };
+    }
+
+    return {
+      severity,
+      message: d.message,
+      range: {
+        start: { line: 0, character: 0 },
+        end: { line: 0, character: 0 },
+      },
+    };
+  });
+
+const bytesToBase64 = (bytes: Uint8Array): string => {
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+};
+
+export const analyzeAndCompile = async (
+  source: string,
+  options: {
+    version: SupportedMegaloVersion;
+    objectLists?: ObjectLists;
+    fromUri?: string;
+    resolvers?: CompileResolvers;
+  }
+): Promise<MegacrowCompileResult> => {
+  const result = await compileSource(source, {
+    version: options.version,
+    objectLists: options.objectLists,
+    fromUri: options.fromUri,
+    resolveInclude: options.resolvers?.resolveInclude,
+    resolveBaseFile: options.resolvers?.resolveBaseFile,
+  });
+  const diagnostics = toLspDiagnostics(result.diagnostics);
+  if (!result.bytes) {
+    return {
+      ok: false,
+      diagnostics,
+      error: diagnostics.some((d) => d.severity === DiagnosticSeverity.Error)
+        ? "Compilation failed"
+        : "No output produced",
+    };
+  }
+
+  return {
+    ok: true,
+    diagnostics,
+    dataBase64: bytesToBase64(result.bytes),
+  };
+};
+
+export const analyzeOnly = async (
+  source: string,
+  options: {
+    version: SupportedMegaloVersion;
+    objectLists?: ObjectLists;
+    fromUri?: string;
+    resolvers?: CompileResolvers;
+  }
+): Promise<Diagnostic[]> => {
+  const result = await compileSource(source, {
+    version: options.version,
+    objectLists: options.objectLists,
+    fromUri: options.fromUri,
+    resolveInclude: options.resolvers?.resolveInclude,
+    resolveBaseFile: options.resolvers?.resolveBaseFile,
+  });
+  return toLspDiagnostics(result.diagnostics);
+};

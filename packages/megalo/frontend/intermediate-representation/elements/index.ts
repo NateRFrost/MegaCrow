@@ -1,5 +1,6 @@
 import { type ASTElementNode, ElementKind } from "../../abstract-syntax-tree/elements";
 import type { ElementLowerContext } from "../parameters/context";
+import { baseLowerer } from "./base";
 import { engineDataLowerer } from "./engine_data";
 import { gameOptionsLowerer } from "./game_options";
 import { gameStatsLowerer } from "./game_stats";
@@ -26,7 +27,11 @@ export const ELEMENT_LOWERERS = new Map<ElementKind, ElementLowerer<any>>();
 ELEMENT_LOWERERS.set(ElementKind.STRING_TABLE, NULL_LOWERER);
 // constants are removed at lower.
 ELEMENT_LOWERERS.set(ElementKind.CONSTANTS, NULL_LOWERER);
+// includes are expanded at parse time; leftover nodes are ignored.
+ELEMENT_LOWERERS.set(ElementKind.INCLUDE, NULL_LOWERER);
+ELEMENT_LOWERERS.set(ElementKind.LOCALIZED_INCLUDE, NULL_LOWERER);
 
+ELEMENT_LOWERERS.set(ElementKind.BASE, baseLowerer);
 ELEMENT_LOWERERS.set(ElementKind.ENGINE_DATA, engineDataLowerer);
 ELEMENT_LOWERERS.set(ElementKind.GAME_OPTIONS, gameOptionsLowerer);
 ELEMENT_LOWERERS.set(ElementKind.GAME_STATS, gameStatsLowerer);
