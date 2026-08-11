@@ -17,6 +17,7 @@ import { CAPABILITES_107_MCC } from "./capabilities";
 import { compileGameOptions } from "./game_options";
 import { compileHudWidgets } from "./hud_widgets";
 import { compileLoadoutPalettes } from "./loadout_palette";
+import { compileMapPermissions } from "./map_permissions";
 import { compilePlayerRatings } from "./player_rating";
 import { compileTeams } from "./teams";
 import { assertCompatibleIR, CompilerCapabilities } from "../diagnostics/assertCompatibleIR";
@@ -174,6 +175,7 @@ export class Compiler107MCC extends Compiler {
     compileTeams(ir, gametype, diagnostics);
     compileLoadoutPalettes(ir, gametype);
     compilePlayerRatings(ir, gametype);
+    compileMapPermissions(ir, gametype, diagnostics);
     compileHudWidgets(ir, gametype, diagnostics);
 
     return gametype;

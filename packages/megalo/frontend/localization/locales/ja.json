@@ -19,6 +19,8 @@
   "too_many_variables": "{{scope}} {{type}} 変数が多すぎます（上限 {{limit}}）",
   "too_many_hud_widgets": "hud widget が多すぎます",
   "too_many_team_entries": "team エントリが多すぎます！",
+  "too_many_map_permission_exceptions": "map permission の exception が多すぎます",
+  "map_id_out_of_range": "map id が範囲外です（-32k～+32k）",
   "fireteam_count_out_of_range": "fireteam_count {{value}} は有効範囲 0～{{max}} の外です",
   "unsupported_field": "'{{fieldPath}}' は {{versionLabel}} ではサポートされていません。",
   "version_label_107_mcc": "Halo: Reach - Master Chief Collection",

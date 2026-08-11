@@ -171,6 +171,14 @@ export const diagnosticMessages = {
     return translate("too_many_team_entries");
   },
 
+  tooManyMapPermissionExceptions(): string {
+    return translate("too_many_map_permission_exceptions");
+  },
+
+  mapIdOutOfRange(): string {
+    return translate("map_id_out_of_range");
+  },
+
   fireteamCountOutOfRange(value: number, max: number): string {
     return translate("fireteam_count_out_of_range", {
       value: String(value),
