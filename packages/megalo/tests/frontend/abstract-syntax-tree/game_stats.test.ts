@@ -45,8 +45,8 @@ end
       name: { value: "stat_caps" },
       type: { value: "number" },
       labelString: { kind: SyntaxKind.REFERENCE, identifier: "stat_caps_text" },
-      unitString: { kind: SyntaxKind.KEYWORD, value: "none" },
-      flags: { kind: SyntaxKind.INTEGER, value: 1 },
+      grouping: { kind: SyntaxKind.KEYWORD, value: "none" },
+      sort: { kind: SyntaxKind.INTEGER, value: 1 },
     });
     expect(element.entries[1]).toMatchObject({
       name: { value: "stat_carry_time" },
@@ -55,8 +55,8 @@ end
         kind: SyntaxKind.REFERENCE,
         identifier: "stat_carry_time_text",
       },
-      unitString: { kind: SyntaxKind.KEYWORD, value: "none" },
-      flags: { kind: SyntaxKind.INTEGER, value: 0 },
+      grouping: { kind: SyntaxKind.KEYWORD, value: "none" },
+      sort: { kind: SyntaxKind.INTEGER, value: 0 },
     });
   });
 
@@ -90,7 +90,7 @@ end
 end
 game_stats
 \tstat_caps number "Caps" none 1
-\tstat_score number stat_caps_text none 0
+\tstat_score number stat_caps_text team -1
 end
 `;
 
@@ -107,55 +107,26 @@ end
       kind: SyntaxKind.QUOTED_STRING,
       value: "Caps",
     });
-    expect(element.entries[1]?.labelString).toMatchObject({
-      kind: SyntaxKind.REFERENCE,
-      identifier: "stat_caps_text",
+    expect(element.entries[1]).toMatchObject({
+      labelString: { kind: SyntaxKind.REFERENCE, identifier: "stat_caps_text" },
+      grouping: { kind: SyntaxKind.KEYWORD, value: "team" },
+      sort: { kind: SyntaxKind.INTEGER, value: -1 },
     });
   });
 
-  it("parses unit_string as a string literal or string reference", () => {
-    const source = `string_table english
-\tstat_caps_text "Caps"
-\tstat_caps_unit "pts"
-end
-game_stats
-\tstat_caps number stat_caps_text "inline unit" 1
-\tstat_score number stat_caps_text stat_caps_unit 0
-end
-`;
-
-    const { ast, diagnostics } = parse(source);
-
-    expect(diagnostics.hasErrors()).toBe(false);
-
-    const element = ast.elements[1]!;
-    if (element.elementKind !== ElementKind.GAME_STATS) {
-      return;
-    }
-
-    expect(element.entries[0]?.unitString).toMatchObject({
-      kind: SyntaxKind.QUOTED_STRING,
-      value: "inline unit",
-    });
-    expect(element.entries[1]?.unitString).toMatchObject({
-      kind: SyntaxKind.REFERENCE,
-      identifier: "stat_caps_unit",
-    });
-  });
-
-  it("reports unresolved unit_string references", () => {
+  it("reports unknown grouping keywords", () => {
     const source = `string_table english
 \tstat_caps_text "Caps"
 end
 game_stats
-\tstat_caps number stat_caps_text missing_unit 1
+\tstat_caps number stat_caps_text player 1
 end
 `;
 
     const { diagnostics } = parse(source);
 
     expect(diagnostics.hasErrors()).toBe(true);
-    expect(diagnostics.getErrors()[0]?.message).toContain("missing_unit");
+    expect(diagnostics.getErrors()[0]?.message).toContain("player");
   });
 
   it("reports unknown statistic format types", () => {

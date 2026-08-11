@@ -14,7 +14,6 @@ import {
   type SourceCodeLocation,
   SourceLocationType,
 } from "../../../../frontend/diagnostics";
-import { unwrapNumber } from "../../../../frontend/intermediate-representation/elements/game_options/shared";
 import { ExplicitPlayer } from "../../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
 import {
   CustomTimerType,
@@ -23,6 +22,7 @@ import {
   PlayerReferenceType,
 } from "../../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import { Lowerer } from "../../../../frontend/intermediate-representation";
+import type { ParameterLoweringContext } from "../../../../frontend/intermediate-representation/parameters";
 import {
   buildParameterLowerer,
   CustomVariableKind,
@@ -35,8 +35,7 @@ import {
   OptionalParam,
   playerParam,
   stringParam,
-  type ParameterLoweringContext,
-} from "../../../../frontend/intermediate-representation/parameters";
+} from "../../../../frontend/intermediate-representation/parameters/lowering";
 import { ObjectListType } from "../../../../frontend/object-lists";
 import { VersionConfiguration107MCC } from "../../../../frontend/version-configuration";
 import { buildVariableSlotMap } from "../../../../frontend/intermediate-representation/preprocessing/symbols";
@@ -185,8 +184,8 @@ describe("buildParameterLowerer", () => {
       numberParam("b"),
     ])(nodes, ctx);
 
-    expect(unwrapNumber(result.byName("a") as never)).toBe(10);
-    expect(unwrapNumber(result.byName("b") as never)).toBe(42);
+    expect(result.byName("a")?.value).toBe(10);
+    expect(result.byName("b")?.value).toBe(42);
     expect(result[0]!.name).toBe("a");
   });
 
@@ -196,7 +195,7 @@ describe("buildParameterLowerer", () => {
       parameterParserBuilder([ParameterType.Number])
     );
     const result = buildParameterLowerer([numberParam("value")])(nodes, ctx);
-    expect(unwrapNumber(result.byName("value") as never)).toBe(1.5);
+    expect(result.byName("value")?.value).toBe(1.5);
   });
 
   it("lowers quoted strings and string symbols into the script string table", () => {
@@ -397,9 +396,9 @@ describe("buildParameterLowerer", () => {
     const withOpt = setup("the_hill offset 1 2 3", signature);
     const present = lower(withOpt.nodes, withOpt.ctx);
     expect(String(present.byName("offset")?.value)).toBe("offset");
-    expect(unwrapNumber(present.byName("x") as never)).toBe(1);
-    expect(unwrapNumber(present.byName("y") as never)).toBe(2);
-    expect(unwrapNumber(present.byName("z") as never)).toBe(3);
+    expect(present.byName("x")?.value).toBe(1);
+    expect(present.byName("y")?.value).toBe(2);
+    expect(present.byName("z")?.value).toBe(3);
   });
 
   it("discriminates hud_widget_set_meter signature shapes", () => {

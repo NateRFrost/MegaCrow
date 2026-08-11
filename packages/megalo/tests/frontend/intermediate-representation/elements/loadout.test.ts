@@ -41,14 +41,14 @@ end
 
     expect(diagnostics.getErrors()).toEqual([]);
     const traits = ir.gameVariant.baseVariant.loadoutTraits;
-    expect(traits.spartanLoadoutsEnabled?.value).toBe(true);
-    expect(traits.eliteLoadoutsEnabled?.value).toBe(true);
+    expect(traits.spartanLoadoutsEnabled).toBe(true);
+    expect(traits.eliteLoadoutsEnabled).toBe(true);
     expect(traits.loadoutPalettes?.[0]?.loadouts?.[0]).toMatchObject({
       name: 60,
-      initialPrimaryWeaponAbsoluteIndex: { value: 1 },
-      initialSecondaryWeaponAbsoluteIndex: { value: 5 },
-      initialEquipmentAbsoluteIndex: { value: 0 },
-      initialGrenadeCountSetting: { value: GrenadeCountSetting.Frag2 },
+      initialPrimaryWeaponAbsoluteIndex: 1,
+      initialSecondaryWeaponAbsoluteIndex: 5,
+      initialEquipmentAbsoluteIndex: 0,
+      initialGrenadeCountSetting: GrenadeCountSetting.Frag2,
     });
   });
 

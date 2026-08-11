@@ -6,6 +6,10 @@ import {
   type ObjectLists,
   ObjectListType,
 } from "../../../frontend/object-lists";
+import {
+  SymbolKind,
+  type SymbolTableObjectFilterEntry,
+} from "../../../frontend/symbol-table";
 import { Lexer } from "../../../frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../version";
 
@@ -16,6 +20,14 @@ const parse = (source: string, objectLists: ObjectLists = {}) => {
   const ast = new Parser(version).parse(tokens, diagnostics, objectLists);
   return { ast, symbolTable: ast.symbolTable.toArray(), diagnostics };
 };
+
+const objectFilterSymbols = (
+  symbolTable: readonly { kind: SymbolKind; name: string }[]
+) =>
+  symbolTable.filter(
+    (entry): entry is SymbolTableObjectFilterEntry =>
+      entry.kind === SymbolKind.ObjectFilter
+  );
 
 describe("mapObjectParser", () => {
   it("parses map_object with filter name and properties", () => {
@@ -30,13 +42,18 @@ map_object health_packs
 end
 `;
 
-    const { ast, diagnostics } = parse(source, {
+    const { ast, symbolTable, diagnostics } = parse(source, {
       [ObjectListType.Objects]: ["health_station"],
     });
 
     expect(diagnostics.hasErrors()).toBe(false);
     expect(ast.failed).toBe(false);
     expect(ast.elements).toHaveLength(3);
+
+    expect(objectFilterSymbols(symbolTable).map((entry) => entry.name)).toEqual([
+      "slayer_stuff",
+      "health_packs",
+    ]);
 
     const slayer = ast.elements[1]!;
     expect(slayer.elementKind).toBe(ElementKind.MAP_OBJECT);
@@ -156,6 +173,27 @@ end
       key: "label",
       value: { kind: SyntaxKind.QUOTED_STRING, value: "good" },
     });
+  });
+
+  it("records for_each references to declared object filters", () => {
+    const source = `map_object flag_return_point
+\tlabel "return"
+end
+trigger initialization
+\taction for_each flag_return_point
+\tend
+end
+`;
+
+    const { symbolTable, diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+
+    const filter = objectFilterSymbols(symbolTable).find(
+      (entry) => entry.name === "flag_return_point"
+    );
+    expect(filter).toBeDefined();
+    expect(filter?.references).toHaveLength(1);
   });
 
   it("reports missing filter name on the header line", () => {
