@@ -14,6 +14,7 @@ import { STRING_TABLE_LANGUAGES } from "../../language-configuration/omni/string
 import { Compiler } from "../compiler";
 import { FrontendError } from "../../error";
 import { CAPABILITES_107_MCC } from "./capabilities";
+import { encodeGameEngineCategory } from "./enums/e_game_engine_category";
 import { compileGameOptions } from "./game_options";
 import { compileGameStats } from "./game_stats";
 import { compileHudWidgets } from "./hud_widgets";
@@ -151,11 +152,10 @@ export class Compiler107MCC extends Compiler {
         variant.engineIcon;
     }
     if (variant.engineCategory !== undefined) {
-      // this is actually an enum, we havent mapped it yet
-      // TODO add e_game_engine_category to blf-ts
-      gametype.m_engine_category = variant.engineCategory;
+      const engineCategory = encodeGameEngineCategory(variant.engineCategory);
+      gametype.m_engine_category = engineCategory;
       gametype.m_base_variant.m_metadata.display.megalo_category_index =
-        variant.engineCategory;
+        engineCategory;
     }
     if (variant.baseVariant.metadata.name !== undefined) {
       gametype.m_base_variant.m_metadata.name =

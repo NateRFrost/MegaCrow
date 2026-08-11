@@ -1,6 +1,7 @@
 export { encodeActiveCamoSetting } from "./e_active_camo_setting";
 export { encodeBooleanTrait } from "./e_boolean_trait";
 export { encodeEquipmentUsageSetting } from "./e_equipment_usage_setting";
+export { encodeGameEngineCategory } from "./e_game_engine_category";
 export { encodeGameStatisticFormat } from "./e_megalo_game_statistic_format";
 export { encodeGameStatisticGrouping } from "./e_megalo_game_statistic_grouping";
 export { encodeGameStatisticSortOrder } from "./e_megalo_game_statistic_sort_order";
