@@ -1,8 +1,6 @@
 import {
   c_game_engine_custom_variant,
   c_string_table,
-  e_file_type,
-  s_content_item_game_variant_metadata,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
 import { bitstream } from "@blamnetwork/blf";
 
@@ -14,13 +12,13 @@ import { STRING_TABLE_LANGUAGES } from "../../language-configuration/omni/string
 import { Compiler } from "../compiler";
 import { FrontendError } from "../../error";
 import { CAPABILITES_107_MCC } from "./capabilities";
-import { encodeGameEngineCategory } from "./enums/e_game_engine_category";
 import { compileGameOptions } from "./game_options";
 import { compileGameStats } from "./game_stats";
 import { compileHudWidgets } from "./hud_widgets";
 import { compileLoadoutPalettes } from "./loadout_palette";
 import { compileMapObjects } from "./map_object";
 import { compileMapPermissions } from "./map_permissions";
+import { compileMetadata } from "./metadata";
 import { compilePlayerRatings } from "./player_rating";
 import { compileTeams } from "./teams";
 import { assertCompatibleIR, CompilerCapabilities } from "../diagnostics/assertCompatibleIR";
@@ -88,10 +86,6 @@ export class Compiler107MCC extends Compiler {
     const gametype = new c_game_engine_custom_variant();
     gametype.initialize();
     gametype.m_build_number = -1;
-    gametype.m_base_variant.m_metadata.general.file_type =
-      e_file_type.GameVariant;
-    gametype.m_base_variant.m_metadata.file_type_data =
-      new s_content_item_game_variant_metadata();
     return gametype;
   }
 
@@ -144,32 +138,7 @@ export class Compiler107MCC extends Compiler {
       );
     }
 
-    if (variant.engineIcon !== undefined) {
-      gametype.m_engine_icon = variant.engineIcon;
-      gametype.m_base_variant.m_metadata.file_type_data =
-        new s_content_item_game_variant_metadata();
-      gametype.m_base_variant.m_metadata.file_type_data.icon_index =
-        variant.engineIcon;
-    }
-    if (variant.engineCategory !== undefined) {
-      const engineCategory = encodeGameEngineCategory(variant.engineCategory);
-      gametype.m_engine_category = engineCategory;
-      gametype.m_base_variant.m_metadata.display.megalo_category_index =
-        engineCategory;
-    }
-    if (variant.baseVariant.metadata.name !== undefined) {
-      gametype.m_base_variant.m_metadata.name =
-        variant.baseVariant.metadata.name;
-    }
-    if (variant.baseVariant.metadata.description !== undefined) {
-      gametype.m_base_variant.m_metadata.description =
-        variant.baseVariant.metadata.description;
-    }
-
-    // TODO: Move
-    gametype.m_base_variant.m_metadata.general.activity = 3;
-    gametype.m_base_variant.m_metadata.general.game_mode = 3;
-    gametype.m_base_variant.m_metadata.general.game_engine_type = 2;
+    compileMetadata(ir, gametype);
 
     gametype.m_base_name_string_index = variant.baseNameStringIndex;
 
