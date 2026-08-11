@@ -15,6 +15,7 @@ import { Compiler } from "../compiler";
 import { FrontendError } from "../../error";
 import { CAPABILITES_107_MCC } from "./capabilities";
 import { compileGameOptions } from "./game_options";
+import { compileHudWidgets } from "./hud_widgets";
 import { assertCompatibleIR, CompilerCapabilities } from "../diagnostics/assertCompatibleIR";
 import { MEGALO_VERSIONS, SupportedMegaloVersion } from "../../../version";
 
@@ -167,6 +168,7 @@ export class Compiler107MCC extends Compiler {
     gametype.m_base_name_string_index = variant.baseNameStringIndex;
 
     compileGameOptions(ir, gametype);
+    compileHudWidgets(ir, gametype, diagnostics);
 
     return gametype;
   }

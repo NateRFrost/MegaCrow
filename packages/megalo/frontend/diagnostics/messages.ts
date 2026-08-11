@@ -163,6 +163,10 @@ export const diagnosticMessages = {
     });
   },
 
+  tooManyHudWidgets(): string {
+    return translate("too_many_hud_widgets");
+  },
+
   expectedLoadoutPaletteItemOrEnd(got: string): string {
     return translate("expected_parameter_type", {
       expected: "item or end",

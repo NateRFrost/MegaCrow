@@ -17,6 +17,7 @@
   "string_already_defined": "String table for language {{language}} already has a string for token {{identifier}} defined",
   "invalid_parameter_count": "Expected {{expected}} parameters but got {{got}}",
   "too_many_variables": "Too many {{scope}} {{type}} variables (limit {{limit}})",
+  "too_many_hud_widgets": "Too many hud widgets",
   "unsupported_field": "'{{fieldPath}}' is not supported by {{versionLabel}}.",
   "version_label_107_mcc": "Halo: Reach - The Master Chief Collection",
   "version_label_107": "Halo: Reach - Title Update 1",
