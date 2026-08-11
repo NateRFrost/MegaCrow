@@ -2,6 +2,7 @@ import { type ASTElementNode, ElementKind } from "../../abstract-syntax-tree/ele
 import type { ElementLowerContext } from "../parameters/context";
 import { engineDataLowerer } from "./engine_data";
 import { gameOptionsLowerer } from "./game_options";
+import { gameStatsLowerer } from "./game_stats";
 import { hudWidgetsLowerer } from "./hud_widgets";
 import { loadoutLowerer } from "./loadout";
 import { loadoutPaletteLowerer } from "./loadout_palette";
@@ -27,6 +28,7 @@ ELEMENT_LOWERERS.set(ElementKind.CONSTANTS, NULL_LOWERER);
 
 ELEMENT_LOWERERS.set(ElementKind.ENGINE_DATA, engineDataLowerer);
 ELEMENT_LOWERERS.set(ElementKind.GAME_OPTIONS, gameOptionsLowerer);
+ELEMENT_LOWERERS.set(ElementKind.GAME_STATS, gameStatsLowerer);
 ELEMENT_LOWERERS.set(ElementKind.HUD_WIDGETS, hudWidgetsLowerer);
 ELEMENT_LOWERERS.set(ElementKind.LOADOUT, loadoutLowerer);
 ELEMENT_LOWERERS.set(ElementKind.LOADOUT_PALETTE, loadoutPaletteLowerer);

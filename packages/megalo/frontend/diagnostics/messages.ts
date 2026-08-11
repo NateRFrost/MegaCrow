@@ -183,6 +183,10 @@ export const diagnosticMessages = {
     return translate("too_many_object_filters");
   },
 
+  tooManyGameStatistics(): string {
+    return translate("too_many_game_statistics");
+  },
+
   objectFilterUserDataOutOfRange(): string {
     return translate("object_filter_user_data_out_of_range");
   },

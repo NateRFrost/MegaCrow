@@ -19,19 +19,17 @@ const GAME_STAT_FORMAT_KINDS = new Set([
   "percentage",
 ]);
 
+const GAME_STAT_GROUPING_KINDS = new Set(["none", "team"]);
+
 type GameStatEntryNodeName = { value: string; location: SourceCodeLocation };
 type GameStatEntryNodeType = { value: string; location: SourceCodeLocation };
-
-export type GameStatUnitStringNode =
-  | ASTStringLiteralOrReference
-  | ASTKeywordParameterNode;
 
 export type GameStatEntryNode = {
   name: GameStatEntryNodeName | ASTErrorNode;
   type: GameStatEntryNodeType | ASTErrorNode;
   labelString: ASTStringLiteralOrReference;
-  unitString: GameStatUnitStringNode;
-  flags: ASTIntegerNode | ASTErrorNode;
+  grouping: ASTKeywordParameterNode | ASTErrorNode;
+  sort: ASTIntegerNode | ASTErrorNode;
   location: SourceCodeLocation;
 };
 
@@ -104,25 +102,48 @@ const parseStatFormat = (
   };
 };
 
-/** Unit may be a string literal/reference, or the keyword `none`. */
-const parseUnitString = (
+/** Grouping is `team` or `none` (player). */
+const parseGrouping = (
   ctx: ParserContext,
   anchor: Token
-): GameStatUnitStringNode => {
-  const peek = ctx.peekToken();
-  if (peek?.kind === TokenKind.Identifier && peek.value === "none") {
-    const noneToken = ctx.getToken();
+): ASTKeywordParameterNode | ASTErrorNode => {
+  const token = ctx.getToken();
+  if (token.kind !== TokenKind.Identifier) {
+    ctx.diagnostics.addError(
+      diagnosticMessages.expectedParameterType(
+        "statistic grouping (team, none)",
+        token.value
+      ),
+      token.location
+    );
     return {
-      kind: SyntaxKind.KEYWORD,
-      value: noneToken.value,
-      location: noneToken.location,
+      kind: SyntaxKind.INVALID,
+      location: anchor.location,
     };
   }
 
-  return parseStringLiteralOrReference(ctx, anchor);
+  if (!GAME_STAT_GROUPING_KINDS.has(token.value)) {
+    ctx.diagnostics.addError(
+      diagnosticMessages.expectedParameterType(
+        "statistic grouping (team, none)",
+        token.value
+      ),
+      token.location
+    );
+    return {
+      kind: SyntaxKind.INVALID,
+      location: token.location,
+    };
+  }
+
+  return {
+    kind: SyntaxKind.KEYWORD,
+    value: token.value,
+    location: token.location,
+  };
 };
 
-const parseFlags = (
+const parseSort = (
   ctx: ParserContext,
   anchor: Token
 ): ASTIntegerNode | ASTErrorNode => {
@@ -152,19 +173,19 @@ const parseGameStatEntry = (ctx: ParserContext): GameStatEntryNode => {
 
   const type = parseStatFormat(ctx, anchor);
   const labelString = parseStringLiteralOrReference(ctx, anchor);
-  const unitString = parseUnitString(ctx, anchor);
-  const flags = parseFlags(ctx, anchor);
+  const grouping = parseGrouping(ctx, anchor);
+  const sort = parseSort(ctx, anchor);
 
   return {
     name,
     type,
     labelString,
-    unitString,
-    flags,
+    grouping,
+    sort,
     location: {
       type: SourceLocationType.SOURCE_CODE,
       start: nameLocation.start,
-      end: flags.location.end,
+      end: sort.location.end,
     },
   };
 };

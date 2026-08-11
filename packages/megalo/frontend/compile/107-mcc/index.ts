@@ -15,6 +15,7 @@ import { Compiler } from "../compiler";
 import { FrontendError } from "../../error";
 import { CAPABILITES_107_MCC } from "./capabilities";
 import { compileGameOptions } from "./game_options";
+import { compileGameStats } from "./game_stats";
 import { compileHudWidgets } from "./hud_widgets";
 import { compileLoadoutPalettes } from "./loadout_palette";
 import { compileMapObjects } from "./map_object";
@@ -178,6 +179,7 @@ export class Compiler107MCC extends Compiler {
     compilePlayerRatings(ir, gametype);
     compileMapPermissions(ir, gametype, diagnostics);
     compileMapObjects(ir, gametype, diagnostics);
+    compileGameStats(ir, gametype, diagnostics);
     compileHudWidgets(ir, gametype, diagnostics);
 
     return gametype;

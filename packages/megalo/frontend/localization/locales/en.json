@@ -22,6 +22,7 @@
   "too_many_map_permission_exceptions": "Too many map permission exceptions",
   "map_id_out_of_range": "map id out of range (-32k, +32k)",
   "too_many_object_filters": "Too many object filters",
+  "too_many_game_statistics": "Too many megalo-defined game statistics",
   "object_filter_user_data_out_of_range": "object filter user_data out of range (-0x8000, 0x7fff)",
   "object_filter_min_out_of_range": "object filter min out of range (0, 0x7f)",
   "fireteam_count_out_of_range": "Fireteam count of {{value}} is outside the valid range of 0 to {{max}}",
