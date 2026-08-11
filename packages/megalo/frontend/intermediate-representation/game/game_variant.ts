@@ -33,7 +33,7 @@ export type GameEngineCustomVariant = {
     assistWeight: number;
     betrayalWeight: number;
     deathWeight: number;
-    normalizeByMaxKills: boolean;
+    normalizeByMaxKills: number;
     base: number;
     range: number;
     lossScalar: number;

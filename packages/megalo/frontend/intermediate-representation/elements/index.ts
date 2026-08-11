@@ -5,6 +5,7 @@ import { gameOptionsLowerer } from "./game_options";
 import { hudWidgetsLowerer } from "./hud_widgets";
 import { loadoutLowerer } from "./loadout";
 import { loadoutPaletteLowerer } from "./loadout_palette";
+import { playerRatingLowerer } from "./player_rating";
 import { teamsLowerer } from "./teams";
 import { variablesLowerer } from "./variables";
 
@@ -27,5 +28,6 @@ ELEMENT_LOWERERS.set(ElementKind.GAME_OPTIONS, gameOptionsLowerer);
 ELEMENT_LOWERERS.set(ElementKind.HUD_WIDGETS, hudWidgetsLowerer);
 ELEMENT_LOWERERS.set(ElementKind.LOADOUT, loadoutLowerer);
 ELEMENT_LOWERERS.set(ElementKind.LOADOUT_PALETTE, loadoutPaletteLowerer);
+ELEMENT_LOWERERS.set(ElementKind.PLAYER_RATING, playerRatingLowerer);
 ELEMENT_LOWERERS.set(ElementKind.TEAMS, teamsLowerer);
 ELEMENT_LOWERERS.set(ElementKind.VARIABLES, variablesLowerer);
