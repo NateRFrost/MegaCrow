@@ -167,6 +167,17 @@ export const diagnosticMessages = {
     return translate("too_many_hud_widgets");
   },
 
+  tooManyTeamEntries(): string {
+    return translate("too_many_team_entries");
+  },
+
+  fireteamCountOutOfRange(value: number, max: number): string {
+    return translate("fireteam_count_out_of_range", {
+      value: String(value),
+      max: String(max),
+    });
+  },
+
   expectedLoadoutPaletteItemOrEnd(got: string): string {
     return translate("expected_parameter_type", {
       expected: "item or end",

@@ -15,7 +15,11 @@ export {
 } from "./enumerated_reals";
 export { encodeForcedChangeColorSetting } from "./e_forced_change_color_setting";
 export { encodeGrenadeCountSetting } from "./e_grenade_count_setting";
+export { encodeDesignatorSwitchType } from "./e_game_engine_team_options_designator_switch_type";
+export { encodeTeamOptionsModelOverrideType } from "./e_game_engine_team_options_model_override_type";
 export { encodeInfiniteAmmoSetting } from "./e_infinite_ammo_setting";
 export { encodeMotionTrackerSetting } from "./e_motion_tracker_setting";
+export { encodeMultiplayerTeamDesignator } from "./e_multiplayer_team_designator";
+export { encodePlayerModelChoice } from "./e_player_model_choice";
 export { encodeVehicleUsageSetting } from "./e_vehicle_usage_setting";
 export { encodeWaypointSetting } from "./e_waypoint_setting";

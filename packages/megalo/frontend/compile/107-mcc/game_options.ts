@@ -1,23 +1,16 @@
 import {
   type c_game_engine_custom_variant,
-  type c_game_engine_team_options_team,
-  type c_loadout_traits,
   k_game_variant_parameter_flags,
   type s_game_variant_parameter_flags,
   s_player_trait_option,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
 import type { IR } from "../../intermediate-representation";
 import type {
-  Color,
-  GameEngineTeamOptionsTeam,
-  LoadoutTraits,
   VehicleSet,
   WeaponSet,
 } from "../../intermediate-representation/game/game_engine_default";
 import type { PlayerTraits } from "../../intermediate-representation/game/game_engine_player_traits";
 import type { BuiltInGameOptionFlags } from "../../intermediate-representation/game/parameters";
-import { STRING_TABLE_LANGUAGES } from "../../language-configuration/omni/strings";
-import { encodeGrenadeCountSetting } from "./enums";
 import { encodePlayerTraits } from "./player_traits";
 
 /** Assign `value` to `target[key]` only when the IR provides the option. */
@@ -68,11 +61,6 @@ const encodeVehicleSet = (value: VehicleSet): number => {
   }
 };
 
-/** Pack an RGB {@link Color} into the 0xRRGGBB integer the compiled format uses. */
-
-const encodeColor = (color: Color): number =>
-  ((color.r & 0xff) << 16) | ((color.g & 0xff) << 8) | (color.b & 0xff);
-
 type ParameterFlagKey = (typeof k_game_variant_parameter_flags)[number];
 
 const snakeToCamel = (name: string): string =>
@@ -100,56 +88,6 @@ const applyParameterFlags = (
     if (value === true) {
       target[snakeKey] = true;
     }
-  }
-};
-
-const compileTeamOption = (
-  target: c_game_engine_team_options_team,
-  team: GameEngineTeamOptionsTeam
-): void => {
-  target.m_team_enabled = true;
-  assign(target, "m_team_initial_designator", team.designator);
-  assign(target, "m_model_override", team.model);
-  assign(target, "m_fireteam_count", team.fireteamCount);
-  if (team.teamColor !== undefined) {
-    target.m_override_color_armour = true;
-    target.m_team_color_override = encodeColor(team.teamColor);
-  }
-  if (team.name !== undefined) {
-    // Team names live in the per-team string table, not the script strings.
-    target.m_name.strings = STRING_TABLE_LANGUAGES.map((language) => [
-      team.name![language] ?? null,
-    ]);
-  }
-};
-
-const compileLoadout = (
-  target: c_loadout_traits,
-  loadout: LoadoutTraits
-): void => {
-  target.m_visible = true;
-  if (loadout.name !== undefined) {
-    target.m_name = Number(loadout.name);
-  }
-  assign(
-    target,
-    "m_initial_primary_weapon_absolute_index",
-    loadout.initialPrimaryWeaponAbsoluteIndex
-  );
-  assign(
-    target,
-    "m_initial_secondary_weapon_absolute_index",
-    loadout.initialSecondaryWeaponAbsoluteIndex
-  );
-  assign(
-    target,
-    "m_initial_equipment_absolute_index",
-    loadout.initialEquipmentAbsoluteIndex
-  );
-  if (loadout.initialGrenadeCountSetting !== undefined) {
-    target.m_initial_grenade_count_setting = encodeGrenadeCountSetting(
-      loadout.initialGrenadeCountSetting
-    );
   }
 };
 
@@ -338,44 +276,6 @@ export const compileGameOptions = (
     "m_yellow_powerup_duration_seconds",
     mapOverrideOptions.yellowPowerupDurationSeconds
   );
-  const teamOptions = base.m_team_options;
-  const { teamOptions: irTeamOptions } = baseVariant;
-  assign(teamOptions, "m_model_override", irTeamOptions.model);
-  assign(
-    teamOptions,
-    "m_designator_switch_type",
-    irTeamOptions.designatorSwitchType
-  );
-  irTeamOptions.teams?.forEach((team, index) => {
-    const target = teamOptions.m_teams[index];
-    if (target !== undefined) {
-      compileTeamOption(target, team);
-    }
-  });
-  const loadouts = base.m_loadouts;
-  const { loadoutTraits } = baseVariant;
-  assignBoolean(
-    loadouts.m_flags,
-    "spartan_loadouts_enabled",
-    loadoutTraits.spartanLoadoutsEnabled
-  );
-  assignBoolean(
-    loadouts.m_flags,
-    "elite_loadouts_enabled",
-    loadoutTraits.eliteLoadoutsEnabled
-  );
-  loadoutTraits.loadoutPalettes?.forEach((palette, paletteIndex) => {
-    const targetPalette = loadouts.m_loadout_palettes[paletteIndex];
-    if (targetPalette === undefined) {
-      return;
-    }
-    palette.loadouts?.forEach((loadout, loadoutIndex) => {
-      const targetLoadout = targetPalette.m_loadouts[loadoutIndex];
-      if (targetLoadout !== undefined) {
-        compileLoadout(targetLoadout, loadout);
-      }
-    });
-  });
   assign(gameVariant, "m_score_to_win_round", irVariant.scoreToWinRound);
   assignBoolean(gameVariant, "m_fire_teams_enabled", irVariant.fireTeamsEnabled);
   assign(gameVariant, "m_symmetric_gametype", irVariant.symmetricGametype);

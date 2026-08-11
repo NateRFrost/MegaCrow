@@ -18,6 +18,8 @@
   "invalid_parameter_count": "{{expected}} パラメータが必要ですが、{{got}} パラメータが見つかりました",
   "too_many_variables": "{{scope}} {{type}} 変数が多すぎます（上限 {{limit}}）",
   "too_many_hud_widgets": "hud widget が多すぎます",
+  "too_many_team_entries": "team エントリが多すぎます！",
+  "fireteam_count_out_of_range": "fireteam_count {{value}} は有効範囲 0～{{max}} の外です",
   "unsupported_field": "'{{fieldPath}}' は {{versionLabel}} ではサポートされていません。",
   "version_label_107_mcc": "Halo: Reach - Master Chief Collection",
   "version_label_107": "Halo: Reach - タイトルアップデート1",

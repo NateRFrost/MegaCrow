@@ -69,6 +69,7 @@ export type GameEngineMapOverrideOptions = Partial<{
 }>;
 
 export enum MultiplayerTeamDesignator {
+  None = -1,
   Defenders = 0,
   Attackers = 1,
   ThirdParty = 2,
@@ -83,6 +84,14 @@ export enum MultiplayerTeamDesignator {
 export enum PlayerModelChoice {
   Spartan = 0,
   Elite = 1,
+}
+
+export enum TeamOptionsModelOverrideType {
+  None = 0,
+  Spartan = 1,
+  Elite = 2,
+  SetByTeam = 3,
+  ByDesignator = 4,
 }
 
 export type Color = {
@@ -106,7 +115,7 @@ export enum DesignatorSwitchType {
 }
 
 export type GameEngineTeamOptions = Partial<{
-  model: PlayerModelChoice;
+  model: TeamOptionsModelOverrideType;
   designatorSwitchType: DesignatorSwitchType;
   teams: GameEngineTeamOptionsTeam[];
 }>;
