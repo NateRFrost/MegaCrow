@@ -10,6 +10,7 @@ import type {
 } from "./megalogamengine_references";
 import type { MegaloSound } from "./megalogamengine_sounds";
 import type { DynamicString } from "./megalogamengine_text";
+import type { VariantVariable } from "./megalogamengine_variant_variable";
 
 export enum ActionType {
   SetScore = 0,
@@ -125,11 +126,16 @@ type ActionParameters<T extends ActionType, P> = {
   parameters: P;
 };
 
-export enum TeamOrPlayerTarget {
+export enum TeamOrPlayerTargetKind {
   Team = 0,
   Player = 1,
   Everyone = 2,
 }
+
+export type TeamOrPlayerTarget =
+  | { type: TeamOrPlayerTargetKind.Everyone }
+  | { type: TeamOrPlayerTargetKind.Player; player: PlayerReference }
+  | { type: TeamOrPlayerTargetKind.Team; team: TeamReference };
 
 export enum MathOperation {
   Add = 0,
@@ -177,7 +183,7 @@ export type DeleteObjectParameters = {
 
 export type NavpointSetVisibleParameters = {
   navpoint: ObjectReference;
-  visible: boolean;
+  playerFilterModifier: PlayerFilterModifier;
 };
 
 export type NavpointSetIconParameters = {
@@ -209,9 +215,9 @@ export type NavpointSetVisibleRangeParameters = {
 };
 
 export type SetParameters = {
-  left: CustomVariableReference;
+  left: VariantVariable;
   operation: MathOperation;
-  right: CustomVariableReference;
+  right: VariantVariable;
 };
 
 export enum BoundaryShape {
@@ -396,7 +402,14 @@ type HUDMeterInputTimer = {
   timer: CustomTimerReference;
 };
 
-export type HUDMeterInput = HUDMeterInputNumber | HUDMeterInputTimer;
+type HUDMeterInputNone = {
+  meterType: HUDMeterInputType.None;
+};
+
+export type HUDMeterInput =
+  | HUDMeterInputNumber
+  | HUDMeterInputTimer
+  | HUDMeterInputNone;
 
 export type HUDWidgetSetMeterParameters = {
   widgetIndex: number;
@@ -679,7 +692,7 @@ export type ObjectBounceParameters = {
 
 export type HUDWidgetSetValueParameters = {
   widgetIndex: number;
-  value: CustomVariableReference;
+  value: DynamicString;
 };
 
 export type ObjectSetScaleParameters = {

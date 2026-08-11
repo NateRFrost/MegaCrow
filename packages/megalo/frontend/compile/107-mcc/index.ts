@@ -21,6 +21,10 @@ import { compileMapPermissions } from "./map_permissions";
 import { compileMetadata } from "./metadata";
 import { compilePlayerRatings } from "./player_rating";
 import { compileTeams } from "./teams";
+import { compileConditions } from "./conditions";
+import { compileActions } from "./actions";
+import { compileTriggers } from "./triggers";
+import { compileVariableMetadata } from "./variableMetadata";
 import { assertCompatibleIR, CompilerCapabilities } from "../diagnostics/assertCompatibleIR";
 import { MEGALO_VERSIONS, SupportedMegaloVersion } from "../../../version";
 
@@ -150,6 +154,10 @@ export class Compiler107MCC extends Compiler {
     compileMapObjects(ir, gametype, diagnostics);
     compileGameStats(ir, gametype, diagnostics);
     compileHudWidgets(ir, gametype, diagnostics);
+    compileVariableMetadata(ir, gametype);
+    compileConditions(ir, gametype, diagnostics);
+    compileActions(ir, gametype, diagnostics);
+    compileTriggers(ir, gametype);
 
     return gametype;
   }

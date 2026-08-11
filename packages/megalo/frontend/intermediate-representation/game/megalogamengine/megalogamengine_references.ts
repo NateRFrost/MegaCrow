@@ -310,6 +310,7 @@ type ObjectTeamReference = {
 type TeamTeamReference = {
   type: TeamReferenceType.TeamTeam;
   team: ExplicitTeam;
+  variableIndex: number;
 };
 
 type PlayerOwnerTeamReference = {

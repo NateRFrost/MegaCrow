@@ -437,7 +437,7 @@ game_options
 end
 `;
 
-    const { ast, diagnostics } = parse(source);
+    const { ast, symbolTable, diagnostics } = parse(source);
 
     expect(diagnostics.hasErrors()).toBe(false);
     expect(ast.failed).toBe(false);
@@ -462,6 +462,16 @@ end
         identifier: "traits_description_vip_traits",
       },
     });
+
+    expect(
+      symbolTable.filter((entry) => entry.kind === SymbolKind.PlayerTraits)
+    ).toEqual([
+      expect.objectContaining({
+        kind: SymbolKind.PlayerTraits,
+        name: "vip_traits",
+        index: 0,
+      }),
+    ]);
 
     const entry = element.entries[0];
     if (entry.kind !== GameOptionEntryKind.PLAYER_TRAITS) {

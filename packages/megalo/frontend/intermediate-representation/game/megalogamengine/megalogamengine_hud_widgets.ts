@@ -14,6 +14,7 @@ export enum HudWidgetPosition {
 }
 
 export enum HUDMeterInputType {
+  None = 0,
   Number = 1,
   Timer = 2,
 }

@@ -92,6 +92,9 @@ export const playerTraitsParser = (
   modifiers: GameOptionModifiers
 ): PlayerTraitsElementNode => {
   const name = parseIdentifier(ctx, keywordToken);
+  if (!isAstErrorNode(name)) {
+    ctx.symbolParser.addPlayerTraitsToScope(name.value, name.location);
+  }
   const displayName = parseStringLiteralOrReference(ctx, keywordToken);
   const description = parseStringLiteralOrReference(ctx, keywordToken);
   const { options, location } = parsePlayerTraitOptions(ctx, keywordToken);

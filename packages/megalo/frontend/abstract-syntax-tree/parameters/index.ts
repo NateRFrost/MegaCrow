@@ -46,6 +46,7 @@ export enum ParameterType {
   RequisitionPalette = 12,
   MathOperation = 13,
   ObjectFilter = 14,
+  PlayerTraits = 15,
 }
 
 export type KeywordParameter = {
@@ -197,6 +198,8 @@ const matchesParameterType = (
       return entry.kind === SymbolKind.RequisitionPalette;
     case ParameterType.ObjectFilter:
       return entry.kind === SymbolKind.ObjectFilter;
+    case ParameterType.PlayerTraits:
+      return entry.kind === SymbolKind.PlayerTraits;
     case ParameterType.String:
       return entry.kind === SymbolKind.String;
     default:
@@ -272,7 +275,8 @@ const lookupReferenceSymbolId = (
   ctx.symbolParser.lookupLoadout(name) ??
   ctx.symbolParser.lookupLoadoutPalette(name) ??
   ctx.symbolParser.lookupRequisitionPalette(name) ??
-  ctx.symbolParser.lookupObjectFilter(name);
+  ctx.symbolParser.lookupObjectFilter(name) ??
+  ctx.symbolParser.lookupPlayerTraits(name);
 
 const consumeLenientParameter = (
   ctx: ParserContext,
@@ -531,6 +535,11 @@ const parseParameter = (
     case ParameterType.ObjectFilter:
       return parseNamedSymbolParameter(ctx, (name) =>
         ctx.symbolParser.lookupObjectFilter(name)
+      );
+
+    case ParameterType.PlayerTraits:
+      return parseNamedSymbolParameter(ctx, (name) =>
+        ctx.symbolParser.lookupPlayerTraits(name)
       );
 
     case ParameterType.String:

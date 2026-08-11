@@ -74,6 +74,7 @@ export const resolveTeamReference = (
       return {
         type: TeamReferenceType.TeamTeam,
         team: ExplicitTeam.CurrentTeam,
+        variableIndex: resolved.index,
       };
     }
     return {
@@ -130,6 +131,7 @@ export const resolveTeamReference = (
       return {
         type: TeamReferenceType.TeamTeam,
         team: ExplicitTeam.CurrentTeam,
+        variableIndex: resolved.index,
       };
     }
     return {

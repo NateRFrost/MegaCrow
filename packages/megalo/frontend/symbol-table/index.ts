@@ -26,6 +26,7 @@ export enum SymbolKind {
   RequisitionPalette = 7,
   ObjectListItem = 8,
   ObjectFilter = 9,
+  PlayerTraits = 10,
 }
 
 // Modelled based on Bungie.Megalo.VariableType
@@ -148,6 +149,12 @@ export type SymbolTableObjectFilterEntry = SymbolTableEntryBase & {
   declaration: SourceLocation;
 };
 
+export type SymbolTablePlayerTraitsEntry = SymbolTableEntryBase & {
+  kind: SymbolKind.PlayerTraits;
+  index: number;
+  declaration: SourceLocation;
+};
+
 export type SymbolTableEntry =
   | SymbolTableVariableEntry
   | SymbolTableConstantEntry
@@ -158,7 +165,8 @@ export type SymbolTableEntry =
   | SymbolTableLoadoutPaletteEntry
   | SymbolTableRequisitionPaletteEntry
   | SymbolTableObjectListItemEntry
-  | SymbolTableObjectFilterEntry;
+  | SymbolTableObjectFilterEntry
+  | SymbolTablePlayerTraitsEntry;
 
 export class SymbolTable {
   private readonly table: SymbolTableEntry[] = [];
@@ -400,6 +408,25 @@ export class SymbolBinder {
       references: [],
       name: entry.name,
       kind: SymbolKind.ObjectFilter,
+      index: entry.index,
+      declaration: entry.declaration,
+    });
+    return id;
+  }
+
+  public addPlayerTraits(
+    entry: Pick<
+      SymbolTablePlayerTraitsEntry,
+      "name" | "index" | "declaration"
+    >
+  ): SymbolId {
+    const id = this.table.length;
+    this.table.push({
+      id,
+      range: declarationRange(entry.declaration),
+      references: [],
+      name: entry.name,
+      kind: SymbolKind.PlayerTraits,
       index: entry.index,
       declaration: entry.declaration,
     });

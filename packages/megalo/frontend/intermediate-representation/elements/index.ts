@@ -10,6 +10,7 @@ import { mapObjectLowerer } from "./map_object";
 import { mapPermissionsLowerer } from "./map_permissions";
 import { playerRatingLowerer } from "./player_rating";
 import { teamsLowerer } from "./teams";
+import { triggersLowerer } from "./triggers";
 import { variablesLowerer } from "./variables";
 
 export type ElementLowerer<T extends ASTElementNode> = (
@@ -36,4 +37,5 @@ ELEMENT_LOWERERS.set(ElementKind.MAP_OBJECT, mapObjectLowerer);
 ELEMENT_LOWERERS.set(ElementKind.MAP_PERMISSIONS, mapPermissionsLowerer);
 ELEMENT_LOWERERS.set(ElementKind.PLAYER_RATING, playerRatingLowerer);
 ELEMENT_LOWERERS.set(ElementKind.TEAMS, teamsLowerer);
+ELEMENT_LOWERERS.set(ElementKind.TRIGGER, triggersLowerer);
 ELEMENT_LOWERERS.set(ElementKind.VARIABLES, variablesLowerer);

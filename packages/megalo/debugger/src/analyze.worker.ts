@@ -19,6 +19,7 @@ import {
   type SymbolTableLoadoutPaletteEntry,
   type SymbolTableObjectFilterEntry,
   type SymbolTableObjectListItemEntry,
+  type SymbolTablePlayerTraitsEntry,
   type SymbolTableRequisitionPaletteEntry,
   type SymbolTableStringEntry,
   type SymbolTableVariableEntry,
@@ -78,6 +79,8 @@ const symbolKindName = (kind: SymbolKind): string => {
       return "ObjectListItem";
     case SymbolKind.ObjectFilter:
       return "ObjectFilter";
+    case SymbolKind.PlayerTraits:
+      return "PlayerTraits";
   }
 };
 
@@ -169,6 +172,14 @@ const serializeSymbolTableEntry = (entry: SymbolTableEntry): object => {
         ...base,
         index: objectFilterEntry.index,
         declaration: objectFilterEntry.declaration,
+      };
+    }
+    case SymbolKind.PlayerTraits: {
+      const playerTraitsEntry = entry as SymbolTablePlayerTraitsEntry;
+      return {
+        ...base,
+        index: playerTraitsEntry.index,
+        declaration: playerTraitsEntry.declaration,
       };
     }
   }

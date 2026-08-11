@@ -51,6 +51,7 @@ export class ParserSymbolContext {
   private readonly declaredRequisitionPalettes: Map<string, SymbolId> =
     new Map();
   private readonly declaredObjectFilters: Map<string, SymbolId> = new Map();
+  private readonly declaredPlayerTraits: Map<string, SymbolId> = new Map();
   private readonly declaredObjectListItems = new Map<
     ObjectListType,
     Map<string, SymbolId>
@@ -219,6 +220,23 @@ export class ParserSymbolContext {
 
   public lookupObjectFilter(name: string): SymbolId | undefined {
     return this.declaredObjectFilters.get(name);
+  }
+
+  public addPlayerTraitsToScope(
+    name: string,
+    declaration: SourceLocation
+  ): SymbolId {
+    const id = this.symbolBinder.addPlayerTraits({
+      name,
+      index: this.declaredPlayerTraits.size,
+      declaration,
+    });
+    this.declaredPlayerTraits.set(name, id);
+    return id;
+  }
+
+  public lookupPlayerTraits(name: string): SymbolId | undefined {
+    return this.declaredPlayerTraits.get(name);
   }
 
   public addLoadoutToScope(

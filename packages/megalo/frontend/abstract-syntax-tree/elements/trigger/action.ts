@@ -343,7 +343,7 @@ export class ActionParserRepository {
 
     this.registerParser(
       "apply_player_traits",
-      buildParameterParser([ParameterType.Player, ParameterType.Keyword])
+      buildParameterParser([ParameterType.Player, ParameterType.PlayerTraits])
     );
 
     this.registerParser(
@@ -412,7 +412,9 @@ export class ActionParserRepository {
 
     this.registerParser(
       "boundary_set_visible",
-      buildParameterParser([ParameterType.Object, BOOLEAN])
+      buildParameterParser(
+        ...visibilityFilterSignatures([ParameterType.Object])
+      )
     );
 
     this.registerParser(
