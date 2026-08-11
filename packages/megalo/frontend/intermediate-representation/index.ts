@@ -11,13 +11,18 @@ import type { ElementLowerContext } from "./parameters";
 import type { GameEngineCustomVariant } from "./game/game_variant";
 import { StringTable } from "./game/string_table";
 import type { VariableMetadata } from "./game/megalogamengine/megalogamengine_variable_metadata";
+import {
+  createFieldLocations,
+  type FieldLocations,
+} from "./locations";
 import { applyBaseName } from "./postprocessing/applyBaseName";
 import { applyDefaultLoadoutCameraTime } from "./postprocessing/applyDefaultLoadoutCameraTime";
 import { applyMetadata } from "./postprocessing/applyMetadata";
 import { applyVariableMetadata } from "./postprocessing/applyVariableMetadata";
 import { buildVariableSlotMap } from "./preprocessing/symbols";
 
-export type ValueWithLocation<T> = {
+
+export type Located<T> = {
   value: T;
   location: SourceLocation;
 };
@@ -25,20 +30,18 @@ export type ValueWithLocation<T> = {
 export type IR = {
   baseFilePath?: string;
   gameVariant: GameEngineCustomVariant;
+  /** Source locations for IR leaves (diagnostics / unused-override warnings). */
+  locations: FieldLocations;
 };
 
 export type LowerContext = {
   objectLists?: ObjectLists;
 };
 
-export const valueWithLocation = <T>(
+export const located = <T>(
   value: T,
   location: SourceLocation
-): ValueWithLocation<T> => ({ value, location });
-
-export const getIRValue = <T>(
-  value: ValueWithLocation<T> | undefined
-): T | undefined => (value === undefined ? undefined : value.value);
+): Located<T> => ({ value, location });
 
 const emptyVariableMetadata = (): VariableMetadata => ({
   numericVariables: [],
@@ -80,8 +83,7 @@ export class Lowerer {
       const elementLowerer = ELEMENT_LOWERERS.get(element.elementKind);
       if (elementLowerer) {
         elementLowerer(element, lowerContext);
-      }
-      else {
+      } else {
         console.warn(`lowerer for ${element.elementKind} NYI`);
       }
     });
@@ -104,78 +106,89 @@ export class Lowerer {
       english: "Custom Game",
     });
 
-    const ir: IR = {
-      baseFilePath: undefined,
-      gameVariant: {
-        baseVariant: {
-          metadata: {
-            general: {
-              gameEngineType: 0,
-              gameMode: 0,
-            },
-            creationHistory: {
-              timestamp: new Date(),
-              xuid: BigInt(0),
-              name: "Default",
-              isOnline: false,
-            },
-            modificationHistory: {
-              timestamp: new Date(),
-              xuid: BigInt(0),
-              name: "Default",
-              isOnline: false,
-            },
+    const locations = createFieldLocations();
+    const gameVariant: GameEngineCustomVariant = {
+      baseVariant: {
+        metadata: {
+          general: {
+            gameEngineType: 0,
+            gameMode: 0,
           },
-          builtIn: false,
-          miscellaneousOptions: {},
-          respawnOptions: {},
-          socialOptions: {},
-          mapOverrideOptions: {},
-          teamOptions: {},
-          loadoutTraits: {},
-        },
-        playerTraits: [],
-        userDefinedOptions: [],
-        scriptStrings,
-        baseNameStringIndex: defaultNameIndex,
-        localizedName: undefined,
-        localizedDescription: undefined,
-        localizedCategory: undefined,
-        engineIcon: valueWithLocation(0, BUILT_IN_LOCATION),
-        engineCategory: valueWithLocation(0, BUILT_IN_LOCATION),
-        mapPermissions: undefined,
-        playerRatings: undefined,
-        scoreToWinRound: undefined,
-        fireTeamsEnabled: undefined,
-        symmetricGametype: undefined,
-        baseVariantParametersLocked: {},
-        baseVariantParametersHidden: {},
-        gameEngine: {
-          conditions: [],
-          actions: [],
-          triggers: [],
-          statistics: [],
-          variableMetadata: {
-            global: emptyVariableMetadata(),
-            player: emptyVariableMetadata(),
-            object: emptyVariableMetadata(),
-            team: emptyVariableMetadata(),
-            temporary: emptyVariableMetadata(),
+          creationHistory: {
+            timestamp: new Date(),
+            xuid: BigInt(0),
+            name: "Default",
+            isOnline: false,
           },
-          hudWidgets: [],
-          initializationTriggerIndex: 0,
-          localInitializationTriggerIndex: 0,
-          hostMigrationTriggerIndex: 0,
-          doubleMigrationTriggerIndex: 0,
-          objectDeathEventTriggerIndex: 0,
-          localTriggerIndex: 0,
-          pregameTriggerIndex: 0,
-          objectsUsed: [],
-          objectFilters: [],
+          modificationHistory: {
+            timestamp: new Date(),
+            xuid: BigInt(0),
+            name: "Default",
+            isOnline: false,
+          },
         },
-        tu1Settings: {},
+        builtIn: false,
+        miscellaneousOptions: {},
+        respawnOptions: {},
+        socialOptions: {},
+        mapOverrideOptions: {},
+        teamOptions: {},
+        loadoutTraits: {},
       },
+      playerTraits: [],
+      userDefinedOptions: [],
+      scriptStrings,
+      baseNameStringIndex: defaultNameIndex,
+      localizedName: undefined,
+      localizedDescription: undefined,
+      localizedCategory: undefined,
+      engineIcon: 0,
+      engineCategory: 0,
+      mapPermissions: undefined,
+      playerRatings: undefined,
+      scoreToWinRound: undefined,
+      fireTeamsEnabled: undefined,
+      symmetricGametype: undefined,
+      baseVariantParametersLocked: {},
+      baseVariantParametersHidden: {},
+      gameEngine: {
+        conditions: [],
+        actions: [],
+        triggers: [],
+        statistics: [],
+        variableMetadata: {
+          global: emptyVariableMetadata(),
+          player: emptyVariableMetadata(),
+          object: emptyVariableMetadata(),
+          team: emptyVariableMetadata(),
+          temporary: emptyVariableMetadata(),
+        },
+        hudWidgets: [],
+        initializationTriggerIndex: 0,
+        localInitializationTriggerIndex: 0,
+        hostMigrationTriggerIndex: 0,
+        doubleMigrationTriggerIndex: 0,
+        objectDeathEventTriggerIndex: 0,
+        localTriggerIndex: 0,
+        pregameTriggerIndex: 0,
+        objectsUsed: [],
+        objectFilters: [],
+      },
+      tu1Settings: {},
     };
-    return ir;
+
+    locations.record(gameVariant, "engineIcon", BUILT_IN_LOCATION);
+    locations.record(gameVariant, "engineCategory", BUILT_IN_LOCATION);
+
+    return {
+      baseFilePath: undefined,
+      gameVariant,
+      locations,
+    };
   }
 }
+
+export type { FieldLocations } from "./locations";
+export { createFieldLocations } from "./locations";
+export { setField } from "./setField";
+

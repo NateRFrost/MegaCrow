@@ -1,4 +1,3 @@
-import type { ValueWithLocation } from "../..";
 import type { StringTableReference } from "../string_table";
 
 export enum ObjectTeamFilter {
@@ -18,7 +17,7 @@ export enum ObjectTeamFilter {
 export type ObjectFilter = Partial<{
   label: StringTableReference;
   objectType: number; // object_lists/objects.txt
-  team: ValueWithLocation<ObjectTeamFilter>;
-  userData: ValueWithLocation<number>;
-  min: ValueWithLocation<number>;
+  team: ObjectTeamFilter;
+  userData: number;
+  min: number;
 }>;

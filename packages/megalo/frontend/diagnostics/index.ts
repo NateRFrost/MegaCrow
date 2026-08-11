@@ -34,7 +34,10 @@ export type SourceCodeLocation = {
 //     type: SourceLocationType.INCLUDE;
 //     file: string;
 // }
-export type IncludeLocation = SourceCodeLocation;
+export type IncludeLocation = {
+  type: SourceLocationType.INCLUDE;
+  file: string;
+};
 
 export type BuiltInLocation = {
   type: SourceLocationType.BUILT_IN;
@@ -57,6 +60,18 @@ export type SourceLocation =
   | IncludeLocation
   | BuiltInLocation
   | ObjectListLocation;
+
+export const isBuiltInLocation = (location: SourceLocation): location is BuiltInLocation =>
+  location.type === SourceLocationType.BUILT_IN;
+
+export const isObjectListLocation = (location: SourceLocation): location is ObjectListLocation =>
+  location.type === SourceLocationType.OBJECT_LIST;
+
+export const isIncludeLocation = (location: SourceLocation): location is IncludeLocation =>
+  location.type === SourceLocationType.INCLUDE;
+
+export const isSourceCodeLocation = (location: SourceLocation): location is SourceCodeLocation =>
+  location.type === SourceLocationType.SOURCE_CODE;
 
 export enum DiagnosticSeverity {
   Error = 0,

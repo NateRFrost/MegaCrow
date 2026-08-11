@@ -1,4 +1,3 @@
-import type { ValueWithLocation } from "..";
 import type { ContentItemMetadata } from "../saved_games/saved_game_files";
 import type {
   GrenadeCountSetting,
@@ -7,30 +6,30 @@ import type {
 import type { StringTableEntry, StringTableReference } from "./string_table";
 
 export type GameEngineMiscellaneousOptions = Partial<{
-  teamsEnabled: ValueWithLocation<boolean>;
-  roundResetPlayers: ValueWithLocation<boolean>;
-  roundResetMap: ValueWithLocation<boolean>;
-  perfectionEnabled: ValueWithLocation<boolean>;
-  roundTimeLimitMinutes: ValueWithLocation<number>;
-  roundCount: ValueWithLocation<number>;
-  earlyVictoryWinCount: ValueWithLocation<number>;
-  suddenDeathTimeLimitSeconds: ValueWithLocation<number>;
-  gracePeriodTimeLimitSeconds: ValueWithLocation<number>;
+  teamsEnabled: boolean;
+  roundResetPlayers: boolean;
+  roundResetMap: boolean;
+  perfectionEnabled: boolean;
+  roundTimeLimitMinutes: number;
+  roundCount: number;
+  earlyVictoryWinCount: number;
+  suddenDeathTimeLimitSeconds: number;
+  gracePeriodTimeLimitSeconds: number;
 }>;
 
 export type GameEngineRespawnOptions = Partial<{
-  inheritRespawnTime: ValueWithLocation<boolean>;
-  respawnWithTeammate: ValueWithLocation<boolean>;
-  respawnAtLocation: ValueWithLocation<boolean>;
-  respawnOnKills: ValueWithLocation<boolean>;
-  livesPerRound: ValueWithLocation<number>;
-  teamLivesPerRound: ValueWithLocation<number>;
-  respawnTimeSeconds: ValueWithLocation<number>;
-  suicidePenaltySeconds: ValueWithLocation<number>;
-  betrayalPenaltySeconds: ValueWithLocation<number>;
-  respawnGrowthSeconds: ValueWithLocation<number>;
-  loadoutCamTime: ValueWithLocation<number>;
-  respawnPlayerTraitsDurationSeconds: ValueWithLocation<number>;
+  inheritRespawnTime: boolean;
+  respawnWithTeammate: boolean;
+  respawnAtLocation: boolean;
+  respawnOnKills: boolean;
+  livesPerRound: number;
+  teamLivesPerRound: number;
+  respawnTimeSeconds: number;
+  suicidePenaltySeconds: number;
+  betrayalPenaltySeconds: number;
+  respawnGrowthSeconds: number;
+  loadoutCamTime: number;
+  respawnPlayerTraitsDurationSeconds: number;
   respawnPlayerTraits: PlayerTraits[];
 }>;
 
@@ -41,32 +40,32 @@ export enum TeamScoringMethod {
 }
 
 export type GameEngineSocialOptions = Partial<{
-  friendlyFireEnabled: ValueWithLocation<number>;
-  betrayalBootingEnabled: ValueWithLocation<number>;
-  enemyVoiceEnabled: ValueWithLocation<number>;
-  openChannelVoiceEnabled: ValueWithLocation<number>;
-  deadPlayerVoiceEnabled: ValueWithLocation<number>;
+  friendlyFireEnabled: number;
+  betrayalBootingEnabled: number;
+  enemyVoiceEnabled: number;
+  openChannelVoiceEnabled: number;
+  deadPlayerVoiceEnabled: number;
 }>;
 
 export type WeaponSet = "none" | "default" | "random" | number;
 export type VehicleSet = "none" | "default" | "random" | number;
 
 export type GameEngineMapOverrideOptions = Partial<{
-  grenadesOnMap: ValueWithLocation<number>;
-  shortcutsOnMap: ValueWithLocation<boolean>;
-  equipmentOnMap: ValueWithLocation<boolean>;
-  powerupsOnMap: ValueWithLocation<boolean>;
-  turretsOnMap: ValueWithLocation<boolean>;
-  indestructibleVehicles: ValueWithLocation<number>;
+  grenadesOnMap: number;
+  shortcutsOnMap: boolean;
+  equipmentOnMap: boolean;
+  powerupsOnMap: boolean;
+  turretsOnMap: boolean;
+  indestructibleVehicles: number;
   basePlayerTraits: PlayerTraits;
-  weaponSetAbsoluteIndex: ValueWithLocation<WeaponSet>; // object_lists/weapon_sets.txt
-  vehicleSetAbsoluteIndex: ValueWithLocation<VehicleSet>; // object_lists/vehicle_sets.txt
+  weaponSetAbsoluteIndex: WeaponSet; // object_lists/weapon_sets.txt
+  vehicleSetAbsoluteIndex: VehicleSet; // object_lists/vehicle_sets.txt
   redPowerupTraits: PlayerTraits;
   bluePowerupTraits: PlayerTraits;
   yellowPowerupTraits: PlayerTraits;
-  redPowerupDurationSeconds: ValueWithLocation<number>;
-  bluePowerupDurationSeconds: ValueWithLocation<number>;
-  yellowPowerupDurationSeconds: ValueWithLocation<number>;
+  redPowerupDurationSeconds: number;
+  bluePowerupDurationSeconds: number;
+  yellowPowerupDurationSeconds: number;
 }>;
 
 export enum MultiplayerTeamDesignator {
@@ -93,11 +92,11 @@ export type Color = {
 };
 
 export type GameEngineTeamOptionsTeam = Partial<{
-  name: ValueWithLocation<StringTableEntry>;
-  designator: ValueWithLocation<MultiplayerTeamDesignator>;
-  model: ValueWithLocation<PlayerModelChoice>;
-  teamColor: ValueWithLocation<Color>;
-  fireteamCount: ValueWithLocation<number>;
+  name: StringTableEntry;
+  designator: MultiplayerTeamDesignator;
+  model: PlayerModelChoice;
+  teamColor: Color;
+  fireteamCount: number;
 }>;
 
 export enum DesignatorSwitchType {
@@ -107,17 +106,17 @@ export enum DesignatorSwitchType {
 }
 
 export type GameEngineTeamOptions = Partial<{
-  model: ValueWithLocation<PlayerModelChoice>;
-  designatorSwitchType: ValueWithLocation<DesignatorSwitchType>;
+  model: PlayerModelChoice;
+  designatorSwitchType: DesignatorSwitchType;
   teams: GameEngineTeamOptionsTeam[];
 }>;
 
 export type LoadoutTraits = Partial<{
   name: StringTableReference; // Index in string table
-  initialPrimaryWeaponAbsoluteIndex: ValueWithLocation<number>; // object_lists/weapons.txt
-  initialSecondaryWeaponAbsoluteIndex: ValueWithLocation<number>; // object_lists/weapons.txt
-  initialEquipmentAbsoluteIndex: ValueWithLocation<number>; // object_lists/equipment.txt
-  initialGrenadeCountSetting: ValueWithLocation<GrenadeCountSetting>;
+  initialPrimaryWeaponAbsoluteIndex: number; // object_lists/weapons.txt
+  initialSecondaryWeaponAbsoluteIndex: number; // object_lists/weapons.txt
+  initialEquipmentAbsoluteIndex: number; // object_lists/equipment.txt
+  initialGrenadeCountSetting: GrenadeCountSetting;
 }>;
 
 export type LoadoutPaletteTraits = Partial<{
@@ -125,15 +124,15 @@ export type LoadoutPaletteTraits = Partial<{
 }>;
 
 export type GameEngineLoadoutTraits = Partial<{
-  spartanLoadoutsEnabled: ValueWithLocation<boolean>;
-  eliteLoadoutsEnabled: ValueWithLocation<boolean>;
+  spartanLoadoutsEnabled: boolean;
+  eliteLoadoutsEnabled: boolean;
   loadoutPalettes: LoadoutPaletteTraits[];
 }>;
 
 export type GameEngineBaseVariant = {
   metadata: ContentItemMetadata;
   builtIn: boolean;
-  teamScoringMethod?: ValueWithLocation<TeamScoringMethod>;
+  teamScoringMethod?: TeamScoringMethod;
   miscellaneousOptions: GameEngineMiscellaneousOptions;
   respawnOptions: GameEngineRespawnOptions;
   socialOptions: GameEngineSocialOptions;

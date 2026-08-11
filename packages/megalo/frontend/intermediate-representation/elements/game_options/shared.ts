@@ -1,5 +1,4 @@
 import type { PlayerTraits } from "../../game/game_engine_player_traits";
-import type { ValueWithLocation } from "../..";
 
 export const emptyPlayerTraits = (): PlayerTraits => ({
   shieldVitality: {},
@@ -8,6 +7,3 @@ export const emptyPlayerTraits = (): PlayerTraits => ({
   appearance: {},
   sensors: {},
 });
-
-export const unwrapNumber = (value: ValueWithLocation<number>): number =>
-  value.value;

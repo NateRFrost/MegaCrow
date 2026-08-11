@@ -5,7 +5,7 @@ import type { SourceCodeLocation } from "../../../diagnostics";
 import { diagnosticMessages } from "../../../diagnostics/messages";
 import { ObjectListType } from "../../../object-lists";
 import { SymbolKind, type SymbolTable } from "../../../symbol-table";
-import { type ValueWithLocation, valueWithLocation } from "../..";
+import { type Located, located } from "../..";
 import { assertSyntaxKind } from "../../diagnostics/assertSyntaxKind";
 import { LowerError } from "../../error";
 import type { VehicleSet } from "../../game/game_engine_default";
@@ -13,7 +13,7 @@ import type { VehicleSet } from "../../game/game_engine_default";
 export const lowerVehicleSet = (
   node: OverrideEntryNode["value"],
   symbolTable: SymbolTable
-): ValueWithLocation<VehicleSet> => {
+): Located<VehicleSet> => {
   if (node.kind !== OverrideValueKind.SIMPLE) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType(ObjectListType.VehicleSets, ""),
@@ -28,7 +28,7 @@ export const lowerVehicleSet = (
   const { location } = node.value;
 
   if (name === "none" || name === "default" || name === "random") {
-    return valueWithLocation(name, location);
+    return located(name, location);
   }
 
   if (node.value.kind === SyntaxKind.REFERENCE) {
@@ -37,7 +37,7 @@ export const lowerVehicleSet = (
       symbol?.kind === SymbolKind.ObjectListItem &&
       symbol.objectType === ObjectListType.VehicleSets
     ) {
-      return valueWithLocation(symbol.index, location);
+      return located(symbol.index, location);
     }
   }
 
@@ -58,5 +58,5 @@ export const lowerVehicleSet = (
       location
     );
   }
-  return valueWithLocation(match.index, location);
+  return located(match.index, location);
 };

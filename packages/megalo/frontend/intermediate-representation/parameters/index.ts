@@ -22,30 +22,7 @@ export {
 } from "./explicit";
 export { GAME_OPTION_CUSTOM_VARIABLE_TYPE } from "./gameOptionTypes";
 export {
-  buildParameterLowerer,
   CustomVariableKind,
-  numberParam,
-  floatParam,
-  stringParam,
-  customVariableParam,
-  customTimerParam,
-  objectParam,
-  objectTypeParam,
-  playerParam,
-  teamParam,
-  variantVariableParam,
-  keywordParam,
-  OptionalParam,
-  LoweringSpecKind,
-  type LoweringSpec,
-  type LoweringSlot,
-  type LoweringSignature,
-  type LoweredParameter,
-  type LoweredResult,
-  type ParameterLowerer,
-  type OptionalLoweringSlot,
-} from "./lowering";
-export {
   resolvePlayerReference,
   resolveTeamReference,
   resolveObjectReference,

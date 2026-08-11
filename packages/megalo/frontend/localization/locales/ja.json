@@ -16,5 +16,11 @@
   "unknown_game_option_override": "game option override が必要ですが、'{{got}}' が見つかりました",
   "string_already_defined": "言語 {{language}} の string table には、トークン {{identifier}} 用の文字列が既に定義されています",
   "invalid_parameter_count": "{{expected}} パラメータが必要ですが、{{got}} パラメータが見つかりました",
-  "too_many_variables": "{{scope}} {{type}} 変数が多すぎます（上限 {{limit}}）"
+  "too_many_variables": "{{scope}} {{type}} 変数が多すぎます（上限 {{limit}}）",
+  "unsupported_field": "'{{fieldPath}}' は {{versionLabel}} ではサポートされていません。",
+  "version_label_107_mcc": "Halo: Reach - Master Chief Collection",
+  "version_label_107": "Halo: Reach - タイトルアップデート1",
+  "version_label_106": "Halo: Reach - 製品版",
+  "version_label_73": "Halo: Reach - ベータ",
+  "version_label_49": "Halo: Reach - アルファ"
 }

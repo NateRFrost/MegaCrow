@@ -1,6 +1,10 @@
 import { Parser } from "../../frontend/abstract-syntax-tree/index";
 import { getCompilerForVersion } from "../../frontend/compile";
-import { BUILT_IN_LOCATION, Diagnostics } from "../../frontend/diagnostics";
+import {
+  BUILT_IN_LOCATION,
+  DiagnosticSeverity,
+  Diagnostics,
+} from "../../frontend/diagnostics";
 import { FrontendError } from "../../frontend/error";
 import { Lowerer } from "../../frontend/intermediate-representation";
 import { setLocale } from "../../frontend/localization";
@@ -322,14 +326,47 @@ self.onmessage = (event: MessageEvent<WorkerRequest>): void => {
   const request = event.data;
   let response: WorkerResponse;
 
-  if (request.type === "saveGametype") {
-    response = saveGametype(request);
-    if (response.data !== undefined) {
-      self.postMessage(response, [response.data]);
-      return;
+  try {
+    if (request.type === "saveGametype") {
+      response = saveGametype(request);
+      if (response.data !== undefined) {
+        self.postMessage(response, [response.data]);
+        return;
+      }
+    } else {
+      response = analyze(request);
     }
-  } else {
-    response = analyze(request);
+  } catch (error) {
+    console.error("[megalo-worker] unhandled error", error);
+    if (request.type === "saveGametype") {
+      response = {
+        type: "saveGametype",
+        id: request.id,
+        error: error instanceof Error ? error.message : String(error),
+        diagnostics: [],
+      };
+    } else {
+      response = {
+        type: "analyze",
+        id: request.id,
+        tokens: [],
+        ast: null,
+        symbolTable: [],
+        ir: null,
+        tokenCount: 0,
+        symbolCount: 0,
+        lexDuration: 0,
+        parseDuration: 0,
+        lowerDuration: 0,
+        diagnostics: [
+          {
+            severity: DiagnosticSeverity.Error,
+            message: error instanceof Error ? error.message : String(error),
+            location: BUILT_IN_LOCATION,
+          },
+        ],
+      };
+    }
   }
 
   debugLog("response-posted", {

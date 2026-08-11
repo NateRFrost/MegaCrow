@@ -1,72 +1,25 @@
 import type { c_player_traits } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { getIRValue } from "../../intermediate-representation";
 import type { PlayerTraits } from "../../intermediate-representation/game/game_engine_player_traits";
 import {
   encodeActiveCamoSetting,
+  encodeBooleanTrait,
+  encodeBodyMultiplierPercentage,
+  encodeDamageModifierPercentage,
+  encodeDamageResistancePercentage,
+  encodeEquipmentUsageSetting,
   encodeForcedChangeColorSetting,
   encodeGrenadeCountSetting,
   encodeInfiniteAmmoSetting,
+  encodeMotionTrackerRange,
   encodeMotionTrackerSetting,
+  encodePlayerGravityPercentage,
+  encodePlayerSpeedPercentage,
+  encodeRechargeRatePercentage,
+  encodeShieldMultiplierPercentage,
+  encodeVampirismPercentage,
   encodeVehicleUsageSetting,
   encodeWaypointSetting,
 } from "./enums";
-
-/** `damage_resistance invulnerable` encodes to the top of the resistance curve. */
-const DAMAGE_RESISTANCE_INVULNERABLE = 12;
-/**
- * `damage_modifier fatality` (instant kill). The compiled field stores a raw
- * percentage, so we use the maximum representable percentage as the sentinel.
- * TODO: confirm the exact compiled value the engine expects for "fatality".
- */
-const DAMAGE_MODIFIER_FATALITY = 200;
-
-/** Reach `ReadEnumeratedReal` percentage tables (source % -> compiled index). */
-const SHIELD_MULTIPLIER_PERCENTAGES = [0, 50, 100, 150, 200, 300, 400];
-const SHIELD_RECHARGE_PERCENTAGES = [
-  0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150,
-];
-const PLAYER_SPEED_PERCENTAGES = [
-  0, 25, 50, 75, 90, 100, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160,
-  200,
-];
-
-const nearestPercentageIndex = (
-  percentages: readonly number[],
-  value: number
-): number => {
-  const exact = percentages.indexOf(value);
-  if (exact >= 0) {
-    return exact;
-  }
-  let bestIndex = 0;
-  let bestDistance = Number.POSITIVE_INFINITY;
-  for (let i = 0; i < percentages.length; i++) {
-    const distance = Math.abs(percentages[i]! - value);
-    if (distance < bestDistance) {
-      bestDistance = distance;
-      bestIndex = i;
-    }
-  }
-  return bestIndex;
-};
-
-const encodeShieldMultiplier = (value: number): number =>
-  nearestPercentageIndex(SHIELD_MULTIPLIER_PERCENTAGES, value);
-
-const encodeShieldRecharge = (value: number): number =>
-  nearestPercentageIndex(SHIELD_RECHARGE_PERCENTAGES, value);
-
-const encodePlayerSpeed = (value: number): number => {
-  const index = nearestPercentageIndex(PLAYER_SPEED_PERCENTAGES, value);
-  return index === 0 ? 0 : index + 1;
-};
-
-/** Map-override trait blocks store the raw percentage-table index (no +1 bias). */
-const encodeMapOverridePlayerSpeed = (value: number): number =>
-  nearestPercentageIndex(PLAYER_SPEED_PERCENTAGES, value);
-
-/** On/off toggles encode source `true`/`1` as compiled value `2` in Reach. */
-const encodeToggle = (enabled: boolean): number => (enabled ? 2 : 0);
 
 /**
  * Encode a lowered {@link PlayerTraits} block into a BLF {@link c_player_traits}.
@@ -75,152 +28,167 @@ const encodeToggle = (enabled: boolean): number => (enabled ? 2 : 0);
  */
 export const encodePlayerTraits = (
   target: c_player_traits,
-  traits: PlayerTraits,
-  options?: { mapOverrideSpeed?: boolean }
+  traits: PlayerTraits
 ): void => {
-  const sv = target.m_shield_vitality_traits;
-  const w = target.m_weapon_traits;
-  const m = target.m_movement_traits;
-  const a = target.m_appearance_traits;
-  const s = target.m_sensor_traits;
+  const shieldVitalityTraits = target.m_shield_vitality_traits;
+  const weaponTraits = target.m_weapon_traits;
+  const movementTraits = target.m_movement_traits;
+  const appearanceTraits = target.m_appearance_traits;
+  const sensorTraits = target.m_sensor_traits;
 
   const { shieldVitality, weapons, movement, appearance, sensors } = traits;
 
-  const damageResistance = getIRValue(shieldVitality.damageResistancePercentage);
-  if (damageResistance !== undefined) {
-    sv.m_damage_resistance_percentage_setting =
-      damageResistance === "invulnerable"
-        ? DAMAGE_RESISTANCE_INVULNERABLE
-        : Number(damageResistance);
+  if (shieldVitality.damageResistancePercentage !== undefined) {
+    shieldVitalityTraits.m_damage_resistance_percentage_setting =
+      encodeDamageResistancePercentage(
+        shieldVitality.damageResistancePercentage
+      );
   }
-  const bodyMultiplier = getIRValue(shieldVitality.bodyMultiplierPercentage);
-  if (bodyMultiplier !== undefined) {
-    sv.m_body_multiplier = bodyMultiplier;
+  if (shieldVitality.bodyMultiplierPercentage !== undefined) {
+    shieldVitalityTraits.m_body_multiplier = encodeBodyMultiplierPercentage(
+      shieldVitality.bodyMultiplierPercentage
+    );
   }
-  const bodyRecharge = getIRValue(shieldVitality.bodyRechargeRatePercentage);
-  if (bodyRecharge !== undefined) {
-    sv.m_body_recharge_rate = bodyRecharge;
+  if (shieldVitality.bodyRechargeRatePercentage !== undefined) {
+    shieldVitalityTraits.m_body_recharge_rate = encodeRechargeRatePercentage(
+      shieldVitality.bodyRechargeRatePercentage
+    );
   }
-  const shieldMultiplier = getIRValue(shieldVitality.shieldMultiplierPercentage);
-  if (shieldMultiplier !== undefined) {
-    sv.m_shield_multiplier = encodeShieldMultiplier(shieldMultiplier);
+  if (shieldVitality.shieldMultiplierPercentage !== undefined) {
+    shieldVitalityTraits.m_shield_multiplier = encodeShieldMultiplierPercentage(
+      shieldVitality.shieldMultiplierPercentage
+    );
   }
-  const shieldRecharge = getIRValue(shieldVitality.shieldRechargeRatePercentage);
-  if (shieldRecharge !== undefined) {
-    sv.m_shield_recharge_rate = encodeShieldRecharge(shieldRecharge);
+  if (shieldVitality.shieldRechargeRatePercentage !== undefined) {
+    shieldVitalityTraits.m_shield_recharge_rate = encodeRechargeRatePercentage(
+      shieldVitality.shieldRechargeRatePercentage
+    );
   }
-  const headshotImmunity = getIRValue(shieldVitality.headshotImmunity);
-  if (headshotImmunity !== undefined) {
-    sv.m_headshot_immunity_setting = headshotImmunity ? 1 : 0;
+  if (shieldVitality.headshotImmunity !== undefined) {
+    shieldVitalityTraits.m_headshot_immunity_setting = encodeBooleanTrait(
+      shieldVitality.headshotImmunity
+    );
   }
-  const vampirism = getIRValue(shieldVitality.vampirismPercentage);
-  if (vampirism !== undefined) {
-    sv.m_vampirism_percentage_setting = vampirism;
+  if (shieldVitality.vampirismPercentage !== undefined) {
+    shieldVitalityTraits.m_vampirism_percentage_setting =
+      encodeVampirismPercentage(shieldVitality.vampirismPercentage);
   }
-  const assassinationImmunity = getIRValue(shieldVitality.assasinationImmunity);
-  if (assassinationImmunity !== undefined) {
-    sv.m_assasination_immunity = assassinationImmunity ? 1 : 0;
+  if (shieldVitality.assasinationImmunity !== undefined) {
+    shieldVitalityTraits.m_assasination_immunity = encodeBooleanTrait(
+      shieldVitality.assasinationImmunity
+    );
   }
-
-  const damageModifier = getIRValue(weapons.damageModifierPercentageSetting);
-  if (damageModifier !== undefined) {
-    w.m_damage_modifier_percentage_setting =
-      damageModifier === "fatality"
-        ? DAMAGE_MODIFIER_FATALITY
-        : Number(damageModifier);
-  }
-  const meleeDamageModifier = getIRValue(weapons.meleeDamageModifierPercentageSetting);
-  if (meleeDamageModifier !== undefined) {
-    w.m_melee_damage_modifier_percentage_setting =
-      meleeDamageModifier === "fatality"
-        ? DAMAGE_MODIFIER_FATALITY
-        : Number(meleeDamageModifier);
-  }
-  const primaryWeapon = getIRValue(weapons.initialPrimaryWeaponAbsoluteIndex);
-  if (primaryWeapon !== undefined) {
-    w.m_initial_primary_weapon_absolute_index = primaryWeapon;
-  }
-  const secondaryWeapon = getIRValue(weapons.initialSecondaryWeaponAbsoluteIndex);
-  if (secondaryWeapon !== undefined) {
-    w.m_initial_secondary_weapon_absolute_index = secondaryWeapon;
-  }
-  const initialEquipment = getIRValue(weapons.initialEquipmentAbsoluteIndex);
-  if (initialEquipment !== undefined) {
-    w.m_initial_equipment_absolute_index = initialEquipment;
-  }
-  const grenadeCount = getIRValue(weapons.initialGrenadeCount);
-  if (grenadeCount !== undefined) {
-    w.m_initial_grenade_count_setting = encodeGrenadeCountSetting(grenadeCount);
-  }
-  const infiniteAmmo = getIRValue(weapons.infiniteAmmo);
-  if (infiniteAmmo !== undefined) {
-    w.m_infinite_ammo_setting = encodeInfiniteAmmoSetting(infiniteAmmo);
-  }
-  const rechargingGrenades = getIRValue(weapons.rechargingGrenades);
-  if (rechargingGrenades !== undefined) {
-    w.m_recharging_grenades_setting = rechargingGrenades ? 1 : 0;
-  }
-  // `weapon_pickup` is stored inverted in the compiled form (allowed pickup -> 0).
-  const weaponPickup = getIRValue(weapons.weaponPickup);
-  if (weaponPickup !== undefined) {
-    w.m_weapon_pickup_setting = weaponPickup ? 0 : 1;
-  }
-  const equipmentUsage = getIRValue(weapons.equipmentUsage);
-  if (equipmentUsage !== undefined) {
-    w.m_equipment_usage_setting = equipmentUsage ? 1 : 0;
-  }
-  const dropEquipment = getIRValue(weapons.dropEquipment);
-  if (dropEquipment !== undefined) {
-    w.m_equipment_drop_on_death_setting = dropEquipment ? 1 : 0;
-  }
-  const infiniteEquipment = getIRValue(weapons.infiniteEquipment);
-  if (infiniteEquipment !== undefined) {
-    w.m_infinite_equipment_setting = encodeToggle(infiniteEquipment);
+  if (shieldVitality.deathless !== undefined) {
+    shieldVitalityTraits.m_cannot_die_from_damage = encodeBooleanTrait(
+      shieldVitality.deathless
+    );
   }
 
-  const speed = getIRValue(movement.speedPercentage);
-  if (speed !== undefined) {
-    m.m_speed_setting = options?.mapOverrideSpeed
-      ? encodeMapOverridePlayerSpeed(speed)
-      : encodePlayerSpeed(speed);
+  if (weapons.damageModifierPercentageSetting !== undefined) {
+    weaponTraits.m_damage_modifier_percentage_setting =
+      encodeDamageModifierPercentage(weapons.damageModifierPercentageSetting);
   }
-  const gravity = getIRValue(movement.gravityPercentage);
-  if (gravity !== undefined) {
-    m.m_gravity_setting = gravity;
+  if (weapons.meleeDamageModifierPercentageSetting !== undefined) {
+    weaponTraits.m_melee_damage_modifier_percentage_setting =
+      encodeDamageModifierPercentage(
+        weapons.meleeDamageModifierPercentageSetting
+      );
   }
-  const vehicleUsage = getIRValue(movement.vehicleUsage);
-  if (vehicleUsage !== undefined) {
-    m.m_vehicle_usage_setting = encodeVehicleUsageSetting(vehicleUsage);
+  if (weapons.initialPrimaryWeaponAbsoluteIndex !== undefined) {
+    weaponTraits.m_initial_primary_weapon_absolute_index =
+      weapons.initialPrimaryWeaponAbsoluteIndex;
   }
-  const jumpModifier = getIRValue(movement.jumpModifier);
-  if (jumpModifier !== undefined) {
-    m.m_jump_modifier = jumpModifier;
+  if (weapons.initialSecondaryWeaponAbsoluteIndex !== undefined) {
+    weaponTraits.m_initial_secondary_weapon_absolute_index =
+      weapons.initialSecondaryWeaponAbsoluteIndex;
+  }
+  if (weapons.initialEquipmentAbsoluteIndex !== undefined) {
+    weaponTraits.m_initial_equipment_absolute_index =
+      weapons.initialEquipmentAbsoluteIndex;
+  }
+  if (weapons.initialGrenadeCount !== undefined) {
+    weaponTraits.m_initial_grenade_count_setting = encodeGrenadeCountSetting(
+      weapons.initialGrenadeCount
+    );
+  }
+  if (weapons.infiniteAmmo !== undefined) {
+    weaponTraits.m_infinite_ammo_setting = encodeInfiniteAmmoSetting(
+      weapons.infiniteAmmo
+    );
+  }
+  if (weapons.rechargingGrenades !== undefined) {
+    weaponTraits.m_recharging_grenades_setting = encodeBooleanTrait(
+      weapons.rechargingGrenades
+    );
+  }
+  if (weapons.weaponPickup !== undefined) {
+    weaponTraits.m_weapon_pickup_setting = encodeBooleanTrait(
+      weapons.weaponPickup
+    );
+  }
+  if (weapons.equipmentUsage !== undefined) {
+    weaponTraits.m_equipment_usage_setting = encodeEquipmentUsageSetting(
+      weapons.equipmentUsage
+    );
+  }
+  if (weapons.dropEquipment !== undefined) {
+    weaponTraits.m_equipment_drop_on_death_setting = encodeBooleanTrait(
+      weapons.dropEquipment
+    );
+  }
+  if (weapons.infiniteEquipment !== undefined) {
+    weaponTraits.m_infinite_equipment_setting = encodeBooleanTrait(
+      weapons.infiniteEquipment
+    );
   }
 
-  const activeCamo = getIRValue(appearance.activeCamo);
-  if (activeCamo !== undefined) {
-    a.m_active_camo_setting = encodeActiveCamoSetting(activeCamo);
+  if (movement.speedPercentage !== undefined) {
+    movementTraits.m_speed_setting = encodePlayerSpeedPercentage(
+      movement.speedPercentage
+    );
   }
-  const waypoint = getIRValue(appearance.waypoint);
-  if (waypoint !== undefined) {
-    a.m_waypoint_setting = encodeWaypointSetting(waypoint);
+  if (movement.gravityPercentage !== undefined) {
+    movementTraits.m_gravity_setting = encodePlayerGravityPercentage(
+      movement.gravityPercentage
+    );
   }
-  const gamertag = getIRValue(appearance.gamertag);
-  if (gamertag !== undefined) {
-    a.m_gamertag_setting = encodeWaypointSetting(gamertag);
+  if (movement.vehicleUsage !== undefined) {
+    movementTraits.m_vehicle_usage_setting = encodeVehicleUsageSetting(
+      movement.vehicleUsage
+    );
   }
-  const forcedChangeColor = getIRValue(appearance.forcedChangeColor);
-  if (forcedChangeColor !== undefined) {
-    a.m_forced_change_color_setting =
-      encodeForcedChangeColorSetting(forcedChangeColor);
+  if (movement.jumpModifier !== undefined) {
+    movementTraits.m_jump_modifier = movement.jumpModifier;
   }
 
-  const trackerMode = getIRValue(sensors.motionTrackerMode);
-  if (trackerMode !== undefined) {
-    s.m_motion_tracker_setting = encodeMotionTrackerSetting(trackerMode);
+  if (appearance.activeCamo !== undefined) {
+    appearanceTraits.m_active_camo_setting = encodeActiveCamoSetting(
+      appearance.activeCamo
+    );
   }
-  const trackerRange = getIRValue(sensors.motionTrackerRange);
-  if (trackerRange !== undefined) {
-    s.m_motion_tracker_range_setting = trackerRange;
+  if (appearance.waypoint !== undefined) {
+    appearanceTraits.m_waypoint_setting = encodeWaypointSetting(
+      appearance.waypoint
+    );
+  }
+  if (appearance.gamertag !== undefined) {
+    appearanceTraits.m_gamertag_setting = encodeWaypointSetting(
+      appearance.gamertag
+    );
+  }
+  if (appearance.forcedChangeColor !== undefined) {
+    appearanceTraits.m_forced_change_color_setting =
+      encodeForcedChangeColorSetting(appearance.forcedChangeColor);
+  }
+
+  if (sensors.motionTrackerMode !== undefined) {
+    sensorTraits.m_motion_tracker_setting = encodeMotionTrackerSetting(
+      sensors.motionTrackerMode
+    );
+  }
+  if (sensors.motionTrackerRange !== undefined) {
+    sensorTraits.m_motion_tracker_range_setting = encodeMotionTrackerRange(
+      sensors.motionTrackerRange
+    );
   }
 };

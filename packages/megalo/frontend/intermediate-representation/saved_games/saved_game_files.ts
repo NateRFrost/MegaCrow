@@ -1,4 +1,3 @@
-import type { ValueWithLocation } from "..";
 
 export type ContentItemHistory = {
   timestamp: Date;
@@ -16,6 +15,6 @@ export type ContentItemMetadata = {
   general: ContentItemGeneralMetadata;
   creationHistory: ContentItemHistory;
   modificationHistory: ContentItemHistory;
-  name?: ValueWithLocation<string>;
-  description?: ValueWithLocation<string>;
+  name?: string;
+  description?: string;
 };

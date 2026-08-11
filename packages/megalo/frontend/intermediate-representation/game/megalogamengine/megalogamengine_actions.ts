@@ -1,4 +1,3 @@
-import type { ValueWithLocation } from "../..";
 import type { StringTableReference } from "../string_table";
 import type { HUDMeterInputType } from "./megalogamengine_hud_widgets";
 import type {
@@ -122,7 +121,7 @@ export enum ActionType {
 }
 
 type ActionParameters<T extends ActionType, P> = {
-  type: ValueWithLocation<T>;
+  type: T;
   parameters: P;
 };
 
@@ -149,41 +148,41 @@ export enum MathOperation {
 }
 
 export type SetScoreParameters = {
-  target: ValueWithLocation<TeamOrPlayerTarget>;
-  operation: ValueWithLocation<MathOperation>;
-  variable: ValueWithLocation<CustomVariableReference>;
+  target: TeamOrPlayerTarget;
+  operation: MathOperation;
+  variable: CustomVariableReference;
 };
 
 export type ObjectOffset = {
-  x: ValueWithLocation<number>;
-  y: ValueWithLocation<number>;
-  z: ValueWithLocation<number>;
+  x: number;
+  y: number;
+  z: number;
 };
 
 export type CreateObjectParameters = {
-  objectType: ValueWithLocation<ObjectTypeReference>;
-  place_at_object: ValueWithLocation<ObjectReference>;
-  object_reference_out?: ValueWithLocation<ObjectReference>;
+  objectType: ObjectTypeReference;
+  place_at_object: ObjectReference;
+  object_reference_out?: ObjectReference;
   labelIndex?: StringTableReference; // not 100% sure about this
-  offset?: ValueWithLocation<ObjectOffset>;
-  variantNameIndex?: ValueWithLocation<number>; // object_lists/stringids.txt ?
-  neverGarbageCollect?: ValueWithLocation<boolean>;
-  suppressEffect?: ValueWithLocation<boolean>;
-  absoluteOrientation?: ValueWithLocation<boolean>;
+  offset?: ObjectOffset;
+  variantNameIndex?: number; // object_lists/stringids.txt ?
+  neverGarbageCollect?: boolean;
+  suppressEffect?: boolean;
+  absoluteOrientation?: boolean;
 };
 
 export type DeleteObjectParameters = {
-  object: ValueWithLocation<ObjectReference>;
+  object: ObjectReference;
 };
 
 export type NavpointSetVisibleParameters = {
-  navpoint: ValueWithLocation<ObjectReference>;
-  visible: ValueWithLocation<boolean>;
+  navpoint: ObjectReference;
+  visible: boolean;
 };
 
 export type NavpointSetIconParameters = {
-  navpoint: ValueWithLocation<ObjectReference>;
-  icon: ValueWithLocation<StringTableReference>;
+  navpoint: ObjectReference;
+  icon: StringTableReference;
 };
 
 export enum NavpointPriority {
@@ -194,25 +193,25 @@ export enum NavpointPriority {
 }
 
 export type NavpointSetPriorityParameters = {
-  navpoint: ValueWithLocation<ObjectReference>;
-  priority: ValueWithLocation<NavpointPriority>;
+  navpoint: ObjectReference;
+  priority: NavpointPriority;
 };
 
 export type NavpointSetTimerParameters = {
-  navpoint: ValueWithLocation<ObjectReference>;
-  timerIndex: ValueWithLocation<number>;
+  navpoint: ObjectReference;
+  timerIndex: number;
 };
 
 export type NavpointSetVisibleRangeParameters = {
-  navpoint: ValueWithLocation<ObjectReference>;
-  minFeet: ValueWithLocation<CustomVariableReference>;
-  maxFeet: ValueWithLocation<CustomVariableReference>;
+  navpoint: ObjectReference;
+  minFeet: CustomVariableReference;
+  maxFeet: CustomVariableReference;
 };
 
 export type SetParameters = {
-  left: ValueWithLocation<CustomVariableReference>;
-  operation: ValueWithLocation<MathOperation>;
-  right: ValueWithLocation<CustomVariableReference>;
+  left: CustomVariableReference;
+  operation: MathOperation;
+  right: CustomVariableReference;
 };
 
 export enum BoundaryShape {
@@ -222,25 +221,25 @@ export enum BoundaryShape {
 }
 
 type SphereBoundaryParameters = {
-  shape: ValueWithLocation<BoundaryShape.Sphere>;
-  radius: ValueWithLocation<CustomVariableReference>;
+  shape: BoundaryShape.Sphere;
+  radius: CustomVariableReference;
 };
 
 type BoxBoundaryParameters = {
-  shape: ValueWithLocation<BoundaryShape.Box>;
-  width: ValueWithLocation<CustomVariableReference>;
-  height: ValueWithLocation<CustomVariableReference>;
-  depth: ValueWithLocation<CustomVariableReference>;
+  shape: BoundaryShape.Box;
+  width: CustomVariableReference;
+  height: CustomVariableReference;
+  depth: CustomVariableReference;
 };
 
 type CylinderBoundaryParameters = {
-  shape: ValueWithLocation<BoundaryShape.Cylinder>;
-  radius: ValueWithLocation<CustomVariableReference>;
-  height: ValueWithLocation<CustomVariableReference>;
+  shape: BoundaryShape.Cylinder;
+  radius: CustomVariableReference;
+  height: CustomVariableReference;
 };
 
 export type SetBoundaryParameters = {
-  object: ValueWithLocation<ObjectReference>;
+  object: ObjectReference;
 } & (
   | SphereBoundaryParameters
   | BoxBoundaryParameters
@@ -248,8 +247,8 @@ export type SetBoundaryParameters = {
 );
 
 export type ApplyPlayerTraitsParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  traitIndex: ValueWithLocation<number>;
+  player: PlayerReference;
+  traitIndex: number;
 };
 
 export type FireteamFilter = {
@@ -264,8 +263,8 @@ export type FireteamFilter = {
 };
 
 export type SetFireteamRespawnFilterParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  fireteamFilter: ValueWithLocation<FireteamFilter>;
+  object: ObjectReference;
+  fireteamFilter: FireteamFilter;
 };
 
 export enum PlayerFilterType {
@@ -279,26 +278,24 @@ export enum PlayerFilterType {
 
 export type PlayerFilterModifier =
   | {
-      type: ValueWithLocation<
-        Exclude<PlayerFilterType, PlayerFilterType.SpecificPlayer>
-      >;
+      type: Exclude<PlayerFilterType, PlayerFilterType.SpecificPlayer>;
     }
   | {
-      type: ValueWithLocation<PlayerFilterType.SpecificPlayer>;
-      player: ValueWithLocation<PlayerReference>;
-      visible: ValueWithLocation<CustomVariableReference>;
+      type: PlayerFilterType.SpecificPlayer;
+      player: PlayerReference;
+      visible: CustomVariableReference;
     };
 
 export type SetProgressBarParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  playerFilterModifier: ValueWithLocation<PlayerFilterModifier>;
-  timerIndex: ValueWithLocation<number>;
+  object: ObjectReference;
+  playerFilterModifier: PlayerFilterModifier;
+  timerIndex: number;
 };
 
 export type HudPostMessageParameters = {
-  target: ValueWithLocation<TeamOrPlayerTarget>;
-  soundIndex: ValueWithLocation<MegaloSound>;
-  string: ValueWithLocation<DynamicString>;
+  target: TeamOrPlayerTarget;
+  soundIndex: MegaloSound;
+  string: DynamicString;
 };
 
 export enum GameEngineTimerRate {
@@ -332,30 +329,30 @@ export enum GameEngineTimerRate {
 }
 
 export type TimerSetRateParameters = {
-  timer: ValueWithLocation<CustomTimerReference>;
-  rate: ValueWithLocation<GameEngineTimerRate>;
+  timer: CustomTimerReference;
+  rate: GameEngineTimerRate;
 };
 
 export type ForEachParameters = {
-  triggerIndex: ValueWithLocation<number>;
+  triggerIndex: number;
 };
 
 export type ObjectDestroyParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  noStatistics?: ValueWithLocation<boolean>;
+  object: ObjectReference;
+  noStatistics?: boolean;
 };
 
 export type ObjectAttachParameters = {
-  child: ValueWithLocation<ObjectReference>;
-  parent: ValueWithLocation<ObjectReference>;
-  offset: ValueWithLocation<ObjectOffset>;
-  absoluteOrientation?: ValueWithLocation<boolean>;
+  child: ObjectReference;
+  parent: ObjectReference;
+  offset: ObjectOffset;
+  absoluteOrientation?: boolean;
 };
 
 export type PlayerAdjustMoneyParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  operation: ValueWithLocation<MathOperation>;
-  amount: ValueWithLocation<CustomVariableReference>;
+  player: PlayerReference;
+  operation: MathOperation;
+  amount: CustomVariableReference;
 };
 
 export type PlayerPurchaseMode = {
@@ -367,9 +364,9 @@ export type PlayerPurchaseMode = {
 };
 
 export type PlayerEnablePurchasesParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  selectedModes: ValueWithLocation<PlayerPurchaseMode>;
-  enabled: ValueWithLocation<CustomVariableReference>;
+  player: PlayerReference;
+  selectedModes: PlayerPurchaseMode;
+  enabled: CustomVariableReference;
 };
 
 export enum WeaponPickupPriority {
@@ -379,24 +376,24 @@ export enum WeaponPickupPriority {
 }
 
 export type WeaponSetPickupPriorityParameters = {
-  weapon: ValueWithLocation<ObjectReference>;
-  priority: ValueWithLocation<WeaponPickupPriority>;
+  weapon: ObjectReference;
+  priority: WeaponPickupPriority;
 };
 
 export type HUDWidgetSetTextParameters = {
-  widgetIndex: ValueWithLocation<number>;
-  string: ValueWithLocation<DynamicString>;
+  widgetIndex: number;
+  string: DynamicString;
 };
 
 type HUDMeterInputNumber = {
-  meterType: ValueWithLocation<HUDMeterInputType.Number>;
-  value: ValueWithLocation<CustomVariableReference>;
-  max: ValueWithLocation<CustomVariableReference>;
+  meterType: HUDMeterInputType.Number;
+  value: CustomVariableReference;
+  max: CustomVariableReference;
 };
 
 type HUDMeterInputTimer = {
-  meterType: ValueWithLocation<HUDMeterInputType.Timer>;
-  timer: ValueWithLocation<CustomTimerReference>;
+  meterType: HUDMeterInputType.Timer;
+  timer: CustomTimerReference;
 };
 
 export type HUDMeterInput = HUDMeterInputNumber | HUDMeterInputTimer;
@@ -408,29 +405,29 @@ export type HUDWidgetSetMeterParameters = {
 
 export type HUDWidgetSetIconParameters = {
   widgetIndex: number;
-  iconIndex: ValueWithLocation<number>; // object_lists/hud_widget_icons.txt
+  iconIndex: number; // object_lists/hud_widget_icons.txt
 };
 
 export type HUDWidgetSetVisibilityParameters = {
   widgetIndex: number;
-  player: ValueWithLocation<PlayerReference>;
+  player: PlayerReference;
   visible: boolean;
 };
 
 export type PlaySoundParameters = {
-  soundIndex: ValueWithLocation<MegaloSound>;
-  immediate: ValueWithLocation<boolean>;
-  target: ValueWithLocation<TeamOrPlayerTarget>;
+  soundIndex: MegaloSound;
+  immediate: boolean;
+  target: TeamOrPlayerTarget;
 };
 
 export type VitalityAdjustmentParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  operation: ValueWithLocation<MathOperation>;
-  amount: ValueWithLocation<CustomVariableReference>;
+  object: ObjectReference;
+  operation: MathOperation;
+  amount: CustomVariableReference;
 };
 
 export type PlayerSetRequisitionPaletteParameters = {
-  player: ValueWithLocation<PlayerReference>;
+  player: PlayerReference;
   requisitionPaletteIndex: number;
 };
 
@@ -440,59 +437,59 @@ export enum GrenadeType {
 }
 
 export type AdjustGrenadesParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  grenadeType: ValueWithLocation<GrenadeType>;
-  operation: ValueWithLocation<MathOperation>;
-  amount: ValueWithLocation<CustomVariableReference>;
+  player: PlayerReference;
+  grenadeType: GrenadeType;
+  operation: MathOperation;
+  amount: CustomVariableReference;
 };
 
 export type SubmitIncidentParameters = {
   statIndex: number;
-  cause: ValueWithLocation<TeamOrPlayerTarget>;
-  effect: ValueWithLocation<TeamOrPlayerTarget>;
+  cause: TeamOrPlayerTarget;
+  effect: TeamOrPlayerTarget;
 };
 
 export type SubmitIncidentWithCustomValueParameters = {
   statIndex: number;
-  cause: ValueWithLocation<TeamOrPlayerTarget>;
-  effect: ValueWithLocation<TeamOrPlayerTarget>;
-  customValue: ValueWithLocation<CustomVariableReference>;
+  cause: TeamOrPlayerTarget;
+  effect: TeamOrPlayerTarget;
+  customValue: CustomVariableReference;
 };
 
 export type SetLoadoutPaletteParameters = {
-  target: ValueWithLocation<TeamOrPlayerTarget>;
+  target: TeamOrPlayerTarget;
   loadoutPaletteIndex: number;
 };
 
 export type PlayerGetWeaponParameters = {
-  player: ValueWithLocation<PlayerReference>;
+  player: PlayerReference;
   primary: boolean;
-  weapon: ValueWithLocation<ObjectReference>;
+  weapon: ObjectReference;
 };
 
 export type CreateTunnelParameters = {
-  from: ValueWithLocation<ObjectReference>;
-  to: ValueWithLocation<ObjectReference>;
-  objectType: ValueWithLocation<ObjectTypeReference>;
-  radious: ValueWithLocation<CustomVariableReference>;
-  objectReferenceOut: ValueWithLocation<ObjectReference>;
+  from: ObjectReference;
+  to: ObjectReference;
+  objectType: ObjectTypeReference;
+  radious: CustomVariableReference;
+  objectReferenceOut: ObjectReference;
 };
 
 export type PlayerSetCoopSpawningParameters = {
-  player: ValueWithLocation<PlayerReference>;
+  player: PlayerReference;
   enabled: boolean;
 };
 
 export type ObjectSetOrientationParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  source: ValueWithLocation<ObjectReference>;
-  absoluteOrientation?: ValueWithLocation<boolean>;
+  object: ObjectReference;
+  source: ObjectReference;
+  absoluteOrientation?: boolean;
 };
 
 export type ObjectFaceObjectParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  target: ValueWithLocation<ObjectReference>;
-  offset?: ValueWithLocation<ObjectOffset>;
+  object: ObjectReference;
+  target: ObjectReference;
+  offset?: ObjectOffset;
 };
 
 export enum BipedGiveWeaponMode {
@@ -502,25 +499,25 @@ export enum BipedGiveWeaponMode {
 }
 
 export type BipedGiveWeaponParameters = {
-  biped: ValueWithLocation<ObjectReference>;
-  weapon: ValueWithLocation<ObjectReference>;
-  mode: ValueWithLocation<BipedGiveWeaponMode>;
+  biped: ObjectReference;
+  weapon: ObjectReference;
+  mode: BipedGiveWeaponMode;
 };
 
 export type BipedDropWeaponParameters = {
-  biped: ValueWithLocation<ObjectReference>;
-  primary: ValueWithLocation<boolean>;
+  biped: ObjectReference;
+  primary: boolean;
   deleteOnDrop: boolean;
 };
 
 export type GetRandomObjectParameters = {
   filterIndex: number;
-  ignoreObject: ValueWithLocation<ObjectReference>;
-  objectOut: ValueWithLocation<ObjectReference>;
+  ignoreObject: ObjectReference;
+  objectOut: ObjectReference;
 };
 
 export type BoundarySetPlayerColorParameters = {
-  object: ValueWithLocation<ObjectReference>;
+  object: ObjectReference;
   playerIndex: number;
 };
 
@@ -553,85 +550,85 @@ export enum ScriptableGameButtons {
 }
 
 export type GetButtonTimeParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  button: ValueWithLocation<ScriptableGameButtons>;
-  timeOut: ValueWithLocation<CustomVariableReference>;
+  player: PlayerReference;
+  button: ScriptableGameButtons;
+  timeOut: CustomVariableReference;
 };
 
 export type TeamSetVehicleSpawningParameters = {
-  team: ValueWithLocation<TeamReference>;
+  team: TeamReference;
   enabled: boolean;
 };
 
 export type PlayerSetVehicleSpawningParameters = {
-  player: ValueWithLocation<PlayerReference>;
+  player: PlayerReference;
   enabled: boolean;
 };
 
 export type SetPlayerRespawnVehicleParameters = {
-  objectType: ValueWithLocation<ObjectTypeReference>;
-  player: ValueWithLocation<PlayerReference>;
+  objectType: ObjectTypeReference;
+  player: PlayerReference;
 };
 
 export type SetTeamRespawnVehicleParameters = {
-  objectType: ValueWithLocation<ObjectTypeReference>;
-  team: ValueWithLocation<TeamReference>;
+  objectType: ObjectTypeReference;
+  team: TeamReference;
 };
 
 export type HideObjectParameters = {
-  object: ValueWithLocation<ObjectReference>;
+  object: ObjectReference;
   shouldHide: boolean;
 };
 
 export type PrintVariableParameters = {
-  string: ValueWithLocation<DynamicString>;
+  string: DynamicString;
 };
 
 export type GetPlayerHoldingObjectParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  playerOut: ValueWithLocation<PlayerReference>;
+  object: ObjectReference;
+  playerOut: PlayerReference;
 };
 
 export type EndRoundParameters = never;
 
 export type BoundarySetVisibleParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  playerFilterModifier: ValueWithLocation<PlayerFilterModifier>;
+  object: ObjectReference;
+  playerFilterModifier: PlayerFilterModifier;
 };
 
 export type ObjectSetInvincibilityParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  invincible: ValueWithLocation<CustomVariableReference>;
+  object: ObjectReference;
+  invincible: CustomVariableReference;
 };
 
 export type RandomParameters = {
-  range: ValueWithLocation<CustomVariableReference>;
-  valueOut: ValueWithLocation<CustomVariableReference>;
+  range: CustomVariableReference;
+  valueOut: CustomVariableReference;
 };
 
 export type ObjectGetOrientationParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  orientationOut: ValueWithLocation<CustomVariableReference>;
+  object: ObjectReference;
+  orientationOut: CustomVariableReference;
 };
 
 export type ObjectGetVelocityParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  velocityOut: ValueWithLocation<CustomVariableReference>;
+  object: ObjectReference;
+  velocityOut: CustomVariableReference;
 };
 
 export type PlayerDeathGetKillingPlayerParameters = {
-  deadPlayer: ValueWithLocation<PlayerReference>;
-  killingPlayerOut: ValueWithLocation<PlayerReference>;
+  deadPlayer: PlayerReference;
+  killingPlayerOut: PlayerReference;
 };
 
 export type PlayerDeathGetDamageTypeParameters = {
-  deadPlayer: ValueWithLocation<PlayerReference>;
-  damageTypeOut: ValueWithLocation<CustomVariableReference>;
+  deadPlayer: PlayerReference;
+  damageTypeOut: CustomVariableReference;
 };
 
 export type PlayerDeathGetSpecialTypeParameters = {
-  deadPlayer: ValueWithLocation<PlayerReference>;
-  specialTypeOut: ValueWithLocation<CustomVariableReference>;
+  deadPlayer: PlayerReference;
+  specialTypeOut: CustomVariableReference;
 };
 
 export type DebuggingEnableTracingParameters = {
@@ -639,233 +636,233 @@ export type DebuggingEnableTracingParameters = {
 };
 
 export type ObjectDetachParameters = {
-  object: ValueWithLocation<ObjectReference>;
+  object: ObjectReference;
 };
 
 export type PlayerGetPlaceParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  placeOut: ValueWithLocation<CustomVariableReference>;
+  player: PlayerReference;
+  placeOut: CustomVariableReference;
 };
 
 export type TeamGetPlaceParameters = {
-  team: ValueWithLocation<TeamReference>;
-  placeOut: ValueWithLocation<CustomVariableReference>;
+  team: TeamReference;
+  placeOut: CustomVariableReference;
 };
 
 export type PlayerGetKillingSpreeCountParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  spreeCountOut: ValueWithLocation<CustomVariableReference>;
+  player: PlayerReference;
+  spreeCountOut: CustomVariableReference;
 };
 
 export type PlayerGetVehicleParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  vehicleOut: ValueWithLocation<ObjectReference>;
+  player: PlayerReference;
+  vehicleOut: ObjectReference;
 };
 
 export type PlayerSetVehicleParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  vehicle: ValueWithLocation<ObjectReference>;
+  player: PlayerReference;
+  vehicle: ObjectReference;
 };
 
 export type PlayerSetUnitParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  unit: ValueWithLocation<ObjectReference>;
+  player: PlayerReference;
+  unit: ObjectReference;
 };
 
 export type TimerResetParameters = {
-  timer: ValueWithLocation<CustomTimerReference>;
+  timer: CustomTimerReference;
 };
 
 export type ObjectBounceParameters = {
-  object: ValueWithLocation<ObjectReference>;
+  object: ObjectReference;
 };
 
 export type HUDWidgetSetValueParameters = {
   widgetIndex: number;
-  value: ValueWithLocation<CustomVariableReference>;
+  value: CustomVariableReference;
 };
 
 export type ObjectSetScaleParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  scale: ValueWithLocation<CustomVariableReference>;
+  object: ObjectReference;
+  scale: CustomVariableReference;
 };
 
 export type NavpointSetTextParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  string: ValueWithLocation<DynamicString>;
+  object: ObjectReference;
+  string: DynamicString;
 };
 
 export type ObjectGetShieldParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  variable: ValueWithLocation<CustomVariableReference>;
+  object: ObjectReference;
+  variable: CustomVariableReference;
 };
 
 export type ObjectGetHealthParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  variable: ValueWithLocation<CustomVariableReference>;
+  object: ObjectReference;
+  variable: CustomVariableReference;
 };
 
 export type PlayerSetObjectiveParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  objective: ValueWithLocation<DynamicString>;
+  player: PlayerReference;
+  objective: DynamicString;
 };
 
 export type PlayerSetObjectiveAllegianceParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  allegiance: ValueWithLocation<DynamicString>;
+  player: PlayerReference;
+  allegiance: DynamicString;
 };
 
 export type PlayerSetObjectiveAllegianceIconParameters = {
-  player: ValueWithLocation<PlayerReference>;
+  player: PlayerReference;
   iconIndex: number; // object_lists/hud_widget_icons.txt
 };
 
 export type TeamSetCoopSpawningParameters = {
-  team: ValueWithLocation<TeamReference>;
+  team: TeamReference;
   coopSpawningEnabled: boolean;
 };
 
 export type TeamSetPrimaryRespawnObjectParameters = {
-  team: ValueWithLocation<TeamReference>;
-  respawnObject: ValueWithLocation<ObjectReference>;
+  team: TeamReference;
+  respawnObject: ObjectReference;
 };
 
 export type PlayerSetPrimaryRespawnObjectParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  respawnObject: ValueWithLocation<ObjectReference>;
+  player: PlayerReference;
+  respawnObject: ObjectReference;
 };
 
 export type PlayerGetFireteamIndexParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  fireteamIndexOut: ValueWithLocation<CustomVariableReference>;
+  player: PlayerReference;
+  fireteamIndexOut: CustomVariableReference;
 };
 
 export type PlayerSetFireteamIndexParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  fireteamIndex: ValueWithLocation<CustomVariableReference>;
+  player: PlayerReference;
+  fireteamIndex: CustomVariableReference;
 };
 
 export type ObjectAdjustShieldParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  operation: ValueWithLocation<MathOperation>;
-  amount: ValueWithLocation<CustomVariableReference>;
+  object: ObjectReference;
+  operation: MathOperation;
+  amount: CustomVariableReference;
 };
 
 export type ObjectAdjustHealthParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  operation: ValueWithLocation<MathOperation>;
-  amount: ValueWithLocation<CustomVariableReference>;
+  object: ObjectReference;
+  operation: MathOperation;
+  amount: CustomVariableReference;
 };
 
 export type ObjectAdjustMaximumShieldParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  operation: ValueWithLocation<MathOperation>;
-  amount: ValueWithLocation<CustomVariableReference>;
+  object: ObjectReference;
+  operation: MathOperation;
+  amount: CustomVariableReference;
 };
 
 export type ObjectAdjustMaximumHealthParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  operation: ValueWithLocation<MathOperation>;
-  amount: ValueWithLocation<CustomVariableReference>;
+  object: ObjectReference;
+  operation: MathOperation;
+  amount: CustomVariableReference;
 };
 
 export type ObjectGetDistanceParameters = {
-  from: ValueWithLocation<ObjectReference>;
-  to: ValueWithLocation<ObjectReference>;
-  distanceOut: ValueWithLocation<CustomVariableReference>;
+  from: ObjectReference;
+  to: ObjectReference;
+  distanceOut: CustomVariableReference;
 };
 
 export type DeviceSetPowerParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  power: ValueWithLocation<CustomVariableReference>;
+  object: ObjectReference;
+  power: CustomVariableReference;
 };
 
 export type DeviceGetPowerParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  powerOut: ValueWithLocation<CustomVariableReference>;
+  object: ObjectReference;
+  powerOut: CustomVariableReference;
 };
 
 export type DeviceSetPositionParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  position: ValueWithLocation<CustomVariableReference>;
+  object: ObjectReference;
+  position: CustomVariableReference;
 };
 
 export type DeviceGetPositionParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  positionOut: ValueWithLocation<CustomVariableReference>;
+  object: ObjectReference;
+  positionOut: CustomVariableReference;
 };
 
 export type DeviceSetPositionTrackParameters = {
-  object: ValueWithLocation<ObjectReference>;
+  object: ObjectReference;
   animationNameIndex: number; // object_lists/stringids.txt ?
-  interpolationTime: ValueWithLocation<CustomVariableReference>;
+  interpolationTime: CustomVariableReference;
 };
 
 export type DeviceAnimatePositionParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  animationTargetFraction: ValueWithLocation<CustomVariableReference>;
-  animationDurationSeconds: ValueWithLocation<CustomVariableReference>;
-  accelerationSeconds: ValueWithLocation<CustomVariableReference>;
-  decelerationSeconds: ValueWithLocation<CustomVariableReference>;
+  object: ObjectReference;
+  animationTargetFraction: CustomVariableReference;
+  animationDurationSeconds: CustomVariableReference;
+  accelerationSeconds: CustomVariableReference;
+  decelerationSeconds: CustomVariableReference;
 };
 
 export type DeviceSetPositionImmediateParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  position: ValueWithLocation<CustomVariableReference>;
+  object: ObjectReference;
+  position: CustomVariableReference;
 };
 
 export type SavedFilmInsertMarkerParameters = {
-  offsetSeconds: ValueWithLocation<CustomVariableReference>;
-  label: ValueWithLocation<DynamicString>;
+  offsetSeconds: CustomVariableReference;
+  label: DynamicString;
 };
 
 export type RespawnZoneEnableParameters = {
-  respawnZone: ValueWithLocation<ObjectReference>;
-  enabled: ValueWithLocation<CustomVariableReference>;
+  respawnZone: ObjectReference;
+  enabled: CustomVariableReference;
 };
 
 export type PlayerGetEquipmentParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  equipmentOut: ValueWithLocation<ObjectReference>;
+  player: PlayerReference;
+  equipmentOut: ObjectReference;
 };
 
 export type ObjectSetNeverGarbageParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  neverGarbage: ValueWithLocation<CustomVariableReference>;
+  object: ObjectReference;
+  neverGarbage: CustomVariableReference;
 };
 
 export type PlayerGetTargetObjectParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  objectOut: ValueWithLocation<ObjectReference>;
+  player: PlayerReference;
+  objectOut: ObjectReference;
 };
 
 export type DebugForcePlayerViewCountParameters = {
-  viewCount: ValueWithLocation<CustomVariableReference>;
+  viewCount: CustomVariableReference;
 };
 
 export type PlayerPickUpWeaponParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  weapon: ValueWithLocation<ObjectReference>;
+  player: PlayerReference;
+  weapon: ObjectReference;
 };
 
 export type SetScenarioInterpolatorStateParameters = {
-  interpolatorIndex: ValueWithLocation<CustomVariableReference>;
-  active: ValueWithLocation<CustomVariableReference>;
+  interpolatorIndex: CustomVariableReference;
+  active: CustomVariableReference;
 };
 
 export type GameGriefRecordCustomPenaltyParameters = {
-  player: ValueWithLocation<PlayerReference>;
-  variable: ValueWithLocation<CustomVariableReference>;
+  player: PlayerReference;
+  variable: CustomVariableReference;
 };
 
 export type SetPickupFilterParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  playerFilterModifier: ValueWithLocation<PlayerFilterModifier>;
+  object: ObjectReference;
+  playerFilterModifier: PlayerFilterModifier;
 };
 
 export type SetRespawnFilterParameters = {
-  object: ValueWithLocation<ObjectReference>;
-  playerFilterModifier: ValueWithLocation<PlayerFilterModifier>;
+  object: ObjectReference;
+  playerFilterModifier: PlayerFilterModifier;
 };
 
 export type BreakIntoDebuggerParameters = never;

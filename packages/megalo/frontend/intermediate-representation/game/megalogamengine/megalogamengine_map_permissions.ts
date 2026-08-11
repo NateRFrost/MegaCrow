@@ -1,6 +1,5 @@
-import type { ValueWithLocation } from "../..";
 
 export type MegaloGameEngineMapPermissions = {
-  exceptMapIds: ValueWithLocation<number>[];
-  allowByDefault: ValueWithLocation<boolean>;
+  exceptMapIds: number[];
+  allowByDefault: boolean;
 };

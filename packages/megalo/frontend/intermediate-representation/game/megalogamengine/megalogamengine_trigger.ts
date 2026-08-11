@@ -1,4 +1,3 @@
-import type { ValueWithLocation } from "../..";
 
 export enum TriggerExecutionMode {
   General = 0,
@@ -21,9 +20,9 @@ export enum TriggerType {
 }
 
 export type Trigger = {
-  executionMode: ValueWithLocation<TriggerExecutionMode>;
-  triggerType: ValueWithLocation<TriggerType>;
-  objectFilterIndex?: ValueWithLocation<number>;
+  executionMode: TriggerExecutionMode;
+  triggerType: TriggerType;
+  objectFilterIndex?: number;
   firstCondition: number;
   conditionCount: number;
   firstAction: number;

@@ -1,4 +1,3 @@
-import type { ValueWithLocation } from "../..";
 import type { StringTableReference } from "../string_table";
 import type {
   CustomTimerReference,
@@ -49,6 +48,6 @@ export type ReplaceableToken =
   | CustomTimerReplaceableToken;
 
 export type DynamicString = {
-  stringIndex: ValueWithLocation<StringTableReference>;
-  tokens: ValueWithLocation<ReplaceableToken>[];
+  stringIndex: StringTableReference;
+  tokens: ReplaceableToken[];
 };

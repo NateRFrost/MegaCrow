@@ -13,7 +13,43 @@ import type { StringTable } from "../../intermediate-representation/game/string_
 import { STRING_TABLE_LANGUAGES } from "../../language-configuration/omni/strings";
 import { Compiler } from "../compiler";
 import { FrontendError } from "../../error";
+import { CAPABILITES_107_MCC } from "./capabilities";
 import { compileGameOptions } from "./game_options";
+import { assertCompatibleIR, CompilerCapabilities } from "../diagnostics/assertCompatibleIR";
+import { MEGALO_VERSIONS, SupportedMegaloVersion } from "../../../version";
+
+/** Reach MCC script string table bitstream layout. */
+const SCRIPT_STRINGS = {
+  maxStringCount: 112,
+  maxStringLength: 0x4c_00,
+  offsetBitLength: 15,
+  bufferSizeBitLength: 15,
+  countBitLength: 7,
+} as const;
+
+const LOCALIZED_NAME = {
+  maxStringCount: 1,
+  maxStringLength: 0x1_80,
+  offsetBitLength: 9,
+  bufferSizeBitLength: 9,
+  countBitLength: 1,
+} as const;
+
+const LOCALIZED_DESCRIPTION = {
+  maxStringCount: 1,
+  maxStringLength: 0xc_00,
+  offsetBitLength: 12,
+  bufferSizeBitLength: 12,
+  countBitLength: 1,
+} as const;
+
+const LOCALIZED_CATEGORY = {
+  maxStringCount: 1,
+  maxStringLength: 0x1_80,
+  offsetBitLength: 9,
+  bufferSizeBitLength: 9,
+  countBitLength: 1,
+} as const;
 
 export class Compiler107MCC extends Compiler {
   private compileStringTable(
@@ -44,7 +80,8 @@ export class Compiler107MCC extends Compiler {
     const gametype = new c_game_engine_custom_variant();
     gametype.initialize();
     gametype.m_build_number = -1;
-    gametype.m_base_variant.m_metadata.general.file_type = e_file_type.GameVariant;
+    gametype.m_base_variant.m_metadata.general.file_type =
+      e_file_type.GameVariant;
     gametype.m_base_variant.m_metadata.file_type_data =
       new s_content_item_game_variant_metadata();
     return gametype;
@@ -54,62 +91,72 @@ export class Compiler107MCC extends Compiler {
     ir: IR,
     diagnostics: Diagnostics
   ): c_game_engine_custom_variant {
-    void diagnostics;
+    assertCompatibleIR(ir, this, diagnostics);
+
     const gametype = this.makeDefaultGametype();
+    const variant = ir.gameVariant;
 
     gametype.m_script_strings = this.compileStringTable(
-        ir.gameVariant.scriptStrings,
-        112,
-        0x4c_00,
-        15,
-        15,
-        7
+      variant.scriptStrings,
+      SCRIPT_STRINGS.maxStringCount,
+      SCRIPT_STRINGS.maxStringLength,
+      SCRIPT_STRINGS.offsetBitLength,
+      SCRIPT_STRINGS.bufferSizeBitLength,
+      SCRIPT_STRINGS.countBitLength
     );
 
-    if (ir.gameVariant.localizedName) {
-      (gametype.m_localized_name = this.compileStringTable(
-        ir.gameVariant.localizedName.value,
-        1,
-        0x1_80,
-        9,
-        9,
-        1
-      ));
+    if (variant.localizedName !== undefined) {
+      gametype.m_localized_name = this.compileStringTable(
+        variant.localizedName,
+        LOCALIZED_NAME.maxStringCount,
+        LOCALIZED_NAME.maxStringLength,
+        LOCALIZED_NAME.offsetBitLength,
+        LOCALIZED_NAME.bufferSizeBitLength,
+        LOCALIZED_NAME.countBitLength
+      );
     }
-    ir.gameVariant.localizedDescription &&
-      (gametype.m_localized_description = this.compileStringTable(
-        ir.gameVariant.localizedDescription.value,
-        1,
-        0xc_00,
-        12,
-        12,
-        1
-      ));
-    ir.gameVariant.localizedCategory &&
-      (gametype.m_localized_category = this.compileStringTable(
-        ir.gameVariant.localizedCategory.value,
-        1,
-        0x1_80,
-        9,
-        9,
-        1
-      ));
-    if (ir.gameVariant.engineIcon !== undefined) {
-      gametype.m_engine_icon = ir.gameVariant.engineIcon.value;
-      gametype.m_base_variant.m_metadata.file_type_data = new s_content_item_game_variant_metadata();
-      gametype.m_base_variant.m_metadata.file_type_data.icon_index = ir.gameVariant.engineIcon.value;
+    if (variant.localizedDescription !== undefined) {
+      gametype.m_localized_description = this.compileStringTable(
+        variant.localizedDescription,
+        LOCALIZED_DESCRIPTION.maxStringCount,
+        LOCALIZED_DESCRIPTION.maxStringLength,
+        LOCALIZED_DESCRIPTION.offsetBitLength,
+        LOCALIZED_DESCRIPTION.bufferSizeBitLength,
+        LOCALIZED_DESCRIPTION.countBitLength
+      );
     }
-    if (ir.gameVariant.engineCategory !== undefined) {
-        // this is actually an enum, we havent mapped it yet
-        // TODO add e_game_engine_category to blf-ts
-      gametype.m_engine_category = ir.gameVariant.engineCategory.value;
-      gametype.m_base_variant.m_metadata.display.megalo_category_index = ir.gameVariant.engineCategory.value;
+    if (variant.localizedCategory !== undefined) {
+      gametype.m_localized_category = this.compileStringTable(
+        variant.localizedCategory,
+        LOCALIZED_CATEGORY.maxStringCount,
+        LOCALIZED_CATEGORY.maxStringLength,
+        LOCALIZED_CATEGORY.offsetBitLength,
+        LOCALIZED_CATEGORY.bufferSizeBitLength,
+        LOCALIZED_CATEGORY.countBitLength
+      );
     }
-    if (ir.gameVariant.baseVariant.metadata.name) {
-      gametype.m_base_variant.m_metadata.name = ir.gameVariant.baseVariant.metadata.name.value;
+
+    if (variant.engineIcon !== undefined) {
+      gametype.m_engine_icon = variant.engineIcon;
+      gametype.m_base_variant.m_metadata.file_type_data =
+        new s_content_item_game_variant_metadata();
+      gametype.m_base_variant.m_metadata.file_type_data.icon_index =
+        variant.engineIcon;
     }
-    if (ir.gameVariant.baseVariant.metadata.description) {
-      gametype.m_base_variant.m_metadata.description = ir.gameVariant.baseVariant.metadata.description.value;
+    if (variant.engineCategory !== undefined) {
+      // this is actually an enum, we havent mapped it yet
+      // TODO add e_game_engine_category to blf-ts
+      gametype.m_engine_category = variant.engineCategory;
+      gametype.m_base_variant.m_metadata.display.megalo_category_index =
+        variant.engineCategory;
+    }
+    if (variant.baseVariant.metadata.name !== undefined) {
+      gametype.m_base_variant.m_metadata.name =
+        variant.baseVariant.metadata.name;
+    }
+    if (variant.baseVariant.metadata.description !== undefined) {
+      gametype.m_base_variant.m_metadata.description =
+        variant.baseVariant.metadata.description;
     }
 
     // TODO: Move
@@ -117,8 +164,7 @@ export class Compiler107MCC extends Compiler {
     gametype.m_base_variant.m_metadata.general.game_mode = 3;
     gametype.m_base_variant.m_metadata.general.game_engine_type = 2;
 
-
-    gametype.m_base_name_string_index = ir.gameVariant.baseNameStringIndex;
+    gametype.m_base_name_string_index = variant.baseNameStringIndex;
 
     compileGameOptions(ir, gametype);
 
@@ -130,13 +176,13 @@ export class Compiler107MCC extends Compiler {
   }
 
   public writeMegaloFile(ir: IR, diagnostics: Diagnostics): Uint8Array {
+    const gametype = this.compile(ir, diagnostics);
     if (diagnostics.hasErrors()) {
       throw new FrontendError(
         "Cannot write megalo file while diagnostics have errors",
         BUILT_IN_LOCATION
       );
     }
-    const gametype = this.compile(ir, diagnostics);
     const bitstreamWriter = c_bitstream_writer.new(
       0,
       e_bitstream_byte_order._bitstream_byte_order_big_endian
@@ -145,5 +191,13 @@ export class Compiler107MCC extends Compiler {
     gametype.encode(bitstreamWriter);
     bitstreamWriter.finish_writing();
     return bitstreamWriter.get_data();
+  }
+
+  public getCapabilities(): CompilerCapabilities {
+    return CAPABILITES_107_MCC;
+  }
+
+  public getMegaloVersion(): SupportedMegaloVersion {
+    return MEGALO_VERSIONS["107-mcc"];
   }
 }

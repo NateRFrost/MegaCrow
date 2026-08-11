@@ -2,7 +2,6 @@ import type {
   UserDefinedOptionNode,
   UserDefinedOptionValueNode,
 } from "../../../abstract-syntax-tree/elements/game_options";
-import { type ValueWithLocation, valueWithLocation } from "../..";
 import { dxAssertionScope } from "../../diagnostics";
 import { assertNotErrorNode } from "../../diagnostics/assertNotErrorNode";
 import type {
@@ -12,38 +11,42 @@ import type {
 import type { ElementLowerContext } from "../../parameters/context";
 import { lowerConstantNumber } from "../../parameters/constantNumber";
 import { resolveScriptStringTableReference } from "../../parameters/resolveScriptStringTableReference";
-import { unwrapNumber } from "./shared";
 
 const lowerOptionValue = (
   valueNode: UserDefinedOptionValueNode,
   ctx: ElementLowerContext
-): ValueWithLocation<UserDefinedOptionValue> => {
+): UserDefinedOptionValue => {
   const value = lowerConstantNumber(valueNode.value, ctx);
-  const name =
-    valueNode.name === undefined
-      ? undefined
-      : valueWithLocation(
-          resolveScriptStringTableReference(
-            valueNode.name,
-            ctx.ir,
-            ctx.symbolTable
-          ),
-          valueNode.name.location
-        );
-  const description =
-    valueNode.description === undefined
-      ? undefined
-      : valueWithLocation(
-          resolveScriptStringTableReference(
-            valueNode.description,
-            ctx.ir,
-            ctx.symbolTable
-          ),
-          valueNode.description.location
-        );
-  return valueWithLocation({ value, name, description }, valueNode.location);
+  const optionValue: UserDefinedOptionValue = {
+    value: value.value,
+  };
+  ctx.ir.locations.record(optionValue, "value", value.location);
+  if (valueNode.name !== undefined) {
+    optionValue.name = resolveScriptStringTableReference(
+      valueNode.name,
+      ctx.ir,
+      ctx.symbolTable
+    );
+    ctx.ir.locations.record(optionValue, "name", valueNode.name.location);
+  }
+  if (valueNode.description !== undefined) {
+    optionValue.description = resolveScriptStringTableReference(
+      valueNode.description,
+      ctx.ir,
+      ctx.symbolTable
+    );
+    ctx.ir.locations.record(
+      optionValue,
+      "description",
+      valueNode.description.location
+    );
+  }
+  return optionValue;
 };
 
+/**
+ * @link https://blam-network.github.io/megalo/language/elements/game-options#option
+ */
 export const lowerOption = (
   entry: UserDefinedOptionNode,
   ctx: ElementLowerContext
@@ -51,55 +54,50 @@ export const lowerOption = (
   dxAssertionScope(ctx.diagnostics, () => {
     assertNotErrorNode(entry.name);
 
-    const name = valueWithLocation(
-      resolveScriptStringTableReference(
-        entry.displayName,
-        ctx.ir,
-        ctx.symbolTable
-      ),
-      entry.displayName.location
-    );
-    const description = valueWithLocation(
-      resolveScriptStringTableReference(
-        entry.description,
-        ctx.ir,
-        ctx.symbolTable
-      ),
-      entry.description.location
-    );
-    const locked = entry.modifiers.lock
-      ? valueWithLocation(true, entry.location)
-      : undefined;
-    const hidden = entry.modifiers.hide
-      ? valueWithLocation(true, entry.location)
-      : undefined;
-
     const values = entry.values.map((value) => lowerOptionValue(value, ctx));
-    const defaultNumber = unwrapNumber(
-      lowerConstantNumber(entry.defaultValue, ctx)
-    );
+    const defaultNumber = lowerConstantNumber(entry.defaultValue, ctx).value;
     let defaultValueIndex = values.findIndex(
-      (value) => unwrapNumber(value.value.value) === defaultNumber
+      (value) => value.value === defaultNumber
     );
     if (defaultValueIndex < 0) {
       defaultValueIndex = 0;
     }
 
     const option: SelectUserDefinedOption = {
-      name,
-      description,
-      locked,
-      hidden,
+      name: resolveScriptStringTableReference(
+        entry.displayName,
+        ctx.ir,
+        ctx.symbolTable
+      ),
+      description: resolveScriptStringTableReference(
+        entry.description,
+        ctx.ir,
+        ctx.symbolTable
+      ),
+      locked: entry.modifiers.lock ? true : undefined,
+      hidden: entry.modifiers.hide ? true : undefined,
       values,
-      defaultValueIndex: valueWithLocation(
-        defaultValueIndex,
-        entry.defaultValue.location
-      ),
-      currentValueIndex: valueWithLocation(
-        defaultValueIndex,
-        entry.defaultValue.location
-      ),
+      defaultValueIndex,
+      currentValueIndex: defaultValueIndex,
     };
+    ctx.ir.locations.record(option, "name", entry.displayName.location);
+    ctx.ir.locations.record(option, "description", entry.description.location);
+    if (entry.modifiers.lock) {
+      ctx.ir.locations.record(option, "locked", entry.location);
+    }
+    if (entry.modifiers.hide) {
+      ctx.ir.locations.record(option, "hidden", entry.location);
+    }
+    ctx.ir.locations.record(
+      option,
+      "defaultValueIndex",
+      entry.defaultValue.location
+    );
+    ctx.ir.locations.record(
+      option,
+      "currentValueIndex",
+      entry.defaultValue.location
+    );
     ctx.ir.gameVariant.userDefinedOptions.push(option);
   });
 };

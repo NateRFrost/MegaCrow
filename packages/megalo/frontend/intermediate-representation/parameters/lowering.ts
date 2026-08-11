@@ -1,3 +1,10 @@
+/**
+ * Declarative parameter-signature matcher.
+ *
+ * Production element lowerers should use explicit helpers (`lowerNumberParam`,
+ * `resolvePlayerReference`, etc.) instead. This module remains for unit tests
+ * and as a reference for the parse-time `parameterParserBuilder` twin.
+ */
 import { isAstErrorNode, SyntaxKind } from "../../abstract-syntax-tree/kinds";
 import type { ASTParameterNode } from "../../abstract-syntax-tree/parameters";
 import {
@@ -6,10 +13,7 @@ import {
 } from "../../diagnostics";
 import type { ObjectListType } from "../../object-lists";
 import { SymbolKind, VariableType, isBuiltInVariable } from "../../symbol-table";
-import {
-  type ValueWithLocation,
-  valueWithLocation,
-} from "..";
+import { type Located, located } from "..";
 import { dxAssertionScope } from "../diagnostics";
 import { LowerError } from "../error";
 import { lowerConstantNumber } from "./constantNumber";
@@ -217,11 +221,11 @@ export const OptionalParam = (
 
 export type LoweredParameter = {
   readonly name: string;
-  readonly value: ValueWithLocation<unknown> | undefined;
+  readonly value: Located<unknown> | undefined;
 };
 
 export type LoweredResult = LoweredParameter[] & {
-  byName: (name: string) => ValueWithLocation<unknown> | undefined;
+  byName: (name: string) => Located<unknown> | undefined;
 };
 
 const isOptionalSlot = (slot: LoweringSlot): slot is OptionalLoweringSlot =>
@@ -436,7 +440,7 @@ const lowerSpec = (
       }
       return {
         name: spec.name,
-        value: valueWithLocation(node.value, node.location),
+        value: located(node.value, node.location),
       };
     }
     case LoweringSpecKind.Number:
@@ -459,7 +463,7 @@ const lowerSpec = (
       }
       return {
         name: spec.name,
-        value: valueWithLocation(
+        value: located(
           resolveCustomVariableReference(node, ctx),
           node.location
         ),
@@ -468,7 +472,7 @@ const lowerSpec = (
     case LoweringSpecKind.String:
       return {
         name: spec.name,
-        value: valueWithLocation(
+        value: located(
           resolveScriptStringTableReference(node, ctx.ir, ctx.symbolTable),
           node.location
         ),
@@ -476,7 +480,7 @@ const lowerSpec = (
     case LoweringSpecKind.CustomVariable:
       return {
         name: spec.name,
-        value: valueWithLocation(
+        value: located(
           resolveCustomVariableReference(node, ctx, spec.acceptedKinds),
           node.location
         ),
@@ -484,7 +488,7 @@ const lowerSpec = (
     case LoweringSpecKind.CustomTimer:
       return {
         name: spec.name,
-        value: valueWithLocation(
+        value: located(
           resolveCustomTimerReference(node, ctx),
           node.location
         ),
@@ -492,7 +496,7 @@ const lowerSpec = (
     case LoweringSpecKind.Object:
       return {
         name: spec.name,
-        value: valueWithLocation(
+        value: located(
           resolveObjectReference(node, ctx, spec.acceptedSubtypes),
           node.location
         ),
@@ -500,7 +504,7 @@ const lowerSpec = (
     case LoweringSpecKind.ObjectType:
       return {
         name: spec.name,
-        value: valueWithLocation(
+        value: located(
           resolveObjectTypeReference(node, ctx, spec.acceptedObjectTypes),
           node.location
         ),
@@ -508,7 +512,7 @@ const lowerSpec = (
     case LoweringSpecKind.Player:
       return {
         name: spec.name,
-        value: valueWithLocation(
+        value: located(
           resolvePlayerReference(node, ctx),
           node.location
         ),
@@ -516,7 +520,7 @@ const lowerSpec = (
     case LoweringSpecKind.Team:
       return {
         name: spec.name,
-        value: valueWithLocation(
+        value: located(
           resolveTeamReference(node, ctx),
           node.location
         ),
@@ -524,7 +528,7 @@ const lowerSpec = (
     case LoweringSpecKind.VariantVariable:
       return {
         name: spec.name,
-        value: valueWithLocation(
+        value: located(
           resolveVariantVariable(node, ctx, spec.preferredType),
           node.location
         ),
@@ -578,7 +582,7 @@ const tryMatchSlot = (
 
     cursor.parameters.push({
       name: slot.name,
-      value: valueWithLocation(node.value, node.location),
+      value: located(node.value, node.location),
     });
     cursor.index += 1;
 

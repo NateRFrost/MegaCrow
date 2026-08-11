@@ -1,4 +1,3 @@
-import type { ValueWithLocation } from "../..";
 import type { StringTableReference } from "../string_table";
 
 export enum GameStatisticFormat {
@@ -20,8 +19,8 @@ export enum GameStatisticGrouping {
 }
 
 export type MegaloGameStatistic = {
-  nameStringIndex: ValueWithLocation<StringTableReference>;
-  format: ValueWithLocation<GameStatisticFormat>;
-  sortOrder: ValueWithLocation<GameStatisticSortOrder>;
-  grouping: ValueWithLocation<GameStatisticGrouping>;
+  nameStringIndex: StringTableReference;
+  format: GameStatisticFormat;
+  sortOrder: GameStatisticSortOrder;
+  grouping: GameStatisticGrouping;
 };

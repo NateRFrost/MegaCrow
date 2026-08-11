@@ -1,18 +1,17 @@
 import { ElementLowerer } from ".";
 import { assertSyntaxKind } from "../diagnostics/assertSyntaxKind";
-import { markCurrentValueUnused } from "../diagnostics/markCurrentValueUnused";
 import { expectParameterCount } from "../diagnostics/expectParameterCount";
 import { SyntaxKind } from "../../abstract-syntax-tree";
 import { assertSymbolKind } from "../diagnostics/assertSymbolKind";
 import { SymbolKind } from "../../symbol-table";
 import { StringTable } from "../game/string_table";
-import { valueWithLocation } from "..";
 import { dxAssertionScope } from "../diagnostics";
 import { EngineDataElementNode } from "../../abstract-syntax-tree/elements/engine_data";
 import { parseEnumCategory as parseEngineCategory } from "../engine-categories";
 import { ENGINE_CATEGORY_STRING_PREFIX } from "../../language-configuration/omni/engine_data";
 import { lowerConstantNumber } from "../parameters/constantNumber";
 import { resolveStringTableEntry } from "../parameters/resolveScriptStringTableReference";
+import { setField } from "../setField";
 
 export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
   element,
@@ -22,23 +21,22 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
   for (const property of element.properties) {
     switch (property.identifier) {
       case "name":
-        markCurrentValueUnused(ir.gameVariant.localizedName, diagnostics);
         expectParameterCount(1, property.parameters);
         dxAssertionScope(diagnostics, () => {
           const parameter = property.parameters[0]!;
           const localizedName = new StringTable();
           resolveStringTableEntry(parameter, localizedName, symbolTable);
-          ir.gameVariant.localizedName = valueWithLocation(
+          setField(
+            ir.locations,
+            diagnostics,
+            ir.gameVariant,
+            "localizedName",
             localizedName,
             parameter.location
           );
         });
         break;
       case "description":
-        markCurrentValueUnused(
-          ir.gameVariant.localizedDescription,
-          diagnostics
-        );
         expectParameterCount(1, property.parameters);
         dxAssertionScope(diagnostics, () => {
           const parameter = property.parameters[0]!;
@@ -48,14 +46,17 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
             localizedDescription,
             symbolTable
           );
-          ir.gameVariant.localizedDescription = valueWithLocation(
+          setField(
+            ir.locations,
+            diagnostics,
+            ir.gameVariant,
+            "localizedDescription",
             localizedDescription,
             parameter.location
           );
         });
         break;
       case "icon":
-        markCurrentValueUnused(ir.gameVariant.engineIcon, diagnostics);
         expectParameterCount(1, property.parameters);
         dxAssertionScope(diagnostics, () => {
           const parameter = property.parameters[0]!;
@@ -63,11 +64,18 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
             SyntaxKind.REFERENCE,
             SyntaxKind.INTEGER,
           ]);
-          ir.gameVariant.engineIcon = lowerConstantNumber(parameter, ctx);
+          const icon = lowerConstantNumber(parameter, ctx);
+          setField(
+            ir.locations,
+            diagnostics,
+            ir.gameVariant,
+            "engineIcon",
+            icon.value,
+            icon.location
+          );
         });
         break;
       case "category":
-        markCurrentValueUnused(ir.gameVariant.localizedCategory, diagnostics);
         expectParameterCount(1, property.parameters);
         dxAssertionScope(diagnostics, () => {
           const parameter = property.parameters[0]!;
@@ -79,7 +87,11 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
             symbol.languageContents,
             parameter.symbolId
           );
-          ir.gameVariant.localizedCategory = valueWithLocation(
+          setField(
+            ir.locations,
+            diagnostics,
+            ir.gameVariant,
+            "localizedCategory",
             localizedCategory,
             parameter.location
           );
@@ -91,7 +103,11 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
           );
           const enumValue = parseEngineCategory(enumValueKey);
           if (enumValue !== undefined) {
-            ir.gameVariant.engineCategory = valueWithLocation(
+            setField(
+              ir.locations,
+              diagnostics,
+              ir.gameVariant,
+              "engineCategory",
               enumValue,
               parameter.location
             );

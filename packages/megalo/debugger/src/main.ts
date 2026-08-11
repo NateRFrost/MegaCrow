@@ -359,6 +359,24 @@ const scheduleIdleChain = (steps: Array<() => void>, timeout: number): void => {
 
 const analyzeWorker = new AnalyzeWorker();
 
+analyzeWorker.onerror = (event) => {
+  const detail = [
+    event.message,
+    event.filename && `${event.filename}:${event.lineno}:${event.colno}`,
+    event.error instanceof Error ? event.error.stack : undefined,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  console.error("[megalo-debugger] worker error", event, detail);
+  saveGametypeButton.disabled = false;
+  window.alert(`Analyze worker failed:\n${detail || "unknown error"}`);
+};
+
+analyzeWorker.onmessageerror = (event) => {
+  console.error("[megalo-debugger] worker message error", event);
+  saveGametypeButton.disabled = false;
+};
+
 let objectLists: ObjectLists = {};
 
 let cachedSource: string | null = null;

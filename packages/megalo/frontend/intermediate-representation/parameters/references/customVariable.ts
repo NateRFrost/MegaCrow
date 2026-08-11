@@ -34,6 +34,7 @@ import {
   isTeamReferenceBase,
   resolveScopedVariableMemberIndex,
   splitParameterMember,
+  type SplitMember,
 } from "./helpers";
 
 /** Simplified kind selector used by the lowering signature system. */
@@ -57,15 +58,9 @@ const encodeNumberVariable = (
   const variableIndex = resolved.index;
   switch (resolved.scope) {
     case VariableScope.Global:
-      return {
-        type: CustomVariableType.GlobalNumber,
-        variableIndex,
-      };
+      return { type: CustomVariableType.GlobalNumber, variableIndex };
     case VariableScope.Temporary:
-      return {
-        type: CustomVariableType.TemporaryNumber,
-        variableIndex,
-      };
+      return { type: CustomVariableType.TemporaryNumber, variableIndex };
     case VariableScope.Object:
       return {
         type: CustomVariableType.ObjectNumber,
@@ -87,7 +82,7 @@ const encodeNumberVariable = (
   }
 };
 
-const encodeScopedNumberReference = (
+const encodeScopedNumber = (
   ctx: ParameterLoweringContext,
   base: string,
   scope: VariableScope,
@@ -177,217 +172,215 @@ export const resolveCustomVariableReference = (
   return ref;
 };
 
-const resolveCustomVariableReferenceUnchecked = (
-  node: ASTParameterNode,
-  ctx: ParameterLoweringContext
-): CustomVariableReference => {
-  if (node.kind === SyntaxKind.INTEGER || node.kind === SyntaxKind.FLOATING_POINT) {
+/** Immediate numeric literal → Constant. */
+const tryImmediateConstant = (
+  node: ASTParameterNode
+): CustomVariableReference | undefined => {
+  if (
+    node.kind === SyntaxKind.INTEGER ||
+    node.kind === SyntaxKind.FLOATING_POINT
+  ) {
     return {
       type: CustomVariableType.Constant,
       immediateValue: node.value,
     };
   }
+  return undefined;
+};
 
-  const { base, member, baseSymbol, location } = splitParameterMember(
-    node,
-    ctx.symbolTable
-  );
-  const name = member ? `${base}.${member}` : base;
-
+/** Compiled name `global_number_N`. */
+const tryCompiledGlobalNumber = (
+  name: string
+): CustomVariableReference | undefined => {
   const globalIndex = parseIndexSuffix(name, "global_number");
-  if (globalIndex !== undefined) {
+  if (globalIndex === undefined) {
+    return undefined;
+  }
+  return {
+    type: CustomVariableType.GlobalNumber,
+    variableIndex: globalIndex,
+  };
+};
+
+/** Bare option / game-option / constant / number-variable name (no member). */
+const tryBareName = (
+  node: ASTParameterNode,
+  ctx: ParameterLoweringContext,
+  name: string,
+  baseSymbol: SymbolTableVariableEntry | undefined
+): CustomVariableReference | undefined => {
+  const optionByName = ctx.optionIndexByName.get(name);
+  if (optionByName !== undefined) {
+    return { type: CustomVariableType.Option, optionIndex: optionByName };
+  }
+
+  const gameOptionType = GAME_OPTION_CUSTOM_VARIABLE_TYPE[name];
+  if (gameOptionType !== undefined) {
+    return { type: gameOptionType };
+  }
+
+  if (node.kind === SyntaxKind.REFERENCE) {
+    const symbol = ctx.symbolTable.getSymbol(node.symbolId);
+    if (symbol?.kind === SymbolKind.Constant) {
+      return {
+        type: CustomVariableType.Constant,
+        immediateValue: symbol.value,
+      };
+    }
+    if (symbol?.kind === SymbolKind.GameOption) {
+      const mapped = GAME_OPTION_CUSTOM_VARIABLE_TYPE[symbol.name];
+      if (mapped !== undefined) {
+        return { type: mapped };
+      }
+      const userOption = ctx.optionIndexByName.get(symbol.name);
+      if (userOption !== undefined) {
+        return { type: CustomVariableType.Option, optionIndex: userOption };
+      }
+    }
+    if (
+      symbol?.kind === SymbolKind.Variable &&
+      symbol.type === VariableType.Number &&
+      !isBuiltInVariable(symbol)
+    ) {
+      return encodeNumberVariable(symbol, ctx.variableSlots);
+    }
+  }
+
+  if (
+    baseSymbol?.type === VariableType.Number &&
+    !isBuiltInVariable(baseSymbol)
+  ) {
+    return encodeNumberVariable(baseSymbol, ctx.variableSlots);
+  }
+
+  return undefined;
+};
+
+/** `player.stat` / `team.stat` via declared stat name or `stat_N`. */
+const tryStatMember = (
+  ctx: ParameterLoweringContext,
+  base: string,
+  member: string
+): CustomVariableReference | undefined => {
+  const fromMap = ctx.statIndexByName.get(member);
+  const fromPrefix = member.startsWith("stat_")
+    ? (fromMap ?? Number(member.replace(/^stat_/, "")) ?? 0)
+    : fromMap;
+  if (fromPrefix === undefined) {
+    return undefined;
+  }
+
+  if (isPlayerReferenceBase(ctx, base)) {
     return {
-      type: CustomVariableType.GlobalNumber,
-      variableIndex: globalIndex,
+      type: CustomVariableType.PlayerStat,
+      player: resolveExplicitPlayerForBase(ctx, base),
+      statisticIndex: fromPrefix,
     };
   }
-
-  if (!member) {
-    const optionByName = ctx.optionIndexByName.get(name);
-    if (optionByName !== undefined) {
-      return {
-        type: CustomVariableType.Option,
-        optionIndex: optionByName,
-      };
-    }
-
-    const gameOptionType = GAME_OPTION_CUSTOM_VARIABLE_TYPE[name];
-    if (gameOptionType !== undefined) {
-      return { type: gameOptionType };
-    }
-
-    if (node.kind === SyntaxKind.REFERENCE) {
-      const symbol = ctx.symbolTable.getSymbol(node.symbolId);
-      if (symbol?.kind === SymbolKind.Constant) {
-        return {
-          type: CustomVariableType.Constant,
-          immediateValue: symbol.value,
-        };
-      }
-      if (symbol?.kind === SymbolKind.GameOption) {
-        const mapped = GAME_OPTION_CUSTOM_VARIABLE_TYPE[symbol.name];
-        if (mapped !== undefined) {
-          return { type: mapped };
-        }
-        const userOption = ctx.optionIndexByName.get(symbol.name);
-        if (userOption !== undefined) {
-          return {
-            type: CustomVariableType.Option,
-            optionIndex: userOption,
-          };
-        }
-      }
-      if (
-        symbol?.kind === SymbolKind.Variable &&
-        symbol.type === VariableType.Number &&
-        !isBuiltInVariable(symbol)
-      ) {
-        return encodeNumberVariable(symbol, ctx.variableSlots);
-      }
-    }
-
-    if (
-      baseSymbol?.type === VariableType.Number &&
-      !isBuiltInVariable(baseSymbol)
-    ) {
-      return encodeNumberVariable(baseSymbol, ctx.variableSlots);
-    }
+  if (isTeamReferenceBase(ctx, base)) {
+    return {
+      type: CustomVariableType.TeamStat,
+      team: resolveExplicitTeamForBase(ctx, base),
+      statisticIndex: fromPrefix,
+    };
   }
+  return undefined;
+};
 
-  if (member) {
-    const statIndex = ctx.statIndexByName.get(member);
-    if (statIndex !== undefined) {
-      if (isPlayerReferenceBase(ctx, base)) {
-        return {
-          type: CustomVariableType.PlayerStat,
-          player: resolveExplicitPlayerForBase(ctx, base),
-          statisticIndex: statIndex,
-        };
-      }
-      if (isTeamReferenceBase(ctx, base)) {
-        return {
-          type: CustomVariableType.TeamStat,
-          team: resolveExplicitTeamForBase(ctx, base),
-          statisticIndex: statIndex,
-        };
-      }
-    }
+/** Compiled member `number_N` on player/team/object bases. */
+const tryCompiledNumberMember = (
+  ctx: ParameterLoweringContext,
+  base: string,
+  member: string
+): CustomVariableReference | undefined => {
+  if (!member.startsWith("number_")) {
+    return undefined;
   }
+  const rawIndex = Number(member.replace(/^number_/, ""));
+  const globalObjectSlot = /^object_\d+$/.test(base);
 
-  if (member?.startsWith("stat_")) {
-    const statIndex =
-      ctx.statIndexByName.get(member) ??
-      Number(member.replace(/^stat_/, "")) ??
-      0;
-    if (isPlayerReferenceBase(ctx, base)) {
-      return {
-        type: CustomVariableType.PlayerStat,
-        player: resolveExplicitPlayerForBase(ctx, base),
-        statisticIndex: statIndex,
-      };
-    }
-    if (isTeamReferenceBase(ctx, base)) {
-      return {
-        type: CustomVariableType.TeamStat,
-        team: resolveExplicitTeamForBase(ctx, base),
-        statisticIndex: statIndex,
-      };
-    }
-  }
-
-  if (member?.startsWith("number_")) {
-    const rawIndex = Number(member.replace(/^number_/, ""));
-    const globalObjectSlot = /^object_\d+$/.test(base);
-    if (base.startsWith("player_") || base === "current_player") {
-      const index =
-        resolveScopedVariableMemberIndex(
-          ctx.symbolTable,
-          ctx.variableSlots,
-          VariableScope.Player,
-          VariableType.Number,
-          member,
-          "number"
-        ) ?? rawIndex;
-      return {
-        type: CustomVariableType.PlayerNumber,
-        player: resolveExplicitPlayerForBase(ctx, base),
-        variableIndex: index,
-      };
-    }
-    if (isTeamReferenceBase(ctx, base, member)) {
-      const index =
-        resolveScopedVariableMemberIndex(
-          ctx.symbolTable,
-          ctx.variableSlots,
-          VariableScope.Team,
-          VariableType.Number,
-          member,
-          "number"
-        ) ?? rawIndex;
-      return {
-        type: CustomVariableType.TeamNumber,
-        team: resolveExplicitTeamForBase(ctx, base),
-        variableIndex: index,
-      };
-    }
-    if (isObjectReferenceBase(ctx, base, member)) {
-      const index = globalObjectSlot
-        ? rawIndex
-        : resolveScopedVariableMemberIndex(
-            ctx.symbolTable,
-            ctx.variableSlots,
-            VariableScope.Object,
-            VariableType.Number,
-            member,
-            "number"
-          ) ?? rawIndex;
-      return {
-        type: CustomVariableType.ObjectNumber,
-        object: resolveExplicitObjectForBase(ctx, base),
-        variableIndex: index,
-      };
-    }
-  }
-
-  if (member) {
-    if (isTeamReferenceBase(ctx, base, member)) {
-      const scoped = encodeScopedNumberReference(
-        ctx,
-        base,
-        VariableScope.Team,
-        member
-      );
-      if (scoped) {
-        return scoped;
-      }
-    }
-    if (
-      isExplicitPlayerName(base) ||
-      ctx.symbolTable.findVariableByName(base)?.type === VariableType.Player
-    ) {
-      const scoped = encodeScopedNumberReference(
-        ctx,
-        base,
+  if (base.startsWith("player_") || base === "current_player") {
+    const index =
+      resolveScopedVariableMemberIndex(
+        ctx.symbolTable,
+        ctx.variableSlots,
         VariableScope.Player,
-        member
-      );
-      if (scoped) {
-        return scoped;
-      }
-    }
-    if (isObjectReferenceBase(ctx, base, member)) {
-      const scoped = encodeScopedNumberReference(
-        ctx,
-        base,
-        VariableScope.Object,
-        member
-      );
-      if (scoped) {
-        return scoped;
-      }
-    }
+        VariableType.Number,
+        member,
+        "number"
+      ) ?? rawIndex;
+    return {
+      type: CustomVariableType.PlayerNumber,
+      player: resolveExplicitPlayerForBase(ctx, base),
+      variableIndex: index,
+    };
   }
+  if (isTeamReferenceBase(ctx, base, member)) {
+    const index =
+      resolveScopedVariableMemberIndex(
+        ctx.symbolTable,
+        ctx.variableSlots,
+        VariableScope.Team,
+        VariableType.Number,
+        member,
+        "number"
+      ) ?? rawIndex;
+    return {
+      type: CustomVariableType.TeamNumber,
+      team: resolveExplicitTeamForBase(ctx, base),
+      variableIndex: index,
+    };
+  }
+  if (isObjectReferenceBase(ctx, base, member)) {
+    const index = globalObjectSlot
+      ? rawIndex
+      : resolveScopedVariableMemberIndex(
+          ctx.symbolTable,
+          ctx.variableSlots,
+          VariableScope.Object,
+          VariableType.Number,
+          member,
+          "number"
+        ) ?? rawIndex;
+    return {
+      type: CustomVariableType.ObjectNumber,
+      object: resolveExplicitObjectForBase(ctx, base),
+      variableIndex: index,
+    };
+  }
+  return undefined;
+};
 
+/** Named number member on a scoped player/team/object (user variable name). */
+const tryNamedScopedNumber = (
+  ctx: ParameterLoweringContext,
+  base: string,
+  member: string
+): CustomVariableReference | undefined => {
+  if (isTeamReferenceBase(ctx, base, member)) {
+    const scoped = encodeScopedNumber(ctx, base, VariableScope.Team, member);
+    if (scoped) return scoped;
+  }
+  if (
+    isExplicitPlayerName(base) ||
+    ctx.symbolTable.findVariableByName(base)?.type === VariableType.Player
+  ) {
+    const scoped = encodeScopedNumber(ctx, base, VariableScope.Player, member);
+    if (scoped) return scoped;
+  }
+  if (isObjectReferenceBase(ctx, base, member)) {
+    const scoped = encodeScopedNumber(ctx, base, VariableScope.Object, member);
+    if (scoped) return scoped;
+  }
+  return undefined;
+};
+
+/** `.score`, `.user_data`, `.player_score` / money / rating. */
+const tryBuiltinMember = (
+  ctx: ParameterLoweringContext,
+  base: string,
+  member: string
+): CustomVariableReference | undefined => {
   if (member === "score") {
     if (isPlayerReferenceBase(ctx, base)) {
       return {
@@ -424,24 +417,62 @@ const resolveCustomVariableReferenceUnchecked = (
     return { type: CustomVariableType.PlayerRating, player };
   }
 
+  return undefined;
+};
+
+/** `option` / `option_N` name forms. */
+const tryOptionName = (
+  ctx: ParameterLoweringContext,
+  name: string
+): CustomVariableReference | undefined => {
   const optionByName = ctx.optionIndexByName.get(name);
   if (optionByName !== undefined) {
-    return {
-      type: CustomVariableType.Option,
-      optionIndex: optionByName,
-    };
+    return { type: CustomVariableType.Option, optionIndex: optionByName };
   }
-
   const optionIndex = parseIndexSuffix(name, "option");
   if (optionIndex !== undefined) {
-    return {
-      type: CustomVariableType.Option,
-      optionIndex,
-    };
+    return { type: CustomVariableType.Option, optionIndex };
+  }
+  return undefined;
+};
+
+const resolveCustomVariableReferenceUnchecked = (
+  node: ASTParameterNode,
+  ctx: ParameterLoweringContext
+): CustomVariableReference => {
+  const immediate = tryImmediateConstant(node);
+  if (immediate) return immediate;
+
+  const split: SplitMember = splitParameterMember(node, ctx.symbolTable);
+  const { base, member, baseSymbol } = split;
+  const name = member ? `${base}.${member}` : base;
+
+  const compiledGlobal = tryCompiledGlobalNumber(name);
+  if (compiledGlobal) return compiledGlobal;
+
+  if (!member) {
+    const bare = tryBareName(node, ctx, name, baseSymbol);
+    if (bare) return bare;
   }
 
+  if (member) {
+    const stat = tryStatMember(ctx, base, member);
+    if (stat) return stat;
+
+    const compiledNumber = tryCompiledNumberMember(ctx, base, member);
+    if (compiledNumber) return compiledNumber;
+
+    const namedScoped = tryNamedScopedNumber(ctx, base, member);
+    if (namedScoped) return namedScoped;
+
+    const builtin = tryBuiltinMember(ctx, base, member);
+    if (builtin) return builtin;
+  }
+
+  const option = tryOptionName(ctx, name);
+  if (option) return option;
+
   // Fallback: treat identifier as constant numeric (0 if non-numeric)
-  void location;
   return {
     type: CustomVariableType.Constant,
     immediateValue: Number(name) || 0,

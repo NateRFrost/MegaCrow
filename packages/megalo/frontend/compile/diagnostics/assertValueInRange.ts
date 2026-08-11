@@ -1,5 +1,5 @@
-import type { Diagnostics } from "../../diagnostics";
-import type { ValueWithLocation } from "../../intermediate-representation";
+import type { Diagnostics, SourceLocation } from "../../diagnostics";
+import { BUILT_IN_LOCATION } from "../../diagnostics";
 
 export const isWithinRange = (
   value: number,
@@ -8,16 +8,17 @@ export const isWithinRange = (
 ): boolean => value >= min && value <= max;
 
 export function assertValueInRange(
-  value: ValueWithLocation<number>,
+  value: number,
   min: number,
   max: number,
-  diagnostics: Diagnostics
+  diagnostics: Diagnostics,
+  location: SourceLocation = BUILT_IN_LOCATION
 ): void {
-  if (!isWithinRange(value.value, min, max)) {
+  if (!isWithinRange(value, min, max)) {
     // TODO: Add a more specific error message.
     diagnostics.addError(
-      `Value ${value.value} is out of range for range ${min} to ${max}.`,
-      value.location
+      `Value ${value} is out of range for range ${min} to ${max}.`,
+      location
     );
   }
 }

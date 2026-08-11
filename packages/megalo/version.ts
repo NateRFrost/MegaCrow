@@ -1,3 +1,5 @@
+import { translate } from "./frontend/localization";
+
 type MegaloFlavour = undefined | "mcc";
 
 export type MegaloVersion = {
@@ -24,3 +26,26 @@ export const MEGALO_VERSIONS = {
 };
 
 export type SupportedMegaloVersion = typeof MEGALO_VERSIONS[keyof typeof MEGALO_VERSIONS];
+
+/** Localized human-readable label for a supported Megalo version. */
+export function getLabel({ version, flavour }: SupportedMegaloVersion): string {
+    switch (version) {
+        case 107:
+            switch (flavour) {
+                case "mcc":
+                    return translate("version_label_107_mcc");
+                default:
+                    return translate("version_label_107");
+            }
+        case 106:
+            return translate("version_label_106");
+        case 73:
+            return translate("version_label_73");
+        case 49:
+            return translate("version_label_49");
+        default: {
+            const _exhaustive: never = version;
+            throw new Error(`Unsupported version: ${_exhaustive}`);
+        }
+    }
+}

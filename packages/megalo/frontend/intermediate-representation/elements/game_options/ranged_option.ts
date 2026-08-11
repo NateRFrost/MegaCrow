@@ -3,7 +3,6 @@ import type {
   UserDefinedOptionValueNode,
 } from "../../../abstract-syntax-tree/elements/game_options";
 import { diagnosticMessages } from "../../../diagnostics/messages";
-import { type ValueWithLocation, valueWithLocation } from "../..";
 import { dxAssertionScope } from "../../diagnostics";
 import { assertNotErrorNode } from "../../diagnostics/assertNotErrorNode";
 import { LowerError } from "../../error";
@@ -14,14 +13,17 @@ import type {
 import type { ElementLowerContext } from "../../parameters/context";
 import { lowerConstantNumber } from "../../parameters/constantNumber";
 import { resolveScriptStringTableReference } from "../../parameters/resolveScriptStringTableReference";
-import { unwrapNumber } from "./shared";
 
 const lowerRangedOptionValue = (
   valueNode: UserDefinedOptionValueNode,
   ctx: ElementLowerContext
-): ValueWithLocation<UserDefinedOptionValue> => {
+): UserDefinedOptionValue => {
   const value = lowerConstantNumber(valueNode.value, ctx);
-  return valueWithLocation({ value }, valueNode.location);
+  const optionValue: UserDefinedOptionValue = {
+    value: value.value,
+  };
+  ctx.ir.locations.record(optionValue, "value", value.location);
+  return optionValue;
 };
 
 export const lowerRangedOption = (
@@ -41,49 +43,45 @@ export const lowerRangedOption = (
       );
     }
 
-    const name = valueWithLocation(
-      resolveScriptStringTableReference(
+    const minValue = lowerRangedOptionValue(entry.values[0]!, ctx);
+    const maxValue = lowerRangedOptionValue(entry.values[1]!, ctx);
+    const defaultNumeric = lowerConstantNumber(entry.defaultValue, ctx);
+    const defaultValue: UserDefinedOptionValue = {
+      value: defaultNumeric.value,
+    };
+    ctx.ir.locations.record(defaultValue, "value", defaultNumeric.location);
+
+    const option: RangedUserDefinedOption = {
+      name: resolveScriptStringTableReference(
         entry.displayName,
         ctx.ir,
         ctx.symbolTable
       ),
-      entry.displayName.location
-    );
-    const description = valueWithLocation(
-      resolveScriptStringTableReference(
+      description: resolveScriptStringTableReference(
         entry.description,
         ctx.ir,
         ctx.symbolTable
       ),
-      entry.description.location
-    );
-    const locked = entry.modifiers.lock
-      ? valueWithLocation(true, entry.location)
-      : undefined;
-    const hidden = entry.modifiers.hide
-      ? valueWithLocation(true, entry.location)
-      : undefined;
-
-    const minValue = lowerRangedOptionValue(entry.values[0]!, ctx);
-    const maxValue = lowerRangedOptionValue(entry.values[1]!, ctx);
-    const defaultNumeric = lowerConstantNumber(entry.defaultValue, ctx);
-    const defaultValue = valueWithLocation(
-      { value: defaultNumeric },
-      entry.defaultValue.location
-    );
-    const option: RangedUserDefinedOption = {
-      name,
-      description,
-      locked,
-      hidden,
+      locked: entry.modifiers.lock ? true : undefined,
+      hidden: entry.modifiers.hide ? true : undefined,
       defaultValue,
       minValue,
       maxValue,
-      currentValue: valueWithLocation(
-        unwrapNumber(defaultNumeric),
-        entry.defaultValue.location
-      ),
+      currentValue: defaultNumeric.value,
     };
+    ctx.ir.locations.record(option, "name", entry.displayName.location);
+    ctx.ir.locations.record(option, "description", entry.description.location);
+    if (entry.modifiers.lock) {
+      ctx.ir.locations.record(option, "locked", entry.location);
+    }
+    if (entry.modifiers.hide) {
+      ctx.ir.locations.record(option, "hidden", entry.location);
+    }
+    ctx.ir.locations.record(
+      option,
+      "currentValue",
+      entry.defaultValue.location
+    );
     ctx.ir.gameVariant.userDefinedOptions.push(option);
   });
 };

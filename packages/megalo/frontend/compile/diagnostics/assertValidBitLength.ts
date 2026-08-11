@@ -1,5 +1,5 @@
-import type { Diagnostics } from "../../diagnostics";
-import type { ValueWithLocation } from "../../intermediate-representation";
+import type { Diagnostics, SourceLocation } from "../../diagnostics";
+import { BUILT_IN_LOCATION } from "../../diagnostics";
 
 export const isWithinBitLength = (
   value: number,
@@ -14,16 +14,17 @@ export const isWithinBitLength = (
 };
 
 export function assertValidBitLength(
-  value: ValueWithLocation<number>,
+  value: number,
   bitLength: number,
   signed: boolean,
-  diagnostics: Diagnostics
+  diagnostics: Diagnostics,
+  location: SourceLocation = BUILT_IN_LOCATION
 ): void {
-  if (!isWithinBitLength(value.value, bitLength, signed)) {
+  if (!isWithinBitLength(value, bitLength, signed)) {
     // TODO: Add a more specific error message.
     diagnostics.addError(
-      `Value ${value.value} is out of range for bit length ${bitLength}.`,
-      value.location
+      `Value ${value} is out of range for bit length ${bitLength}.`,
+      location
     );
   }
 }

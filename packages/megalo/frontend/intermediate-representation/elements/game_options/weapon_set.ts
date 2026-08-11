@@ -7,7 +7,7 @@ import type { SourceCodeLocation } from "../../../diagnostics";
 import { diagnosticMessages } from "../../../diagnostics/messages";
 import { ObjectListType } from "../../../object-lists";
 import { SymbolKind, type SymbolTable } from "../../../symbol-table";
-import { type ValueWithLocation, valueWithLocation } from "../..";
+import { type Located, located } from "../..";
 import { assertSyntaxKind } from "../../diagnostics/assertSyntaxKind";
 import { LowerError } from "../../error";
 import type { WeaponSet } from "../../game/game_engine_default";
@@ -15,7 +15,7 @@ import type { WeaponSet } from "../../game/game_engine_default";
 export const lowerWeaponSet = (
   node: OverrideEntryNode["value"],
   symbolTable: SymbolTable
-): ValueWithLocation<WeaponSet> => {
+): Located<WeaponSet> => {
   if (node.kind !== OverrideValueKind.SIMPLE) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType(ObjectListType.WeaponSets, ""),
@@ -30,7 +30,7 @@ export const lowerWeaponSet = (
   const { location } = node.value;
 
   if (name === "none" || name === "default" || name === "random") {
-    return valueWithLocation(name, location);
+    return located(name, location);
   }
 
   if (node.value.kind === SyntaxKind.REFERENCE) {
@@ -39,7 +39,7 @@ export const lowerWeaponSet = (
       symbol?.kind === SymbolKind.ObjectListItem &&
       symbol.objectType === ObjectListType.WeaponSets
     ) {
-      return valueWithLocation(symbol.index, location);
+      return located(symbol.index, location);
     }
   }
 
@@ -57,5 +57,5 @@ export const lowerWeaponSet = (
       location
     );
   }
-  return valueWithLocation(match.index, location);
+  return located(match.index, location);
 };

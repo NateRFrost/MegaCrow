@@ -1,18 +1,17 @@
-import type { ValueWithLocation } from "..";
 
 export type DamageResistance = "invulnerable" | number;
 export type DamageModifier = "fatality" | number;
 
 export type PlayerTraitShieldVitality = Partial<{
-  damageResistancePercentage: ValueWithLocation<DamageResistance>;
-  bodyMultiplierPercentage: ValueWithLocation<number>;
-  bodyRechargeRatePercentage: ValueWithLocation<number>;
-  shieldMultiplierPercentage: ValueWithLocation<number>;
-  shieldRechargeRatePercentage: ValueWithLocation<number>;
-  headshotImmunity: ValueWithLocation<boolean>;
-  vampirismPercentage: ValueWithLocation<number>;
-  assasinationImmunity: ValueWithLocation<boolean>;
-  deathless: ValueWithLocation<boolean>;
+  damageResistancePercentage: DamageResistance;
+  bodyMultiplierPercentage: number;
+  bodyRechargeRatePercentage: number;
+  shieldMultiplierPercentage: number;
+  shieldRechargeRatePercentage: number;
+  headshotImmunity: boolean;
+  vampirismPercentage: number;
+  assasinationImmunity: boolean;
+  deathless: boolean;
 }>;
 
 export enum GrenadeCountSetting {
@@ -41,18 +40,18 @@ export enum InfiniteAmmoSetting {
 }
 
 export type PlayerTraitWeapons = Partial<{
-  damageModifierPercentageSetting: ValueWithLocation<DamageModifier>;
-  meleeDamageModifierPercentageSetting: ValueWithLocation<DamageModifier>;
-  initialPrimaryWeaponAbsoluteIndex: ValueWithLocation<number>; // object_lists/weapons.txt
-  initialSecondaryWeaponAbsoluteIndex: ValueWithLocation<number>; // object_lists/weapons.txt
-  initialGrenadeCount: ValueWithLocation<GrenadeCountSetting>;
-  rechargingGrenades: ValueWithLocation<boolean>;
-  infiniteAmmo: ValueWithLocation<InfiniteAmmoSetting>;
-  weaponPickup: ValueWithLocation<boolean>;
-  equipmentUsage: ValueWithLocation<boolean>;
-  dropEquipment: ValueWithLocation<boolean>;
-  infiniteEquipment: ValueWithLocation<boolean>;
-  initialEquipmentAbsoluteIndex: ValueWithLocation<number>; // object_lists/equipment.txt
+  damageModifierPercentageSetting: DamageModifier;
+  meleeDamageModifierPercentageSetting: DamageModifier;
+  initialPrimaryWeaponAbsoluteIndex: number; // object_lists/weapons.txt
+  initialSecondaryWeaponAbsoluteIndex: number; // object_lists/weapons.txt
+  initialGrenadeCount: GrenadeCountSetting;
+  rechargingGrenades: boolean;
+  infiniteAmmo: InfiniteAmmoSetting;
+  weaponPickup: boolean;
+  equipmentUsage: boolean;
+  dropEquipment: boolean;
+  infiniteEquipment: boolean;
+  initialEquipmentAbsoluteIndex: number; // object_lists/equipment.txt
 }>;
 
 export enum VehicleUsage {
@@ -68,11 +67,11 @@ export enum VehicleUsage {
 }
 
 export type PlayerTraitMovement = Partial<{
-  speedPercentage: ValueWithLocation<number>;
-  gravityPercentage: ValueWithLocation<number>;
-  vehicleUsage: ValueWithLocation<VehicleUsage>;
-  jumpModifier: ValueWithLocation<number>; // % expressed as an integer
-  sprinting: ValueWithLocation<boolean>;
+  speedPercentage: number;
+  gravityPercentage: number;
+  vehicleUsage: VehicleUsage;
+  jumpModifier: number; // % expressed as an integer
+  sprinting: boolean;
 }>;
 
 export enum ActiveCamo {
@@ -109,10 +108,10 @@ export enum ForcedChangeColor {
 }
 
 export type PlayerTraitAppearance = Partial<{
-  activeCamo: ValueWithLocation<ActiveCamo>;
-  waypoint: ValueWithLocation<WaypointVisibility>;
-  gamertag: ValueWithLocation<WaypointVisibility>;
-  forcedChangeColor: ValueWithLocation<ForcedChangeColor>;
+  activeCamo: ActiveCamo;
+  waypoint: WaypointVisibility;
+  gamertag: WaypointVisibility;
+  forcedChangeColor: ForcedChangeColor;
 }>;
 
 export enum MotionTrackerMode {
@@ -124,8 +123,8 @@ export enum MotionTrackerMode {
 }
 
 export type PlayerTraitSensors = Partial<{
-  motionTrackerMode: ValueWithLocation<MotionTrackerMode>;
-  motionTrackerRange: ValueWithLocation<number>;
+  motionTrackerMode: MotionTrackerMode;
+  motionTrackerRange: number;
 }>;
 
 export type PlayerTraits = {

@@ -4,21 +4,21 @@ import type { ASTParameterNode } from "../../abstract-syntax-tree/parameters";
 import { diagnosticMessages } from "../../diagnostics/messages";
 import { ObjectListType } from "../../object-lists";
 import { SymbolKind } from "../../symbol-table";
-import { valueWithLocation } from "..";
+import { type Located, located } from "..";
 import { dxAssertionScope } from "../diagnostics";
 import { assertNotErrorNode } from "../diagnostics/assertNotErrorNode";
 import { assertSyntaxKind } from "../diagnostics/assertSyntaxKind";
-import { markCurrentValueUnused } from "../diagnostics/markCurrentValueUnused";
 import { LowerError } from "../error";
 import type { LoadoutTraits } from "../game/game_engine_default";
 import type { ElementLowerContext } from "../parameters";
 import { lowerGrenadeCount } from "../parameters/grenadeCount";
+import { setField } from "../setField";
 
 const lowerObjectListKeyword = (
   node: ASTParameterNode,
   objectType: ObjectListType,
   ctx: ElementLowerContext
-) => {
+): Located<number> => {
   assertSyntaxKind(node, SyntaxKind.KEYWORD);
   const symbol = ctx.symbolTable
     .toArray()
@@ -34,7 +34,7 @@ const lowerObjectListKeyword = (
       node.location
     );
   }
-  return valueWithLocation(symbol.index, node.location);
+  return located(symbol.index, node.location);
 };
 
 export const loadoutLowerer = (
@@ -53,24 +53,36 @@ export const loadoutLowerer = (
         );
       }
       switch (item.identifier) {
-        case "name":
-          traits.name = lowerObjectListKeyword(
+        case "name": {
+          const value = lowerObjectListKeyword(
             parameter,
             ObjectListType.Loadouts,
             ctx
-          ).value;
+          );
+          setField(
+            ctx.ir.locations,
+            ctx.diagnostics,
+            traits,
+            "name",
+            value.value,
+            value.location
+          );
           break;
+        }
         case "primary_weapon": {
           const value = lowerObjectListKeyword(
             parameter,
             ObjectListType.Weapons,
             ctx
           );
-          markCurrentValueUnused(
-            traits.initialPrimaryWeaponAbsoluteIndex,
-            ctx.diagnostics
+          setField(
+            ctx.ir.locations,
+            ctx.diagnostics,
+            traits,
+            "initialPrimaryWeaponAbsoluteIndex",
+            value.value,
+            value.location
           );
-          traits.initialPrimaryWeaponAbsoluteIndex = value;
           break;
         }
         case "backpack_weapon": {
@@ -79,11 +91,14 @@ export const loadoutLowerer = (
             ObjectListType.Weapons,
             ctx
           );
-          markCurrentValueUnused(
-            traits.initialSecondaryWeaponAbsoluteIndex,
-            ctx.diagnostics
+          setField(
+            ctx.ir.locations,
+            ctx.diagnostics,
+            traits,
+            "initialSecondaryWeaponAbsoluteIndex",
+            value.value,
+            value.location
           );
-          traits.initialSecondaryWeaponAbsoluteIndex = value;
           break;
         }
         case "equipment": {
@@ -92,21 +107,29 @@ export const loadoutLowerer = (
             ObjectListType.Equipment,
             ctx
           );
-          markCurrentValueUnused(
-            traits.initialEquipmentAbsoluteIndex,
-            ctx.diagnostics
+          setField(
+            ctx.ir.locations,
+            ctx.diagnostics,
+            traits,
+            "initialEquipmentAbsoluteIndex",
+            value.value,
+            value.location
           );
-          traits.initialEquipmentAbsoluteIndex = value;
           break;
         }
-        case "grenades":
+        case "grenades": {
           assertSyntaxKind(parameter, SyntaxKind.GRENADE_COUNT);
-          markCurrentValueUnused(
-            traits.initialGrenadeCountSetting,
-            ctx.diagnostics
+          const value = lowerGrenadeCount(parameter);
+          setField(
+            ctx.ir.locations,
+            ctx.diagnostics,
+            traits,
+            "initialGrenadeCountSetting",
+            value.value,
+            value.location
           );
-          traits.initialGrenadeCountSetting = lowerGrenadeCount(parameter);
           break;
+        }
       }
     });
   }
