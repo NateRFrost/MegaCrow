@@ -81,6 +81,11 @@ const parseFilterName = (
     return filterName;
   }
 
+  ctx.symbolParser.addObjectFilterToScope(
+    filterName.value,
+    filterName.location
+  );
+
   return {
     value: filterName.value,
     location: filterName.location,

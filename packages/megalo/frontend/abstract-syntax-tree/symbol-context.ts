@@ -50,6 +50,7 @@ export class ParserSymbolContext {
   private readonly declaredLoadoutPalettes: Map<string, SymbolId> = new Map();
   private readonly declaredRequisitionPalettes: Map<string, SymbolId> =
     new Map();
+  private readonly declaredObjectFilters: Map<string, SymbolId> = new Map();
   private readonly declaredObjectListItems = new Map<
     ObjectListType,
     Map<string, SymbolId>
@@ -201,6 +202,23 @@ export class ParserSymbolContext {
 
   public lookupHudWidget(name: string): SymbolId | undefined {
     return this.declaredHudWidgets.get(name);
+  }
+
+  public addObjectFilterToScope(
+    name: string,
+    declaration: SourceLocation
+  ): SymbolId {
+    const id = this.symbolBinder.addObjectFilter({
+      name,
+      index: this.declaredObjectFilters.size,
+      declaration,
+    });
+    this.declaredObjectFilters.set(name, id);
+    return id;
+  }
+
+  public lookupObjectFilter(name: string): SymbolId | undefined {
+    return this.declaredObjectFilters.get(name);
   }
 
   public addLoadoutToScope(

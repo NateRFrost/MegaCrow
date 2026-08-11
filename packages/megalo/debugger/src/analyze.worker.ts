@@ -17,6 +17,7 @@ import {
   type SymbolTableHudWidgetEntry,
   type SymbolTableLoadoutEntry,
   type SymbolTableLoadoutPaletteEntry,
+  type SymbolTableObjectFilterEntry,
   type SymbolTableObjectListItemEntry,
   type SymbolTableRequisitionPaletteEntry,
   type SymbolTableStringEntry,
@@ -75,6 +76,8 @@ const symbolKindName = (kind: SymbolKind): string => {
       return "RequisitionPalette";
     case SymbolKind.ObjectListItem:
       return "ObjectListItem";
+    case SymbolKind.ObjectFilter:
+      return "ObjectFilter";
   }
 };
 
@@ -158,6 +161,14 @@ const serializeSymbolTableEntry = (entry: SymbolTableEntry): object => {
         objectType: objectListItemEntry.objectType,
         index: objectListItemEntry.index,
         declaration: objectListItemEntry.declaration,
+      };
+    }
+    case SymbolKind.ObjectFilter: {
+      const objectFilterEntry = entry as SymbolTableObjectFilterEntry;
+      return {
+        ...base,
+        index: objectFilterEntry.index,
+        declaration: objectFilterEntry.declaration,
       };
     }
   }

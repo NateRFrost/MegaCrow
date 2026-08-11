@@ -227,7 +227,7 @@ export class ConditionParserRepository {
     ]);
     this.registerSignature("object_matches_filter", [
       ParameterType.Object,
-      ParameterType.Keyword,
+      ParameterType.ObjectFilter,
     ]);
     this.registerSignature("player_is_active", [ParameterType.Player]);
     this.registerSignature("equipment_is_active", [ParameterType.Object]);

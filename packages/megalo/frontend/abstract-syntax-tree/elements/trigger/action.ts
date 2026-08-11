@@ -229,7 +229,7 @@ const createObjectV73: ParameterSignature = [
   KeywordParameter("at"),
   ParameterType.Object,
   OptionalParameter("set", ParameterType.Object),
-  OptionalParameter("label", ParameterType.Keyword),
+  OptionalParameter("label", ParameterType.ObjectFilter),
   OptionalParameter("never_garbage"),
   OptionalParameter("suppress_effect"),
   OptionalParameter("absolute_orientation"),
@@ -910,7 +910,7 @@ export class ActionParserRepository {
     this.registerParser(
       "get_random_object",
       buildParameterParser([
-        ParameterType.Keyword,
+        ParameterType.ObjectFilter,
         ParameterType.Object,
         ParameterType.Object,
       ])

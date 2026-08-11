@@ -20,6 +20,7 @@ export { encodeTeamOptionsModelOverrideType } from "./e_game_engine_team_options
 export { encodeInfiniteAmmoSetting } from "./e_infinite_ammo_setting";
 export { encodeMotionTrackerSetting } from "./e_motion_tracker_setting";
 export { encodeMultiplayerTeamDesignator } from "./e_multiplayer_team_designator";
+export { encodeObjectTeamFilter } from "./e_object_team_filter";
 export { encodePlayerModelChoice } from "./e_player_model_choice";
 export { encodeTeamScoringMethod } from "./e_team_scoring_method";
 export { encodeVehicleUsageSetting } from "./e_vehicle_usage_setting";

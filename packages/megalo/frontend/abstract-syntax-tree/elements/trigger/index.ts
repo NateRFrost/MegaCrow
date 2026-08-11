@@ -1,5 +1,7 @@
 import type { SourceCodeLocation } from "../../../diagnostics";
 import { diagnosticMessages } from "../../../diagnostics/messages";
+import { TRIGGER_EXECUTION_KINDS } from "../../../language-configuration/omni/triggers";
+import type { SymbolId } from "../../../symbol-table";
 import {
   normalizeTriggerHeader,
   type ParserScope,
@@ -36,7 +38,11 @@ export type BeginStatementNode = ASTNode<SyntaxKind.BEGIN> & {
 };
 
 export type ForEachStatementNode = ASTNode<SyntaxKind.FOR_EACH> & {
-  target: { value: string; location: SourceCodeLocation };
+  target: {
+    value: string;
+    location: SourceCodeLocation;
+    symbolId?: SymbolId;
+  };
   statements: TriggerStatementNode[];
 };
 
@@ -48,8 +54,28 @@ export type TriggerStatementNode =
   | ForEachStatementNode;
 
 export type TriggerElementNode = ASTElementBase<ElementKind.TRIGGER> & {
-  name: { value: string; location: SourceCodeLocation };
+  name: {
+    value: string;
+    location: SourceCodeLocation;
+    symbolId?: SymbolId;
+  };
   statements: TriggerStatementNode[];
+};
+
+const lookupObjectFilterReference = (
+  ctx: ParserContext,
+  name: string,
+  location: SourceCodeLocation
+): SymbolId | undefined => {
+  if ((TRIGGER_EXECUTION_KINDS as readonly string[]).includes(name.toLowerCase())) {
+    return;
+  }
+
+  const symbolId = ctx.symbolParser.lookupObjectFilter(name);
+  if (symbolId !== undefined) {
+    ctx.symbolParser.recordReference(symbolId, location);
+  }
+  return symbolId;
 };
 
 const withScope = <T extends { location: SourceCodeLocation }>(
@@ -97,6 +123,11 @@ const parseTriggerName = (
   return {
     value: nameToken.value,
     location: nameToken.location,
+    symbolId: lookupObjectFilterReference(
+      ctx,
+      nameToken.value,
+      nameToken.location
+    ),
   };
 };
 
@@ -216,6 +247,11 @@ const parseForEachTarget = (
   return {
     value: targetToken.value,
     location: targetToken.location,
+    symbolId: lookupObjectFilterReference(
+      ctx,
+      targetToken.value,
+      targetToken.location
+    ),
   };
 };
 

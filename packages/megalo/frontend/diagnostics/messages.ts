@@ -179,6 +179,18 @@ export const diagnosticMessages = {
     return translate("map_id_out_of_range");
   },
 
+  tooManyObjectFilters(): string {
+    return translate("too_many_object_filters");
+  },
+
+  objectFilterUserDataOutOfRange(): string {
+    return translate("object_filter_user_data_out_of_range");
+  },
+
+  objectFilterMinOutOfRange(): string {
+    return translate("object_filter_min_out_of_range");
+  },
+
   fireteamCountOutOfRange(value: number, max: number): string {
     return translate("fireteam_count_out_of_range", {
       value: String(value),
