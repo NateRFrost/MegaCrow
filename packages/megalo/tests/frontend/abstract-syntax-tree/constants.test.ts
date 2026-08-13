@@ -8,12 +8,14 @@ import {
 } from "../../../frontend/symbol-table";
 import { Lexer } from "../../../frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../version";
+import { FrontendContext } from "../../../frontend/context";
 
 const parse = (source: string) => {
   const diagnostics = new Diagnostics();
   const version = MEGALO_VERSIONS["107-mcc"];
-  const tokens = new Lexer(version).lex(source, diagnostics);
-  const ast = new Parser(version).parse(tokens, diagnostics);
+  const frontend = new FrontendContext(version);
+  const tokens = new Lexer(frontend).lex(source, diagnostics);
+  const ast = new Parser(frontend).parse(tokens, diagnostics);
   return { ast, symbolTable: ast.symbolTable.toArray(), diagnostics };
 };
 
@@ -76,7 +78,7 @@ end
     }
 
     const builtInTrue = symbolTable.find((entry) => entry.name === "true");
-    expect(builtInTrue?.range.start.offset).toBe(-1);
+    expect(builtInTrue?.range.start.localOffset).toBe(-1);
     expect(builtInTrue?.references).toHaveLength(1);
 
     expect(element.entries[2]?.value).toMatchObject({
@@ -114,6 +116,43 @@ end
       identifier: "k_special_death_type_melee",
       symbolId: melee?.id,
     });
+
+    const headshot = userConstantSymbols(symbolTable).find(
+      (entry) => entry.name === "k_special_death_type_headshot"
+    );
+    expect(headshot?.value).toBe(1);
+  });
+
+  it("resolves declare-before-use constant alias chains", () => {
+    const source = `constants
+\tnumber k_a 8
+\tnumber k_b k_a
+\tnumber k_c k_b
+end
+`;
+
+    const { symbolTable, diagnostics } = parse(source);
+    expect(diagnostics.hasErrors()).toBe(false);
+    const byName = Object.fromEntries(
+      userConstantSymbols(symbolTable).map((e) => [e.name, e.value])
+    );
+    expect(byName).toMatchObject({ k_a: 8, k_b: 8, k_c: 8 });
+  });
+
+  it("rejects forward references to undeclared constants", () => {
+    const source = `constants
+\tnumber k_a k_b
+\tnumber k_b 3
+end
+`;
+
+    const { symbolTable, diagnostics } = parse(source);
+    expect(diagnostics.hasErrors()).toBe(true);
+    const byName = Object.fromEntries(
+      userConstantSymbols(symbolTable).map((e) => [e.name, e.value])
+    );
+    expect(byName).toMatchObject({ k_b: 3 });
+    expect(byName.k_a).toBeUndefined();
   });
 
   it("reports floating-point constant values", () => {

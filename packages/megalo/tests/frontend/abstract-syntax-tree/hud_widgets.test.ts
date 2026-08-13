@@ -8,12 +8,14 @@ import {
 } from "../../../frontend/symbol-table";
 import { Lexer } from "../../../frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../version";
+import { FrontendContext } from "../../../frontend/context";
 
 const parse = (source: string) => {
   const diagnostics = new Diagnostics();
   const version = MEGALO_VERSIONS["107-mcc"];
-  const tokens = new Lexer(version).lex(source, diagnostics);
-  const ast = new Parser(version).parse(tokens, diagnostics);
+  const frontend = new FrontendContext(version);
+  const tokens = new Lexer(frontend).lex(source, diagnostics);
+  const ast = new Parser(frontend).parse(tokens, diagnostics);
   return { ast, symbolTable: ast.symbolTable.toArray(), diagnostics };
 };
 
@@ -95,5 +97,24 @@ end
 
     expect(diagnostics.hasErrors()).toBe(true);
     expect(diagnostics.getErrors()[0]?.message).toContain("end");
+  });
+
+  it("warns when a duplicate hud_widget name is declared (first wins)", () => {
+    const source = `hud_widgets
+\tshared_widget top_left
+\tshared_widget bottom_center
+end
+`;
+
+    const { symbolTable, diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(diagnostics.getWarnings()).toHaveLength(1);
+    expect(diagnostics.getWarnings()[0]?.message).toContain("shared_widget");
+    expect(diagnostics.getWarnings()[0]?.message).toContain("ignored");
+
+    expect(
+      hudWidgetSymbols(symbolTable).filter((e) => e.name === "shared_widget")
+    ).toHaveLength(2);
   });
 });

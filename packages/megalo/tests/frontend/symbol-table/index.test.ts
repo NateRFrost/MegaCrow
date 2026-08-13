@@ -16,29 +16,39 @@ import {
   VariableType,
   isBuiltInVariable,
 } from "../../../frontend/symbol-table";
-import { VersionConfiguration107MCC } from "../../../frontend/version-configuration";
 import {
   buildVariableSlotMap,
   findVariableBySlot,
 } from "../../../frontend/intermediate-representation/preprocessing/symbols";
 import { ParserScopeKind } from "../../../frontend/symbol-table/scope";
 import { MEGALO_VERSIONS } from "../../../version";
+import { FrontendContext } from "../../../frontend/context";
 
-const VARIABLE_LIMITS_107_MCC = new VersionConfiguration107MCC().limits;
 const version = MEGALO_VERSIONS["107-mcc"];
+const frontend = new FrontendContext(version);
 
 const loc = (line: number, column = 1): SourceCodeLocation => ({
   type: SourceLocationType.SOURCE_CODE,
-  start: { offset: 0, line, column },
-  end: { offset: 0, line, column: column + 1 },
+  start: {
+    localOffset: 0,
+    absoluteOffset: 0,
+    line,
+    column,
+  },
+  end: {
+    localOffset: 0,
+    absoluteOffset: 0,
+    line,
+    column: column + 1,
+  },
 });
 
-const createBinder = () => new SymbolBinder(version, new Diagnostics());
+const createBinder = () => new SymbolBinder(frontend, new Diagnostics());
 
 describe("SymbolBinder", () => {
   it("addString creates a string symbol with language declaration", () => {
     const diagnostics = new Diagnostics();
-    const binder = new SymbolBinder(version, diagnostics);
+    const binder = new SymbolBinder(frontend, diagnostics);
     const declaration = loc(2, 5);
 
     const id = binder.addString({
@@ -66,7 +76,7 @@ describe("SymbolBinder", () => {
 
   it("addString merges language declarations for the same symbol name", () => {
     const diagnostics = new Diagnostics();
-    const binder = new SymbolBinder(version, diagnostics);
+    const binder = new SymbolBinder(frontend, diagnostics);
     const englishDeclaration = loc(2);
     const frenchDeclaration = loc(5);
 
@@ -101,7 +111,7 @@ describe("SymbolBinder", () => {
 
   it("addString reports duplicate declarations for the same language", () => {
     const diagnostics = new Diagnostics();
-    const binder = new SymbolBinder(version, diagnostics);
+    const binder = new SymbolBinder(frontend, diagnostics);
     const firstDeclaration = loc(2);
     const duplicateDeclaration = loc(3);
 
@@ -133,7 +143,7 @@ describe("SymbolBinder", () => {
 
   it("addVariable and addConstant append distinct entries", () => {
     const diagnostics = new Diagnostics();
-    const binder = new SymbolBinder(version, diagnostics);
+    const binder = new SymbolBinder(frontend, diagnostics);
     const variableDeclaration = loc(1);
     const constantDeclaration = loc(2);
 
@@ -194,7 +204,7 @@ describe("SymbolBinder", () => {
 
   it("buildVariableSlotMap assigns sequential slots per (scope, type) and skips built-ins", () => {
     const diagnostics = new Diagnostics();
-    const binder = new SymbolBinder(version, diagnostics);
+    const binder = new SymbolBinder(frontend, diagnostics);
 
     const first = binder.addVariable({
       name: "a",
@@ -228,11 +238,7 @@ describe("SymbolBinder", () => {
     });
 
     const table = binder.getSymbolTable();
-    const slots = buildVariableSlotMap(
-      table,
-      VARIABLE_LIMITS_107_MCC,
-      diagnostics
-    );
+    const slots = buildVariableSlotMap(frontend, table, diagnostics);
 
     expect(slots.get(first)?.index).toBe(0);
     expect(slots.get(second)?.index).toBe(1);
@@ -260,8 +266,8 @@ describe("SymbolBinder", () => {
 
   it("registers built-in timers in the global scope", () => {
     const diagnostics = new Diagnostics();
-    const binder = new SymbolBinder(version, diagnostics);
-    const parser = new ParserSymbolContext(version, diagnostics, binder);
+    const binder = new SymbolBinder(frontend, diagnostics);
+    const parser = new ParserSymbolContext(frontend, diagnostics, binder);
 
     for (const name of [
       "round_timer",
@@ -280,8 +286,8 @@ describe("SymbolBinder", () => {
 
   it("registers team designators as built-in Team variables", () => {
     const diagnostics = new Diagnostics();
-    const binder = new SymbolBinder(version, diagnostics);
-    const parser = new ParserSymbolContext(version, diagnostics, binder);
+    const binder = new SymbolBinder(frontend, diagnostics);
+    const parser = new ParserSymbolContext(frontend, diagnostics, binder);
 
     for (const name of TEAM_DESIGNATORS) {
       const id = parser.lookupSymbol(name);
@@ -295,10 +301,101 @@ describe("SymbolBinder", () => {
     }
   });
 
+  it("registers explicit team refs as built-in Team variables", () => {
+    const diagnostics = new Diagnostics();
+    const binder = new SymbolBinder(frontend, diagnostics);
+    const parser = new ParserSymbolContext(frontend, diagnostics, binder);
+
+    for (const name of ["neutral", "local_team"]) {
+      const id = parser.lookupSymbol(name);
+      expect(id).toBeDefined();
+      expect(parser.getSymbolEntry(id!)).toMatchObject({
+        kind: SymbolKind.Variable,
+        type: VariableType.Team,
+        name,
+        scope: VariableScope.Global,
+      });
+    }
+
+    // MegaCrow extension only (MegaloEdit Headache #2).
+    expect(parser.lookupSymbol("target_team")).toBeUndefined();
+    // Trigger-scoped only (see addBuiltInScopeVariables).
+    expect(parser.lookupSymbol("current_team")).toBeUndefined();
+    // Encoding-only slot names are not source-level built-ins.
+    expect(parser.lookupSymbol("team_0")).toBeUndefined();
+    expect(parser.lookupSymbol("global_team_0")).toBeUndefined();
+    expect(parser.lookupSymbol("temporary_team_0")).toBeUndefined();
+    expect(parser.lookupSymbol("temporary_0")).toBeUndefined();
+  });
+
+  it("registers target_team when the MegaCrow extension is enabled", () => {
+    const diagnostics = new Diagnostics();
+    const extFrontend = new FrontendContext(version, { targetTeam: true });
+    const binder = new SymbolBinder(extFrontend, diagnostics);
+    const parser = new ParserSymbolContext(extFrontend, diagnostics, binder);
+
+    const id = parser.lookupSymbol("target_team");
+    expect(id).toBeDefined();
+    expect(parser.getSymbolEntry(id!)).toMatchObject({
+      kind: SymbolKind.Variable,
+      type: VariableType.Team,
+      name: "target_team",
+      scope: VariableScope.Global,
+    });
+  });
+
+  it("registers always-available player and object refs as built-ins", () => {
+    const diagnostics = new Diagnostics();
+    const binder = new SymbolBinder(frontend, diagnostics);
+    const parser = new ParserSymbolContext(frontend, diagnostics, binder);
+
+    for (const name of ["local_player", "target_player"]) {
+      const id = parser.lookupSymbol(name);
+      expect(id).toBeDefined();
+      expect(parser.getSymbolEntry(id!)).toMatchObject({
+        kind: SymbolKind.Variable,
+        type: VariableType.Player,
+        name,
+        scope: VariableScope.Global,
+      });
+    }
+
+    const targetObject = parser.lookupSymbol("target_object");
+    expect(targetObject).toBeDefined();
+    expect(parser.getSymbolEntry(targetObject!)).toMatchObject({
+      kind: SymbolKind.Variable,
+      type: VariableType.Object,
+      name: "target_object",
+      scope: VariableScope.Global,
+    });
+
+    expect(parser.lookupSymbol("current_player")).toBeUndefined();
+    expect(parser.lookupSymbol("current_object")).toBeUndefined();
+  });
+
+  it("injects current_team only inside team triggers", () => {
+    const diagnostics = new Diagnostics();
+    const binder = new SymbolBinder(frontend, diagnostics);
+    const parser = new ParserSymbolContext(frontend, diagnostics, binder);
+
+    expect(parser.lookupSymbol("current_team")).toBeUndefined();
+
+    parser.pushScope({ kind: ParserScopeKind.Trigger, trigger: { kind: "team" } });
+    expect(parser.lookupSymbol("current_team")).toBeDefined();
+    expect(parser.getSymbolEntry(parser.lookupSymbol("current_team")!)).toMatchObject({
+      kind: SymbolKind.Variable,
+      type: VariableType.Team,
+      name: "current_team",
+    });
+
+    parser.popScope();
+    expect(parser.lookupSymbol("current_team")).toBeUndefined();
+  });
+
   it("lookupStringContent prefers english then falls back to the first language", () => {
     const diagnostics = new Diagnostics();
-    const binder = new SymbolBinder(version, diagnostics);
-    const parser = new ParserSymbolContext(version, diagnostics, binder);
+    const binder = new SymbolBinder(frontend, diagnostics);
+    const parser = new ParserSymbolContext(frontend, diagnostics, binder);
 
     parser.addStringToScope({
       name: "msg_only_french",
@@ -325,8 +422,8 @@ describe("SymbolBinder", () => {
 
   it("pushScope and popScope isolate variable lookups", () => {
     const diagnostics = new Diagnostics();
-    const binder = new SymbolBinder(version, diagnostics);
-    const parser = new ParserSymbolContext(version, diagnostics, binder);
+    const binder = new SymbolBinder(frontend, diagnostics);
+    const parser = new ParserSymbolContext(frontend, diagnostics, binder);
 
     parser.addVariableToScope({
       name: "outer_var",

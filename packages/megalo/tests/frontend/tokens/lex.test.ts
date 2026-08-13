@@ -7,19 +7,20 @@ import {
   type Tokens,
 } from "../../../frontend/tokens/index";
 import { MEGALO_VERSIONS } from "../../../version";
+import { FrontendContext } from "../../../frontend/context";
 
 const kinds = (source: string): TokenKind[] =>
-  new Lexer(MEGALO_VERSIONS["107-mcc"])
+  new Lexer(new FrontendContext(MEGALO_VERSIONS["107-mcc"]))
     .lex(source, new Diagnostics())
     .map((token) => token.kind);
 
 const values = (source: string): string[] =>
-  new Lexer(MEGALO_VERSIONS["107-mcc"])
+  new Lexer(new FrontendContext(MEGALO_VERSIONS["107-mcc"]))
     .lex(source, new Diagnostics())
     .map((token) => token.value);
 
 const tokens = (source: string): Tokens =>
-  new Lexer(MEGALO_VERSIONS["107-mcc"]).lex(source, new Diagnostics());
+  new Lexer(new FrontendContext(MEGALO_VERSIONS["107-mcc"])).lex(source, new Diagnostics());
 
 const expectToken = (
   token: Token,
@@ -131,16 +132,46 @@ describe("lex", () => {
     const result = tokens(source);
 
     expectToken(result[0]!, TokenKind.Identifier, "foo", {
-      start: { offset: 0, line: 1, column: 1 },
-      end: { offset: 3, line: 1, column: 4 },
+      start: {
+        localOffset: 0,
+        absoluteOffset: 0,
+        line: 1,
+        column: 1,
+      },
+      end: {
+        localOffset: 3,
+        absoluteOffset: 3,
+        line: 1,
+        column: 4,
+      },
     });
     expectToken(result[1]!, TokenKind.Comment, " bar", {
-      start: { offset: 4, line: 2, column: 1 },
-      end: { offset: 9, line: 2, column: 6 },
+      start: {
+        localOffset: 4,
+        absoluteOffset: 4,
+        line: 2,
+        column: 1,
+      },
+      end: {
+        localOffset: 9,
+        absoluteOffset: 9,
+        line: 2,
+        column: 6,
+      },
     });
     expectToken(result[2]!, TokenKind.Identifier, "baz", {
-      start: { offset: 10, line: 3, column: 1 },
-      end: { offset: 13, line: 3, column: 4 },
+      start: {
+        localOffset: 10,
+        absoluteOffset: 10,
+        line: 3,
+        column: 1,
+      },
+      end: {
+        localOffset: 13,
+        absoluteOffset: 13,
+        line: 3,
+        column: 4,
+      },
     });
   });
 

@@ -9,12 +9,14 @@ import {
 } from "../../../frontend/symbol-table";
 import { Lexer } from "../../../frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../version";
+import { FrontendContext } from "../../../frontend/context";
 
 const parse = (source: string) => {
   const diagnostics = new Diagnostics();
   const version = MEGALO_VERSIONS["107-mcc"];
-  const tokens = new Lexer(version).lex(source, diagnostics);
-  const ast = new Parser(version).parse(tokens, diagnostics);
+  const frontend = new FrontendContext(version);
+  const tokens = new Lexer(frontend).lex(source, diagnostics);
+  const ast = new Parser(frontend).parse(tokens, diagnostics);
   return { ast, symbolTable: ast.symbolTable.toArray(), diagnostics };
 };
 
@@ -246,5 +248,57 @@ end
 
     expect(diagnostics.hasErrors()).toBe(true);
     expect(diagnostics.getErrors()[0]?.message).toContain("end");
+  });
+
+  it("warns when a duplicate global timer name is declared (first wins)", () => {
+    const source = `variables global
+\tnetworked timer shared_timer 5
+\tnetworked timer shared_timer 99
+end
+`;
+
+    const { symbolTable, diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(diagnostics.getWarnings()).toHaveLength(1);
+    expect(diagnostics.getWarnings()[0]?.message).toContain("shared_timer");
+    expect(diagnostics.getWarnings()[0]?.message).toContain("ignored");
+
+    const timers = variableSymbols(symbolTable).filter(
+      (entry) => entry.name === "shared_timer"
+    );
+    expect(timers).toHaveLength(2);
+  });
+
+  it("warns when a duplicate member variable name is declared (first wins)", () => {
+    const source = `variables player
+\tlocal number shared_flag 0
+\tlocal number shared_flag 1
+end
+`;
+
+    const { symbolTable, diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(diagnostics.getWarnings()).toHaveLength(1);
+    expect(diagnostics.getWarnings()[0]?.message).toContain("shared_flag");
+    expect(diagnostics.getWarnings()[0]?.message).toContain("ignored");
+
+    expect(
+      variableSymbols(symbolTable).filter((e) => e.name === "shared_flag")
+    ).toHaveLength(2);
+  });
+
+  it("does not warn when a duplicate global number shadows (last wins)", () => {
+    const source = `variables global
+\tlocal number counter 0
+\tlocal number counter 7
+end
+`;
+
+    const { diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(diagnostics.getWarnings()).toHaveLength(0);
   });
 });

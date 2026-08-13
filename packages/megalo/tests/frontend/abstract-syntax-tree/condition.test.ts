@@ -10,13 +10,15 @@ import {
 } from "../../../frontend/symbol-table";
 import { Lexer, TokenKind } from "../../../frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../version";
+import { FrontendContext } from "../../../frontend/context";
 
 const parseConditionLine = (source: string) => {
   const diagnostics = new Diagnostics();
   const version = MEGALO_VERSIONS["107-mcc"];
-  const tokens = new Lexer(version).lex(source, diagnostics);
-  const symbolBinder = new SymbolBinder(version, diagnostics);
-  const ctx = new ParserContext(tokens, version, diagnostics, symbolBinder);
+  const frontend = new FrontendContext(version);
+  const tokens = new Lexer(frontend).lex(source, diagnostics);
+  const symbolBinder = new SymbolBinder(frontend, diagnostics);
+  const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
 
   ctx.symbolParser.addVariableToScope({
     name: "current_player",
@@ -194,7 +196,7 @@ describe("parseCondition", () => {
 
 describe("comparison operator lexing", () => {
   it("tokenizes symbolic comparison operators", () => {
-    const tokens = new Lexer(MEGALO_VERSIONS["107-mcc"]).lex(
+    const tokens = new Lexer(new FrontendContext(MEGALO_VERSIONS["107-mcc"])).lex(
       "== != <= >=",
       new Diagnostics()
     );

@@ -17,13 +17,15 @@ import {
 } from "../../../frontend/symbol-table";
 import { Lexer } from "../../../frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../version";
+import { FrontendContext } from "../../../frontend/context";
 
 const parseParameters = (source: string, parser: ParameterParser) => {
   const diagnostics = new Diagnostics();
   const version = MEGALO_VERSIONS["107-mcc"];
-  const tokens = new Lexer(version).lex(source, diagnostics);
-  const symbolBinder = new SymbolBinder(version, diagnostics);
-  const ctx = new ParserContext(tokens, version, diagnostics, symbolBinder);
+  const frontend = new FrontendContext(version);
+  const tokens = new Lexer(frontend).lex(source, diagnostics);
+  const symbolBinder = new SymbolBinder(frontend, diagnostics);
+  const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
 
   ctx.symbolParser.addVariableToScope({
     name: "round_timer",
@@ -88,7 +90,7 @@ const parseParameters = (source: string, parser: ParameterParser) => {
 describe("parameterParserBuilder", () => {
   it("parses keyword parameters for initial_grenades", () => {
     const parser = parameterParserBuilder([
-      ParameterType.Number,
+      ParameterType.Integer,
       ParameterType.Keyword,
     ]);
 
@@ -101,9 +103,60 @@ describe("parameterParserBuilder", () => {
     ]);
   });
 
+  it("parses built-in team refs as symbol references", () => {
+    const parser = parameterParserBuilder([
+      ParameterType.Team,
+      ParameterType.Team,
+      ParameterType.Team,
+    ]);
+
+    const { parameters, diagnostics } = parseParameters(
+      "attackers neutral local_team",
+      parser
+    );
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(parameters).toEqual([
+      expect.objectContaining({
+        kind: SyntaxKind.REFERENCE,
+        identifier: "attackers",
+      }),
+      expect.objectContaining({
+        kind: SyntaxKind.REFERENCE,
+        identifier: "neutral",
+      }),
+      expect.objectContaining({
+        kind: SyntaxKind.REFERENCE,
+        identifier: "local_team",
+      }),
+    ]);
+  });
+
+  it("parses target_team when the MegaCrow extension is enabled", () => {
+    const diagnostics = new Diagnostics();
+    const frontend = new FrontendContext(MEGALO_VERSIONS["107-mcc"], {
+      targetTeam: true,
+    });
+    const tokens = new Lexer(frontend).lex("target_team", diagnostics);
+    const symbolBinder = new SymbolBinder(frontend, diagnostics);
+    const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
+    const parameters = parameterParserBuilder([ParameterType.Team])(
+      ctx,
+      tokens[0]!.location
+    );
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(parameters).toEqual([
+      expect.objectContaining({
+        kind: SyntaxKind.REFERENCE,
+        identifier: "target_team",
+      }),
+    ]);
+  });
+
   it("parses numeric constant references", () => {
     const parser = parameterParserBuilder([
-      ParameterType.Number,
+      ParameterType.Integer,
       ParameterType.Keyword,
     ]);
 
@@ -123,7 +176,7 @@ describe("parameterParserBuilder", () => {
     const parser = parameterParserBuilder(
       [ParameterType.HudWidget, KeywordParameter("off")],
       [ParameterType.HudWidget, ParameterType.Timer],
-      [ParameterType.HudWidget, ParameterType.Number, ParameterType.Number]
+      [ParameterType.HudWidget, ParameterType.Integer, ParameterType.Integer]
     );
 
     const off = parseParameters("health_meter off", parser);
@@ -158,8 +211,8 @@ describe("parameterParserBuilder", () => {
   it("still consumes tokens when a parameter does not match the expected type", () => {
     const parser = parameterParserBuilder([
       ParameterType.HudWidget,
-      ParameterType.Number,
-      ParameterType.Number,
+      ParameterType.Integer,
+      ParameterType.Integer,
     ]);
 
     const { parameters, diagnostics } = parseParameters(
@@ -198,12 +251,13 @@ describe("parameterParserBuilder", () => {
 
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-    const tokens = new Lexer(version).lex(
+const frontend = new FrontendContext(version);
+    const tokens = new Lexer(frontend).lex(
       "player current_player vip",
       diagnostics
     );
-    const symbolBinder = new SymbolBinder(version, diagnostics);
-    const ctx = new ParserContext(tokens, version, diagnostics, symbolBinder);
+    const symbolBinder = new SymbolBinder(frontend, diagnostics);
+    const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
     ctx.symbolParser.addVariableToScope({
       name: "current_player",
       type: VariableType.Player,
@@ -299,12 +353,11 @@ describe("parameterParserBuilder", () => {
     const parser = parameterParserBuilder();
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-    const tokens = new Lexer(version).lex("unused", diagnostics);
-    const ctx = new ParserContext(
-      tokens,
-      version,
+const frontend = new FrontendContext(version);
+    const tokens = new Lexer(frontend).lex("unused", diagnostics);
+    const ctx = new ParserContext(tokens, frontend,
       diagnostics,
-      new SymbolBinder(version, diagnostics)
+      new SymbolBinder(frontend, diagnostics)
     );
 
     expect(parser(ctx, tokens[0]!.location)).toEqual([]);
@@ -314,7 +367,7 @@ describe("parameterParserBuilder", () => {
   it("parses math operations as operator or keyword tokens", () => {
     const parser = parameterParserBuilder([
       ParameterType.MathOperation,
-      ParameterType.Number,
+      ParameterType.Integer,
     ]);
 
     const keyword = parseParameters("set_to 1", parser);
@@ -357,7 +410,7 @@ describe("parameterParserBuilder", () => {
   });
 
   it("parses a single member reference level", () => {
-    const parser = parameterParserBuilder([ParameterType.Number]);
+    const parser = parameterParserBuilder([ParameterType.Integer]);
 
     const { parameters, diagnostics } = parseParameters(
       "current_player.score",
@@ -419,12 +472,13 @@ describe("parameterParserBuilder", () => {
     const parser = parameterParserBuilder([ParameterType.DynamicString]);
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-    const tokens = new Lexer(version).lex(
+const frontend = new FrontendContext(version);
+    const tokens = new Lexer(frontend).lex(
       "obj_score score_to_win_round",
       diagnostics
     );
-    const symbolBinder = new SymbolBinder(version, diagnostics);
-    const ctx = new ParserContext(tokens, version, diagnostics, symbolBinder);
+    const symbolBinder = new SymbolBinder(frontend, diagnostics);
+    const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
 
     ctx.symbolParser.addStringToScope({
       name: "obj_score",
@@ -494,12 +548,13 @@ describe("parameterParserBuilder", () => {
     const parser = parameterParserBuilder([ParameterType.DynamicString]);
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-    const tokens = new Lexer(version).lex(
+const frontend = new FrontendContext(version);
+    const tokens = new Lexer(frontend).lex(
       "missing_string leftover",
       diagnostics
     );
-    const symbolBinder = new SymbolBinder(version, diagnostics);
-    const ctx = new ParserContext(tokens, version, diagnostics, symbolBinder);
+    const symbolBinder = new SymbolBinder(frontend, diagnostics);
+    const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
 
     const parameters = parser(ctx, tokens[0]!.location);
 

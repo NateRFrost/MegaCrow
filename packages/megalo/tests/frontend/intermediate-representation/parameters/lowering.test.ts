@@ -37,7 +37,6 @@ import {
   stringParam,
 } from "../../../../frontend/intermediate-representation/parameters/lowering";
 import { ObjectListType } from "../../../../frontend/object-lists";
-import { VersionConfiguration107MCC } from "../../../../frontend/version-configuration";
 import { buildVariableSlotMap } from "../../../../frontend/intermediate-representation/preprocessing/symbols";
 import {
   SymbolBinder,
@@ -47,14 +46,25 @@ import {
 } from "../../../../frontend/symbol-table";
 import { Lexer } from "../../../../frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../../version";
+import { FrontendContext } from "../../../../frontend/context";
 
-const VARIABLE_LIMITS_107_MCC = new VersionConfiguration107MCC().limits;
 const version = MEGALO_VERSIONS["107-mcc"];
+const frontend = new FrontendContext(version);
 
 const loc = (line = 1): SourceCodeLocation => ({
   type: SourceLocationType.SOURCE_CODE,
-  start: { offset: 0, line, column: 1 },
-  end: { offset: 0, line, column: 2 },
+  start: {
+    localOffset: 0,
+    absoluteOffset: 0,
+    line,
+    column: 1,
+  },
+  end: {
+    localOffset: 0,
+    absoluteOffset: 0,
+    line,
+    column: 2,
+  },
 });
 
 type Harness = {
@@ -73,11 +83,9 @@ const setup = (
   }
 ): Harness => {
   const diagnostics = new Diagnostics();
-  const tokens = new Lexer(version).lex(source, diagnostics);
-  const symbolBinder = new SymbolBinder(version, diagnostics);
-  const parseCtx = new ParserContext(
-    tokens,
-    version,
+  const tokens = new Lexer(frontend).lex(source, diagnostics);
+  const symbolBinder = new SymbolBinder(frontend, diagnostics);
+  const parseCtx = new ParserContext(tokens, frontend,
     diagnostics,
     symbolBinder,
     options?.objectLists ?? {}
@@ -130,6 +138,7 @@ const setup = (
     type: VariableType.Number,
     declaration: loc(),
   });
+  parseCtx.symbolParser.addGameStatToScope("kills", loc());
 
   if (parseCtx.symbolParser.lookupSymbol("current_player") === undefined) {
     parseCtx.symbolParser.addVariableToScope({
@@ -145,11 +154,11 @@ const setup = (
   const nodes = parser(parseCtx, tokens[0]?.location ?? loc());
   const symbolTable = symbolBinder.getSymbolTable();
   const variableSlots = buildVariableSlotMap(
+    frontend,
     symbolTable,
-    VARIABLE_LIMITS_107_MCC,
     diagnostics
   );
-  const ir = new Lowerer(new VersionConfiguration107MCC()).lower(
+  const ir = new Lowerer(frontend).lower(
     { failed: false, comments: [], elements: [], symbolTable },
     diagnostics
   );
@@ -166,8 +175,8 @@ const setup = (
       loadoutsByName: new Map(),
       loadoutPalettesByName: new Map(),
       variableDeclarations: new Map(),
-      optionIndexByName: new Map([["my_option", 0]]),
-      statIndexByName: new Map([["kills", 0]]),
+      frontend,
+      inPregameTrigger: false,
     },
   };
 };
@@ -175,8 +184,8 @@ const setup = (
 describe("buildParameterLowerer", () => {
   it("lowers integer and constant numbers", () => {
     const parser = parameterParserBuilder([
-      ParameterType.Number,
-      ParameterType.Number,
+      ParameterType.Integer,
+      ParameterType.Integer,
     ]);
     const { nodes, ctx } = setup("10 k_max_count", parser);
     const result = buildParameterLowerer([
@@ -192,7 +201,7 @@ describe("buildParameterLowerer", () => {
   it("lowers float literals", () => {
     const { nodes, ctx } = setup(
       "1.5",
-      parameterParserBuilder([ParameterType.Number])
+      parameterParserBuilder([ParameterType.Integer])
     );
     const result = buildParameterLowerer([numberParam("value")])(nodes, ctx);
     expect(result.byName("value")?.value).toBe(1.5);
@@ -215,7 +224,7 @@ describe("buildParameterLowerer", () => {
   it("maps built-in game options to specific CustomVariableType values", () => {
     const { nodes, ctx } = setup(
       "score_to_win_round",
-      parameterParserBuilder([ParameterType.Number])
+      parameterParserBuilder([ParameterType.Integer])
     );
     const result = buildParameterLowerer([
       customVariableParam("opt", CustomVariableKind.GameOption),
@@ -228,7 +237,7 @@ describe("buildParameterLowerer", () => {
   it("maps user-defined options to CustomVariableType.Option", () => {
     const { nodes, ctx } = setup(
       "my_option",
-      parameterParserBuilder([ParameterType.Number])
+      parameterParserBuilder([ParameterType.Integer])
     );
     const result = buildParameterLowerer([
       customVariableParam("opt", CustomVariableKind.Option),
@@ -244,7 +253,7 @@ describe("buildParameterLowerer", () => {
   it("lowers global number variables with allocated slot indices", () => {
     const { nodes, ctx, symbolTable } = setup(
       "meter_value",
-      parameterParserBuilder([ParameterType.Number])
+      parameterParserBuilder([ParameterType.Integer])
     );
     const slot = symbolTable.findVariableByName("meter_value");
     expect(slot && isBuiltInVariable(slot)).toBe(false);
@@ -264,7 +273,7 @@ describe("buildParameterLowerer", () => {
   it("lowers player-scoped numbers via member references", () => {
     const { nodes, ctx } = setup(
       "current_player.player_number",
-      parameterParserBuilder([ParameterType.Number])
+      parameterParserBuilder([ParameterType.Integer])
     );
     const result = buildParameterLowerer([
       customVariableParam("value", CustomVariableKind.Number),
@@ -322,9 +331,9 @@ describe("buildParameterLowerer", () => {
 
   it("lowers object type references from object lists", () => {
     const diagnostics = new Diagnostics();
-    const tokens = new Lexer(version).lex("warthog", diagnostics);
-    const binder = new SymbolBinder(version, diagnostics);
-    const parseCtx = new ParserContext(tokens, version, diagnostics, binder, {
+    const tokens = new Lexer(frontend).lex("warthog", diagnostics);
+    const binder = new SymbolBinder(frontend, diagnostics);
+    const parseCtx = new ParserContext(tokens, frontend, diagnostics, binder, {
       [ObjectListType.Objects]: ["warthog", "ghost"],
     });
     const nodes = parameterParserBuilder([
@@ -332,11 +341,11 @@ describe("buildParameterLowerer", () => {
     ])(parseCtx, tokens[0]!.location);
     const symbolTable = binder.getSymbolTable();
     const variableSlots = buildVariableSlotMap(
+      frontend,
       symbolTable,
-      VARIABLE_LIMITS_107_MCC,
       diagnostics
     );
-    const ir = new Lowerer(new VersionConfiguration107MCC()).lower(
+    const ir = new Lowerer(frontend).lower(
       { failed: false, comments: [], elements: [], symbolTable },
       diagnostics
     );
@@ -348,8 +357,8 @@ describe("buildParameterLowerer", () => {
       loadoutsByName: new Map(),
       loadoutPalettesByName: new Map(),
       variableDeclarations: new Map(),
-      optionIndexByName: new Map(),
-      statIndexByName: new Map(),
+      frontend,
+      inPregameTrigger: false,
     });
     expect(Number(result.byName("type")?.value)).toBe(0);
   });
@@ -373,9 +382,9 @@ describe("buildParameterLowerer", () => {
       ParameterType.Object,
       OptionalParameter(
         "offset",
-        ParameterType.Number,
-        ParameterType.Number,
-        ParameterType.Number
+        ParameterType.Integer,
+        ParameterType.Integer,
+        ParameterType.Integer
       ),
     ]);
     const lower = buildParameterLowerer([
@@ -405,7 +414,7 @@ describe("buildParameterLowerer", () => {
     const meterParser = parameterParserBuilder(
       [ParameterType.HudWidget, KeywordParameter("off")],
       [ParameterType.HudWidget, ParameterType.Timer],
-      [ParameterType.HudWidget, ParameterType.Number, ParameterType.Number]
+      [ParameterType.HudWidget, ParameterType.Integer, ParameterType.Integer]
     );
 
     const lower = buildParameterLowerer(
@@ -450,8 +459,8 @@ describe("buildParameterLowerer", () => {
 
   it("assigns sequential slot indices and skips built-ins", () => {
     const diagnostics = new Diagnostics();
-    const binder = new SymbolBinder(version, diagnostics);
-    const parseCtx = new ParserContext([], version, diagnostics, binder);
+    const binder = new SymbolBinder(frontend, diagnostics);
+    const parseCtx = new ParserContext([], frontend, diagnostics, binder);
 
     const a = parseCtx.symbolParser.addVariableToScope({
       name: "n0",
@@ -467,11 +476,7 @@ describe("buildParameterLowerer", () => {
     });
 
     const table = binder.getSymbolTable();
-    const slots = buildVariableSlotMap(
-      table,
-      VARIABLE_LIMITS_107_MCC,
-      diagnostics
-    );
+    const slots = buildVariableSlotMap(frontend, table, diagnostics);
     expect(slots.get(a)?.index).toBe(0);
     expect(slots.get(b)?.index).toBe(1);
     const roundTimer = table.findVariableByName("round_timer");

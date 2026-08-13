@@ -5,16 +5,17 @@ import { Diagnostics } from "../../../../frontend/diagnostics";
 import { Lowerer } from "../../../../frontend/intermediate-representation";
 import { ObjectTeamFilter } from "../../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_map_objects";
 import { ObjectListType } from "../../../../frontend/object-lists";
-import { Lexer } from "../../../../frontend/tokens";
-import { VersionConfiguration107MCC } from "../../../../frontend/version-configuration";
+import { Lexer } from "../../../../frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../../version";
+import { FrontendContext } from "../../../../frontend/context";
 
 const lower = (source: string) => {
   const version = MEGALO_VERSIONS["107-mcc"];
+  const frontend = new FrontendContext(version);
   const diagnostics = new Diagnostics();
-  const tokens = new Lexer(version).lex(source, diagnostics);
-  const ast = new Parser(version).parse(tokens, diagnostics, objectLists);
-  const ir = new Lowerer(new VersionConfiguration107MCC()).lower(
+  const tokens = new Lexer(frontend).lex(source, diagnostics);
+  const ast = new Parser(frontend).parse(tokens, diagnostics, objectLists);
+  const ir = new Lowerer(frontend).lower(
     ast,
     diagnostics,
     { objectLists }

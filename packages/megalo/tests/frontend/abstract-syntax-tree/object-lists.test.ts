@@ -11,15 +11,17 @@ import { ObjectListType } from "../../../frontend/object-lists";
 import { SymbolBinder, SymbolKind } from "../../../frontend/symbol-table";
 import { Lexer } from "../../../frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../version";
+import { FrontendContext } from "../../../frontend/context";
 
 const version = MEGALO_VERSIONS["107-mcc"];
+const frontend = new FrontendContext(version);
 
 describe("object list parameters", () => {
   it("resolves object list entries to REFERENCE symbols with ObjectListLocation", () => {
     const diagnostics = new Diagnostics();
-    const tokens = new Lexer(version).lex("sniper_rifle", diagnostics);
-    const binder = new SymbolBinder(version, diagnostics);
-    const ctx = new ParserContext(tokens, version, diagnostics, binder, {
+    const tokens = new Lexer(frontend).lex("sniper_rifle", diagnostics);
+    const binder = new SymbolBinder(frontend, diagnostics);
+    const ctx = new ParserContext(tokens, frontend, diagnostics, binder, {
       [ObjectListType.Weapons]: ["dmr", "assault_rifle", "sniper_rifle"],
     });
 
@@ -46,7 +48,12 @@ describe("object list parameters", () => {
       declaration: {
         type: SourceLocationType.OBJECT_LIST,
         objectType: ObjectListType.Weapons,
-        source: { line: 2, column: 0, offset: -1 },
+        source: {
+          line: 2,
+          column: 0,
+          localOffset: -1,
+          absoluteOffset: -1,
+        },
       },
     });
     expect(entry?.references).toHaveLength(1);
@@ -54,9 +61,9 @@ describe("object list parameters", () => {
 
   it("rejects unknown object list entries", () => {
     const diagnostics = new Diagnostics();
-    const tokens = new Lexer(version).lex("not_a_weapon", diagnostics);
-    const binder = new SymbolBinder(version, diagnostics);
-    const ctx = new ParserContext(tokens, version, diagnostics, binder, {
+    const tokens = new Lexer(frontend).lex("not_a_weapon", diagnostics);
+    const binder = new SymbolBinder(frontend, diagnostics);
+    const ctx = new ParserContext(tokens, frontend, diagnostics, binder, {
       [ObjectListType.Weapons]: ["dmr", "assault_rifle"],
     });
 
@@ -70,14 +77,14 @@ describe("object list parameters", () => {
 
   it("resolves map_object type against objects.txt via Parser.parse", () => {
     const diagnostics = new Diagnostics();
-    const tokens = new Lexer(version).lex(
+    const tokens = new Lexer(frontend).lex(
       `map_object health_packs
 \ttype "health_station"
 end
 `,
       diagnostics
     );
-    const ast = new Parser(version).parse(tokens, diagnostics, {
+    const ast = new Parser(frontend).parse(tokens, diagnostics, {
       [ObjectListType.Objects]: [
         "flag_stand",
         "health_station",
@@ -110,14 +117,14 @@ end
 
   it("rejects unknown map_object type names when objects.txt is loaded", () => {
     const diagnostics = new Diagnostics();
-    const tokens = new Lexer(version).lex(
+    const tokens = new Lexer(frontend).lex(
       `map_object bad
 \ttype "not_an_object"
 end
 `,
       diagnostics
     );
-    new Parser(version).parse(tokens, diagnostics, {
+    new Parser(frontend).parse(tokens, diagnostics, {
       [ObjectListType.Objects]: ["health_station"],
     });
 

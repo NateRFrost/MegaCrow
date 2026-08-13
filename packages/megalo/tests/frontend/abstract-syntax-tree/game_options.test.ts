@@ -12,12 +12,14 @@ import {
 } from "../../../frontend/symbol-table";
 import { Lexer } from "../../../frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../version";
+import { FrontendContext } from "../../../frontend/context";
 
 const parse = (source: string) => {
   const diagnostics = new Diagnostics();
   const version = MEGALO_VERSIONS["107-mcc"];
-  const tokens = new Lexer(version).lex(source, diagnostics);
-  const ast = new Parser(version).parse(tokens, diagnostics);
+  const frontend = new FrontendContext(version);
+  const tokens = new Lexer(frontend).lex(source, diagnostics);
+  const ast = new Parser(frontend).parse(tokens, diagnostics);
   return { ast, symbolTable: ast.symbolTable.toArray(), diagnostics };
 };
 
@@ -151,6 +153,44 @@ end
       (entry) => entry.name === "kill_points"
     );
     expect(killPoints).toBeDefined();
+  });
+
+  it("warns when a duplicate option name is declared (first wins)", () => {
+    const source = `string_table english
+\tname_a "A"
+\tname_b "B"
+\tdesc ""
+\tval "1"
+end
+game_options
+\toption shared_opt
+\t\tname_a
+\t\tdesc
+\t\t1
+\t\t1 val ""
+\tend
+\toption shared_opt
+\t\tname_b
+\t\tdesc
+\t\t1
+\t\t1 val ""
+\tend
+end
+`;
+
+    const { symbolTable, diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(diagnostics.getWarnings()).toHaveLength(1);
+    expect(diagnostics.getWarnings()[0]?.message).toContain("shared_opt");
+    expect(diagnostics.getWarnings()[0]?.message).toContain("ignored");
+
+    const shared = gameOptionSymbols(symbolTable).filter(
+      (entry) => entry.name === "shared_opt"
+    );
+    expect(shared).toHaveLength(2);
+    expect(shared[0]).toMatchObject({ index: 0 });
+    expect(shared[1]).toMatchObject({ index: 1 });
   });
 
   it("parses a block ranged_option", () => {
@@ -504,6 +544,37 @@ end
     });
   });
 
+  it("warns when a duplicate player_traits name is declared (first wins)", () => {
+    const source = `string_table english
+\ttraits_name_a "A"
+\ttraits_name_b "B"
+\ttraits_description ""
+end
+game_options
+\tplayer_traits shared_traits traits_name_a traits_description
+\tend
+\tplayer_traits shared_traits traits_name_b traits_description
+\tend
+end
+`;
+
+    const { symbolTable, diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(diagnostics.getWarnings()).toHaveLength(1);
+    expect(diagnostics.getWarnings()[0]?.message).toContain("shared_traits");
+    expect(diagnostics.getWarnings()[0]?.message).toContain("ignored");
+
+    const traits = symbolTable.filter(
+      (entry) =>
+        entry.kind === SymbolKind.PlayerTraits &&
+        entry.name === "shared_traits"
+    );
+    expect(traits).toHaveLength(2);
+    expect(traits[0]).toMatchObject({ index: 0 });
+    expect(traits[1]).toMatchObject({ index: 1 });
+  });
+
   it("parses damage_resistance with a keyword or numeric alternate", () => {
     const source = `string_table english
 \ttraits_name "Traits"
@@ -573,5 +644,37 @@ end
     }
 
     expect(entry.options).toHaveLength(0);
+  });
+
+  it("parses player_traits override shorthand by name and index", () => {
+    const source = `game_options
+\tplayer_traits "VIP Traits"
+\t\tspeed 150
+\tend
+\tplayer_traits 0
+\t\tgravity 50
+\tend
+end
+`;
+
+    const { ast, diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+
+    const element = ast.elements[0]!;
+    if (element.elementKind !== ElementKind.GAME_OPTIONS) {
+      return;
+    }
+
+    expect(element.entries[0]).toMatchObject({
+      kind: GameOptionEntryKind.PLAYER_TRAITS_OVERRIDE,
+      target: { kind: "name", value: "VIP Traits" },
+      options: [{ identifier: "speed" }],
+    });
+    expect(element.entries[1]).toMatchObject({
+      kind: GameOptionEntryKind.PLAYER_TRAITS_OVERRIDE,
+      target: { kind: "index", value: 0 },
+      options: [{ identifier: "gravity" }],
+    });
   });
 });

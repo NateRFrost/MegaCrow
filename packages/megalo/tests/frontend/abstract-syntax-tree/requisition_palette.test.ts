@@ -8,6 +8,7 @@ import {
 } from "../../../frontend/symbol-table";
 import { Lexer } from "../../../frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../version";
+import { FrontendContext } from "../../../frontend/context";
 
 const requisitionPaletteSymbols = (
   symbolTable: readonly { kind: SymbolKind; name: string }[]
@@ -20,8 +21,9 @@ const requisitionPaletteSymbols = (
 const parse = (source: string) => {
   const diagnostics = new Diagnostics();
   const version = MEGALO_VERSIONS["107-mcc"];
-  const tokens = new Lexer(version).lex(source, diagnostics);
-  const ast = new Parser(version).parse(tokens, diagnostics);
+  const frontend = new FrontendContext(version);
+  const tokens = new Lexer(frontend).lex(source, diagnostics);
+  const ast = new Parser(frontend).parse(tokens, diagnostics);
   return { ast, symbolTable: ast.symbolTable.toArray(), diagnostics };
 };
 
@@ -183,5 +185,27 @@ end
     expect(
       diagnostics.getErrors().some((error) => error.message.includes("end"))
     ).toBe(true);
+  });
+
+  it("warns when a duplicate requisition_palette name is declared (first wins)", () => {
+    const source = `requisition_palette shared_palette
+\tbaseline spartan
+end
+requisition_palette shared_palette
+\tbaseline elite
+end
+`;
+
+    const { symbolTable, diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(diagnostics.getWarnings()).toHaveLength(1);
+    expect(diagnostics.getWarnings()[0]?.message).toContain("shared_palette");
+    expect(diagnostics.getWarnings()[0]?.message).toContain("ignored");
+    expect(
+      requisitionPaletteSymbols(symbolTable).filter(
+        (e) => e.name === "shared_palette"
+      )
+    ).toHaveLength(2);
   });
 });

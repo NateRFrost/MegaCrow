@@ -10,13 +10,15 @@ import {
 } from "../../../frontend/symbol-table";
 import { Lexer } from "../../../frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../version";
+import { FrontendContext } from "../../../frontend/context";
 
 const parseActionParameters = (source: string, actionName: string) => {
   const diagnostics = new Diagnostics();
   const version = MEGALO_VERSIONS["107-mcc"];
-  const tokens = new Lexer(version).lex(source, diagnostics);
-  const symbolBinder = new SymbolBinder(version, diagnostics);
-  const ctx = new ParserContext(tokens, version, diagnostics, symbolBinder);
+  const frontend = new FrontendContext(version);
+  const tokens = new Lexer(frontend).lex(source, diagnostics);
+  const symbolBinder = new SymbolBinder(frontend, diagnostics);
+  const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
 
   ctx.symbolParser.addVariableToScope({
     name: "current_player",
@@ -147,12 +149,13 @@ describe("ActionParserRepository", () => {
   it("parses set_loadout_palette with a loadout palette reference", () => {
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-    const tokens = new Lexer(version).lex(
+const frontend = new FrontendContext(version);
+    const tokens = new Lexer(frontend).lex(
       "player current_player slayer_loadouts_t1",
       diagnostics
     );
-    const symbolBinder = new SymbolBinder(version, diagnostics);
-    const ctx = new ParserContext(tokens, version, diagnostics, symbolBinder);
+    const symbolBinder = new SymbolBinder(frontend, diagnostics);
+    const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
 
     ctx.symbolParser.addVariableToScope({
       name: "current_player",
@@ -178,12 +181,13 @@ describe("ActionParserRepository", () => {
   it("parses player_set_requisition_palette with a requisition palette reference", () => {
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-    const tokens = new Lexer(version).lex(
+const frontend = new FrontendContext(version);
+    const tokens = new Lexer(frontend).lex(
       "current_player covy_palette_gold",
       diagnostics
     );
-    const symbolBinder = new SymbolBinder(version, diagnostics);
-    const ctx = new ParserContext(tokens, version, diagnostics, symbolBinder);
+    const symbolBinder = new SymbolBinder(frontend, diagnostics);
+    const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
 
     ctx.symbolParser.addVariableToScope({
       name: "current_player",
@@ -224,12 +228,13 @@ describe("ActionParserRepository", () => {
   it("parses player_set_objective with a dynamic string literal and number replacement", () => {
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-    const tokens = new Lexer(version).lex(
+const frontend = new FrontendContext(version);
+    const tokens = new Lexer(frontend).lex(
       'current_player "+%n" score_to_win_round',
       diagnostics
     );
-    const symbolBinder = new SymbolBinder(version, diagnostics);
-    const ctx = new ParserContext(tokens, version, diagnostics, symbolBinder);
+    const symbolBinder = new SymbolBinder(frontend, diagnostics);
+    const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
 
     ctx.symbolParser.addVariableToScope({
       name: "current_player",
@@ -261,15 +266,16 @@ describe("ActionParserRepository", () => {
     expect(ctx.hasMore()).toBe(false);
   });
 
-  it("parses player_set_objective_allegiance with replacements before the icon index", () => {
+  it("parses player_set_objective_allegiance with dynamic-string replacements (2 args)", () => {
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-    const tokens = new Lexer(version).lex(
-      'current_player "+%n" score_to_win_round 3',
+const frontend = new FrontendContext(version);
+    const tokens = new Lexer(frontend).lex(
+      'current_player "+%n" score_to_win_round',
       diagnostics
     );
-    const symbolBinder = new SymbolBinder(version, diagnostics);
-    const ctx = new ParserContext(tokens, version, diagnostics, symbolBinder);
+    const symbolBinder = new SymbolBinder(frontend, diagnostics);
+    const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
 
     ctx.symbolParser.addVariableToScope({
       name: "current_player",
@@ -289,29 +295,66 @@ describe("ActionParserRepository", () => {
     const parameters = parser!(ctx, tokens[0]!.location);
 
     expect(diagnostics.hasErrors()).toBe(false);
-    expect(parameters).toHaveLength(3);
+    expect(parameters).toHaveLength(2);
     expect(parameters[1]).toMatchObject({
       kind: SyntaxKind.DYNAMIC_STRING,
       replacements: [
         expect.objectContaining({ identifier: "score_to_win_round" }),
       ],
     });
-    expect(parameters[2]).toMatchObject({ kind: SyntaxKind.INTEGER, value: 3 });
+    expect(ctx.hasMore()).toBe(false);
+  });
+
+  it("parses player_set_objective_allegiance_icon as player + constant integer", () => {
+    const diagnostics = new Diagnostics();
+    const frontend = new FrontendContext(MEGALO_VERSIONS["107-mcc"]);
+    const tokens = new Lexer(frontend).lex(
+      "current_player k_engine_icon_elite",
+      diagnostics
+    );
+    const symbolBinder = new SymbolBinder(frontend, diagnostics);
+    const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
+
+    ctx.symbolParser.addVariableToScope({
+      name: "current_player",
+      type: VariableType.Player,
+      declaration: BUILT_IN_LOCATION,
+      scope: VariableScope.Global,
+    });
+    ctx.symbolParser.addConstantToScope({
+      name: "k_engine_icon_elite",
+      value: 7,
+      declaration: BUILT_IN_LOCATION,
+    });
+
+    const parser = ctx.actionParserRepository.getParser(
+      "player_set_objective_allegiance_icon"
+    );
+    const parameters = parser!(ctx, tokens[0]!.location);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(parameters).toHaveLength(2);
+    expect(parameters[1]).toMatchObject({
+      kind: SyntaxKind.REFERENCE,
+      identifier: "k_engine_icon_elite",
+    });
+    expect(ctx.hasMore()).toBe(false);
   });
 
   it("registers empty actions", () => {
-    const repository = new ActionParserRepository(MEGALO_VERSIONS["107-mcc"]);
+    const repository = new ActionParserRepository(
+      new FrontendContext(MEGALO_VERSIONS["107-mcc"])
+    );
     const parser = repository.getParser("begin");
     expect(parser).toBeDefined();
 
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-    const tokens = new Lexer(version).lex("unused", diagnostics);
-    const ctx = new ParserContext(
-      tokens,
-      version,
+const frontend = new FrontendContext(version);
+    const tokens = new Lexer(frontend).lex("unused", diagnostics);
+    const ctx = new ParserContext(tokens, frontend,
       diagnostics,
-      new SymbolBinder(version, diagnostics)
+      new SymbolBinder(frontend, diagnostics)
     );
     expect(parser!(ctx, tokens[0]!.location)).toEqual([]);
   });

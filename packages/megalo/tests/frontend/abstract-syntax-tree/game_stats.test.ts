@@ -2,14 +2,17 @@ import { describe, expect, it } from "vitest";
 import { Parser, SyntaxKind } from "../../../frontend/abstract-syntax-tree";
 import { ElementKind } from "../../../frontend/abstract-syntax-tree/elements";
 import { Diagnostics } from "../../../frontend/diagnostics";
+import { SymbolKind } from "../../../frontend/symbol-table";
 import { Lexer } from "../../../frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../version";
+import { FrontendContext } from "../../../frontend/context";
 
 const parse = (source: string) => {
   const diagnostics = new Diagnostics();
   const version = MEGALO_VERSIONS["107-mcc"];
-  const tokens = new Lexer(version).lex(source, diagnostics);
-  const ast = new Parser(version).parse(tokens, diagnostics);
+  const frontend = new FrontendContext(version);
+  const tokens = new Lexer(frontend).lex(source, diagnostics);
+  const ast = new Parser(frontend).parse(tokens, diagnostics);
   return { ast, symbolTable: ast.symbolTable.toArray(), diagnostics };
 };
 
@@ -170,5 +173,32 @@ game_stats
     expect(
       diagnostics.getErrors().some((error) => error.message.includes("end"))
     ).toBe(true);
+  });
+
+  it("warns when a duplicate game_stats name is declared (first wins)", () => {
+    const source = `string_table english
+\tlabel_a "A"
+\tlabel_b "B"
+end
+game_stats
+\tshared_stat number label_a none 1
+\tshared_stat number label_b none 0
+end
+`;
+
+    const { symbolTable, diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(diagnostics.getWarnings()).toHaveLength(1);
+    expect(diagnostics.getWarnings()[0]?.message).toContain("shared_stat");
+    expect(diagnostics.getWarnings()[0]?.message).toContain("ignored");
+
+    const stats = symbolTable.filter(
+      (entry) =>
+        entry.kind === SymbolKind.GameStat && entry.name === "shared_stat"
+    );
+    expect(stats).toHaveLength(2);
+    expect(stats[0]).toMatchObject({ index: 0 });
+    expect(stats[1]).toMatchObject({ index: 1 });
   });
 });

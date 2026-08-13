@@ -39,8 +39,18 @@ const loc = (
   column = 1
 ): SourceCodeLocation => ({
   type: SourceLocationType.SOURCE_CODE,
-  start: { offset, line, column },
-  end: { offset: offset + 1, line, column: column + 1 },
+  start: {
+    localOffset: offset,
+    absoluteOffset: offset,
+    line,
+    column,
+  },
+  end: {
+    localOffset: offset + 1,
+    absoluteOffset: offset + 1,
+    line,
+    column: column + 1,
+  },
 });
 
 const emptyVariableMetadata = () => ({
@@ -57,6 +67,10 @@ const buildMinimalIr = (): IR => {
   const baseNameStringIndex = scriptStrings.addEntry({ english: "Custom Game" });
 
   return {
+    baseOverrides: {
+      userDefinedOptions: [],
+      playerTraits: [],
+    },
     gameVariant: {
       baseVariant: {
         metadata: {
@@ -86,8 +100,8 @@ const buildMinimalIr = (): IR => {
       userDefinedOptions: [],
       scriptStrings,
       baseNameStringIndex,
-      engineIcon: 0,
-      engineCategory: 0,
+      engineIcon: undefined,
+      engineCategory: undefined,
       baseVariantParametersLocked: {},
       baseVariantParametersHidden: {},
       gameEngine: {

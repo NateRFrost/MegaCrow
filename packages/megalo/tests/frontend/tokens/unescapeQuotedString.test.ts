@@ -2,10 +2,11 @@ import { describe, expect, it } from "vitest";
 import { Diagnostics } from "../../../frontend/diagnostics";
 import { Lexer, TokenKind } from "../../../frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../version";
+import { FrontendContext } from "../../../frontend/context";
 
 describe("unescapeQuotedString", () => {
   const quotedValue = (source: string): string => {
-    const token = new Lexer(MEGALO_VERSIONS["107-mcc"]).lex(
+    const token = new Lexer(new FrontendContext(MEGALO_VERSIONS["107-mcc"])).lex(
       source,
       new Diagnostics()
     )[0];
