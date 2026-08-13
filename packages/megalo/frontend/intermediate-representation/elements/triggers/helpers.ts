@@ -18,6 +18,7 @@ import {
   resolveCustomVariableReference,
   resolvePlayerReference,
   resolveTeamReference,
+  tryLowerConstantInteger,
 } from "../../parameters";
 
 export const requireParamCount = (
@@ -55,22 +56,26 @@ export const hasOptionalKeyword = (
       parameter.kind === SyntaxKind.KEYWORD && parameter.value === keyword,
   );
 
+/**
+ * MegaloEdit boolean: integer / named constant (`true`/`false` are built-ins).
+ */
 export const parseBooleanLiteral = (
   node: ASTParameterNode,
+  ctx: ElementLowerContext,
   location: SourceCodeLocation,
 ): boolean => {
-  if (node.kind === SyntaxKind.KEYWORD) {
-    if (node.value === "true" || node.value === "1") return true;
-    if (node.value === "false" || node.value === "0") return false;
+  const value = tryLowerConstantInteger(node, ctx);
+  if (value !== undefined) {
+    return value.value !== 0;
   }
-  if (
-    node.kind === SyntaxKind.INTEGER ||
-    node.kind === SyntaxKind.FLOATING_POINT
-  ) {
-    return node.value !== 0;
-  }
+  const got =
+    node.kind === SyntaxKind.KEYWORD
+      ? node.value
+      : node.kind === SyntaxKind.REFERENCE
+        ? node.identifier
+        : "";
   throw new LowerError(
-    diagnosticMessages.expectedParameterType("boolean", ""),
+    diagnosticMessages.expectedParameterType("boolean", got),
     node.location ?? location,
   );
 };

@@ -1,4 +1,4 @@
-import type { MegaloVersion } from "../../version";
+import type { FrontendContext } from "../context";
 import type { Diagnostics } from "../diagnostics";
 import { IncludeDiagnostics } from "../diagnostics/include";
 import { diagnosticMessages } from "../diagnostics/messages";
@@ -32,6 +32,7 @@ export type AST = {
   comments: ASTCommentNode[];
   elements: ASTElementNode[];
   symbolTable: SymbolTable;
+  includedPaths?: ReadonlySet<string>;
 };
 
 export type ResolveIncludeFn = (
@@ -47,23 +48,25 @@ export type ParseOptions = {
   resolveInclude?: ResolveIncludeFn;
   /** URI of the document being parsed (for relative include resolution). */
   fromUri?: string;
-  /** Stack of include URIs currently being expanded (cycle detection). */
+  // We need to keep track of the include stack to detect cyclical includes.
   includeStack?: string[];
-  /**
-   * Paths already expanded in this parse (MegaloEdit: include each path once).
-   * Keys are lowercased include directive paths and resolved URIs.
-   */
+  // We need to keep track of included paths because Megalo
+  // only resolves includes once per file.
   includedPaths?: Set<string>;
+  // Keeps track of current absolute offset,
+  // passed as an object so we can update the number using the reference.
+  // optional because ParseOptions is also used by parseAsync, which manages this.
+  absoluteOffsetState?: { next: number };
 };
 
 // Parser is Frontend lifecycle - it is instanced per workspace.
 export class Parser {
-  private megaloVersion: MegaloVersion;
-  private elementParserRepository: ElementParserRepository;
+  private readonly frontend: FrontendContext;
+  private readonly elementParserRepository: ElementParserRepository;
 
-  public constructor(megaloVersion: MegaloVersion) {
-    this.megaloVersion = megaloVersion;
-    this.elementParserRepository = new ElementParserRepository(megaloVersion);
+  public constructor(frontend: FrontendContext) {
+    this.frontend = frontend;
+    this.elementParserRepository = new ElementParserRepository(frontend);
   }
 
   /** Sync parse without include expansion (includes remain as AST elements). */
@@ -77,10 +80,10 @@ export class Parser {
     const tokensWithoutComments = tokens.filter(
       (token) => token.kind !== TokenKind.Comment
     );
-    const symbolBinder = new SymbolBinder(this.megaloVersion, diagnostics);
+    const symbolBinder = new SymbolBinder(this.frontend, diagnostics);
     const ctx = new ParserContext(
       tokensWithoutComments,
-      this.megaloVersion,
+      this.frontend,
       diagnostics,
       symbolBinder,
       objectLists
@@ -138,7 +141,15 @@ export class Parser {
     const tokensWithoutComments = tokens.filter(
       (token) => token.kind !== TokenKind.Comment
     );
-    const symbolBinder = new SymbolBinder(this.megaloVersion, diagnostics);
+    const symbolBinder = new SymbolBinder(this.frontend, diagnostics);
+    const includedPaths = options.includedPaths ?? new Set<string>();
+    const lastRootToken = tokensWithoutComments.at(-1);
+    const absoluteOffsetState = options.absoluteOffsetState ?? {
+      next:
+        lastRootToken === undefined
+          ? 0
+          : lastRootToken.location.end.localOffset + 1,
+    };
     const elements = await this.parseElementsAsync(
       tokensWithoutComments,
       diagnostics,
@@ -146,7 +157,8 @@ export class Parser {
       objectLists,
       {
         ...options,
-        includedPaths: options.includedPaths ?? new Set<string>(),
+        includedPaths,
+        absoluteOffsetState,
       }
     );
 
@@ -155,6 +167,7 @@ export class Parser {
       comments,
       elements,
       symbolTable: symbolBinder.getSymbolTable(),
+      includedPaths,
     };
   };
 
@@ -169,7 +182,7 @@ export class Parser {
     const elements: ASTElementNode[] = [];
     const ctx = new ParserContext(
       tokens,
-      this.megaloVersion,
+      this.frontend,
       diagnostics,
       symbolBinder,
       objectLists,
@@ -317,8 +330,25 @@ export class Parser {
     sharedSymbolParser.diagnostics = included;
 
     try {
-      const lexer = new Lexer(this.megaloVersion);
+      const lexer = new Lexer(this.frontend);
       const nestedTokens = lexer.lex(resolved.text, included);
+      // Rebase absolute offsets only; keep localOffset for IDE / IncludeLocation.source.
+      const offsetState = options.absoluteOffsetState ?? { next: 0 };
+      const offsetBase = offsetState.next;
+      for (const token of nestedTokens) {
+        token.location = {
+          ...token.location,
+          start: {
+            ...token.location.start,
+            absoluteOffset: token.location.start.localOffset + offsetBase,
+          },
+          end: {
+            ...token.location.end,
+            absoluteOffset: token.location.end.localOffset + offsetBase,
+          },
+        };
+      }
+      offsetState.next = offsetBase + resolved.text.length + 1;
       const nestedWithoutComments = nestedTokens.filter(
         (token) => token.kind !== TokenKind.Comment
       );
@@ -333,6 +363,7 @@ export class Parser {
           fromUri: resolved.uri,
           includeStack: [...stack, resolved.uri],
           includedPaths,
+          absoluteOffsetState: offsetState,
         },
         sharedSymbolParser
       );

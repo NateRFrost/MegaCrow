@@ -11,7 +11,7 @@ import { Compiler } from "../compiler";
 type Primitive = string | number | boolean | bigint;
 
 // used to make a type with all of the keys of IR, but only boolean values.
-type ToCapabilities<T> = [T] extends [readonly (infer E)[]]
+export type ToCapabilities<T> = [T] extends [readonly (infer E)[]]
   ? ToCapabilities<E>
   : [T] extends [Primitive]
     ? boolean
@@ -21,9 +21,13 @@ type ToCapabilities<T> = [T] extends [readonly (infer E)[]]
           | boolean
       : boolean;
 
-/** IR capability map — always an object (not a bare boolean). */
+type GameVariantCapabilities = ToCapabilities<
+  Omit<IR["gameVariant"], "gameEngine">
+>;
+
 export type IRCapabilities = {
-  readonly gameVariant: ToCapabilities<IR["gameVariant"]>;
+  // CustomGameEngineDefinition is not part of IR capabilities as its handled elsewhere.
+  readonly gameVariant: GameVariantCapabilities;
 };
 
 export type CompilerCapabilities = {
@@ -127,7 +131,7 @@ export function assertCompatibleIR(
   diagnostics: Diagnostics
 ): void {
   checkIRCapabilities(
-    ir.gameVariant,
+    ir.gameVariant as Omit<IR["gameVariant"], "gameEngine">,
     compiler.getCapabilities().ir.gameVariant,
     "gameVariant",
     diagnostics,

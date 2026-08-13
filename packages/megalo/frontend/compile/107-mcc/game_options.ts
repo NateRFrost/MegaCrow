@@ -2,14 +2,26 @@ import {
   type c_game_engine_custom_variant,
   k_game_variant_parameter_flags,
   type s_game_variant_parameter_flags,
+  s_user_defined_option,
+  s_user_defined_option_value,
   s_player_trait_option,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import type { IR } from "../../intermediate-representation";
+import type { Diagnostics } from "../../diagnostics";
+import type {
+  IR,
+  PlayerTraitOptionOverride,
+  UserDefinedOptionOverride,
+} from "../../intermediate-representation";
 import type {
   VehicleSet,
   WeaponSet,
 } from "../../intermediate-representation/game/game_engine_default";
 import type { PlayerTraits } from "../../intermediate-representation/game/game_engine_player_traits";
+import type {
+  RangedUserDefinedOption,
+  UserDefinedOption,
+  UserDefinedOptionValue,
+} from "../../intermediate-representation/game/megalogamengine/megalogamengine_user_defined_options";
 import type { BuiltInGameOptionFlags } from "../../intermediate-representation/game/parameters";
 import { encodeTeamScoringMethod } from "./enums/e_team_scoring_method";
 import { encodePlayerTraits } from "./player_traits";
@@ -78,6 +90,258 @@ const compilePlayerTraitOption = (
   option.m_description_string_index = description;
   encodePlayerTraits(option.m_player_traits, traits);
   return option;
+};
+
+const isRangedUserDefinedOption = (
+  option: UserDefinedOption
+): option is RangedUserDefinedOption => "minValue" in option;
+
+const encodeUserDefinedOptionValue = (
+  value: UserDefinedOptionValue,
+  isRange: boolean
+): s_user_defined_option_value => {
+  const encoded = new s_user_defined_option_value();
+  encoded.m_value = value.value;
+  if (!isRange) {
+    encoded.m_name_string_index = value.name ?? 0;
+    encoded.m_description_string_index = value.description ?? 0;
+  }
+  return encoded;
+};
+
+const encodeUserDefinedOption = (
+  option: UserDefinedOption
+): s_user_defined_option => {
+  const encoded = new s_user_defined_option();
+  encoded.m_name_string_index = option.name ?? 0;
+  encoded.m_description_string_index = option.description ?? 0;
+
+  if (isRangedUserDefinedOption(option)) {
+    encoded.m_range_default_value = encodeUserDefinedOptionValue(
+      option.defaultValue,
+      true
+    );
+    encoded.m_range_min_value = encodeUserDefinedOptionValue(
+      option.minValue,
+      true
+    );
+    encoded.m_range_max_value = encodeUserDefinedOptionValue(
+      option.maxValue,
+      true
+    );
+    encoded.m_range_current_value = option.currentValue;
+  } else {
+    encoded.m_default_value_index = option.defaultValueIndex;
+    encoded.m_values = option.values.map((value) =>
+      encodeUserDefinedOptionValue(value, false)
+    );
+    encoded.m_current_value_index = option.currentValueIndex;
+  }
+
+  return encoded;
+};
+
+/** Append IR-defined user options onto the (possibly base-derived) gametype. */
+const compileUserDefinedOptions = (
+  ir: IR,
+  gameVariant: c_game_engine_custom_variant
+): void => {
+  const options = ir.gameVariant.userDefinedOptions;
+  if (options.length === 0) {
+    return;
+  }
+
+  for (const option of options) {
+    const index = gameVariant.m_user_defined_options.length;
+    gameVariant.m_user_defined_options.push(encodeUserDefinedOption(option));
+    if (option.locked) {
+      gameVariant.m_user_defined_options_locked[index] = true;
+    }
+    if (option.hidden) {
+      gameVariant.m_user_defined_options_hidden[index] = true;
+    }
+  }
+};
+
+const englishOptionName = (
+  gametype: c_game_engine_custom_variant,
+  option: s_user_defined_option
+): string | undefined => {
+  const english = gametype.m_script_strings.strings[0];
+  return english?.[option.m_name_string_index] ?? undefined;
+};
+
+const resolveOverrideOptionIndex = (
+  gametype: c_game_engine_custom_variant,
+  override: UserDefinedOptionOverride,
+  diagnostics: Diagnostics
+): number | undefined => {
+  const options = gametype.m_user_defined_options;
+  if (override.target.kind === "index") {
+    const index = override.target.value;
+    if (index < 0 || index >= options.length) {
+      diagnostics.addError(
+        `Option index ${index} was out of range [0,${options.length})`,
+        override.location
+      );
+      return undefined;
+    }
+    return index;
+  }
+
+  const index = options.findIndex(
+    (option) => englishOptionName(gametype, option) === override.target.value
+  );
+  if (index < 0) {
+    diagnostics.addError(
+      `Couldn't find an option with this name => ${override.target.value}`,
+      override.location
+    );
+    return undefined;
+  }
+  return index;
+};
+
+const applyUserDefinedOptionValue = (
+  option: s_user_defined_option,
+  value: number,
+  optionLabel: string,
+  location: UserDefinedOptionOverride["location"],
+  diagnostics: Diagnostics
+): void => {
+  if (option.m_range_default_value !== undefined) {
+    const min = option.m_range_min_value?.m_value ?? Number.NEGATIVE_INFINITY;
+    const max = option.m_range_max_value?.m_value ?? Number.POSITIVE_INFINITY;
+    if (value < min || value > max) {
+      diagnostics.addError(
+        `value ${value} out of range [${min},${max}] for option ${optionLabel}`,
+        location
+      );
+      return;
+    }
+    option.m_range_current_value = value;
+    return;
+  }
+
+  const values = option.m_values ?? [];
+  const valueIndex = values.findIndex((entry) => entry.m_value === value);
+  if (valueIndex < 0) {
+    diagnostics.addError(
+      `value ${value} is not a valid choice for option ${optionLabel}`,
+      location
+    );
+    return;
+  }
+  option.m_current_value_index = valueIndex;
+};
+
+/**
+ * Apply base-derived `option "Name" value` / `option <index> value` retunes.
+ * Must run against the decoded base (and its script strings) before the IR
+ * string table replaces `m_script_strings`.
+ */
+export const applyUserDefinedOptionOverrides = (
+  ir: IR,
+  gametype: c_game_engine_custom_variant,
+  diagnostics: Diagnostics
+): void => {
+  const overrides = ir.baseOverrides.userDefinedOptions;
+  if (overrides.length === 0) {
+    return;
+  }
+
+  for (const override of overrides) {
+    const index = resolveOverrideOptionIndex(gametype, override, diagnostics);
+    if (index === undefined) {
+      continue;
+    }
+
+    const option = gametype.m_user_defined_options[index]!;
+    const label =
+      override.target.kind === "name"
+        ? override.target.value
+        : englishOptionName(gametype, option) ?? String(index);
+
+    applyUserDefinedOptionValue(
+      option,
+      override.value,
+      label,
+      override.location,
+      diagnostics
+    );
+
+    if (override.locked) {
+      gametype.m_user_defined_options_locked[index] = true;
+    }
+    if (override.hidden) {
+      gametype.m_user_defined_options_hidden[index] = true;
+    }
+  }
+};
+
+const englishPlayerTraitName = (
+  gametype: c_game_engine_custom_variant,
+  option: s_player_trait_option
+): string | undefined => {
+  const english = gametype.m_script_strings.strings[0];
+  return english?.[option.m_name_string_index] ?? undefined;
+};
+
+const resolveOverridePlayerTraitIndex = (
+  gametype: c_game_engine_custom_variant,
+  override: PlayerTraitOptionOverride,
+  diagnostics: Diagnostics
+): number | undefined => {
+  const traits = gametype.m_player_traits;
+  if (override.target.kind === "index") {
+    const index = override.target.value;
+    if (index < 0 || index >= traits.length) {
+      diagnostics.addError(
+        `player trait index out of range`,
+        override.location
+      );
+      return undefined;
+    }
+    return index;
+  }
+
+  const wanted = override.target.value.toLowerCase();
+  const index = traits.findIndex((option) => {
+    const name = englishPlayerTraitName(gametype, option);
+    return name !== undefined && name.toLowerCase() === wanted;
+  });
+  if (index < 0) {
+    diagnostics.addError(
+      `string '${override.target.value}' is not the name of a player trait option`,
+      override.location
+    );
+    return undefined;
+  }
+  return index;
+};
+
+export const applyPlayerTraitOptionOverrides = (
+  ir: IR,
+  gametype: c_game_engine_custom_variant,
+  diagnostics: Diagnostics
+): void => {
+  const overrides = ir.baseOverrides.playerTraits;
+  if (overrides.length === 0) {
+    return;
+  }
+
+  for (const override of overrides) {
+    const index = resolveOverridePlayerTraitIndex(
+      gametype,
+      override,
+      diagnostics
+    );
+    if (index === undefined) {
+      continue;
+    }
+    const option = gametype.m_player_traits[index]!;
+    encodePlayerTraits(option.m_player_traits, override.traits);
+  }
 };
 
 /** Compile the base + custom variant game options from the IR into the gametype. */
@@ -272,18 +536,47 @@ export const compileGameOptions = (
   if (irVariant.fireTeamsEnabled !== undefined) {
     gameVariant.m_fire_teams_enabled = irVariant.fireTeamsEnabled !== 0;
   }
-  if (irVariant.symmetricGametype !== undefined) {
-    gameVariant.m_symmetric_gametype = irVariant.symmetricGametype;
+  // MegaloEdit defaults this
+  if (!ir.baseFileBytes || irVariant.symmetricGametype !== undefined) {
+    gameVariant.m_symmetric_gametype = irVariant.symmetricGametype ?? true;
   }
-  gameVariant.m_player_traits = irVariant.playerTraits.map((option) =>
-    compilePlayerTraitOption(
-      Number(option.name ?? 0),
-      Number(option.description ?? 0),
-      option.traits
-    )
-  );
+  if (irVariant.playerTraits.length > 0) {
+    if (ir.baseFileBytes) {
+      // Apply base derived player trait overrides.
+      const merged = [...gameVariant.m_player_traits];
+      irVariant.playerTraits.forEach((option, i) => {
+        const compiled = compilePlayerTraitOption(
+          Number(option.name ?? 0),
+          Number(option.description ?? 0),
+          option.traits
+        );
+        if (i < merged.length) {
+          merged[i]!.m_player_traits = compiled.m_player_traits;
+        } else {
+          merged.push(compiled);
+        }
+      });
+      gameVariant.m_player_traits = merged;
+    } else {
+      gameVariant.m_player_traits = irVariant.playerTraits.map((option) =>
+        compilePlayerTraitOption(
+          Number(option.name ?? 0),
+          Number(option.description ?? 0),
+          option.traits
+        )
+      );
+    }
+  }
+  compileUserDefinedOptions(ir, gameVariant);
 
   const tu1 = gameVariant.m_tu1_settings;
+
+  // MegaloEdit wire defaults when no tu1_* overrides
+  tu1.m_armor_lock_damage_drain = 0;
+  tu1.m_armor_lock_damage_drain_limit = 0;
+  tu1.m_active_camo_energy_curve_min = 5 / 254;
+  tu1.m_active_camo_energy_curve_max = 17 / 254;
+
   if (tu1Settings.alwaysSpilloverDamage !== undefined) {
     tu1.m_flags.always_spillover_damage = tu1Settings.alwaysSpilloverDamage;
   }
@@ -316,10 +609,12 @@ export const compileGameOptions = (
       tu1Settings.armorLockDamageDrainLimit;
   }
   if (tu1Settings.activeCamoEnergyCurveMin !== undefined) {
-    tu1.m_active_camo_energy_curve_min = tu1Settings.activeCamoEnergyCurveMin;
+    tu1.m_active_camo_energy_curve_min =
+      tu1Settings.activeCamoEnergyCurveMin;
   }
   if (tu1Settings.activeCamoEnergyCurveMax !== undefined) {
-    tu1.m_active_camo_energy_curve_max = tu1Settings.activeCamoEnergyCurveMax;
+    tu1.m_active_camo_energy_curve_max =
+      tu1Settings.activeCamoEnergyCurveMax;
   }
   if (tu1Settings.magnumDamage !== undefined) {
     tu1.m_magnum_damage = tu1Settings.magnumDamage;

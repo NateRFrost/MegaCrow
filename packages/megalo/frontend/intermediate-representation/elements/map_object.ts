@@ -1,17 +1,17 @@
 import { SyntaxKind } from "../../abstract-syntax-tree";
 import type { MapObjectElementNode } from "../../abstract-syntax-tree/elements/map_object";
 import { diagnosticMessages } from "../../diagnostics/messages";
-import { SymbolKind } from "../../symbol-table";
 import type { ElementLowerer } from ".";
 import { dxAssertionScope } from "../diagnostics";
 import { assertNotErrorNode } from "../diagnostics/assertNotErrorNode";
 import { assertSyntaxKind } from "../diagnostics/assertSyntaxKind";
-import { assertSymbolKind } from "../diagnostics/assertSymbolKind";
 import { LowerError } from "../error";
 import {
   type ObjectFilter,
   ObjectTeamFilter,
 } from "../game/megalogamengine/megalogamengine_map_objects";
+import { asParameterLoweringContext } from "../parameters/context";
+import { resolveObjectTypeReference } from "../parameters/references";
 import { resolveScriptStringTableReference } from "../parameters/resolveScriptStringTableReference";
 import { setField } from "../setField";
 
@@ -39,7 +39,8 @@ export const mapObjectLowerer: ElementLowerer<MapObjectElementNode> = (
     assertNotErrorNode(element.filterName);
 
     const filter: ObjectFilter = {};
-    const { objectFilters, objectsUsed } = ctx.ir.gameVariant.gameEngine;
+    const { objectFilters } = ctx.ir.gameVariant.gameEngine;
+    const paramCtx = asParameterLoweringContext(ctx);
 
     for (const property of element.properties) {
       if (property.value.kind === SyntaxKind.INVALID) {
@@ -64,18 +65,18 @@ export const mapObjectLowerer: ElementLowerer<MapObjectElementNode> = (
           break;
         }
         case "type": {
-          assertSyntaxKind(property.value, SyntaxKind.REFERENCE);
-          const symbol = ctx.symbolTable.getSymbol(property.value.symbolId);
-          assertSymbolKind(symbol, SymbolKind.ObjectListItem);
+          const objectType = resolveObjectTypeReference(
+            property.value,
+            paramCtx
+          );
           setField(
             ctx.ir.locations,
             ctx.diagnostics,
             filter,
             "objectType",
-            symbol.index,
+            objectType,
             property.value.location
           );
-          objectsUsed[symbol.index] = true;
           break;
         }
         case "team": {

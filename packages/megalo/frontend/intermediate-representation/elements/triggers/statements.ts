@@ -9,6 +9,7 @@ import type { ActionStatementNode } from "../../../abstract-syntax-tree/elements
 import type { ASTParameterNode } from "../../../abstract-syntax-tree/parameters";
 import { diagnosticMessages } from "../../../diagnostics/messages";
 import {
+  SymbolKind,
   VariableScope,
   VariableType,
 } from "../../../symbol-table";
@@ -40,6 +41,10 @@ import {
 } from "../../parameters/context";
 import { resolveVariantVariable } from "../../parameters";
 import {
+  coerceVariantOperands,
+  isBareNoneOperand,
+} from "../../parameters/references/coerce";
+import {
   requireResolvedVariableSlot,
   type ResolvedVariableSlot,
 } from "../../preprocessing/symbols";
@@ -53,20 +58,14 @@ import {
 import {
   type ActionScopeWindow,
   type AppendTarget,
-  MAX_ACTIONS,
-  MAX_CONDITIONS,
-  MAX_TRIGGERS,
   ScopeAppendTarget,
 } from "./scope";
 
 export type ActionScopeContext = {
   ctx: ElementLowerContext;
   appendTarget: AppendTarget;
-  /** When true, reject non-pregame-executable actions. */
-  isPregame: boolean;
+  insidePregameTrigger: boolean;
 };
-
-const PREGAME_ACTIONS = new Set<string>(["set", "for_each", "begin"]);
 
 /**
  * Lower a statement list into an action scope (trigger body or begin body),
@@ -81,6 +80,8 @@ export const lowerActionScope = (
     ...scopeCtx,
     appendTarget: scope,
   };
+  const { conditions: maxConditions } =
+    scopeCtx.ctx.frontend.versionConfiguration.limits;
 
   let unionGroup = -1;
   let previousUnionOr = false;
@@ -91,7 +92,7 @@ export const lowerActionScope = (
         case SyntaxKind.CONDITION: {
           if (
             scope.getConditionOffset() + scope.localConditionCount() >=
-            MAX_CONDITIONS
+            maxConditions
           ) {
             throw new LowerError("Too many conditions!", statement.location);
           }
@@ -152,17 +153,12 @@ const lowerPlainAction = (
   statement: ActionStatementNode,
   scopeCtx: ActionScopeContext
 ): void => {
-  if (scopeCtx.isPregame && !PREGAME_ACTIONS.has(statement.name.value)) {
-    throw new LowerError(
-      `Action '${statement.name.value}' is not allowed in a pregame trigger.`,
-      statement.name.location
-    );
-  }
-
+  const { actions: maxActions } =
+    scopeCtx.ctx.frontend.versionConfiguration.limits;
   if (
     scopeCtx.appendTarget.getActionOffset() +
       scopeCtx.appendTarget.localActionCount() >=
-    MAX_ACTIONS
+    maxActions
   ) {
     throw new LowerError("Too many actions!", statement.location);
   }
@@ -180,10 +176,12 @@ export const lowerBegin = (
   statement: BeginStatementNode,
   scopeCtx: ActionScopeContext
 ): void => {
+  const { actions: maxActions } =
+    scopeCtx.ctx.frontend.versionConfiguration.limits;
   if (
     scopeCtx.appendTarget.getActionOffset() +
       scopeCtx.appendTarget.localActionCount() >=
-    MAX_ACTIONS
+    maxActions
   ) {
     throw new LowerError("Too many actions!", statement.location);
   }
@@ -208,16 +206,18 @@ const lowerForEach = (
   statement: ForEachStatementNode,
   scopeCtx: ActionScopeContext
 ): void => {
+  const { actions: maxActions, triggers: maxTriggers } =
+    scopeCtx.ctx.frontend.versionConfiguration.limits;
   if (
     scopeCtx.appendTarget.getActionOffset() +
       scopeCtx.appendTarget.localActionCount() >=
-    MAX_ACTIONS
+    maxActions
   ) {
     throw new LowerError("Too many actions!", statement.location);
   }
 
   const engine = scopeCtx.ctx.ir.gameVariant.gameEngine;
-  if (engine.triggers.length >= MAX_TRIGGERS) {
+  if (engine.triggers.length >= maxTriggers) {
     throw new LowerError("Too many triggers!", statement.location);
   }
 
@@ -229,25 +229,31 @@ const lowerForEach = (
     true
   );
 
-  // Nested trigger body lowers against the global engine (like managedmegalo
-  // ReadTrigger), then the for_each action references that trigger index.
+  // Reserve nested trigger index before lowering its body.
+  const triggerIndex = engine.triggers.length;
+  engine.triggers.push(
+    makeTrigger(header, {
+      firstCondition: 0,
+      conditionCount: 0,
+      firstAction: 0,
+      actionCount: 0,
+    })
+  );
+  applySpecialTriggerIndex(engine, header, triggerIndex);
+
   const nestedRoot = scopeCtx.appendTarget;
   const window = lowerActionScope(statement.statements, {
     ctx: scopeCtx.ctx,
     appendTarget: nestedRoot,
-    isPregame: false,
+    insidePregameTrigger: scopeCtx.insidePregameTrigger,
   });
 
-  const triggerIndex = engine.triggers.length;
-  engine.triggers.push(
-    makeTrigger(header, {
-      firstCondition: window.firstConditionIndex,
-      conditionCount: window.conditionCount,
-      firstAction: window.firstActionIndex,
-      actionCount: window.actionCount,
-    })
-  );
-  applySpecialTriggerIndex(engine, header, triggerIndex);
+  engine.triggers[triggerIndex] = makeTrigger(header, {
+    firstCondition: window.firstConditionIndex,
+    conditionCount: window.conditionCount,
+    firstAction: window.firstActionIndex,
+    actionCount: window.actionCount,
+  });
 
   scopeCtx.appendTarget.appendAction({
     type: ActionType.ForEach,
@@ -326,25 +332,33 @@ const lowerTemporary = (
   statement: TemporaryStatementNode,
   scopeCtx: ActionScopeContext
 ): void => {
-  if (scopeCtx.isPregame) {
+  if (scopeCtx.insidePregameTrigger) {
     throw new LowerError(
       "Temporary variables are not allowed in a pregame trigger.",
       statement.location
     );
   }
 
+  const { actions: maxActions } =
+    scopeCtx.ctx.frontend.versionConfiguration.limits;
   if (
     scopeCtx.appendTarget.getActionOffset() +
       scopeCtx.appendTarget.localActionCount() >=
-    MAX_ACTIONS
+    maxActions
   ) {
     throw new LowerError("Too many actions!", statement.location);
   }
 
-  const symbol = scopeCtx.ctx.symbolTable.findVariableByName(
-    statement.name.value
-  );
-  if (symbol === undefined) {
+  const symbolId = statement.name.symbolId;
+  const symbol =
+    symbolId !== undefined
+      ? scopeCtx.ctx.symbolTable.getSymbol(symbolId)
+      : scopeCtx.ctx.symbolTable.findVariableByName(statement.name.value);
+  if (
+    symbol === undefined ||
+    symbol.kind !== SymbolKind.Variable ||
+    (symbolId === undefined && symbol.scope !== VariableScope.Temporary)
+  ) {
     throw new LowerError(
       `Unknown temporary variable '${statement.name.value}'.`,
       statement.name.location
@@ -364,15 +378,21 @@ const lowerTemporary = (
   }
 
   const paramCtx = asParameterLoweringContext(scopeCtx.ctx);
+  const initialNode = statement.initial as ASTParameterNode;
+  const rightWasNone = isBareNoneOperand(initialNode);
+  const left = temporaryLeftHandSide(slot, statement.location);
+  const [, right] = coerceVariantOperands(
+    left,
+    resolveVariantVariable(initialNode, paramCtx),
+    rightWasNone,
+    false
+  );
   const setAction: Action = {
     type: ActionType.Set,
     parameters: {
-      left: temporaryLeftHandSide(slot, statement.location),
+      left,
       operation: MathOperation.SetTo,
-      right: resolveVariantVariable(
-        statement.initial as ASTParameterNode,
-        paramCtx
-      ),
+      right,
     },
   };
   scopeCtx.appendTarget.appendAction(setAction);

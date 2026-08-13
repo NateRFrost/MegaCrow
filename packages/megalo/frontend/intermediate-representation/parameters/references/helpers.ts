@@ -67,10 +67,7 @@ export const splitParameterMember = (
     };
   }
 
-  if (
-    node.kind === SyntaxKind.INTEGER ||
-    node.kind === SyntaxKind.FLOATING_POINT
-  ) {
+  if (node.kind === SyntaxKind.INTEGER) {
     return {
       base: String(node.value),
       location: node.location,
@@ -107,15 +104,12 @@ export const temporaryReferenceKind = (
 };
 
 export const isExplicitPlayerName = (name: string): boolean =>
-  tryParseExplicitPlayer(name) !== undefined ||
-  name === "none" ||
-  name === "local_player" ||
-  name === "object_death_killing_player";
+  tryParseExplicitPlayer(name) !== undefined;
 
 export const isExplicitTeamName = (name: string): boolean =>
   name === "neutral" ||
   name === "current_team" ||
-  name.startsWith("team_") ||
+  /^team_\d+$/.test(name) ||
   tryParseExplicitTeam(name) !== undefined;
 
 export const isGlobalObjectVariableName = (name: string): boolean =>
@@ -165,6 +159,7 @@ export const resolveScopedVariableMemberIndex = (
   member: string,
   indexPrefix?: string
 ): number | undefined => {
+  // MegaloEdit Headache #1 - scoped variables always resolve first declared.
   const named = symbolTable
     .variablesOf(scope, type)
     .find((s: SymbolTableVariableEntry) => s.name === member);

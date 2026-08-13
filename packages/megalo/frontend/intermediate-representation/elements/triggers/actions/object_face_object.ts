@@ -12,96 +12,57 @@ import {
   asParameterLoweringContext,
   type ElementLowerContext,
 } from "../../../parameters/context";
-import { resolveObjectReference } from "../../../parameters";
+import {
+  lowerConstantInteger,
+  resolveObjectReference,
+} from "../../../parameters";
 
-const resolveNumericLiteral = (
+const resolveOffsetComponent = (
   node: ASTParameterNode,
+  ctx: ElementLowerContext,
   location: SourceCodeLocation,
-): number => {
-  if (
-    node.kind === SyntaxKind.INTEGER ||
-    node.kind === SyntaxKind.FLOATING_POINT
-  ) {
-    return node.value;
-  }
-  throw new LowerError(
-    diagnosticMessages.expectedParameterType("number", ""),
-    node.location ?? location,
-  );
-};
+): number => lowerConstantInteger(node, ctx, "integer", location).value;
 
 const parseOptionalObjectOffset = (
   parameters: ASTParameterNode[],
   startIndex: number,
+  ctx: ElementLowerContext,
   location: SourceCodeLocation,
 ): {
   offset: ObjectOffset;
-  absoluteOrientation?: boolean;
   nextIndex: number;
 } => {
   let offset: ObjectOffset = { x: 0, y: 0, z: 0 };
-  let absoluteOrientation: boolean | undefined;
   let index = startIndex;
 
   while (index < parameters.length) {
     const parameter = parameters[index]!;
-    if (parameter.kind === SyntaxKind.KEYWORD) {
-      if (parameter.value === "offset") {
-        const xNode = parameters[index + 1];
-        const yNode = parameters[index + 2];
-        const zNode = parameters[index + 3];
-        if (xNode === undefined || yNode === undefined || zNode === undefined) {
-          throw new LowerError(
-            diagnosticMessages.invalidParameterCount(
-              index + 4,
-              parameters.length,
-            ),
-            location,
-          );
-        }
-        offset = {
-          x: resolveNumericLiteral(xNode, location),
-          y: resolveNumericLiteral(yNode, location),
-          z: resolveNumericLiteral(zNode, location),
-        };
-        index += 4;
-        continue;
+    if (parameter.kind === SyntaxKind.KEYWORD && parameter.value === "offset") {
+      const xNode = parameters[index + 1];
+      const yNode = parameters[index + 2];
+      const zNode = parameters[index + 3];
+      if (xNode === undefined || yNode === undefined || zNode === undefined) {
+        throw new LowerError(
+          diagnosticMessages.invalidParameterCount(
+            index + 4,
+            parameters.length,
+          ),
+          location,
+        );
       }
-      if (parameter.value === "absolute_orientation") {
-        absoluteOrientation = true;
-        index++;
-        continue;
-      }
-    }
-
-    if (
-      parameter.kind === SyntaxKind.INTEGER ||
-      parameter.kind === SyntaxKind.FLOATING_POINT
-    ) {
-      const yNode = parameters[index + 1];
-      const zNode = parameters[index + 2];
-      if (
-        yNode !== undefined &&
-        zNode !== undefined &&
-        (yNode.kind === SyntaxKind.INTEGER ||
-          yNode.kind === SyntaxKind.FLOATING_POINT) &&
-        (zNode.kind === SyntaxKind.INTEGER ||
-          zNode.kind === SyntaxKind.FLOATING_POINT)
-      ) {
-        offset = {
-          x: parameter.value,
-          y: yNode.value,
-          z: zNode.value,
-        };
-        index += 3;
-        continue;
-      }
+      offset = {
+        x: resolveOffsetComponent(xNode, ctx, location),
+        y: resolveOffsetComponent(yNode, ctx, location),
+        z: resolveOffsetComponent(zNode, ctx, location),
+      };
+      index += 4;
+      continue;
     }
 
     break;
   }
 
-  return { offset, absoluteOrientation, nextIndex: index };
+  return { offset, nextIndex: index };
 };
 
 export const lowerObjectFaceObject = (
@@ -119,6 +80,7 @@ export const lowerObjectFaceObject = (
   const { offset, nextIndex } = parseOptionalObjectOffset(
     parameters,
     2,
+    ctx,
     location,
   );
   if (nextIndex !== parameters.length) {

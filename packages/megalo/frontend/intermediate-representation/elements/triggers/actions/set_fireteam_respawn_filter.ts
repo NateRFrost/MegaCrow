@@ -1,3 +1,4 @@
+import { SyntaxKind } from "../../../../abstract-syntax-tree";
 import type { ASTParameterNode } from "../../../../abstract-syntax-tree/parameters";
 import type { SourceCodeLocation } from "../../../../diagnostics";
 import { diagnosticMessages } from "../../../../diagnostics/messages";
@@ -12,57 +13,94 @@ import {
   type ElementLowerContext,
 } from "../../../parameters/context";
 import { resolveObjectReference } from "../../../parameters";
-import { requireKeyword } from "../helpers";
 
-const FIRETEAM_KEYWORDS: Record<string, keyof FireteamFilter> = {
-  fireteam1: "fireteam1",
-  fireteam2: "fireteam2",
-  fireteam3: "fireteam3",
-  fireteam4: "fireteam4",
-  fireteam5: "fireteam5",
-  fireteam6: "fireteam6",
-  fireteam7: "fireteam7",
-  fireteam8: "fireteam8",
+const emptyFireteamFilter = (): FireteamFilter => ({
+  fireteam1: false,
+  fireteam2: false,
+  fireteam3: false,
+  fireteam4: false,
+  fireteam5: false,
+  fireteam6: false,
+  fireteam7: false,
+  fireteam8: false,
+});
+
+const FIRETEAM_KEYS = [
+  "fireteam1",
+  "fireteam2",
+  "fireteam3",
+  "fireteam4",
+  "fireteam5",
+  "fireteam6",
+  "fireteam7",
+  "fireteam8",
+] as const satisfies readonly (keyof FireteamFilter)[];
+
+const applyFireteamFilterToken = (
+  node: ASTParameterNode,
+  filter: FireteamFilter,
+  location: SourceCodeLocation
+): void => {
+  if (node.kind === SyntaxKind.INTEGER) {
+    if (node.value < 0 || node.value > 3) {
+      throw new LowerError(
+        diagnosticMessages.expectedParameterType(
+          "fireteam filter",
+          String(node.value)
+        ),
+        node.location ?? location
+      );
+    }
+    for (const key of FIRETEAM_KEYS) {
+      filter[key] = false;
+    }
+    filter[FIRETEAM_KEYS[node.value]!] = true;
+    return;
+  }
+
+  const name =
+    node.kind === SyntaxKind.KEYWORD
+      ? node.value.toLowerCase()
+      : node.kind === SyntaxKind.REFERENCE
+        ? node.identifier.toLowerCase()
+        : undefined;
+  if (name === "none") {
+    for (const key of FIRETEAM_KEYS) {
+      filter[key] = false;
+    }
+    return;
+  }
+  if (name === "all") {
+    for (const key of FIRETEAM_KEYS) {
+      filter[key] = true;
+    }
+    return;
+  }
+  throw new LowerError(
+    diagnosticMessages.expectedParameterType("fireteam filter", name ?? ""),
+    node.location ?? location
+  );
 };
 
 export const lowerSetFireteamRespawnFilter = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   if (parameters.length < 2) {
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(2, parameters.length),
-      location,
+      location
     );
   }
-  const fireteamFilter: FireteamFilter = {
-    fireteam1: false,
-    fireteam2: false,
-    fireteam3: false,
-    fireteam4: false,
-    fireteam5: false,
-    fireteam6: false,
-    fireteam7: false,
-    fireteam8: false,
-  };
-  for (let i = 1; i < parameters.length; i++) {
-    const name = requireKeyword(parameters[i], location).toLowerCase();
-    const key = FIRETEAM_KEYWORDS[name];
-    if (key === undefined) {
-      throw new LowerError(
-        diagnosticMessages.expectedParameterType("fireteam filter", name),
-        parameters[i]!.location,
-      );
-    }
-    fireteamFilter[key] = true;
-  }
+  const fireteamFilter = emptyFireteamFilter();
+  applyFireteamFilterToken(parameters[1]!, fireteamFilter, location);
   return {
     type: ActionType.SetFireteamRespawnFilter,
     parameters: {
       object: resolveObjectReference(
         parameters[0]!,
-        asParameterLoweringContext(ctx),
+        asParameterLoweringContext(ctx)
       ),
       fireteamFilter,
     },

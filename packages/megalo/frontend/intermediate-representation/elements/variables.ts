@@ -10,10 +10,12 @@ import {
   SymbolKind,
   type SymbolId,
   VariableType,
+  isBuiltInVariable,
 } from "../../symbol-table";
 import { dxAssertionScope } from "../diagnostics";
 import { assertNotErrorNode } from "../diagnostics/assertNotErrorNode";
 import { LowerError } from "../error";
+import { MultiplayerTeamDesignator } from "../game/game_engine_default";
 import {
   CustomVariableType,
   type CustomVariableReference,
@@ -23,6 +25,7 @@ import type {
   ElementLowerContext,
   VariableDeclarationInfo,
 } from "../parameters/context";
+import { GAME_OPTION_CUSTOM_VARIABLE_TYPE } from "../parameters/gameOptionTypes";
 
 const NETWORK_STATE_BY_NAME: Record<string, MegaloVariableNetworkState> = {
   local: MegaloVariableNetworkState.Local,
@@ -30,13 +33,40 @@ const NETWORK_STATE_BY_NAME: Record<string, MegaloVariableNetworkState> = {
   networked_high: MegaloVariableNetworkState.NetworkedHigh,
 };
 
+const TEAM_INITIAL_DESIGNATOR: Record<string, MultiplayerTeamDesignator> = {
+  none: MultiplayerTeamDesignator.None,
+  neutral: MultiplayerTeamDesignator.Neutral,
+  defenders: MultiplayerTeamDesignator.Defenders,
+  attackers: MultiplayerTeamDesignator.Attackers,
+  third_party: MultiplayerTeamDesignator.ThirdParty,
+  fourth_party: MultiplayerTeamDesignator.FourthParty,
+  fifth_party: MultiplayerTeamDesignator.FifthParty,
+  sixth_party: MultiplayerTeamDesignator.SixthParty,
+  seventh_party: MultiplayerTeamDesignator.SeventhParty,
+  eighth_party: MultiplayerTeamDesignator.EighthParty,
+};
+
 const parseNetworkState = (
   value: string
 ): MegaloVariableNetworkState | undefined => NETWORK_STATE_BY_NAME[value];
 
+const teamDesignatorInitial = (
+  name: string
+): CustomVariableReference | undefined => {
+  const designator = TEAM_INITIAL_DESIGNATOR[name];
+  if (designator === undefined) {
+    return undefined;
+  }
+  return {
+    type: CustomVariableType.Constant,
+    immediateValue: designator,
+  };
+};
+
 const lowerInitialValue = (
   entry: VariablesElementNode["entries"][number],
-  ctx: ElementLowerContext
+  ctx: ElementLowerContext,
+  variableType: VariableType
 ): CustomVariableReference => {
   const { initial } = entry;
   if (initial.kind === SyntaxKind.INTEGER) {
@@ -53,9 +83,32 @@ const lowerInitialValue = (
         immediateValue: symbol.value,
       };
     }
+    if (symbol?.kind === SymbolKind.GameOption) {
+      const mapped = GAME_OPTION_CUSTOM_VARIABLE_TYPE[symbol.name];
+      if (mapped !== undefined) {
+        return { type: mapped };
+      }
+      const userOption = ctx.symbolTable.lookupUserDefinedOptionIndex(
+        symbol.name
+      );
+      if (userOption !== undefined) {
+        return { type: CustomVariableType.Option, optionIndex: userOption };
+      }
+    }
     if (
       symbol?.kind === SymbolKind.Variable &&
-      symbol.type === VariableType.Number
+      isBuiltInVariable(symbol) &&
+      variableType === VariableType.Team
+    ) {
+      const teamInit = teamDesignatorInitial(symbol.name);
+      if (teamInit) {
+        return teamInit;
+      }
+    }
+    if (
+      symbol?.kind === SymbolKind.Variable &&
+      symbol.type === VariableType.Number &&
+      !isBuiltInVariable(symbol)
     ) {
       const resolved = ctx.variableSlots.get(symbol.id);
       if (resolved !== undefined) {
@@ -111,7 +164,7 @@ export const variablesLowerer = (
           (s) =>
             s.name === name.value &&
             s.declaration.type === SourceLocationType.SOURCE_CODE &&
-            s.declaration.start.offset === name.location.start.offset
+            s.declaration.start.localOffset === name.location.start.localOffset
         ) ?? candidates.find((s) => s.name === name.value);
 
       if (resolved === undefined) {
@@ -123,7 +176,7 @@ export const variablesLowerer = (
 
       const info: VariableDeclarationInfo = {
         networkState,
-        initial: lowerInitialValue(entry, ctx),
+        initial: lowerInitialValue(entry, ctx, variableType),
       };
       ctx.variableDeclarations.set(resolved.id as SymbolId, info);
     });

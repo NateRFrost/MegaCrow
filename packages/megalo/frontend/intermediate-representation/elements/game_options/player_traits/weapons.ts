@@ -1,4 +1,6 @@
 import { SyntaxKind } from "../../../../abstract-syntax-tree";
+import type { ASTParameterNode } from "../../../../abstract-syntax-tree/parameters";
+import type { SourceCodeLocation } from "../../../../diagnostics";
 import { diagnosticMessages } from "../../../../diagnostics/messages";
 import { ObjectListType } from "../../../../object-lists";
 import { located } from "../../..";
@@ -7,7 +9,7 @@ import {
   InfiniteAmmoSetting,
   type PlayerTraits,
 } from "../../../game/game_engine_player_traits";
-import { lowerBooleanParam, lowerNumberParam } from "../../../parameters";
+import { lowerBooleanParam } from "../../../parameters";
 import { lowerGrenadeCount } from "../../../parameters/grenadeCount";
 import { setField } from "../../../setField";
 import {
@@ -18,6 +20,26 @@ import {
 
 const EQUIPMENT_USAGE_ENABLED = new Set(["on", "enabled"]);
 const EQUIPMENT_USAGE_DISABLED = new Set(["off", "disabled"]);
+
+const OBJECT_LIST_SENTINELS: Record<string, number> = {
+  none: -1,
+  default: -2,
+  random: -3,
+};
+
+const lowerWeaponOrEquipmentIndex = (
+  parameters: ASTParameterNode[],
+  ctx: TraitOptionArgs["ctx"],
+  objectType: ObjectListType,
+  location: SourceCodeLocation
+) => {
+  const first = parameters[0];
+  const sentinel = resolveKeyword(first);
+  if (sentinel !== undefined && OBJECT_LIST_SENTINELS[sentinel] !== undefined) {
+    return located(OBJECT_LIST_SENTINELS[sentinel]!, first!.location);
+  }
+  return lowerObjectListIndex(parameters, ctx, objectType, location);
+};
 
 /** Returns true if `identifier` was handled as a weapons trait. */
 export const lowerWeaponsOption = (
@@ -40,10 +62,7 @@ export const lowerWeaponsOption = (
       let value;
       if (resolveKeyword(firstParam) === "fatality") {
         value = located("fatality" as const, firstParam.location);
-      } else if (
-        firstParam.kind === SyntaxKind.INTEGER ||
-        firstParam.kind === SyntaxKind.FLOATING_POINT
-      ) {
+      } else if (firstParam.kind === SyntaxKind.INTEGER) {
         value = located(firstParam.value, firstParam.location);
       } else {
         throw new LowerError(
@@ -72,10 +91,7 @@ export const lowerWeaponsOption = (
       let value;
       if (resolveKeyword(firstParam) === "fatality") {
         value = located("fatality" as const, firstParam.location);
-      } else if (
-        firstParam.kind === SyntaxKind.INTEGER ||
-        firstParam.kind === SyntaxKind.FLOATING_POINT
-      ) {
+      } else if (firstParam.kind === SyntaxKind.INTEGER) {
         value = located(firstParam.value, firstParam.location);
       } else {
         throw new LowerError(
@@ -94,7 +110,7 @@ export const lowerWeaponsOption = (
       return true;
     }
     case "initial_primary_weapon": {
-      const value = lowerObjectListIndex(
+      const value = lowerWeaponOrEquipmentIndex(
         parameters,
         ctx,
         ObjectListType.Weapons,
@@ -111,7 +127,7 @@ export const lowerWeaponsOption = (
       return true;
     }
     case "initial_secondary_weapon": {
-      const value = lowerObjectListIndex(
+      const value = lowerWeaponOrEquipmentIndex(
         parameters,
         ctx,
         ObjectListType.Weapons,
@@ -128,7 +144,7 @@ export const lowerWeaponsOption = (
       return true;
     }
     case "initial_equipment": {
-      const value = lowerObjectListIndex(
+      const value = lowerWeaponOrEquipmentIndex(
         parameters,
         ctx,
         ObjectListType.Equipment,
@@ -184,13 +200,13 @@ export const lowerWeaponsOption = (
       return true;
     }
     case "infinite_ammo": {
-      const enabled = lowerNumberParam(parameters, ctx, "boolean", location);
+      const enabled = lowerBooleanParam(parameters, ctx, location);
       setField(
         ir.locations,
         diagnostics,
         traits.weapons,
         "infiniteAmmo",
-        enabled.value !== 0
+        enabled.value
           ? InfiniteAmmoSetting.Enabled
           : InfiniteAmmoSetting.Disabled,
         enabled.location
@@ -198,13 +214,13 @@ export const lowerWeaponsOption = (
       return true;
     }
     case "bottomless_clip": {
-      const enabled = lowerNumberParam(parameters, ctx, "boolean", location);
+      const enabled = lowerBooleanParam(parameters, ctx, location);
       setField(
         ir.locations,
         diagnostics,
         traits.weapons,
         "infiniteAmmo",
-        enabled.value !== 0
+        enabled.value
           ? InfiniteAmmoSetting.BottomlessClip
           : InfiniteAmmoSetting.Disabled,
         enabled.location

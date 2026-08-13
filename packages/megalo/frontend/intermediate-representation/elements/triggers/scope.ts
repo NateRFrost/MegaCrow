@@ -2,11 +2,6 @@ import type { Action } from "../../game/megalogamengine/megalogamengine_actions"
 import type { Condition } from "../../game/megalogamengine/megalogamengine_conditions";
 import type { CustomGameEngineDefinition } from "../../game/game_variant";
 
-/** Limits from managedmegalo `MegaloLimits`. */
-export const MAX_TRIGGERS = 320;
-export const MAX_CONDITIONS = 512;
-export const MAX_ACTIONS = 1024;
-
 /**
  * Append target for conditions/actions, matching managedmegalo's
  * `IActionAppendTarget` / `IConditionAppendTarget` + `ScopeAppendTarget`.

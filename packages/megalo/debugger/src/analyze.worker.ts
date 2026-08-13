@@ -1,5 +1,6 @@
 import { Parser } from "../../frontend/abstract-syntax-tree/index";
 import { getCompilerForVersion } from "../../frontend/compile";
+import { FrontendContext } from "../../frontend/context";
 import {
   BUILT_IN_LOCATION,
   DiagnosticSeverity,
@@ -25,7 +26,6 @@ import {
   type SymbolTableVariableEntry,
 } from "../../frontend/symbol-table";
 import { Lexer, type Token, TokenKind } from "../../frontend/tokens/index";
-import { getConfigurationForVersion } from "../../frontend/version-configuration";
 import { MEGALO_VERSIONS } from "../../version";
 import type {
   AnalyzeRequest,
@@ -36,12 +36,11 @@ import type {
   WorkerResponse,
 } from "./analyze.types";
 
-const MEGALO_VERSION = MEGALO_VERSIONS["107-mcc"];
-const lexer = new Lexer(MEGALO_VERSION);
-const parser = new Parser(MEGALO_VERSION);
-const versionConfiguration = getConfigurationForVersion(MEGALO_VERSION);
-const lowerer = new Lowerer(versionConfiguration);
-const compiler = getCompilerForVersion(MEGALO_VERSION);
+const frontend = new FrontendContext(MEGALO_VERSIONS["107-mcc"]);
+const lexer = new Lexer(frontend);
+const parser = new Parser(frontend);
+const lowerer = new Lowerer(frontend);
+const compiler = getCompilerForVersion(frontend.megaloVersion);
 
 const debugLog = (event: string, details: Record<string, unknown> = {}): void => {
   console.log(`[megalo-worker] ${event}`, {

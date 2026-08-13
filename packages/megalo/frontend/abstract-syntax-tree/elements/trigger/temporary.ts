@@ -25,7 +25,7 @@ export const isTemporaryStorageName = (
 
 export type TemporaryStatementNode = ASTNode<SyntaxKind.TEMPORARY> & {
   storage: { value: TemporaryStorageName; location: SourceCodeLocation };
-  name: { value: string; location: SourceCodeLocation };
+  name: { value: string; location: SourceCodeLocation; symbolId?: number };
   initial: ASTConditionOperandNode;
 };
 
@@ -110,8 +110,9 @@ export const parseTemporary = (
   const storage = parseTemporaryStorage(ctx, temporaryToken);
   const name = parseTemporaryName(ctx, temporaryToken);
 
+  let symbolId: number | undefined;
   if (storage !== undefined && name !== undefined) {
-    ctx.symbolParser.addVariableToScope({
+    symbolId = ctx.symbolParser.addVariableToScope({
       name: name.value,
       type: variableTypeFromName(storage.value),
       declaration: name.location,
@@ -130,7 +131,13 @@ export const parseTemporary = (
         value: "number",
         location: temporaryToken.location,
       },
-      name: name ?? { value: "", location: temporaryToken.location },
+      name:
+        symbolId !== undefined
+          ? {
+              ...(name ?? { value: "", location: temporaryToken.location }),
+              symbolId,
+            }
+          : (name ?? { value: "", location: temporaryToken.location }),
       initial: {
         kind: SyntaxKind.INVALID,
         location: temporaryToken.location,
@@ -144,10 +151,14 @@ export const parseTemporary = (
     name?.location ?? temporaryToken.location
   );
 
+  const nameNode = name ?? { value: "", location: temporaryToken.location };
   return {
     kind: SyntaxKind.TEMPORARY,
     storage: storage ?? { value: "number", location: temporaryToken.location },
-    name: name ?? { value: "", location: temporaryToken.location },
+    name:
+      symbolId !== undefined
+        ? { ...nameNode, symbolId }
+        : nameNode,
     initial,
     location: locationSpan(temporaryToken.location, initial.location),
   };

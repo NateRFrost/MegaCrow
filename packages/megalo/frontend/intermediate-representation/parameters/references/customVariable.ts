@@ -21,7 +21,7 @@ import {
 import { LowerError } from "../../error";
 import type { ParameterLoweringContext } from "../context";
 import { parseIndexSuffix } from "../explicit";
-import { GAME_OPTION_CUSTOM_VARIABLE_TYPE } from "../gameOptionTypes";
+import { resolveGameOptionCustomVariableType } from "../gameOptionTypes";
 import {
   resolveExplicitObjectForBase,
   resolveExplicitPlayerForBase,
@@ -86,7 +86,8 @@ const encodeScopedNumber = (
   ctx: ParameterLoweringContext,
   base: string,
   scope: VariableScope,
-  member: string
+  member: string,
+  resolvedBaseVariable?: SymbolTableVariableEntry
 ): CustomVariableReference | undefined => {
   const index = resolveScopedVariableMemberIndex(
     ctx.symbolTable,
@@ -103,19 +104,19 @@ const encodeScopedNumber = (
     case VariableScope.Team:
       return {
         type: CustomVariableType.TeamNumber,
-        team: resolveExplicitTeamForBase(ctx, base),
+        team: resolveExplicitTeamForBase(ctx, base, resolvedBaseVariable),
         variableIndex: index,
       };
     case VariableScope.Player:
       return {
         type: CustomVariableType.PlayerNumber,
-        player: resolveExplicitPlayerForBase(ctx, base),
+        player: resolveExplicitPlayerForBase(ctx, base, resolvedBaseVariable),
         variableIndex: index,
       };
     case VariableScope.Object:
       return {
         type: CustomVariableType.ObjectNumber,
-        object: resolveExplicitObjectForBase(ctx, base),
+        object: resolveExplicitObjectForBase(ctx, base, resolvedBaseVariable),
         variableIndex: index,
       };
     default:
@@ -176,10 +177,7 @@ export const resolveCustomVariableReference = (
 const tryImmediateConstant = (
   node: ASTParameterNode
 ): CustomVariableReference | undefined => {
-  if (
-    node.kind === SyntaxKind.INTEGER ||
-    node.kind === SyntaxKind.FLOATING_POINT
-  ) {
+  if (node.kind === SyntaxKind.INTEGER) {
     return {
       type: CustomVariableType.Constant,
       immediateValue: node.value,
@@ -209,12 +207,15 @@ const tryBareName = (
   name: string,
   baseSymbol: SymbolTableVariableEntry | undefined
 ): CustomVariableReference | undefined => {
-  const optionByName = ctx.optionIndexByName.get(name);
+  const optionByName = ctx.symbolTable.lookupUserDefinedOptionIndex(name);
   if (optionByName !== undefined) {
     return { type: CustomVariableType.Option, optionIndex: optionByName };
   }
 
-  const gameOptionType = GAME_OPTION_CUSTOM_VARIABLE_TYPE[name];
+  const gameOptionType = resolveGameOptionCustomVariableType(
+    name,
+    ctx.inPregameTrigger
+  );
   if (gameOptionType !== undefined) {
     return { type: gameOptionType };
   }
@@ -228,11 +229,16 @@ const tryBareName = (
       };
     }
     if (symbol?.kind === SymbolKind.GameOption) {
-      const mapped = GAME_OPTION_CUSTOM_VARIABLE_TYPE[symbol.name];
+      const mapped = resolveGameOptionCustomVariableType(
+        symbol.name,
+        ctx.inPregameTrigger
+      );
       if (mapped !== undefined) {
         return { type: mapped };
       }
-      const userOption = ctx.optionIndexByName.get(symbol.name);
+      const userOption = ctx.symbolTable.lookupUserDefinedOptionIndex(
+        symbol.name
+      );
       if (userOption !== undefined) {
         return { type: CustomVariableType.Option, optionIndex: userOption };
       }
@@ -260,9 +266,10 @@ const tryBareName = (
 const tryStatMember = (
   ctx: ParameterLoweringContext,
   base: string,
-  member: string
+  member: string,
+  resolvedBaseVariable?: SymbolTableVariableEntry
 ): CustomVariableReference | undefined => {
-  const fromMap = ctx.statIndexByName.get(member);
+  const fromMap = ctx.symbolTable.lookupGameStatIndex(member);
   const fromPrefix = member.startsWith("stat_")
     ? (fromMap ?? Number(member.replace(/^stat_/, "")) ?? 0)
     : fromMap;
@@ -273,14 +280,14 @@ const tryStatMember = (
   if (isPlayerReferenceBase(ctx, base)) {
     return {
       type: CustomVariableType.PlayerStat,
-      player: resolveExplicitPlayerForBase(ctx, base),
+      player: resolveExplicitPlayerForBase(ctx, base, resolvedBaseVariable),
       statisticIndex: fromPrefix,
     };
   }
   if (isTeamReferenceBase(ctx, base)) {
     return {
       type: CustomVariableType.TeamStat,
-      team: resolveExplicitTeamForBase(ctx, base),
+      team: resolveExplicitTeamForBase(ctx, base, resolvedBaseVariable),
       statisticIndex: fromPrefix,
     };
   }
@@ -291,7 +298,8 @@ const tryStatMember = (
 const tryCompiledNumberMember = (
   ctx: ParameterLoweringContext,
   base: string,
-  member: string
+  member: string,
+  resolvedBaseVariable?: SymbolTableVariableEntry
 ): CustomVariableReference | undefined => {
   if (!member.startsWith("number_")) {
     return undefined;
@@ -311,7 +319,7 @@ const tryCompiledNumberMember = (
       ) ?? rawIndex;
     return {
       type: CustomVariableType.PlayerNumber,
-      player: resolveExplicitPlayerForBase(ctx, base),
+      player: resolveExplicitPlayerForBase(ctx, base, resolvedBaseVariable),
       variableIndex: index,
     };
   }
@@ -327,7 +335,7 @@ const tryCompiledNumberMember = (
       ) ?? rawIndex;
     return {
       type: CustomVariableType.TeamNumber,
-      team: resolveExplicitTeamForBase(ctx, base),
+      team: resolveExplicitTeamForBase(ctx, base, resolvedBaseVariable),
       variableIndex: index,
     };
   }
@@ -344,7 +352,7 @@ const tryCompiledNumberMember = (
         ) ?? rawIndex;
     return {
       type: CustomVariableType.ObjectNumber,
-      object: resolveExplicitObjectForBase(ctx, base),
+      object: resolveExplicitObjectForBase(ctx, base, resolvedBaseVariable),
       variableIndex: index,
     };
   }
@@ -355,21 +363,41 @@ const tryCompiledNumberMember = (
 const tryNamedScopedNumber = (
   ctx: ParameterLoweringContext,
   base: string,
-  member: string
+  member: string,
+  resolvedBaseVariable?: SymbolTableVariableEntry
 ): CustomVariableReference | undefined => {
   if (isTeamReferenceBase(ctx, base, member)) {
-    const scoped = encodeScopedNumber(ctx, base, VariableScope.Team, member);
+    const scoped = encodeScopedNumber(
+      ctx,
+      base,
+      VariableScope.Team,
+      member,
+      resolvedBaseVariable
+    );
     if (scoped) return scoped;
   }
   if (
     isExplicitPlayerName(base) ||
+    resolvedBaseVariable?.type === VariableType.Player ||
     ctx.symbolTable.findVariableByName(base)?.type === VariableType.Player
   ) {
-    const scoped = encodeScopedNumber(ctx, base, VariableScope.Player, member);
+    const scoped = encodeScopedNumber(
+      ctx,
+      base,
+      VariableScope.Player,
+      member,
+      resolvedBaseVariable
+    );
     if (scoped) return scoped;
   }
   if (isObjectReferenceBase(ctx, base, member)) {
-    const scoped = encodeScopedNumber(ctx, base, VariableScope.Object, member);
+    const scoped = encodeScopedNumber(
+      ctx,
+      base,
+      VariableScope.Object,
+      member,
+      resolvedBaseVariable
+    );
     if (scoped) return scoped;
   }
   return undefined;
@@ -379,25 +407,26 @@ const tryNamedScopedNumber = (
 const tryBuiltinMember = (
   ctx: ParameterLoweringContext,
   base: string,
-  member: string
+  member: string,
+  resolvedBaseVariable?: SymbolTableVariableEntry
 ): CustomVariableReference | undefined => {
   if (member === "score") {
     if (isPlayerReferenceBase(ctx, base)) {
       return {
         type: CustomVariableType.PlayerScore,
-        player: resolveExplicitPlayerForBase(ctx, base),
+        player: resolveExplicitPlayerForBase(ctx, base, resolvedBaseVariable),
       };
     }
     return {
       type: CustomVariableType.TeamScore,
-      team: resolveExplicitTeamForBase(ctx, base),
+      team: resolveExplicitTeamForBase(ctx, base, resolvedBaseVariable),
     };
   }
 
   if (member === "user_data" && isObjectReferenceBase(ctx, base, member)) {
     return {
       type: CustomVariableType.SpawnObject,
-      object: resolveExplicitObjectForBase(ctx, base),
+      object: resolveExplicitObjectForBase(ctx, base, resolvedBaseVariable),
     };
   }
 
@@ -407,7 +436,7 @@ const tryBuiltinMember = (
     member === "player_rating" ||
     member === "rating"
   ) {
-    const player = resolveExplicitPlayerForBase(ctx, base);
+    const player = resolveExplicitPlayerForBase(ctx, base, resolvedBaseVariable);
     if (member === "player_score") {
       return { type: CustomVariableType.PlayerScore, player };
     }
@@ -425,7 +454,7 @@ const tryOptionName = (
   ctx: ParameterLoweringContext,
   name: string
 ): CustomVariableReference | undefined => {
-  const optionByName = ctx.optionIndexByName.get(name);
+  const optionByName = ctx.symbolTable.lookupUserDefinedOptionIndex(name);
   if (optionByName !== undefined) {
     return { type: CustomVariableType.Option, optionIndex: optionByName };
   }
@@ -456,16 +485,21 @@ const resolveCustomVariableReferenceUnchecked = (
   }
 
   if (member) {
-    const stat = tryStatMember(ctx, base, member);
+    const stat = tryStatMember(ctx, base, member, baseSymbol);
     if (stat) return stat;
 
-    const compiledNumber = tryCompiledNumberMember(ctx, base, member);
+    const compiledNumber = tryCompiledNumberMember(
+      ctx,
+      base,
+      member,
+      baseSymbol
+    );
     if (compiledNumber) return compiledNumber;
 
-    const namedScoped = tryNamedScopedNumber(ctx, base, member);
+    const namedScoped = tryNamedScopedNumber(ctx, base, member, baseSymbol);
     if (namedScoped) return namedScoped;
 
-    const builtin = tryBuiltinMember(ctx, base, member);
+    const builtin = tryBuiltinMember(ctx, base, member, baseSymbol);
     if (builtin) return builtin;
   }
 

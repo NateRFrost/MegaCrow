@@ -3,8 +3,9 @@ import {
   type VariantVariable,
   VariableType as VariantVariableType,
 } from "../../game/megalogamengine/megalogamengine_variant_variable";
-import { VariableType } from "../../../symbol-table";
+import { VariableScope, VariableType } from "../../../symbol-table";
 import type { ParameterLoweringContext } from "../context";
+import { resolveGameOptionCustomVariableType } from "../gameOptionTypes";
 import { resolveCustomTimerReference } from "./customTimer";
 import { resolveCustomVariableReference } from "./customVariable";
 import {
@@ -12,6 +13,8 @@ import {
   isPlayerReferenceBase,
   isTeamReferenceBase,
   isTemporaryCompiledNameExport as isTemporaryCompiledName,
+  resolveScopedObjectMemberIndex,
+  resolveScopedVariableMemberIndex,
   splitParameterMember,
   temporaryReferenceKind,
 } from "./helpers";
@@ -19,61 +22,116 @@ import { encodeNoObjectReference, resolveObjectReference } from "./object";
 import { resolvePlayerReference } from "./player";
 import { resolveTeamReference } from "./team";
 
-export const resolveVariantVariable = (
+const memberSubjectScope = (
+  ctx: ParameterLoweringContext,
+  base: string,
+  member: string
+): VariableScope.Player | VariableScope.Team | VariableScope.Object | undefined => {
+  if (isPlayerReferenceBase(ctx, base)) {
+    return VariableScope.Player;
+  }
+  if (isTeamReferenceBase(ctx, base, member)) {
+    return VariableScope.Team;
+  }
+  if (isObjectReferenceBase(ctx, base, member)) {
+    return VariableScope.Object;
+  }
+  return undefined;
+};
+
+const tryScopedNonNumberMember = (
   node: ASTParameterNode,
   ctx: ParameterLoweringContext,
-  preferredType?: VariantVariableType
-): VariantVariable => {
-  const { base, member } = splitParameterMember(node, ctx.symbolTable);
-  const name = member ? `${base}.${member}` : base;
+  base: string,
+  member: string
+): VariantVariable | undefined => {
+  const scope = memberSubjectScope(ctx, base, member);
+  if (scope === undefined) {
+    return undefined;
+  }
 
-  if (preferredType === VariantVariableType.CustomTimer || name.includes("timer")) {
+  if (
+    resolveScopedVariableMemberIndex(
+      ctx.symbolTable,
+      ctx.variableSlots,
+      scope,
+      VariableType.Timer,
+      member
+    ) !== undefined
+  ) {
     return {
       type: VariantVariableType.CustomTimer,
       customTimer: resolveCustomTimerReference(node, ctx),
     };
   }
-
-  if (preferredType === VariantVariableType.CustomVariable) {
-    return {
-      type: VariantVariableType.CustomVariable,
-      customVariable: resolveCustomVariableReference(node, ctx),
-    };
-  }
-
-  if (preferredType === VariantVariableType.Player) {
-    return {
-      type: VariantVariableType.Player,
-      player: resolvePlayerReference(node, ctx),
-    };
-  }
-
-  if (preferredType === VariantVariableType.Team) {
-    return {
-      type: VariantVariableType.Team,
-      team: resolveTeamReference(node, ctx),
-    };
-  }
-
-  if (preferredType === VariantVariableType.Object) {
-    if (base === "none" && !member) {
-      return {
-        type: VariantVariableType.Object,
-        object: encodeNoObjectReference(),
-      };
-    }
+  if (
+    resolveScopedObjectMemberIndex(
+      ctx.symbolTable,
+      ctx.variableSlots,
+      scope,
+      member
+    ) !== undefined
+  ) {
     return {
       type: VariantVariableType.Object,
       object: resolveObjectReference(node, ctx),
     };
   }
+  if (
+    resolveScopedVariableMemberIndex(
+      ctx.symbolTable,
+      ctx.variableSlots,
+      scope,
+      VariableType.Player,
+      member,
+      "number"
+    ) !== undefined
+  ) {
+    return {
+      type: VariantVariableType.Player,
+      player: resolvePlayerReference(node, ctx),
+    };
+  }
+  if (
+    resolveScopedVariableMemberIndex(
+      ctx.symbolTable,
+      ctx.variableSlots,
+      scope,
+      VariableType.Team,
+      member,
+      "number"
+    ) !== undefined
+  ) {
+    return {
+      type: VariantVariableType.Team,
+      team: resolveTeamReference(node, ctx),
+    };
+  }
+  return undefined;
+};
 
-  // Infer from symbol / shape when no preference is given.
+export const resolveVariantVariable = (
+  node: ASTParameterNode,
+  ctx: ParameterLoweringContext
+): VariantVariable => {
+  const { base, member } = splitParameterMember(node, ctx.symbolTable);
+  const name = member ? `${base}.${member}` : base;
+
   if (!member) {
-    if (ctx.optionIndexByName.has(name)) {
+    if (ctx.symbolTable.lookupUserDefinedOptionIndex(name) !== undefined) {
       return {
         type: VariantVariableType.CustomVariable,
         customVariable: resolveCustomVariableReference(node, ctx),
+      };
+    }
+
+    if (
+      name.includes("timer") &&
+      resolveGameOptionCustomVariableType(name, ctx.inPregameTrigger) === undefined
+    ) {
+      return {
+        type: VariantVariableType.CustomTimer,
+        customTimer: resolveCustomTimerReference(node, ctx),
       };
     }
 
@@ -139,6 +197,13 @@ export const resolveVariantVariable = (
       type: VariantVariableType.Team,
       team: resolveTeamReference(node, ctx),
     };
+  }
+
+  if (member) {
+    const scoped = tryScopedNonNumberMember(node, ctx, base, member);
+    if (scoped) {
+      return scoped;
+    }
   }
 
   return {

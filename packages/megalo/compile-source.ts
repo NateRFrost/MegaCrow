@@ -1,4 +1,5 @@
 import { getCompilerForVersion } from "./frontend/compile";
+import { FrontendContext } from "./frontend/context";
 import {
   BUILT_IN_LOCATION,
   type Diagnostic,
@@ -13,8 +14,9 @@ import {
   Parser,
   type ResolveIncludeFn,
 } from "./frontend/abstract-syntax-tree";
-import { getConfigurationForVersion } from "./frontend/version-configuration";
 import { loadObjectListsForVersion } from "./load-object-lists";
+import type { CompilerSettings } from "./frontend/compiler-settings";
+import type { MegacrowExtensions } from "./frontend/megacrow-extensions";
 import type { SupportedMegaloVersion } from "./version";
 
 export type ResolveBaseFileFn = (
@@ -35,6 +37,10 @@ export type CompileSourceOptions = {
   resolveBaseFile?: ResolveBaseFileFn;
   /** URI of the source document (for relative path resolution). */
   fromUri?: string;
+  /** MegaCrow-only language extensions (defaults keep MegaloEdit parity). */
+  megacrowExtensions?: Partial<MegacrowExtensions>;
+  /** MegaloEdit-parity compiler knobs. */
+  compilerSettings?: Partial<CompilerSettings>;
 };
 
 export type CompileSourceResult = {
@@ -96,16 +102,19 @@ export const compileSource = async (
   source: string,
   options: CompileSourceOptions
 ): Promise<CompileSourceResult> => {
-  const { version } = options;
+  const frontend = new FrontendContext(
+    options.version,
+    options.megacrowExtensions,
+    options.compilerSettings
+  );
   const objectLists =
-    options.objectLists ?? loadObjectListsForVersion(version);
+    options.objectLists ?? loadObjectListsForVersion(options.version);
   const diagnostics = new Diagnostics();
 
-  const lexer = new Lexer(version);
-  const parser = new Parser(version);
-  const versionConfiguration = getConfigurationForVersion(version);
-  const lowerer = new Lowerer(versionConfiguration);
-  const compiler = getCompilerForVersion(version);
+  const lexer = new Lexer(frontend);
+  const parser = new Parser(frontend);
+  const lowerer = new Lowerer(frontend);
+  const compiler = getCompilerForVersion(frontend.megaloVersion);
 
   try {
     const tokens = lexer.lex(source, diagnostics);
@@ -114,7 +123,9 @@ export const compileSource = async (
       resolveInclude: options.resolveInclude,
       fromUri: options.fromUri,
     });
-    const ir = lowerer.lower(ast, diagnostics, { objectLists });
+    const ir = lowerer.lower(ast, diagnostics, {
+      objectLists,
+    });
     await resolveAndAttachBase(
       ir,
       diagnostics,

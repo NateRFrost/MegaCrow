@@ -1,4 +1,5 @@
 import type { StringTableLanguage } from "../../language-configuration/omni/strings";
+import { STRING_TABLE_LANGUAGES } from "../../language-configuration/omni/strings";
 import { SymbolId } from "../../symbol-table";
 
 type AtLeastOne<T> = {
@@ -18,6 +19,15 @@ export const stringTableEntry = (
   content: string
 ): StringTableEntry => ({ [language]: content }) as StringTableEntry;
 
+/** Inline literals are identical across all 12 language slots (proto `literalVec`). */
+export const literalStringTableEntry = (text: string): StringTableEntry => {
+  const entry = {} as Record<StringTableLanguage, string>;
+  for (const language of STRING_TABLE_LANGUAGES) {
+    entry[language] = text;
+  }
+  return entry as StringTableEntry;
+};
+
 export class StringTable {
   private readonly table: StringTableSymbolEntry[] = [];
 
@@ -26,20 +36,20 @@ export class StringTable {
       // If a string literal is being added and we already have a matching string literal, we dont need to add it again.
       const matchingStringLiteralIndex: StringTableReference = this.table.findIndex(e => e.english === entry.english && e.symbolId == undefined);
       if (matchingStringLiteralIndex !== -1) {
-        return matchingStringLiteralIndex + 1;
+        return matchingStringLiteralIndex;
       }
     }
     else {
       // If a symbol string is being added and we already have it, we dont need to add it again.
       const matchkingSymbolStringIndex: StringTableReference = this.table.findIndex(e => e.symbolId === symbolId);
       if (matchkingSymbolStringIndex !== -1) {
-        return matchkingSymbolStringIndex + 1;
+        return matchkingSymbolStringIndex;
       }
     }
 
-    // Add new string.
+    // Add new string; return its 0-based index.
     this.table.push({...entry, symbolId});
-    return this.table.length;
+    return this.table.length - 1;
   }
 
   public toArray(): readonly StringTableEntry[] {

@@ -1,5 +1,6 @@
 import { type SourceCodeLocation, SourceLocationType } from "../../diagnostics";
 import { diagnosticMessages } from "../../diagnostics/messages";
+import { SymbolKind } from "../../symbol-table";
 import { type Token, TokenKind } from "../../tokens";
 import {
   type ASTErrorNode,
@@ -66,12 +67,26 @@ export const parseIntegerInitialValue = (
     };
   }
 
-  const node = tryParseParameterValue(ctx, ParameterType.Number);
-  if (
-    node !== undefined &&
-    (node.kind === SyntaxKind.INTEGER || node.kind === SyntaxKind.REFERENCE)
-  ) {
-    return node;
+  const node = tryParseParameterValue(ctx, ParameterType.Integer);
+  if (node !== undefined) {
+    if (
+      node.kind === SyntaxKind.INTEGER ||
+      node.kind === SyntaxKind.REFERENCE
+    ) {
+      return node;
+    }
+    // tryParseParameterValue may have consumed a non-integer token; do not
+    // consume again.
+    ctx.diagnostics.addError(
+      diagnosticMessages.expectedConstantValue(
+        node.kind === SyntaxKind.KEYWORD ? node.value : ""
+      ),
+      node.location
+    );
+    return {
+      kind: SyntaxKind.INVALID,
+      location: node.location,
+    };
   }
 
   const valueToken = ctx.getToken();
@@ -101,14 +116,35 @@ export const parseNumericInitialValue = (
     };
   }
 
-  const node = tryParseParameterValue(ctx, ParameterType.Number);
-  if (
-    node !== undefined &&
-    (node.kind === SyntaxKind.INTEGER ||
-      node.kind === SyntaxKind.FLOATING_POINT ||
-      node.kind === SyntaxKind.REFERENCE)
-  ) {
-    return node;
+  if (valuePeek?.kind === TokenKind.FloatingPoint) {
+    const valueToken = ctx.getToken();
+    return {
+      kind: SyntaxKind.FLOATING_POINT,
+      value: Number.parseFloat(valueToken.value),
+      location: valueToken.location,
+    };
+  }
+
+  const node = tryParseParameterValue(ctx, ParameterType.Integer);
+  if (node !== undefined) {
+    if (
+      node.kind === SyntaxKind.INTEGER ||
+      node.kind === SyntaxKind.REFERENCE
+    ) {
+      return node;
+    }
+    // tryParseParameterValue may have consumed a non-integer token; do not
+    // consume again.
+    ctx.diagnostics.addError(
+      diagnosticMessages.expectedConstantValue(
+        node.kind === SyntaxKind.KEYWORD ? node.value : ""
+      ),
+      node.location
+    );
+    return {
+      kind: SyntaxKind.INVALID,
+      location: node.location,
+    };
   }
 
   const valueToken = ctx.getToken();
@@ -120,6 +156,22 @@ export const parseNumericInitialValue = (
     kind: SyntaxKind.INVALID,
     location: valueToken.location,
   };
+};
+
+const resolveConstantInitialNumber = (
+  ctx: ParserContext,
+  value: IntegerInitialValue
+): number | undefined => {
+  if (value.kind === SyntaxKind.INTEGER) {
+    return value.value;
+  }
+  if (value.kind === SyntaxKind.REFERENCE) {
+    const target = ctx.symbolParser.getSymbolEntry(value.symbolId);
+    if (target?.kind === SymbolKind.Constant) {
+      return target.value;
+    }
+  }
+  return undefined;
 };
 
 const parseConstantEntry = (ctx: ParserContext): ConstantEntryNode => {
@@ -162,11 +214,12 @@ const parseConstantEntry = (ctx: ParserContext): ConstantEntryNode => {
       location: nameToken.location,
     };
 
-    if (value.kind === SyntaxKind.INTEGER) {
+    const numericValue = resolveConstantInitialNumber(ctx, value);
+    if (numericValue !== undefined) {
       ctx.symbolParser.addConstantToScope({
         name: nameToken.value,
         declaration: nameToken.location,
-        value: value.value,
+        value: numericValue,
       });
     }
   } else {

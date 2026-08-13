@@ -1,6 +1,9 @@
 import type { ASTParameterNode } from "../../../../abstract-syntax-tree/parameters";
+import { SyntaxKind } from "../../../../abstract-syntax-tree";
 import type { SourceCodeLocation } from "../../../../diagnostics";
 import { diagnosticMessages } from "../../../../diagnostics/messages";
+import { ObjectListType } from "../../../../object-lists";
+import { SymbolKind } from "../../../../symbol-table";
 import { LowerError } from "../../../error";
 import {
   ActionType,
@@ -14,25 +17,44 @@ import {
   resolveCustomVariableReference,
   resolveObjectReference,
 } from "../../../parameters";
-import { parseIndexSuffix } from "../../../parameters/explicit";
-import { requireKeyword, requireParamCount } from "../helpers";
+import { requireParamCount } from "../helpers";
 
 const resolveDeviceAnimationNameIndex = (
   node: ASTParameterNode,
+  ctx: ElementLowerContext,
   location: SourceCodeLocation,
 ): number => {
-  const name = requireKeyword(node, location);
-  const indexed = parseIndexSuffix(name, "animation");
-  if (indexed !== undefined) {
-    return indexed + 1;
+  // MegaloEdit ReadStringIdName: identifier or quoted string from strings.txt.
+  const name =
+    node.kind === SyntaxKind.KEYWORD
+      ? node.value
+      : node.kind === SyntaxKind.QUOTED_STRING
+        ? node.value
+        : node.kind === SyntaxKind.REFERENCE
+          ? (ctx.symbolTable.getSymbol(node.symbolId)?.name ?? node.identifier)
+          : undefined;
+  if (name === undefined) {
+    throw new LowerError(
+      diagnosticMessages.expectedParameterType("device animation", ""),
+      node.location ?? location,
+    );
   }
-  const numeric = Number(name);
-  if (!Number.isNaN(numeric)) {
-    return numeric;
+
+  const listItem = ctx.symbolTable
+    .toArray()
+    .find(
+      (entry) =>
+        entry.kind === SymbolKind.ObjectListItem &&
+        entry.objectType === ObjectListType.Strings &&
+        entry.name === name,
+    );
+  if (listItem?.kind === SymbolKind.ObjectListItem) {
+    return listItem.index + 1;
   }
+
   throw new LowerError(
     diagnosticMessages.expectedParameterType("device animation", name),
-    node.location,
+    node.location ?? location,
   );
 };
 
@@ -49,6 +71,7 @@ export const lowerDeviceSetPositionTrack = (
       object: resolveObjectReference(parameters[0]!, paramCtx),
       animationNameIndex: resolveDeviceAnimationNameIndex(
         parameters[1]!,
+        ctx,
         location,
       ),
       interpolationTime: resolveCustomVariableReference(

@@ -117,7 +117,8 @@ const encodeScopedTimerReference = (
   ctx: ParameterLoweringContext,
   base: string,
   scope: VariableScope,
-  member: string
+  member: string,
+  resolvedBaseVariable?: SymbolTableVariableEntry
 ): CustomTimerReference | undefined => {
   const index = resolveScopedTimerMemberIndex(ctx, scope, member);
   if (index === undefined) {
@@ -127,19 +128,19 @@ const encodeScopedTimerReference = (
     case VariableScope.Team:
       return {
         type: CustomTimerType.Team,
-        team: resolveExplicitTeamForBase(ctx, base),
+        team: resolveExplicitTeamForBase(ctx, base, resolvedBaseVariable),
         variableIndex: index,
       };
     case VariableScope.Player:
       return {
         type: CustomTimerType.Player,
-        player: resolveExplicitPlayerForBase(ctx, base),
+        player: resolveExplicitPlayerForBase(ctx, base, resolvedBaseVariable),
         variableIndex: index,
       };
     case VariableScope.Object:
       return {
         type: CustomTimerType.Object,
-        object: resolveExplicitObjectForBase(ctx, base),
+        object: resolveExplicitObjectForBase(ctx, base, resolvedBaseVariable),
         variableIndex: index,
       };
     default:
@@ -151,9 +152,15 @@ export const resolveCustomTimerReference = (
   node: ASTParameterNode,
   ctx: ParameterLoweringContext
 ): CustomTimerReference => {
-  const { base, member } = splitParameterMember(node, ctx.symbolTable);
+  const { base, member, baseSymbol } = splitParameterMember(
+    node,
+    ctx.symbolTable
+  );
   const name = member ? `${base}.${member}` : base;
-  const slot = ctx.symbolTable.findVariableByName(name);
+  const slot =
+    !member && baseSymbol?.type === VariableType.Timer
+      ? baseSymbol
+      : ctx.symbolTable.findVariableByName(name);
 
   if (slot?.type === VariableType.Timer && !member) {
     if (isBuiltInVariable(slot)) {
@@ -194,7 +201,8 @@ export const resolveCustomTimerReference = (
         ctx,
         base,
         VariableScope.Team,
-        member
+        member,
+        baseSymbol
       );
       if (scoped) {
         return scoped;
@@ -205,7 +213,8 @@ export const resolveCustomTimerReference = (
         ctx,
         base,
         VariableScope.Player,
-        member
+        member,
+        baseSymbol
       );
       if (scoped) {
         return scoped;
@@ -216,7 +225,8 @@ export const resolveCustomTimerReference = (
         ctx,
         base,
         VariableScope.Object,
-        member
+        member,
+        baseSymbol
       );
       if (scoped) {
         return scoped;

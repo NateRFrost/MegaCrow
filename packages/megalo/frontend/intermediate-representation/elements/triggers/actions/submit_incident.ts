@@ -1,4 +1,5 @@
 import type { ASTParameterNode } from "../../../../abstract-syntax-tree/parameters";
+import { SyntaxKind } from "../../../../abstract-syntax-tree";
 import type { SourceCodeLocation } from "../../../../diagnostics";
 import { diagnosticMessages } from "../../../../diagnostics/messages";
 import { ObjectListType } from "../../../../object-lists";
@@ -8,50 +9,34 @@ import {
   ActionType,
   type Action,
 } from "../../../game/megalogamengine/megalogamengine_actions";
-import {
-  asParameterLoweringContext,
-  type ElementLowerContext,
-} from "../../../parameters/context";
-import { parseIndexSuffix } from "../../../parameters";
-import { parseTeamOrPlayerTarget, requireKeyword } from "../helpers";
+import { type ElementLowerContext } from "../../../parameters/context";
+import { parseTeamOrPlayerTarget } from "../helpers";
 
-const resolveIncidentIndex = (
+export const resolveIncidentIndex = (
   node: ASTParameterNode,
   ctx: ElementLowerContext,
   location: SourceCodeLocation,
 ): number => {
-  const name = requireKeyword(node, location);
-  const paramCtx = asParameterLoweringContext(ctx);
-
-  const fromStatMap = paramCtx.statIndexByName.get(name);
-  if (fromStatMap !== undefined) {
-    return fromStatMap;
+  if (node.kind === SyntaxKind.REFERENCE) {
+    const symbol = ctx.symbolTable.getSymbol(node.symbolId);
+    if (
+      symbol?.kind === SymbolKind.ObjectListItem &&
+      symbol.objectType === ObjectListType.Incidents
+    ) {
+      return symbol.index;
+    }
   }
 
-  const incidentSymbol = ctx.symbolTable
-    .toArray()
-    .find(
-      (entry) =>
-        entry.kind === SymbolKind.ObjectListItem &&
-        entry.objectType === ObjectListType.Incidents &&
-        entry.name === name,
-    );
-  if (incidentSymbol?.kind === SymbolKind.ObjectListItem) {
-    return incidentSymbol.index + 1;
-  }
-
-  const fromSuffix = parseIndexSuffix(name, "incident");
-  if (fromSuffix !== undefined) {
-    return fromSuffix;
-  }
-
-  if (/^\d+$/.test(name)) {
-    return Number(name);
-  }
+  const name =
+    node.kind === SyntaxKind.KEYWORD
+      ? node.value
+      : node.kind === SyntaxKind.REFERENCE
+        ? (ctx.symbolTable.getSymbol(node.symbolId)?.name ?? node.identifier)
+        : undefined;
 
   throw new LowerError(
-    diagnosticMessages.expectedParameterType("incident", name),
-    node.location,
+    diagnosticMessages.expectedParameterType("incident", name ?? ""),
+    node.location ?? location,
   );
 };
 

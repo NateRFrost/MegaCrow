@@ -1,4 +1,5 @@
 import type { Diagnostics } from "../../diagnostics";
+import type { FrontendContext } from "../../context";
 import type { SymbolId, SymbolTable } from "../../symbol-table";
 import type { VariableSlotMap } from "../preprocessing/symbols";
 import type { IR } from "..";
@@ -14,49 +15,32 @@ export type VariableDeclarationInfo = {
   initial: CustomVariableReference;
 };
 
-/**
- * Context shared by every IR element lowerer.
- */
 export type ElementLowerContext = {
+  readonly frontend: FrontendContext;
   readonly symbolTable: SymbolTable;
   readonly variableSlots: VariableSlotMap;
   readonly ir: IR;
   readonly diagnostics: Diagnostics;
-  /** Lowered declarations available to dependent element passes. */
   readonly loadoutsByName: Map<string, LoadoutTraits>;
   readonly loadoutPalettesByName: Map<string, LoadoutPaletteTraits>;
-  /** Declared variables' network state + initial value, keyed by symbol id. */
   readonly variableDeclarations: Map<SymbolId, VariableDeclarationInfo>;
+  // True while lowering a pregame trigger or a trigger nested within a pregame trigger.
+  inPregameTrigger: boolean;
 };
 
-/**
- * Context for parameter lowering (triggers, trait options, etc.).
- * Option/stat maps are filled by the caller from earlier element passes.
- */
 export type ParameterLoweringContext = ElementLowerContext & {
-  /** Trigger execution mode, used to disambiguate bare temporary_N compiled names. */
   readonly triggerExecutionMode?:
     | "player"
     | "team"
     | "object"
     | "global"
     | string;
-  readonly optionIndexByName: ReadonlyMap<string, number>;
-  readonly statIndexByName: ReadonlyMap<string, number>;
 };
 
-/** Lift an element context into a parameter context with empty option/stat maps. */
 export const asParameterLoweringContext = (
   ctx: ElementLowerContext,
-  extras?: Partial<
-    Pick<
-      ParameterLoweringContext,
-      "triggerExecutionMode" | "optionIndexByName" | "statIndexByName"
-    >
-  >
+  extras?: Partial<Pick<ParameterLoweringContext, "triggerExecutionMode">>
 ): ParameterLoweringContext => ({
   ...ctx,
-  optionIndexByName: extras?.optionIndexByName ?? new Map(),
-  statIndexByName: extras?.statIndexByName ?? new Map(),
   triggerExecutionMode: extras?.triggerExecutionMode,
 });

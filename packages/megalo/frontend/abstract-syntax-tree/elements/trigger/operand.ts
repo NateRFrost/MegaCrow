@@ -60,7 +60,7 @@ export const parseIfOperand = (
 ): ASTConditionOperandNode => {
   const token = ctx.peekToken();
   if (token?.kind === TokenKind.Integer) {
-    const node = tryParseParameterValue(ctx, ParameterType.Number);
+    const node = tryParseParameterValue(ctx, ParameterType.Integer);
     if (node !== undefined) {
       return node;
     }
@@ -84,7 +84,7 @@ export const parseIfOperand = (
 
   const typed = tryParseParameterValue(
     ctx,
-    ParameterType.Number,
+    ParameterType.Integer,
     ParameterType.Timer,
     ParameterType.Team,
     ParameterType.Player,
@@ -200,7 +200,7 @@ export const parseTimerOperand = (
 
 const parameterTypeLabel = (type: ParameterType): string => {
   switch (type) {
-    case ParameterType.Number:
+    case ParameterType.Integer:
       return "number";
     case ParameterType.Timer:
       return "timer";

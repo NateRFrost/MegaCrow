@@ -56,7 +56,7 @@ export const objectListLocation = (
 ): ObjectListLocation => ({
   type: SourceLocationType.OBJECT_LIST,
   objectType,
-  source: { offset: -1, line: index, column: 0 },
+  source: { localOffset: -1, absoluteOffset: -1, line: index, column: 0 },
 });
 
 export class ObjectListParser {

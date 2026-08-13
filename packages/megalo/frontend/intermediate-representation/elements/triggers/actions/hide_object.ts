@@ -26,11 +26,10 @@ export const lowerHideObject = (
     parameters: {
       object: resolveObjectReference(
         parameters[0]!,
-
         asParameterLoweringContext(ctx),
       ),
 
-      shouldHide: parseBooleanLiteral(parameters[1]!, location),
+      shouldHide: parseBooleanLiteral(parameters[1]!, ctx, location),
     },
   };
 };

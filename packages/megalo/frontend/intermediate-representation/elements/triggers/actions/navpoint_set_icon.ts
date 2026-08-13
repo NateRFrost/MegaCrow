@@ -10,46 +10,59 @@ import {
   asParameterLoweringContext,
   type ElementLowerContext,
 } from "../../../parameters/context";
-import { resolveObjectReference } from "../../../parameters";
-import { parseIndexSuffix } from "../../../parameters/explicit";
+import {
+  resolveCustomVariableReference,
+  resolveObjectReference,
+} from "../../../parameters";
 import { requireKeyword } from "../helpers";
 
 const NAVPOINT_ICON_BY_NAME: Record<string, number> = {
-  none: 0,
-  speaker: 1,
-  attacker: 2,
-  defender: 3,
-  objective: 4,
-  destination: 5,
-  friend: 6,
-  enemy: 7,
-  pickup: 8,
-  assault: 9,
-  king: 10,
-  invader: 11,
-  vip: 12,
-  defend: 13,
-  recover: 13,
-  neutralize: 13,
-  num: 14,
+  none: -1,
+  speaker: 0,
+  dead_teammate: 1,
+  unused: 2,
+  target: 3,
+  destination: 4,
+  bomb: 5,
+  flag: 6,
+  skull: 7,
+  king: 8,
+  vip: 9,
+  lock: 10,
+  num: 11, // uses custom number variable
+  // 12-19 are numbers 1-8, effectively unused
+  ordnance: 20,
+  interface: 21,
+  recon: 22,
+  ammunition: 23,
+  recover: 24,
+  defend: 25,
+  neutralize: 26,
+  // Megalo Headache #3
+  ["coop spawning"]: 27,
 };
 
 const resolveNavpointIconIndex = (
   node: ASTParameterNode,
+  ctx: ElementLowerContext,
   location: SourceCodeLocation,
 ): number => {
   const name = requireKeyword(node, location).toLowerCase();
+  // MegaloEdit Headache #3
+  if (name === "coop spawning") {
+    if (!ctx.frontend.megacrowExtensions.coopSpawningWaypointIcon) {
+      throw new LowerError(
+        diagnosticMessages.megacrowExtensionRequired(
+          "coopSpawningWaypointIcon",
+          "coop spawning"
+        ),
+        node.location,
+      );
+    }
+  }
   const mapped = NAVPOINT_ICON_BY_NAME[name];
   if (mapped !== undefined) {
     return mapped;
-  }
-  const indexed = parseIndexSuffix(name, "navpoint_icon");
-  if (indexed !== undefined) {
-    return indexed;
-  }
-  const numeric = Number(name);
-  if (!Number.isNaN(numeric)) {
-    return numeric;
   }
   throw new LowerError(
     diagnosticMessages.expectedParameterType("navpoint icon", name),
@@ -69,11 +82,35 @@ export const lowerNavpointSetIcon = (
     );
   }
   const paramCtx = asParameterLoweringContext(ctx);
+  const icon = resolveNavpointIconIndex(parameters[1]!, ctx, location);
+  // MegaloEdit: when icon is `num` (11), a custom number variable follows.
+  if (icon === 11) {
+    if (parameters.length !== 3) {
+      throw new LowerError(
+        diagnosticMessages.invalidParameterCount(3, parameters.length),
+        location,
+      );
+    }
+    return {
+      type: ActionType.NavpointSetIcon,
+      parameters: {
+        navpoint: resolveObjectReference(parameters[0]!, paramCtx),
+        icon,
+        number: resolveCustomVariableReference(parameters[2]!, paramCtx),
+      },
+    };
+  }
+  if (parameters.length !== 2) {
+    throw new LowerError(
+      diagnosticMessages.invalidParameterCount(2, parameters.length),
+      location,
+    );
+  }
   return {
     type: ActionType.NavpointSetIcon,
     parameters: {
       navpoint: resolveObjectReference(parameters[0]!, paramCtx),
-      icon: resolveNavpointIconIndex(parameters[1]!, location),
+      icon,
     },
   };
 };

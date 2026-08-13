@@ -4,8 +4,10 @@ export type {
 } from "./context";
 export { asParameterLoweringContext } from "./context";
 export {
-  lowerNumberParam,
+  lowerFloatParam,
   lowerBooleanParam,
+  lowerConstantInteger,
+  tryLowerConstantInteger,
 } from "./common";
 export { lowerConstantNumber } from "./constantNumber";
 export {

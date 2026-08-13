@@ -11,62 +11,33 @@ import { ExplicitObject } from "../game/megalogamengine/megalogamengine_explicit
 import { ExplicitPlayer } from "../game/megalogamengine/megalogamengine_explicit_player";
 import { ExplicitTeam } from "../game/megalogamengine/megalogamengine_explicit_team";
 
-/**
- * Reverse lookup for the built-in player identifiers that appear in Megalo
- * source. Numbered slots (`player_N`, `global_N`, `temporary_N`) are absent:
- * named/global players resolve through the slot table / `global_player_N`
- * suffix, and temporaries resolve by index onto the `Temporary*` enum members
- * (see {@link parseExplicitPlayer}), so none of them reach this map.
- */
 const PLAYER_EXPLICIT_NAMES: Partial<Record<ExplicitPlayer, string>> = {
-  [ExplicitPlayer.None]: "no_player",
+  [ExplicitPlayer.None]: "none",
   [ExplicitPlayer.Current]: "current_player",
-  [ExplicitPlayer.Hud]: "hud_player",
-  [ExplicitPlayer.HudTarget]: "hud_target_player",
-  [ExplicitPlayer.Killer]: "killer",
+  [ExplicitPlayer.Hud]: "local_player",
+  [ExplicitPlayer.HudTarget]: "target_player",
+  // MegaloEdit: only valid inside an `object_death` trigger.
+  [ExplicitPlayer.Killer]: "object_death_killing_player",
 };
 
-/**
- * Reverse lookup for the built-in object identifiers that appear in Megalo
- * source. Numbered slots (`global_N`, `temporary_N`) are absent: global objects
- * are addressed as `object_N` / `global_object_N`, and temporaries resolve by
- * index onto the `Temporary*` enum members (see {@link parseExplicitObject}),
- * so neither reaches this map.
- */
 const OBJECT_EXPLICIT_NAMES: Partial<Record<ExplicitObject, string>> = {
   [ExplicitObject.None]: "none",
   [ExplicitObject.Current]: "current_object",
-  [ExplicitObject.HudTarget]: "hud_target_object",
-  [ExplicitObject.Killed]: "killed_object",
-  [ExplicitObject.Killer]: "killer_object",
+  [ExplicitObject.HudTarget]: "target_object",
+  // MegaloEdit: only valid inside an `object_death` trigger.
+  [ExplicitObject.Killed]: "object_death_dead_object",
+  [ExplicitObject.Killer]: "object_death_killing_object",
 };
 
-const OBJECT_EXPLICIT_ALIASES: Record<string, ExplicitObject> = {
-  object_death_dead_object: ExplicitObject.Killed,
-  object_death_killing_object: ExplicitObject.Killer,
-};
-
-/**
- * Reverse lookup for the built-in team identifiers that appear in Megalo
- * source. Numbered slots (`team_N`, `global_N`, `temporary_N`) are absent:
- * global teams are addressed as `global_team_N`, and `team_N` / temporaries
- * resolve by index onto the `Team*` / `Temporary*` enum members (see
- * {@link parseExplicitTeam}), so none of them reach this map.
- */
 const TEAM_EXPLICIT_NAMES: Partial<Record<ExplicitTeam, string>> = {
   [ExplicitTeam.None]: "none",
   [ExplicitTeam.neutral]: "neutral",
   [ExplicitTeam.CurrentTeam]: "current_team",
-  [ExplicitTeam.LocalTeam]: "hud_player_owner_team",
-  [ExplicitTeam.TargetTeam]: "hud_target_player_owner_team",
+  [ExplicitTeam.LocalTeam]: "local_team",
+  // Megalo Headache #2: encoded as TargetTeam; MegaloEdit does not parse this name.
+  [ExplicitTeam.TargetTeam]: "target_team",
 };
 
-/**
- * Team slot index for each multiplayer designator name. Values come from the
- * authoritative {@link MultiplayerTeamDesignator} enum (not the declaration
- * order of `TEAM_DESIGNATORS`, which differs), and the `Record<TeamDesignator>`
- * key type keeps this exhaustive with the canonical designator list.
- */
 export const TEAM_DESIGNATOR_INDICES: Record<TeamDesignator, number> = {
   attackers: MultiplayerTeamDesignator.Attackers,
   defenders: MultiplayerTeamDesignator.Defenders,
@@ -78,11 +49,6 @@ export const TEAM_DESIGNATOR_INDICES: Record<TeamDesignator, number> = {
   eighth_party: MultiplayerTeamDesignator.EighthParty,
 };
 
-/**
- * The temporary storages that use a qualified `temporary_<storage>_N` reference:
- * the declarable {@link TemporaryStorageName} minus `number`, which instead
- * compiles to a bare `temporary_N`.
- */
 export type TemporaryStorage = Exclude<TemporaryStorageName, "number">;
 
 export const parseQualifiedTemporaryName = (
@@ -126,16 +92,6 @@ const parseTeamSlotIndex = (name: string): number | undefined => {
   return match ? Number(match[1]) : undefined;
 };
 
-/**
- * Resolves a numbered slot (`Temporary3`, `Team1`, …) to its enum value.
- * Throws if the slot index is out of range for the enum.
- */
-/**
- * Resolves a numbered slot (`Global3`, `Temporary1`, `Team0`, …) to its enum
- * value. The result type `T` is inferred from the call context (e.g. the
- * function's return type), so callers get a properly typed enum member without
- * casting. Throws if the slot index is out of range for the enum.
- */
 export const enumSlotValue = <T extends number>(
   enumObj: Record<string, string | number>,
   prefix: "Global" | "Temporary" | "Team",
@@ -151,12 +107,6 @@ export const enumSlotValue = <T extends number>(
 export const parseExplicitPlayer = (name: string): ExplicitPlayer => {
   if (name === "none") {
     return ExplicitPlayer.None;
-  }
-  if (name === "local_player") {
-    return ExplicitPlayer.Hud;
-  }
-  if (name === "object_death_killing_player") {
-    return ExplicitPlayer.Killer;
   }
   const qualified = parseQualifiedTemporaryName(name);
   if (qualified?.storage === "player") {
@@ -191,10 +141,6 @@ export const parseExplicitObject = (name: string): ExplicitObject => {
   const temporaryIndex = parseTemporaryIndex(name);
   if (temporaryIndex !== undefined) {
     return enumSlotValue(ExplicitObject, "Temporary", temporaryIndex);
-  }
-  const alias = OBJECT_EXPLICIT_ALIASES[name];
-  if (alias !== undefined) {
-    return alias;
   }
   const found = findEnumByName(OBJECT_EXPLICIT_NAMES, name);
   if (found !== undefined) {

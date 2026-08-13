@@ -57,13 +57,13 @@ export type PlayerTraitWeapons = Partial<{
 export enum VehicleUsage {
   Unchanged = 0,
   None = 1,
-  Full = 2,
-  Passenger = 3,
-  NotPassenger = 4,
-  Driver = 5,
-  Gunner = 6,
-  NotDriver = 7,
-  NotGunner = 8,
+  Passenger = 2,
+  Driver = 3,
+  Gunner = 4,
+  NotPassenger = 5,
+  NotDriver = 6,
+  NotGunner = 7,
+  Full = 8,
 }
 
 export type PlayerTraitMovement = Partial<{

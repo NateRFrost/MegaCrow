@@ -6,41 +6,25 @@ import { SourceCodeLocation } from "../../../../diagnostics";
 import { diagnosticMessages } from "../../../../diagnostics/messages";
 import { assertNotErrorNode } from "../../../diagnostics/assertNotErrorNode";
 import { LowerError } from "../../../error";
+import {
+  LOADOUT_PALETTE_TYPE_BY_NAME,
+  LoadoutPaletteType,
+} from "../../../game/megalogamengine/LoadoutPaletteType";
 import type { ElementLowerContext } from "../../../parameters/context";
 import { setField } from "../../../setField";
 
-
-// TODO: Find a new home for this enum
-export const enum LoadoutPaletteType {
-  none = 0,
-  spartan_tier1 = 1,
-  elite_tier1 = 2,
-  spartan_tier2 = 3,
-  elite_tier2 = 4,
-  spartan_tier3 = 5,
-  elite_tier3 = 6,
-}
-
-const getLoadoutPaletteType = (tier: string, location: SourceCodeLocation) => {
-  switch (tier) {
-    case "spartan_tier1":
-      return LoadoutPaletteType.spartan_tier1;
-    case "elite_tier1":
-      return LoadoutPaletteType.elite_tier1;
-    case "spartan_tier2":
-      return LoadoutPaletteType.spartan_tier2;
-    case "elite_tier2":
-      return LoadoutPaletteType.elite_tier2;
-    case "spartan_tier3":
-      return LoadoutPaletteType.spartan_tier3;
-    case "elite_tier3":
-      return LoadoutPaletteType.elite_tier3;
-    default:
-      throw new LowerError(
-        diagnosticMessages.expectedParameterType("loadout palette tier", tier),
-        location
-      );
+const resolveLoadoutPaletteType = (
+  tier: string,
+  location: SourceCodeLocation
+): LoadoutPaletteType => {
+  const type = LOADOUT_PALETTE_TYPE_BY_NAME[tier];
+  if (type === undefined) {
+    throw new LowerError(
+      diagnosticMessages.expectedParameterType("loadout palette tier", tier),
+      location
+    );
   }
+  return type;
 };
 
 export const lowerLoadoutPaletteOverride = (
@@ -56,8 +40,9 @@ export const lowerLoadoutPaletteOverride = (
   const { tier, palette } = entry.value;
   assertNotErrorNode(tier);
   assertNotErrorNode(palette);
-  const tierIndex = getLoadoutPaletteType(tier.value, tier.location);
-  if (tierIndex === undefined) {
+  const paletteType = resolveLoadoutPaletteType(tier.value, tier.location);
+  const slotIndex = paletteType - LoadoutPaletteType.spartan_tier1;
+  if (slotIndex < 0) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType(
         "loadout palette tier",
@@ -76,7 +61,7 @@ export const lowerLoadoutPaletteOverride = (
 
   const loadoutTraits = ctx.ir.gameVariant.baseVariant.loadoutTraits;
   loadoutTraits.loadoutPalettes ??= [];
-  loadoutTraits.loadoutPalettes[tierIndex] = loweredPalette;
+  loadoutTraits.loadoutPalettes[slotIndex] = loweredPalette;
   setField(
     ctx.ir.locations,
     ctx.diagnostics,

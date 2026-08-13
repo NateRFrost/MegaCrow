@@ -1,4 +1,4 @@
-import type { MegaloVersion } from "../../version";
+import type { FrontendContext } from "../context";
 import {
   type Diagnostics,
   type SourceCodeLocation,
@@ -98,11 +98,7 @@ const OPERATOR_LEXEMES = [
 // #endregion
 
 export class Lexer {
-  private megaloVersion: MegaloVersion;
-
-  public constructor(megaloVersion: MegaloVersion) {
-    this.megaloVersion = megaloVersion;
-  }
+  public constructor(private readonly frontend: FrontendContext) {}
 
   private matchOperatorLexeme = (
     source: string,
@@ -226,8 +222,18 @@ export class Lexer {
         value,
         location: {
           type: SourceLocationType.SOURCE_CODE,
-          start: { offset: tokenStart, line: tokenLine, column: tokenColumn },
-          end: { offset: tokenEnd, line: tokenLine, column: endColumn },
+          start: {
+            localOffset: tokenStart,
+            absoluteOffset: tokenStart,
+            line: tokenLine,
+            column: tokenColumn,
+          },
+          end: {
+            localOffset: tokenEnd,
+            absoluteOffset: tokenEnd,
+            line: tokenLine,
+            column: endColumn,
+          },
         },
       });
     };

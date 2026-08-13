@@ -1,9 +1,11 @@
 import type { MegaloVersion } from "../../../../version";
+import type { FrontendContext } from "../../../context";
 import {
   type SourceCodeLocation,
   SourceLocationType,
 } from "../../../diagnostics";
 import { diagnosticMessages } from "../../../diagnostics/messages";
+import { ObjectListType } from "../../../object-lists";
 import { type Token, TokenKind } from "../../../tokens";
 import type { ParserContext } from "../../context";
 import { type ASTNode, SyntaxKind } from "../../kinds";
@@ -11,11 +13,13 @@ import {
   type ASTParameterNode,
   parameterParserBuilder as buildParameterParser,
   KeywordParameter,
+  ObjectListParameter,
   OptionalParameter,
   type ParameterParser,
   type ParameterSignature,
   type ParameterSlot,
   ParameterType,
+  parseParameterValue,
 } from "../../parameters";
 import {
   type BeginStatementNode,
@@ -114,10 +118,10 @@ export const parseAction = (
 
 const MATH_OPERATION = ParameterType.MathOperation;
 
-const BOOLEAN = ParameterType.Number;
+const BOOLEAN = ParameterType.Integer;
 
 const ANY_VARIABLE = [
-  ParameterType.Number,
+  ParameterType.Integer,
   ParameterType.Timer,
   ParameterType.Team,
   ParameterType.Player,
@@ -138,13 +142,22 @@ const BOUNDARY_SHAPE_KEYWORDS = [
   KeywordParameter("box"),
 ] as const;
 
-const FIRETEAM_FILTER_KEYWORDS = [
+/** MegaloEdit: `none` | `all` | integer 0–3. */
+const FIRETEAM_FILTER_SLOT = [
   KeywordParameter("none"),
   KeywordParameter("all"),
-  KeywordParameter("0"),
-  KeywordParameter("1"),
-  KeywordParameter("2"),
-  KeywordParameter("3"),
+  ParameterType.Integer,
+] as const;
+
+/** MegaloEdit `ReadLoadoutPaletteType` enum names. */
+const LOADOUT_PALETTE_TYPE_SLOT = [
+  KeywordParameter("none"),
+  KeywordParameter("spartan_tier1"),
+  KeywordParameter("elite_tier1"),
+  KeywordParameter("spartan_tier2"),
+  KeywordParameter("elite_tier2"),
+  KeywordParameter("spartan_tier3"),
+  KeywordParameter("elite_tier3"),
 ] as const;
 
 const GRENADE_TYPE_KEYWORDS = [
@@ -224,23 +237,17 @@ const pairTeamOrPlayerTargetSignatures = (
   return signatures;
 };
 
-const createObjectV73: ParameterSignature = [
-  ParameterType.Keyword,
-  KeywordParameter("at"),
-  ParameterType.Object,
-  OptionalParameter("set", ParameterType.Object),
-  OptionalParameter("label", ParameterType.ObjectFilter),
-  OptionalParameter("never_garbage"),
-  OptionalParameter("suppress_effect"),
-  OptionalParameter("absolute_orientation"),
-  OptionalParameter(
-    "offset",
-    ParameterType.Number,
-    ParameterType.Number,
-    ParameterType.Number
-  ),
-  OptionalParameter("variant", ParameterType.Keyword),
-];
+/** MegaloEdit: quoted object type, then `at`/`set`/flags in any order. */
+const CREATE_OBJECT_OPTIONAL_KEYWORDS = new Set([
+  "at",
+  "set",
+  "label",
+  "never_garbage",
+  "suppress_effect",
+  "absolute_orientation",
+  "offset",
+  "variant",
+]);
 
 const createObjectLegacy: ParameterSignature = [
   ParameterType.Keyword,
@@ -248,14 +255,129 @@ const createObjectLegacy: ParameterSignature = [
   ParameterType.Object,
 ];
 
-const setBoundarySignature: ParameterSignature = [
+const parseCreateObjectV73: ParameterParser = (ctx, anchor) => {
+  const parameters: ASTParameterNode[] = [];
+
+  const typeToken = ctx.peekToken();
+  if (typeToken?.kind === TokenKind.QuotedString) {
+    const consumed = ctx.getToken();
+    const symbolId = ctx.symbolParser.lookupObjectListItem(
+      ObjectListType.Objects,
+      consumed.value
+    );
+    if (symbolId !== undefined) {
+      ctx.symbolParser.recordReference(symbolId, consumed.location);
+      parameters.push({
+        kind: SyntaxKind.REFERENCE,
+        identifier: consumed.value,
+        symbolId,
+        location: consumed.location,
+      });
+    } else {
+      parameters.push({
+        kind: SyntaxKind.KEYWORD,
+        value: consumed.value,
+        location: consumed.location,
+      });
+    }
+  } else {
+    // MegaloEdit requires a quoted type; also accept an unquoted name.
+    parameters.push(
+      parseParameterValue(
+        ctx,
+        anchor,
+        ObjectListParameter(ObjectListType.Objects),
+        ParameterType.Keyword
+      )
+    );
+  }
+
+  while (ctx.hasMore()) {
+    const token = ctx.peekToken();
+    if (
+      token?.kind !== TokenKind.Identifier ||
+      !CREATE_OBJECT_OPTIONAL_KEYWORDS.has(token.value)
+    ) {
+      break;
+    }
+
+    const keywordToken = ctx.getToken();
+    parameters.push({
+      kind: SyntaxKind.KEYWORD,
+      value: keywordToken.value,
+      location: keywordToken.location,
+    });
+
+    switch (keywordToken.value) {
+      case "at":
+      case "set":
+        parameters.push(
+          parseParameterValue(ctx, keywordToken.location, ParameterType.Object)
+        );
+        break;
+      case "label":
+        parameters.push(
+          parseParameterValue(
+            ctx,
+            keywordToken.location,
+            ParameterType.ObjectFilter
+          )
+        );
+        break;
+      case "offset":
+        parameters.push(
+          parseParameterValue(ctx, keywordToken.location, ParameterType.Integer),
+          parseParameterValue(ctx, keywordToken.location, ParameterType.Integer),
+          parseParameterValue(ctx, keywordToken.location, ParameterType.Integer)
+        );
+        break;
+      case "variant":
+        parameters.push(
+          parseParameterValue(
+            ctx,
+            keywordToken.location,
+            ParameterType.Keyword,
+            ParameterType.QuotedString
+          )
+        );
+        break;
+      default:
+        break;
+    }
+  }
+
+  return parameters;
+};
+
+/** MegaloEdit: positional custom-variable dimensions after shape (no keywords). */
+const setBoundarySignatures: ParameterSignature[] = [
+  [ParameterType.Object, KeywordParameter("none")],
+  [ParameterType.Object, KeywordParameter("sphere"), ParameterType.Integer],
+  [
+    ParameterType.Object,
+    KeywordParameter("cylinder"),
+    ParameterType.Integer,
+    ParameterType.Integer,
+    ParameterType.Integer,
+  ],
+  [
+    ParameterType.Object,
+    KeywordParameter("box"),
+    ParameterType.Integer,
+    ParameterType.Integer,
+    ParameterType.Integer,
+    ParameterType.Integer,
+  ],
+];
+
+const setBoundarySignatureLegacyKeywords: ParameterSignature = [
   ParameterType.Object,
   BOUNDARY_SHAPE_KEYWORDS,
-  OptionalParameter("width", ParameterType.Number),
-  OptionalParameter("radius", ParameterType.Number),
-  OptionalParameter("length", ParameterType.Number),
-  OptionalParameter("neg_height", ParameterType.Number),
-  OptionalParameter("pos_height", ParameterType.Number),
+  OptionalParameter("width", ParameterType.Integer),
+  OptionalParameter("radius", ParameterType.Integer),
+  OptionalParameter("length", ParameterType.Integer),
+  OptionalParameter("neg_height", ParameterType.Integer),
+  OptionalParameter("pos_height", ParameterType.Integer),
 ];
 
 const playSoundSignatures: ParameterSignature[] =
@@ -265,6 +387,38 @@ const playSoundSignatures: ParameterSignature[] =
     ParameterType.String,
   ]);
 
+const parseNavpointSetIcon = (
+  allowCoopSpawning: boolean
+): ParameterParser => {
+  return (ctx, anchor) => {
+    const object = parseParameterValue(ctx, anchor, ParameterType.Object);
+    const iconFirst = ctx.peekToken();
+    if (
+      allowCoopSpawning &&
+      iconFirst?.kind === TokenKind.Identifier &&
+      iconFirst.value === "coop" &&
+      ctx.peekToken(1)?.kind === TokenKind.Identifier &&
+      ctx.peekToken(1)?.value === "spawning"
+    ) {
+      const coop = ctx.getToken();
+      const spawning = ctx.getToken();
+      const icon: ASTParameterNode = {
+        kind: SyntaxKind.KEYWORD,
+        value: "coop spawning",
+        location: locationSpan(coop.location, spawning.location),
+      };
+      return [object, icon];
+    }
+
+    const icon = parseParameterValue(ctx, anchor, ParameterType.Keyword);
+    if (icon.kind === SyntaxKind.KEYWORD && icon.value === "num") {
+      const number = parseParameterValue(ctx, anchor, ParameterType.Integer);
+      return [object, icon, number];
+    }
+    return [object, icon];
+  };
+};
+
 export class ActionParserRepository {
   private readonly parsers = new Map<string, ParameterParser>();
 
@@ -272,19 +426,19 @@ export class ActionParserRepository {
     this.parsers.set(name, parser);
   }
 
-  private registerParsers(megaloVersion: MegaloVersion) {
+  private registerParsers(
+    megaloVersion: MegaloVersion,
+    megacrowExtensions: FrontendContext["megacrowExtensions"]
+  ) {
     this.registerParser(
       "set_score",
       buildParameterParser(
-        ...teamOrPlayerTargetSignatures([MATH_OPERATION, ParameterType.Number])
+        ...teamOrPlayerTargetSignatures([MATH_OPERATION, ParameterType.Integer])
       )
     );
 
     if (megaloVersion.version >= 73) {
-      this.registerParser(
-        "create_object",
-        buildParameterParser(createObjectV73)
-      );
+      this.registerParser("create_object", parseCreateObjectV73);
     } else {
       this.registerParser(
         "create_object",
@@ -304,12 +458,11 @@ export class ActionParserRepository {
       )
     );
 
+    // Longer form first: `num` requires a following number variable.
+    // Megalo Headache #3: optional `coop spawning` when extension enabled.
     this.registerParser(
       "navpoint_set_icon",
-      buildParameterParser(
-        [ParameterType.Object, ParameterType.Keyword],
-        [ParameterType.Object, ParameterType.Keyword, ParameterType.Number]
-      )
+      parseNavpointSetIcon(megacrowExtensions.coopSpawningWaypointIcon)
     );
 
     this.registerParser(
@@ -326,8 +479,8 @@ export class ActionParserRepository {
       "navpoint_set_visible_range",
       buildParameterParser([
         ParameterType.Object,
-        ParameterType.Number,
-        ParameterType.Number,
+        ParameterType.Integer,
+        ParameterType.Integer,
       ])
     );
 
@@ -338,7 +491,10 @@ export class ActionParserRepository {
 
     this.registerParser(
       "set_boundary",
-      buildParameterParser(setBoundarySignature)
+      buildParameterParser(
+        ...setBoundarySignatures,
+        setBoundarySignatureLegacyKeywords
+      )
     );
 
     this.registerParser(
@@ -362,12 +518,14 @@ export class ActionParserRepository {
 
     this.registerParser(
       "set_fireteam_respawn_filter",
-      buildParameterParser([ParameterType.Object, FIRETEAM_FILTER_KEYWORDS])
+      buildParameterParser([ParameterType.Object, FIRETEAM_FILTER_SLOT])
     );
 
+    // MegaloEdit: timer is omitted when the filter is `no_one`.
     this.registerParser(
       "set_progress_bar",
       buildParameterParser(
+        [ParameterType.Object, KeywordParameter("no_one")],
         ...visibilityFilterSignatures(
           [ParameterType.Object],
           [ParameterType.Timer]
@@ -388,7 +546,7 @@ export class ActionParserRepository {
 
     this.registerParser(
       "timer_set_rate",
-      buildParameterParser([ParameterType.Timer, ParameterType.Number])
+      buildParameterParser([ParameterType.Timer, ParameterType.Float])
     );
 
     this.registerParser(
@@ -432,19 +590,19 @@ export class ActionParserRepository {
 
     this.registerParser(
       "random",
-      buildParameterParser([ParameterType.Number, ParameterType.Number])
+      buildParameterParser([ParameterType.Integer, ParameterType.Integer])
     );
 
     this.registerParser("break_into_debugger", buildParameterParser());
 
     this.registerParser(
       "object_get_orientation",
-      buildParameterParser([ParameterType.Object, ParameterType.Number])
+      buildParameterParser([ParameterType.Object, ParameterType.Integer])
     );
 
     this.registerParser(
       "object_get_velocity",
-      buildParameterParser([ParameterType.Object, ParameterType.Number])
+      buildParameterParser([ParameterType.Object, ParameterType.Integer])
     );
 
     this.registerParser(
@@ -454,12 +612,12 @@ export class ActionParserRepository {
 
     this.registerParser(
       "player_death_get_damage_type",
-      buildParameterParser([ParameterType.Player, ParameterType.Number])
+      buildParameterParser([ParameterType.Player, ParameterType.Integer])
     );
 
     this.registerParser(
       "player_death_get_special_type",
-      buildParameterParser([ParameterType.Player, ParameterType.Number])
+      buildParameterParser([ParameterType.Player, ParameterType.Integer])
     );
 
     this.registerParser(
@@ -472,9 +630,9 @@ export class ActionParserRepository {
       buildParameterParser([
         ParameterType.Object,
         ParameterType.Object,
-        ParameterType.Number,
-        ParameterType.Number,
-        ParameterType.Number,
+        ParameterType.Integer,
+        ParameterType.Integer,
+        ParameterType.Integer,
         OptionalParameter("absolute_orientation"),
       ])
     );
@@ -486,17 +644,17 @@ export class ActionParserRepository {
 
     this.registerParser(
       "player_get_place",
-      buildParameterParser([ParameterType.Player, ParameterType.Number])
+      buildParameterParser([ParameterType.Player, ParameterType.Integer])
     );
 
     this.registerParser(
       "team_get_place",
-      buildParameterParser([ParameterType.Team, ParameterType.Number])
+      buildParameterParser([ParameterType.Team, ParameterType.Integer])
     );
 
     this.registerParser(
       "player_get_killing_spree_count",
-      buildParameterParser([ParameterType.Player, ParameterType.Number])
+      buildParameterParser([ParameterType.Player, ParameterType.Integer])
     );
 
     this.registerParser(
@@ -504,7 +662,7 @@ export class ActionParserRepository {
       buildParameterParser([
         ParameterType.Player,
         MATH_OPERATION,
-        ParameterType.Number,
+        ParameterType.Integer,
       ])
     );
 
@@ -529,7 +687,7 @@ export class ActionParserRepository {
 
     this.registerParser(
       "player_set_unit",
-      buildParameterParser([ParameterType.Player, ParameterType.Keyword])
+      buildParameterParser([ParameterType.Player, ParameterType.Object])
     );
 
     this.registerParser(
@@ -571,13 +729,19 @@ export class ActionParserRepository {
       buildParameterParser(
         [ParameterType.HudWidget, KeywordParameter("off")],
         [ParameterType.HudWidget, ParameterType.Timer],
-        [ParameterType.HudWidget, ParameterType.Number, ParameterType.Number]
+        [ParameterType.HudWidget, ParameterType.Integer, ParameterType.Integer]
       )
     );
 
     this.registerParser(
       "hud_widget_set_icon",
-      buildParameterParser([ParameterType.HudWidget, ParameterType.Keyword])
+      buildParameterParser([
+        ParameterType.HudWidget,
+        [
+          KeywordParameter("none"),
+          ObjectListParameter(ObjectListType.HudWidgetIcons),
+        ],
+      ])
     );
 
     this.registerParser(
@@ -596,7 +760,7 @@ export class ActionParserRepository {
 
     this.registerParser(
       "object_set_scale",
-      buildParameterParser([ParameterType.Object, ParameterType.Number])
+      buildParameterParser([ParameterType.Object, ParameterType.Integer])
     );
 
     this.registerParser(
@@ -606,12 +770,12 @@ export class ActionParserRepository {
 
     this.registerParser(
       "object_get_shield",
-      buildParameterParser([ParameterType.Object, ParameterType.Number])
+      buildParameterParser([ParameterType.Object, ParameterType.Integer])
     );
 
     this.registerParser(
       "object_get_health",
-      buildParameterParser([ParameterType.Object, ParameterType.Number])
+      buildParameterParser([ParameterType.Object, ParameterType.Integer])
     );
 
     this.registerParser(
@@ -619,22 +783,17 @@ export class ActionParserRepository {
       buildParameterParser([ParameterType.Player, ParameterType.DynamicString])
     );
 
+    // MegaloEdit / HREK: two args only. Docs grammar wrongly listed a third
+    // engine_icon_index (copied onto both allegiance actions); requiring it
+    // made the lenient parser eat the next `action` token and desync triggers.
     this.registerParser(
       "player_set_objective_allegiance",
-      buildParameterParser([
-        ParameterType.Player,
-        ParameterType.DynamicString,
-        ParameterType.Number,
-      ])
+      buildParameterParser([ParameterType.Player, ParameterType.DynamicString])
     );
 
     this.registerParser(
       "player_set_objective_allegiance_icon",
-      buildParameterParser([
-        ParameterType.Player,
-        ParameterType.DynamicString,
-        ParameterType.Number,
-      ])
+      buildParameterParser([ParameterType.Player, ParameterType.Integer])
     );
 
     this.registerParser(
@@ -654,12 +813,12 @@ export class ActionParserRepository {
 
     this.registerParser(
       "player_get_fireteam_index",
-      buildParameterParser([ParameterType.Player, ParameterType.Number])
+      buildParameterParser([ParameterType.Player, ParameterType.Integer])
     );
 
     this.registerParser(
       "player_set_fireteam_index",
-      buildParameterParser([ParameterType.Player, ParameterType.Number])
+      buildParameterParser([ParameterType.Player, ParameterType.Integer])
     );
 
     this.registerParser(
@@ -667,7 +826,7 @@ export class ActionParserRepository {
       buildParameterParser([
         ParameterType.Object,
         MATH_OPERATION,
-        ParameterType.Number,
+        ParameterType.Integer,
       ])
     );
 
@@ -676,7 +835,7 @@ export class ActionParserRepository {
       buildParameterParser([
         ParameterType.Object,
         MATH_OPERATION,
-        ParameterType.Number,
+        ParameterType.Integer,
       ])
     );
 
@@ -685,7 +844,7 @@ export class ActionParserRepository {
       buildParameterParser([
         ParameterType.Object,
         ParameterType.Object,
-        ParameterType.Number,
+        ParameterType.Integer,
       ])
     );
 
@@ -694,7 +853,7 @@ export class ActionParserRepository {
       buildParameterParser([
         ParameterType.Object,
         MATH_OPERATION,
-        ParameterType.Number,
+        ParameterType.Integer,
       ])
     );
 
@@ -703,7 +862,7 @@ export class ActionParserRepository {
       buildParameterParser([
         ParameterType.Object,
         MATH_OPERATION,
-        ParameterType.Number,
+        ParameterType.Integer,
       ])
     );
 
@@ -717,22 +876,22 @@ export class ActionParserRepository {
 
     this.registerParser(
       "device_set_power",
-      buildParameterParser([ParameterType.Object, ParameterType.Number])
+      buildParameterParser([ParameterType.Object, ParameterType.Integer])
     );
 
     this.registerParser(
       "device_get_power",
-      buildParameterParser([ParameterType.Object, ParameterType.Number])
+      buildParameterParser([ParameterType.Object, ParameterType.Integer])
     );
 
     this.registerParser(
       "device_set_position",
-      buildParameterParser([ParameterType.Object, ParameterType.Number])
+      buildParameterParser([ParameterType.Object, ParameterType.Integer])
     );
 
     this.registerParser(
       "device_get_position",
-      buildParameterParser([ParameterType.Object, ParameterType.Number])
+      buildParameterParser([ParameterType.Object, ParameterType.Integer])
     );
 
     this.registerParser(
@@ -741,14 +900,16 @@ export class ActionParserRepository {
         ParameterType.Player,
         GRENADE_TYPE_KEYWORDS,
         MATH_OPERATION,
-        ParameterType.Number,
+        ParameterType.Integer,
       ])
     );
 
     this.registerParser(
       "submit_incident",
       buildParameterParser(
-        ...pairTeamOrPlayerTargetSignatures([ParameterType.Keyword])
+        ...pairTeamOrPlayerTargetSignatures([
+          ObjectListParameter(ObjectListType.Incidents),
+        ])
       )
     );
 
@@ -756,24 +917,25 @@ export class ActionParserRepository {
       "submit_incident_with_custom_value",
       buildParameterParser(
         ...pairTeamOrPlayerTargetSignatures(
-          [ParameterType.Keyword],
-          [ParameterType.Number]
+          [ObjectListParameter(ObjectListType.Incidents)],
+          [ParameterType.Integer]
         )
       )
     );
 
+    // MegaloEdit ReadLoadoutPaletteType: none|spartan_tier1|elite_tier1|…
     this.registerParser(
       "set_loadout_palette",
       buildParameterParser(
         [
           KeywordParameter("player"),
           ParameterType.Player,
-          ParameterType.LoadoutPalette,
+          LOADOUT_PALETTE_TYPE_SLOT,
         ],
         [
           KeywordParameter("team"),
           ParameterType.Team,
-          ParameterType.LoadoutPalette,
+          LOADOUT_PALETTE_TYPE_SLOT,
         ]
       )
     );
@@ -782,8 +944,8 @@ export class ActionParserRepository {
       "device_set_position_track",
       buildParameterParser([
         ParameterType.Object,
-        ParameterType.Keyword,
-        ParameterType.Number,
+        [ParameterType.Keyword, ParameterType.QuotedString],
+        ParameterType.Integer,
       ])
     );
 
@@ -791,21 +953,21 @@ export class ActionParserRepository {
       "device_animate_position",
       buildParameterParser([
         ParameterType.Object,
-        ParameterType.Number,
-        ParameterType.Number,
-        ParameterType.Number,
-        ParameterType.Number,
+        ParameterType.Integer,
+        ParameterType.Integer,
+        ParameterType.Integer,
+        ParameterType.Integer,
       ])
     );
 
     this.registerParser(
       "device_set_position_immediate",
-      buildParameterParser([ParameterType.Object, ParameterType.Number])
+      buildParameterParser([ParameterType.Object, ParameterType.Integer])
     );
 
     this.registerParser(
       "saved_film_insert_marker",
-      buildParameterParser([ParameterType.Number, ParameterType.DynamicString])
+      buildParameterParser([ParameterType.Integer, ParameterType.DynamicString])
     );
 
     this.registerParser(
@@ -843,14 +1005,14 @@ export class ActionParserRepository {
         ParameterType.Object,
         ParameterType.Object,
         ParameterType.Keyword,
-        ParameterType.Number,
+        ParameterType.Integer,
         ParameterType.Object,
       ])
     );
 
     this.registerParser(
       "debug_force_player_view_count",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser([ParameterType.Integer])
     );
 
     this.registerParser(
@@ -879,9 +1041,9 @@ export class ActionParserRepository {
         ParameterType.Object,
         OptionalParameter(
           "offset",
-          ParameterType.Number,
-          ParameterType.Number,
-          ParameterType.Number
+          ParameterType.Integer,
+          ParameterType.Integer,
+          ParameterType.Integer
         ),
       ])
     );
@@ -890,7 +1052,11 @@ export class ActionParserRepository {
       "biped_give_weapon",
       buildParameterParser([
         ParameterType.Object,
-        ParameterType.Object,
+        [
+          ObjectListParameter(ObjectListType.Objects),
+          ParameterType.QuotedString,
+          ParameterType.Keyword,
+        ],
         BIPED_WEAPON_SLOT_KEYWORDS,
       ])
     );
@@ -906,7 +1072,7 @@ export class ActionParserRepository {
 
     this.registerParser(
       "set_scenario_interpolator_state",
-      buildParameterParser([ParameterType.Number, BOOLEAN])
+      buildParameterParser([ParameterType.Integer, BOOLEAN])
     );
 
     this.registerParser(
@@ -920,7 +1086,7 @@ export class ActionParserRepository {
 
     this.registerParser(
       "game_grief_record_custom_penalty",
-      buildParameterParser([ParameterType.Player, ParameterType.Number])
+      buildParameterParser([ParameterType.Player, ParameterType.Integer])
     );
 
     this.registerParser(
@@ -938,7 +1104,7 @@ export class ActionParserRepository {
       buildParameterParser([
         ParameterType.Player,
         ParameterType.Keyword,
-        ParameterType.Number,
+        ParameterType.Integer,
       ])
     );
 
@@ -968,8 +1134,8 @@ export class ActionParserRepository {
     );
   }
 
-  public constructor(megaloVersion: MegaloVersion) {
-    this.registerParsers(megaloVersion);
+  public constructor(frontend: FrontendContext) {
+    this.registerParsers(frontend.megaloVersion, frontend.megacrowExtensions);
   }
 
   public getParser(name: string): ParameterParser | undefined {

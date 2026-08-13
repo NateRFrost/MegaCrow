@@ -1,4 +1,4 @@
-import type { MegaloVersion } from "../../version";
+import type { FrontendContext } from "../context";
 import {
   BUILT_IN_POSITION,
   type Diagnostics,
@@ -27,6 +27,7 @@ export enum SymbolKind {
   ObjectListItem = 8,
   ObjectFilter = 9,
   PlayerTraits = 10,
+  GameStat = 11,
 }
 
 // Modelled based on Bungie.Megalo.VariableType
@@ -101,6 +102,8 @@ export type SymbolTableGameOptionEntry = SymbolTableEntryBase & {
   kind: SymbolKind.GameOption;
   type: VariableType.Number;
   declaration: SourceLocation;
+  // Undefined for built-in game options
+  index?: number;
 };
 
 export type SymbolTableConstantEntry = SymbolTableEntryBase & {
@@ -155,6 +158,12 @@ export type SymbolTablePlayerTraitsEntry = SymbolTableEntryBase & {
   declaration: SourceLocation;
 };
 
+export type SymbolTableGameStatEntry = SymbolTableEntryBase & {
+  kind: SymbolKind.GameStat;
+  index: number;
+  declaration: SourceLocation;
+};
+
 export type SymbolTableEntry =
   | SymbolTableVariableEntry
   | SymbolTableConstantEntry
@@ -166,7 +175,8 @@ export type SymbolTableEntry =
   | SymbolTableRequisitionPaletteEntry
   | SymbolTableObjectListItemEntry
   | SymbolTableObjectFilterEntry
-  | SymbolTablePlayerTraitsEntry;
+  | SymbolTablePlayerTraitsEntry
+  | SymbolTableGameStatEntry;
 
 export class SymbolTable {
   private readonly table: SymbolTableEntry[] = [];
@@ -186,10 +196,54 @@ export class SymbolTable {
   public findVariableByName(
     name: string
   ): SymbolTableVariableEntry | undefined {
-    return this.table.find(
+    const matches = this.table.filter(
       (symbol): symbol is SymbolTableVariableEntry =>
         symbol.kind === SymbolKind.Variable && symbol.name === name
     );
+    if (matches.length === 0) {
+      return;
+    }
+    if (matches.length === 1) {
+      return matches[0];
+    }
+
+    // MegaloEdit Headache #1
+    const last = matches[matches.length - 1]!;
+    const sameList = matches.filter(
+      (symbol) =>
+        symbol.scope === last.scope && symbol.type === last.type
+    );
+    if (sameList.length > 1) {
+      const resolvesLastDeclared =
+        last.scope === VariableScope.Temporary ||
+        (last.scope === VariableScope.Global &&
+          last.type !== VariableType.Timer);
+      return resolvesLastDeclared ? sameList[sameList.length - 1] : sameList[0];
+    }
+
+    return matches[0];
+  }
+
+  public lookupUserDefinedOptionIndex(name: string): number | undefined {
+    for (const symbol of this.table) {
+      if (
+        symbol.kind === SymbolKind.GameOption &&
+        symbol.index !== undefined &&
+        symbol.name === name
+      ) {
+        return symbol.index;
+      }
+    }
+    return undefined;
+  }
+
+  public lookupGameStatIndex(name: string): number | undefined {
+    for (const symbol of this.table) {
+      if (symbol.kind === SymbolKind.GameStat && symbol.name === name) {
+        return symbol.index;
+      }
+    }
+    return undefined;
   }
 
   public variablesOf(
@@ -212,12 +266,11 @@ export class SymbolTable {
  */
 // Analysis lifecycle - we build a new one each analysis pass.
 export class SymbolBinder {
-  private readonly megaloVersion: MegaloVersion;
   private readonly table: SymbolTableEntry[] = [];
   private readonly diagnostics: Diagnostics;
 
-  public constructor(megaloVersion: MegaloVersion, diagnostics: Diagnostics) {
-    this.megaloVersion = megaloVersion;
+  public constructor(frontend: FrontendContext, diagnostics: Diagnostics) {
+    void frontend;
     this.diagnostics = diagnostics;
   }
 
@@ -233,6 +286,7 @@ export class SymbolBinder {
         symbol.kind === SymbolKind.String && symbol.name === entry.name
     );
 
+    // if the string has already been declared for this language, error
     if (existingString?.languageDeclarations[entry.language] !== undefined) {
       if (entry.declaration.type === SourceLocationType.SOURCE_CODE) {
         this.diagnostics.addError(
@@ -243,12 +297,14 @@ export class SymbolBinder {
       return;
     }
 
+    // if the string has already been declared but not for this language, add the new language declaration
     if (existingString) {
       existingString.languageDeclarations[entry.language] = entry.declaration;
       existingString.languageContents[entry.language] = entry.content;
       return existingString.id;
     }
 
+    // if the string is entirely new, declare it
     const id = this.table.length;
     this.table.push({
       id,
@@ -283,7 +339,10 @@ export class SymbolBinder {
   }
 
   public addGameOption(
-    entry: Pick<SymbolTableGameOptionEntry, "name" | "type" | "declaration">
+    entry: Pick<
+      SymbolTableGameOptionEntry,
+      "name" | "type" | "declaration" | "index"
+    >
   ): SymbolId {
     const id = this.table.length;
     this.table.push({
@@ -294,6 +353,7 @@ export class SymbolBinder {
       kind: SymbolKind.GameOption,
       type: entry.type,
       declaration: entry.declaration,
+      index: entry.index,
     });
     return id;
   }
@@ -427,6 +487,22 @@ export class SymbolBinder {
       references: [],
       name: entry.name,
       kind: SymbolKind.PlayerTraits,
+      index: entry.index,
+      declaration: entry.declaration,
+    });
+    return id;
+  }
+
+  public addGameStat(
+    entry: Pick<SymbolTableGameStatEntry, "name" | "index" | "declaration">
+  ): SymbolId {
+    const id = this.table.length;
+    this.table.push({
+      id,
+      range: declarationRange(entry.declaration),
+      references: [],
+      name: entry.name,
+      kind: SymbolKind.GameStat,
       index: entry.index,
       declaration: entry.declaration,
     });

@@ -13,7 +13,11 @@ import { STRING_TABLE_LANGUAGES } from "../../language-configuration/omni/string
 import { Compiler } from "../compiler";
 import { FrontendError } from "../../error";
 import { CAPABILITES_107_MCC } from "./capabilities";
-import { compileGameOptions } from "./game_options";
+import {
+  applyPlayerTraitOptionOverrides,
+  applyUserDefinedOptionOverrides,
+  compileGameOptions,
+} from "./game_options";
 import { compileGameStats } from "./game_stats";
 import { compileHudWidgets } from "./hud_widgets";
 import { compileLoadoutPalettes } from "./loadout_palette";
@@ -135,16 +139,26 @@ export class Compiler107MCC extends Compiler {
     assertCompatibleIR(ir, this, diagnostics);
 
     const gametype = this.decodeBaseGametype(ir, diagnostics);
+    const isBaseDerived = ir.baseFileBytes !== undefined;
+    
+    // Handle base overrides
+    if (isBaseDerived) {
+      applyUserDefinedOptionOverrides(ir, gametype, diagnostics);
+      applyPlayerTraitOptionOverrides(ir, gametype, diagnostics);
+    }
+
     const variant = ir.gameVariant;
 
-    gametype.m_script_strings = this.compileStringTable(
-      variant.scriptStrings,
-      SCRIPT_STRINGS.maxStringCount,
-      SCRIPT_STRINGS.maxStringLength,
-      SCRIPT_STRINGS.offsetBitLength,
-      SCRIPT_STRINGS.bufferSizeBitLength,
-      SCRIPT_STRINGS.countBitLength
-    );
+    if (!isBaseDerived) {
+      gametype.m_script_strings = this.compileStringTable(
+        variant.scriptStrings,
+        SCRIPT_STRINGS.maxStringCount,
+        SCRIPT_STRINGS.maxStringLength,
+        SCRIPT_STRINGS.offsetBitLength,
+        SCRIPT_STRINGS.bufferSizeBitLength,
+        SCRIPT_STRINGS.countBitLength
+      );
+    }
 
     if (variant.localizedName !== undefined) {
       gametype.m_localized_name = this.compileStringTable(
@@ -179,20 +193,28 @@ export class Compiler107MCC extends Compiler {
 
     compileMetadata(ir, gametype);
 
-    gametype.m_base_name_string_index = variant.baseNameStringIndex;
+    if (!isBaseDerived) {
+      gametype.m_base_name_string_index = variant.baseNameStringIndex;
+    }
+    if (variant.baseVariant.builtIn) {
+      gametype.m_base_variant.m_built_in = true;
+    }
 
     compileGameOptions(ir, gametype);
     compileTeams(ir, gametype, diagnostics);
     compileLoadoutPalettes(ir, gametype);
     compilePlayerRatings(ir, gametype);
     compileMapPermissions(ir, gametype, diagnostics);
-    compileMapObjects(ir, gametype, diagnostics);
-    compileGameStats(ir, gametype, diagnostics);
-    compileHudWidgets(ir, gametype, diagnostics);
-    compileVariableMetadata(ir, gametype);
-    compileConditions(ir, gametype, diagnostics);
-    compileActions(ir, gametype, diagnostics);
-    compileTriggers(ir, gametype);
+
+    if (!isBaseDerived) {
+      compileMapObjects(ir, gametype, diagnostics);
+      compileGameStats(ir, gametype, diagnostics);
+      compileHudWidgets(ir, gametype, diagnostics);
+      compileVariableMetadata(ir, gametype);
+      compileConditions(ir, gametype, diagnostics);
+      compileActions(ir, gametype, diagnostics);
+      compileTriggers(ir, gametype);
+    }
 
     return gametype;
   }

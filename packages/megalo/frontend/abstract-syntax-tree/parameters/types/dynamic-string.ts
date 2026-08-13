@@ -27,7 +27,7 @@ const getDynamicStringPlaceholderType = (
 ): ParameterType | undefined => {
   switch (char) {
     case "n":
-      return ParameterType.Number;
+      return ParameterType.Integer;
     case "p":
       return ParameterType.Player;
     case "t":

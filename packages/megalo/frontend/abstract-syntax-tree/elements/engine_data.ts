@@ -1,5 +1,6 @@
 import type { SourceCodeLocation } from "../../diagnostics";
 import type { MegaloVersion } from "../../../version";
+import type { FrontendContext } from "../../context";
 import { diagnosticMessages } from "../../diagnostics/messages";
 import {
   ENGINE_CATEGORY_STRING_PREFIX,
@@ -102,12 +103,12 @@ export class EngineDataParserRepository {
         [ParameterType.QuotedString, ParameterType.String],
       ])
     );
-    this.registerParser("icon", buildParameterParser([ParameterType.Number]));
+    this.registerParser("icon", buildParameterParser([ParameterType.Integer]));
     this.registerParser("category", parseEngineCategoryParameter);
   }
 
-  public constructor(megaloVersion: MegaloVersion) {
-    this.registerParsers(megaloVersion);
+  public constructor(frontend: FrontendContext) {
+    this.registerParsers(frontend.megaloVersion);
   }
 
   public getParser(name: string): ParameterParser | undefined {

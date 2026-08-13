@@ -3,7 +3,7 @@ import { diagnosticMessages } from "../../../../diagnostics/messages";
 import { located } from "../../..";
 import { LowerError } from "../../../error";
 import type { PlayerTraits } from "../../../game/game_engine_player_traits";
-import { lowerBooleanParam, lowerNumberParam } from "../../../parameters";
+import { lowerBooleanParam, lowerConstantInteger } from "../../../parameters";
 import { setField } from "../../../setField";
 import { resolveKeyword, type TraitOptionArgs } from "./helpers";
 
@@ -13,12 +13,11 @@ export const lowerShieldVitalityOption = (
   traits: PlayerTraits,
   args: TraitOptionArgs
 ): boolean => {
-  const { parameters, ctx, location } = args;
+  const { parameters, first, ctx, location } = args;
   const { diagnostics, ir } = ctx;
 
   switch (identifier) {
     case "damage_resistance": {
-      const first = parameters[0];
       if (first === undefined) {
         throw new LowerError(
           diagnosticMessages.expectedParameterType("percentage", ""),
@@ -28,10 +27,7 @@ export const lowerShieldVitalityOption = (
       let value;
       if (resolveKeyword(first) === "invulnerable") {
         value = located("invulnerable" as const, first.location);
-      } else if (
-        first.kind === SyntaxKind.INTEGER ||
-        first.kind === SyntaxKind.FLOATING_POINT
-      ) {
+      } else if (first.kind === SyntaxKind.INTEGER) {
         value = located(first.value, first.location);
       } else {
         throw new LowerError(
@@ -50,7 +46,13 @@ export const lowerShieldVitalityOption = (
       return true;
     }
     case "body_recharge": {
-      const value = lowerNumberParam(parameters, ctx, "percentage", location);
+      if (first === undefined) {
+        throw new LowerError(
+          diagnosticMessages.expectedParameterType("percentage", ""),
+          location
+        );
+      }
+      const value = lowerConstantInteger(first, ctx, "percentage", location);
       setField(
         ir.locations,
         diagnostics,
@@ -62,7 +64,13 @@ export const lowerShieldVitalityOption = (
       return true;
     }
     case "shield_recharge": {
-      const value = lowerNumberParam(parameters, ctx, "percentage", location);
+      if (first === undefined) {
+        throw new LowerError(
+          diagnosticMessages.expectedParameterType("percentage", ""),
+          location
+        );
+      }
+      const value = lowerConstantInteger(first, ctx, "percentage", location);
       setField(
         ir.locations,
         diagnostics,
@@ -74,7 +82,13 @@ export const lowerShieldVitalityOption = (
       return true;
     }
     case "vampirism": {
-      const value = lowerNumberParam(parameters, ctx, "percentage", location);
+      if (first === undefined) {
+        throw new LowerError(
+          diagnosticMessages.expectedParameterType("percentage", ""),
+          location
+        );
+      }
+      const value = lowerConstantInteger(first, ctx, "percentage", location);
       setField(
         ir.locations,
         diagnostics,
@@ -98,7 +112,13 @@ export const lowerShieldVitalityOption = (
       return true;
     }
     case "body_multiplier": {
-      const value = lowerNumberParam(parameters, ctx, "percentage", location);
+      if (first === undefined) {
+        throw new LowerError(
+          diagnosticMessages.expectedParameterType("percentage", ""),
+          location
+        );
+      }
+      const value = lowerConstantInteger(first, ctx, "percentage", location);
       setField(
         ir.locations,
         diagnostics,
@@ -110,7 +130,13 @@ export const lowerShieldVitalityOption = (
       return true;
     }
     case "shield_multiplier": {
-      const value = lowerNumberParam(parameters, ctx, "percentage", location);
+      if (first === undefined) {
+        throw new LowerError(
+          diagnosticMessages.expectedParameterType("percentage", ""),
+          location
+        );
+      }
+      const value = lowerConstantInteger(first, ctx, "percentage", location);
       setField(
         ir.locations,
         diagnostics,

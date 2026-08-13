@@ -25,15 +25,35 @@ const encodeColor = (color: Color): number =>
   ((color.g & 0xff) << 8) |
   (color.b & 0xff);
 
+const emptyTeamNameStrings = (): (string | null)[][] =>
+  STRING_TABLE_LANGUAGES.map(() => []);
+
+const compileTeamNameTable = (
+  name: NonNullable<GameEngineTeamOptionsTeam["name"]>
+): (string | null)[][] => {
+  // MegaloEdit repeats the English team name in every language slot 
+  const english =
+    name.english ??
+    STRING_TABLE_LANGUAGES.map((language) => name[language]).find(
+      (value): value is string => typeof value === "string" && value.length > 0
+    ) ??
+    "";
+  return STRING_TABLE_LANGUAGES.map(() => [english]);
+};
+
 const compileTeamOption = (
   target: c_game_engine_team_options_team,
-  team: GameEngineTeamOptionsTeam
+  team: GameEngineTeamOptionsTeam,
+  teamIndex: number
 ): void => {
   target.m_team_enabled = true;
   if (team.designator !== undefined) {
     target.m_team_initial_designator = encodeMultiplayerTeamDesignator(
       team.designator
     );
+  } else {
+    // Missing designator defaults to the team slot index.
+    target.m_team_initial_designator = teamIndex;
   }
   if (team.model !== undefined) {
     target.m_model_override = encodePlayerModelChoice(team.model);
@@ -47,9 +67,7 @@ const compileTeamOption = (
   }
   if (team.name !== undefined) {
     // Team names live in the per-team string table, not the script strings.
-    target.m_name.strings = STRING_TABLE_LANGUAGES.map((language) => [
-      team.name![language] ?? null,
-    ]);
+    target.m_name.strings = compileTeamNameTable(team.name);
   }
 };
 
@@ -74,7 +92,7 @@ export const compileTeams = (
       irTeamOptions.designatorSwitchType
     );
   }
-  if (irTeams === undefined) {
+  if (irTeams === undefined || irTeams.length === 0) {
     return;
   }
   if (irTeams.length > k_game_variant_team_count) {
@@ -87,11 +105,12 @@ export const compileTeams = (
   for (const target of teamOptions.m_teams) {
     target.m_team_enabled = false;
     target.m_team_initial_designator = e_multiplayer_team_designator.none;
+    target.m_name.strings = emptyTeamNameStrings();
   }
   irTeams.slice(0, k_game_variant_team_count).forEach((team, index) => {
     const target = teamOptions.m_teams[index];
     if (target !== undefined) {
-      compileTeamOption(target, team);
+      compileTeamOption(target, team, index);
     }
   });
 };

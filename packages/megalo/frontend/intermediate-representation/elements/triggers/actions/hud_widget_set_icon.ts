@@ -16,12 +16,12 @@ const resolveDeclaredSymbolIndex = (
   ctx: ElementLowerContext,
   kind: SymbolKind.HudWidget | SymbolKind.LoadoutPalette,
   expected: string,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): number => {
   if (node.kind !== SyntaxKind.REFERENCE) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType(expected, ""),
-      node.location ?? location,
+      node.location ?? location
     );
   }
 
@@ -29,7 +29,7 @@ const resolveDeclaredSymbolIndex = (
   if (symbol?.kind !== kind) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType(expected, ""),
-      node.location,
+      node.location
     );
   }
 
@@ -40,7 +40,7 @@ const resolveDeclaredSymbolIndex = (
   if (index < 0) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType(expected, symbol.name),
-      node.location,
+      node.location
     );
   }
   return index;
@@ -49,61 +49,57 @@ const resolveDeclaredSymbolIndex = (
 const resolveHudWidgetIndex = (
   node: ASTParameterNode,
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): number =>
   resolveDeclaredSymbolIndex(
     node,
     ctx,
     SymbolKind.HudWidget,
     "HUD widget",
-    location,
+    location
   );
 
-const resolveObjectListKeywordIndex = (
+const resolveHudWidgetIconIndex = (
   node: ASTParameterNode,
-  objectType: ObjectListType,
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): number => {
+  if (node.kind === SyntaxKind.KEYWORD && node.value === "none") {
+    return -1;
+  }
+
+  if (node.kind === SyntaxKind.REFERENCE) {
+    const symbol = ctx.symbolTable.getSymbol(node.symbolId);
+    if (
+      symbol?.kind === SymbolKind.ObjectListItem &&
+      symbol.objectType === ObjectListType.HudWidgetIcons
+    ) {
+      return symbol.index;
+    }
+  }
+
   const name =
     node.kind === SyntaxKind.KEYWORD
       ? node.value
       : node.kind === SyntaxKind.REFERENCE
-        ? ctx.symbolTable.getSymbol(node.symbolId)?.name
+        ? (ctx.symbolTable.getSymbol(node.symbolId)?.name ?? node.identifier)
         : undefined;
-  if (name === undefined) {
-    throw new LowerError(
-      diagnosticMessages.expectedParameterType(objectType, ""),
-      node.location ?? location,
-    );
-  }
 
-  const symbol = ctx.symbolTable
-    .toArray()
-    .find(
-      (entry) =>
-        entry.kind === SymbolKind.ObjectListItem &&
-        entry.objectType === objectType &&
-        entry.name === name,
-    );
-  if (symbol?.kind !== SymbolKind.ObjectListItem) {
-    throw new LowerError(
-      diagnosticMessages.expectedParameterType(objectType, name),
-      node.location ?? location,
-    );
-  }
-  return symbol.index;
+  throw new LowerError(
+    diagnosticMessages.expectedParameterType("hud widget icon", name ?? ""),
+    node.location ?? location
+  );
 };
 
 export const lowerHudWidgetSetIcon = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   if (parameters.length !== 2) {
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(2, parameters.length),
-      location,
+      location
     );
   }
 
@@ -111,12 +107,7 @@ export const lowerHudWidgetSetIcon = (
     type: ActionType.HudWidgetSetIcon,
     parameters: {
       widgetIndex: resolveHudWidgetIndex(parameters[0]!, ctx, location),
-      iconIndex: resolveObjectListKeywordIndex(
-        parameters[1]!,
-        ObjectListType.HudWidgetIcons,
-        ctx,
-        location,
-      ),
+      iconIndex: resolveHudWidgetIconIndex(parameters[1]!, ctx, location),
     },
   };
 };

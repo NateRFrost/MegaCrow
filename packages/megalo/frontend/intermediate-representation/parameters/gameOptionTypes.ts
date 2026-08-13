@@ -44,3 +44,15 @@ export const GAME_OPTION_CUSTOM_VARIABLE_TYPE: Readonly<
   blue_powerup_duration: CustomVariableType.BluePowerupDuration,
   yellow_powerup_duration: CustomVariableType.YellowPowerupDuration,
 };
+
+export const resolveGameOptionCustomVariableType = (
+  name: string,
+  inPregameTrigger: boolean
+): TypeOnlyCustomVariableReference["type"] | undefined => {
+  if (name === "symmetric_gametype") {
+    return inPregameTrigger
+      ? CustomVariableType.SymmetricGametypePregame
+      : CustomVariableType.SymmetricGametype;
+  }
+  return GAME_OPTION_CUSTOM_VARIABLE_TYPE[name];
+};

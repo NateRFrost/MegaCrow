@@ -32,7 +32,7 @@ export { grenadeCountParser } from "./types/grenade-count";
 
 export enum ParameterType {
   Keyword = 0,
-  Number = 1,
+  Integer = 1,
   String = 2,
   QuotedString = 3,
   DynamicString = 4,
@@ -47,6 +47,7 @@ export enum ParameterType {
   MathOperation = 13,
   ObjectFilter = 14,
   PlayerTraits = 15,
+  Float = 16,
 }
 
 export type KeywordParameter = {
@@ -163,7 +164,8 @@ const matchesParameterType = (
   type: ParameterType
 ): boolean => {
   switch (type) {
-    case ParameterType.Number:
+    case ParameterType.Integer:
+    case ParameterType.Float:
       return (
         entry.kind === SymbolKind.Constant ||
         entry.kind === SymbolKind.GameOption ||
@@ -208,7 +210,8 @@ const matchesParameterType = (
 };
 
 const isVariableParameterType = (type: ParameterType): boolean =>
-  type === ParameterType.Number ||
+  type === ParameterType.Integer ||
+  type === ParameterType.Float ||
   type === ParameterType.Timer ||
   type === ParameterType.Team ||
   type === ParameterType.Player ||
@@ -347,7 +350,7 @@ const parseVariableParameter = (
 ): ASTParameterNode | undefined => {
   const token = ctx.peekToken();
 
-  if (type === ParameterType.Number && token?.kind === TokenKind.Integer) {
+  if (type === ParameterType.Integer && token?.kind === TokenKind.Integer) {
     const integerToken = ctx.getToken();
     return {
       kind: SyntaxKind.INTEGER,
@@ -356,13 +359,23 @@ const parseVariableParameter = (
     };
   }
 
-  if (type === ParameterType.Number && token?.kind === TokenKind.FloatingPoint) {
-    const floatToken = ctx.getToken();
-    return {
-      kind: SyntaxKind.FLOATING_POINT,
-      value: Number.parseFloat(floatToken.value),
-      location: floatToken.location,
-    };
+  if (type === ParameterType.Float) {
+    if (token?.kind === TokenKind.FloatingPoint) {
+      const floatToken = ctx.getToken();
+      return {
+        kind: SyntaxKind.FLOATING_POINT,
+        value: Number.parseFloat(floatToken.value),
+        location: floatToken.location,
+      };
+    }
+    if (token?.kind === TokenKind.Integer) {
+      const integerToken = ctx.getToken();
+      return {
+        kind: SyntaxKind.INTEGER,
+        value: Number.parseInt(integerToken.value, 10),
+        location: integerToken.location,
+      };
+    }
   }
 
   if (token?.kind !== TokenKind.Identifier) {

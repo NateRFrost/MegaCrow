@@ -21,8 +21,8 @@ import { requireKeyword } from "../helpers";
 
 const parseBoundaryShape = (
   node: ASTParameterNode,
-  location: SourceCodeLocation,
-): BoundaryShape => {
+  location: SourceCodeLocation
+): BoundaryShape | "none" => {
   const name = requireKeyword(node, location).toLowerCase();
   switch (name) {
     case "sphere":
@@ -32,74 +32,107 @@ const parseBoundaryShape = (
     case "cylinder":
       return BoundaryShape.Cylinder;
     case "none":
-      throw new LowerError(
-        diagnosticMessages.expectedParameterType("boundary shape", name),
-        node.location,
-      );
+      return "none";
     default:
       throw new LowerError(
         diagnosticMessages.expectedParameterType("boundary shape", name),
-        node.location,
+        node.location
       );
   }
 };
 
-const collectBoundaryKeywordVariables = (
+const isDimensionKeyword = (value: string): boolean =>
+  value === "width" ||
+  value === "radius" ||
+  value === "length" ||
+  value === "depth" ||
+  value === "neg_height" ||
+  value === "pos_height" ||
+  value === "height";
+
+/**
+ * MegaloEdit uses positional custom vars after the shape. Docs-style keyword
+ * forms (`width N`, `radius N`, …) are also accepted.
+ */
+const collectBoundaryDimensions = (
   parameters: ASTParameterNode[],
   startIndex: number,
   paramCtx: ReturnType<typeof asParameterLoweringContext>,
-  location: SourceCodeLocation,
-): Map<string, CustomVariableReference> => {
-  const values = new Map<string, CustomVariableReference>();
+  location: SourceCodeLocation
+): {
+  positional: CustomVariableReference[];
+  byKeyword: Map<string, CustomVariableReference>;
+} => {
+  const byKeyword = new Map<string, CustomVariableReference>();
+  const positional: CustomVariableReference[] = [];
+
   for (let i = startIndex; i < parameters.length; i++) {
     const parameter = parameters[i]!;
-    if (parameter.kind !== SyntaxKind.KEYWORD) {
+    if (
+      parameter.kind === SyntaxKind.KEYWORD &&
+      isDimensionKeyword(parameter.value)
+    ) {
+      const valueNode = parameters[i + 1];
+      if (valueNode === undefined) {
+        throw new LowerError(
+          diagnosticMessages.invalidParameterCount(i + 2, parameters.length),
+          location
+        );
+      }
+      byKeyword.set(
+        parameter.value,
+        resolveCustomVariableReference(valueNode, paramCtx)
+      );
+      i++;
       continue;
     }
-    const valueNode = parameters[i + 1];
-    if (valueNode === undefined) {
-      throw new LowerError(
-        diagnosticMessages.invalidParameterCount(i + 2, parameters.length),
-        location,
-      );
-    }
-    values.set(
-      parameter.value,
-      resolveCustomVariableReference(valueNode, paramCtx),
-    );
-    i++;
+    positional.push(resolveCustomVariableReference(parameter, paramCtx));
   }
-  return values;
+
+  return { positional, byKeyword };
 };
 
 export const lowerSetBoundary = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   if (parameters.length < 2) {
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(2, parameters.length),
-      location,
+      location
     );
   }
   const paramCtx = asParameterLoweringContext(ctx);
   const object = resolveObjectReference(parameters[0]!, paramCtx);
   const shape = parseBoundaryShape(parameters[1]!, location);
-  const vars = collectBoundaryKeywordVariables(
+
+  if (shape === "none") {
+    return {
+      type: ActionType.SetBoundary,
+      parameters: {
+        object,
+        shape: BoundaryShape.None,
+      },
+    };
+  }
+
+  const { positional, byKeyword } = collectBoundaryDimensions(
     parameters,
     2,
     paramCtx,
-    location,
+    location
   );
 
   switch (shape) {
     case BoundaryShape.Sphere: {
-      const radius = vars.get("radius");
+      const radius =
+        byKeyword.get("radius") ??
+        positional[0];
       if (radius === undefined) {
         throw new LowerError(
           diagnosticMessages.expectedParameterType("radius", ""),
-          location,
+          location
         );
       }
       return {
@@ -108,38 +141,75 @@ export const lowerSetBoundary = (
       };
     }
     case BoundaryShape.Box: {
-      const width = vars.get("width");
-      const depth = vars.get("length") ?? vars.get("depth");
-      const height = vars.get("pos_height") ?? vars.get("height");
-      if (width === undefined || depth === undefined || height === undefined) {
+      const width = byKeyword.get("width") ?? positional[0];
+      const depth =
+        byKeyword.get("length") ??
+        byKeyword.get("depth") ??
+        positional[1];
+      const negHeight =
+        byKeyword.get("neg_height") ?? positional[2];
+      const posHeight =
+        byKeyword.get("pos_height") ??
+        byKeyword.get("height") ??
+        positional[3] ??
+        negHeight;
+      if (
+        width === undefined ||
+        depth === undefined ||
+        negHeight === undefined ||
+        posHeight === undefined
+      ) {
         throw new LowerError(
           diagnosticMessages.expectedParameterType(
             "box boundary dimensions",
-            "",
+            ""
           ),
-          location,
+          location
         );
       }
       return {
         type: ActionType.SetBoundary,
-        parameters: { object, shape, width, depth, height },
+        parameters: {
+          object,
+          shape,
+          width,
+          depth,
+          negHeight,
+          posHeight,
+        },
       };
     }
     case BoundaryShape.Cylinder: {
-      const radius = vars.get("radius");
-      const height = vars.get("pos_height") ?? vars.get("height");
-      if (radius === undefined || height === undefined) {
+      const radius = byKeyword.get("radius") ?? positional[0];
+      const negHeight =
+        byKeyword.get("neg_height") ?? positional[1];
+      const posHeight =
+        byKeyword.get("pos_height") ??
+        byKeyword.get("height") ??
+        positional[2] ??
+        negHeight;
+      if (
+        radius === undefined ||
+        negHeight === undefined ||
+        posHeight === undefined
+      ) {
         throw new LowerError(
           diagnosticMessages.expectedParameterType(
             "cylinder boundary dimensions",
-            "",
+            ""
           ),
-          location,
+          location
         );
       }
       return {
         type: ActionType.SetBoundary,
-        parameters: { object, shape, radius, height },
+        parameters: {
+          object,
+          shape,
+          radius,
+          negHeight,
+          posHeight,
+        },
       };
     }
   }

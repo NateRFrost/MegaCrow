@@ -14,7 +14,7 @@ const MAP_PERMISSION_KEYS = ["default", "exception"] as const;
 export const mapPermissionsLowerer: ElementLowerer<
   MapPermissionsElementNode
 > = (element, ctx) => {
-  // ManagedMegalo re-initializes on each map_permissions block.
+  // Each map_permissions block replaces the previous one.
   markCurrentValueUnused(ctx.ir.locations.get(ctx.ir.gameVariant, "mapPermissions"), ctx.diagnostics);
   const permissions = {
     exceptMapIds: [] as number[],
@@ -56,7 +56,6 @@ export const mapPermissionsLowerer: ElementLowerer<
 
           assertSyntaxKind(entry.value, [
             SyntaxKind.INTEGER,
-            SyntaxKind.FLOATING_POINT,
             SyntaxKind.REFERENCE,
           ]);
           const value = lowerConstantNumber(entry.value, ctx);
@@ -73,7 +72,6 @@ export const mapPermissionsLowerer: ElementLowerer<
         case "exception": {
           assertSyntaxKind(entry.value, [
             SyntaxKind.INTEGER,
-            SyntaxKind.FLOATING_POINT,
             SyntaxKind.REFERENCE,
           ]);
           const value = lowerConstantNumber(entry.value, ctx);

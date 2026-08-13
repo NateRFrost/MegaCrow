@@ -30,7 +30,7 @@ export const lowerTeamSetVehicleSpawning = (
         asParameterLoweringContext(ctx),
       ),
 
-      enabled: parseBooleanLiteral(parameters[1]!, location),
+      enabled: parseBooleanLiteral(parameters[1]!, ctx, location),
     },
   };
 };

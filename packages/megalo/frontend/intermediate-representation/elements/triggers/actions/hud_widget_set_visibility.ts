@@ -81,7 +81,7 @@ export const lowerHudWidgetSetVisibility = (
     parameters: {
       widgetIndex: resolveHudWidgetIndex(parameters[0]!, ctx, location),
       player: resolvePlayerReference(parameters[1]!, paramCtx),
-      visible: parseBooleanLiteral(parameters[2]!, location),
+      visible: parseBooleanLiteral(parameters[2]!, ctx, location),
     },
   };
 };

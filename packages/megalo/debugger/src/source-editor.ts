@@ -45,8 +45,11 @@ const diagnosticToMarker = (
 
   const { start, end } = location;
   const valueLength = model.getValueLength();
-  const startOffset = Math.min(Math.max(0, start.offset), valueLength);
-  const endOffset = Math.min(Math.max(startOffset, end.offset), valueLength);
+  const startOffset = Math.min(Math.max(0, start.localOffset), valueLength);
+  const endOffset = Math.min(
+    Math.max(startOffset, end.localOffset),
+    valueLength
+  );
 
   if (endOffset > startOffset) {
     const startPos = model.getPositionAt(startOffset);

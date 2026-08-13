@@ -3,19 +3,31 @@ import type { IR } from "..";
 import { ActionType } from "../game/megalogamengine/megalogamengine_actions";
 
 export function applyDefaultLoadoutCameraTime(ir: IR) {
-  const hasNoBaseFilePath = !ir.baseFilePath;
-  const hasNoLoadoutCamTime =
-    ir.gameVariant.baseVariant.respawnOptions?.loadoutCamTime == undefined;
+  // If we're in a base variant, we don't need to apply the default loadout camera time.
+  if (ir.baseFilePath) {
+    return ir;
+  }
+
+  const loadoutCamLocation = ir.locations.get(
+    ir.gameVariant.baseVariant.respawnOptions,
+    "loadoutCamTime"
+  );
+  const hasAuthoredLoadoutCamTime =
+    loadoutCamLocation !== undefined && loadoutCamLocation.type !== BUILT_IN_LOCATION.type;
+
   const usesSetLoadoutPalette = ir.gameVariant.gameEngine.actions.some(
     (action) => action.type === ActionType.SetLoadoutPalette
   );
-  if (hasNoBaseFilePath && hasNoLoadoutCamTime && usesSetLoadoutPalette) {
-    ir.gameVariant.baseVariant.respawnOptions.loadoutCamTime = 10.0;
-    ir.locations.record(
-      ir.gameVariant.baseVariant.respawnOptions,
-      "loadoutCamTime",
-      BUILT_IN_LOCATION
-    );
+
+  if (hasAuthoredLoadoutCamTime || usesSetLoadoutPalette) {
+    return ir;
   }
+
+  ir.gameVariant.baseVariant.respawnOptions.loadoutCamTime = 0;
+  ir.locations.record(
+    ir.gameVariant.baseVariant.respawnOptions,
+    "loadoutCamTime",
+    BUILT_IN_LOCATION
+  );
   return ir;
 }

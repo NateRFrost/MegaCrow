@@ -40,11 +40,8 @@ const resolveRequisitionPaletteIndex = (
       }
     }
   }
-  if (
-    node.kind === SyntaxKind.INTEGER ||
-    node.kind === SyntaxKind.FLOATING_POINT
-  ) {
-    return Math.trunc(node.value);
+  if (node.kind === SyntaxKind.INTEGER) {
+    return node.value;
   }
   const name = requireKeyword(node, location);
   const indexed = parseIndexSuffix(name, "requisition_palette");

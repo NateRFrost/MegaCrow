@@ -182,30 +182,25 @@ export const parseTriggerStatements = (
 
 const parseScopedTriggerBody = (
   ctx: ParserContext,
-  openLocation: SourceCodeLocation,
-  anchorForErrors: SourceCodeLocation
+  openLocation: SourceCodeLocation
 ): { statements: TriggerStatementNode[]; location: SourceCodeLocation } => {
   const statements = parseTriggerStatements(ctx);
 
   const endToken = ctx.peekToken();
-  if (!isEndToken(endToken)) {
-    ctx.diagnostics.addError(
-      diagnosticMessages.expectedEndBeforeEof(),
-      anchorForErrors
-    );
-    const lastStatement = statements.at(-1);
-    const endLocation: SourceCodeLocation =
-      lastStatement?.location ?? openLocation;
+  if (isEndToken(endToken)) {
+    const consumedEnd = ctx.getToken();
     return {
       statements,
-      location: locationSpan(openLocation, endLocation),
+      location: locationSpan(openLocation, consumedEnd.location),
     };
   }
 
-  const consumedEnd = ctx.getToken();
+  const lastStatement = statements.at(-1);
+  const endLocation: SourceCodeLocation =
+    lastStatement?.location ?? openLocation;
   return {
     statements,
-    location: locationSpan(openLocation, consumedEnd.location),
+    location: locationSpan(openLocation, endLocation),
   };
 };
 
@@ -216,7 +211,6 @@ export const parseBegin = (
   withScope(ctx, { kind: ParserScopeKind.Block }, () => {
     const { statements, location } = parseScopedTriggerBody(
       ctx,
-      beginToken.location,
       beginToken.location
     );
     return {
@@ -270,8 +264,7 @@ export const parseForEach = (
     () => {
       const { statements, location } = parseScopedTriggerBody(
         ctx,
-        actionToken.location,
-        target?.location ?? actionToken.location
+        actionToken.location
       );
 
       return {
@@ -305,21 +298,18 @@ export const triggerParser = (
       const statements = parseTriggerStatements(ctx);
 
       const endToken = ctx.peekToken();
-      if (!isEndToken(endToken)) {
-        ctx.diagnostics.addError(
+      if (endToken === undefined) {
+        ctx.diagnostics.addWarning(
           diagnosticMessages.expectedEndBeforeEof(),
           elementToken.location
         );
-        const lastStatement = statements.at(-1);
-        const endLocation: SourceCodeLocation =
-          lastStatement?.location ?? name.location;
         return {
           kind: SyntaxKind.ELEMENT,
           elementKind: ElementKind.TRIGGER,
           keywordLocation: elementToken.location,
           name,
           statements,
-          location: locationSpan(elementToken.location, endLocation),
+          location: locationSpan(elementToken.location, name.location),
         };
       }
 

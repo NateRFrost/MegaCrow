@@ -2,15 +2,20 @@ import { ExplicitObject } from "../../game/megalogamengine/megalogamengine_expli
 import { ExplicitPlayer } from "../../game/megalogamengine/megalogamengine_explicit_player";
 import { ExplicitTeam } from "../../game/megalogamengine/megalogamengine_explicit_team";
 import {
+  type SymbolTableVariableEntry,
   VariableScope,
   VariableType,
   isBuiltInVariable,
 } from "../../../symbol-table";
+import { diagnosticMessages } from "../../../diagnostics/messages";
+import type { SourceLocation } from "../../../diagnostics";
+import { BUILT_IN_LOCATION } from "../../../diagnostics";
 import {
   findVariableBySlot,
   requireResolvedVariableSlot,
   requireVariableSlot,
 } from "../../preprocessing/symbols";
+import { LowerError } from "../../error";
 import type { ParameterLoweringContext } from "../context";
 import {
   enumSlotValue,
@@ -29,12 +34,30 @@ const normalizeExplicitTemporaryBase = (base: string): string => {
   return `temporary_${qualified.index}`;
 };
 
+const assertMegacrowTeamExtensions = (
+  team: ExplicitTeam,
+  ctx: ParameterLoweringContext,
+  location: SourceLocation
+): void => {
+  // Megalo Headache #2
+  if (team === ExplicitTeam.TargetTeam && !ctx.frontend.megacrowExtensions.targetTeam) {
+    throw new LowerError(
+      diagnosticMessages.megacrowExtensionRequired("targetTeam", "target_team"),
+      location
+    );
+  }
+};
+
 export const resolveExplicitPlayerForBase = (
   ctx: ParameterLoweringContext,
-  base: string
+  base: string,
+  resolvedBaseVariable?: SymbolTableVariableEntry
 ): ExplicitPlayer => {
   const engineBase = normalizeExplicitTemporaryBase(base);
-  const slot = ctx.symbolTable.findVariableByName(engineBase);
+  const slot =
+    resolvedBaseVariable?.type === VariableType.Player && !isBuiltInVariable(resolvedBaseVariable)
+      ? resolvedBaseVariable
+      : ctx.symbolTable.findVariableByName(engineBase);
   if (slot?.type === VariableType.Player && !isBuiltInVariable(slot)) {
     const resolved = requireResolvedVariableSlot(ctx.variableSlots, slot.id);
     if (resolved.scope === VariableScope.Global) {
@@ -64,10 +87,15 @@ export const resolveExplicitPlayerForBase = (
 
 export const resolveExplicitTeamForBase = (
   ctx: ParameterLoweringContext,
-  base: string
+  base: string,
+  resolvedBaseVariable?: SymbolTableVariableEntry,
+  location: SourceLocation = BUILT_IN_LOCATION
 ): ExplicitTeam => {
   const engineBase = normalizeExplicitTemporaryBase(base);
-  const slot = ctx.symbolTable.findVariableByName(engineBase);
+  const slot =
+    resolvedBaseVariable?.type === VariableType.Team && !isBuiltInVariable(resolvedBaseVariable)
+      ? resolvedBaseVariable
+      : ctx.symbolTable.findVariableByName(engineBase);
   if (slot?.type === VariableType.Team && !isBuiltInVariable(slot)) {
     const resolved = requireResolvedVariableSlot(ctx.variableSlots, slot.id);
     if (resolved.scope === VariableScope.Global) {
@@ -86,12 +114,15 @@ export const resolveExplicitTeamForBase = (
     }
     return ExplicitTeam.CurrentTeam;
   }
-  return parseExplicitTeam(engineBase);
+  const team = parseExplicitTeam(engineBase);
+  assertMegacrowTeamExtensions(team, ctx, location);
+  return team;
 };
 
 export const resolveExplicitObjectForBase = (
   ctx: ParameterLoweringContext,
-  base: string
+  base: string,
+  resolvedBaseVariable?: SymbolTableVariableEntry
 ): ExplicitObject => {
   const qualified = parseQualifiedTemporaryName(base);
   if (qualified?.storage === "object") {
@@ -120,7 +151,10 @@ export const resolveExplicitObjectForBase = (
     }
   }
 
-  const slot = ctx.symbolTable.findVariableByName(base);
+  const slot =
+    resolvedBaseVariable?.type === VariableType.Object && !isBuiltInVariable(resolvedBaseVariable)
+      ? resolvedBaseVariable
+      : ctx.symbolTable.findVariableByName(base);
   if (slot?.type === VariableType.Object && !isBuiltInVariable(slot)) {
     const resolved = requireResolvedVariableSlot(ctx.variableSlots, slot.id);
     if (resolved.scope === VariableScope.Global) {

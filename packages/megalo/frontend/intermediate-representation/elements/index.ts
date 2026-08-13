@@ -21,6 +21,8 @@ export type ElementLowerer<T extends ASTElementNode> = (
 
 export const NULL_LOWERER: ElementLowerer<any> = () => {};
 
+export { baseLowerer };
+
 export const ELEMENT_LOWERERS = new Map<ElementKind, ElementLowerer<any>>();
 
 // string table is build out by all lowerers

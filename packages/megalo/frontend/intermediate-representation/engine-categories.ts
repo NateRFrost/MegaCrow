@@ -20,6 +20,16 @@ export enum EngineCategories {
     ms343 = 18,
     heroic = 19,
     legendary = 20,
+    mythic = 21,
+    mantis = 22,
+    shishka = 23,
+    huevos = 24,
+    jonnyo = 25,
+    dangerboy = 26,
+    holiday = 27,
+    community = 28,
+    matchmaking = 29,
+    pre_game_warm_up = 30,
 }
 
 // sigh
@@ -69,6 +79,26 @@ export const parseEnumCategory = (category: string) => {
             return EngineCategories.heroic;
         case "legendary":
             return EngineCategories.legendary;
+        case "mythic":
+            return EngineCategories.mythic;
+        case "mantis":
+            return EngineCategories.mantis;
+        case "shishka":
+            return EngineCategories.shishka;
+        case "huevos":
+            return EngineCategories.huevos;
+        case "jonnyo":
+            return EngineCategories.jonnyo;
+        case "dangerboy":
+            return EngineCategories.dangerboy;
+        case "holiday":
+            return EngineCategories.holiday;
+        case "community":
+            return EngineCategories.community;
+        case "matchmaking":
+            return EngineCategories.matchmaking;
+        case "pre_game_warm_up":
+            return EngineCategories.pre_game_warm_up;
         default:
             return undefined;
     }

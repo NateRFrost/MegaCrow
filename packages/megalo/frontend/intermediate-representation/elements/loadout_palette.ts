@@ -33,6 +33,9 @@ export const loadoutPaletteLowerer = (
       palette.loadouts!.push(loadout);
     }
 
-    ctx.loadoutPalettesByName.set(paletteName, palette);
+    // Megalo Headache #1
+    if (!ctx.loadoutPalettesByName.has(paletteName)) {
+      ctx.loadoutPalettesByName.set(paletteName, palette);
+    }
   });
 };

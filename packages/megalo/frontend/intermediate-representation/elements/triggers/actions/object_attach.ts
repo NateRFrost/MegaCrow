@@ -12,27 +12,23 @@ import {
   asParameterLoweringContext,
   type ElementLowerContext,
 } from "../../../parameters/context";
-import { resolveObjectReference } from "../../../parameters";
+import {
+  lowerConstantInteger,
+  resolveObjectReference,
+  tryLowerConstantInteger,
+} from "../../../parameters";
 
-const resolveNumericLiteral = (
+/** MegaloEdit `s_object_offset`: three `ReadConstantInteger` values. */
+const resolveOffsetComponent = (
   node: ASTParameterNode,
+  ctx: ElementLowerContext,
   location: SourceCodeLocation,
-): number => {
-  if (
-    node.kind === SyntaxKind.INTEGER ||
-    node.kind === SyntaxKind.FLOATING_POINT
-  ) {
-    return node.value;
-  }
-  throw new LowerError(
-    diagnosticMessages.expectedParameterType("number", ""),
-    node.location ?? location,
-  );
-};
+): number => lowerConstantInteger(node, ctx, "integer", location).value;
 
 const parseOptionalObjectOffset = (
   parameters: ASTParameterNode[],
   startIndex: number,
+  ctx: ElementLowerContext,
   location: SourceCodeLocation,
 ): {
   offset: ObjectOffset;
@@ -60,9 +56,9 @@ const parseOptionalObjectOffset = (
           );
         }
         offset = {
-          x: resolveNumericLiteral(xNode, location),
-          y: resolveNumericLiteral(yNode, location),
-          z: resolveNumericLiteral(zNode, location),
+          x: resolveOffsetComponent(xNode, ctx, location),
+          y: resolveOffsetComponent(yNode, ctx, location),
+          z: resolveOffsetComponent(zNode, ctx, location),
         };
         index += 4;
         continue;
@@ -74,28 +70,23 @@ const parseOptionalObjectOffset = (
       }
     }
 
+    // Positional x y z (no `offset` keyword) — same ReadConstantInteger triple.
+    const yNode = parameters[index + 1];
+    const zNode = parameters[index + 2];
     if (
-      parameter.kind === SyntaxKind.INTEGER ||
-      parameter.kind === SyntaxKind.FLOATING_POINT
+      yNode !== undefined &&
+      zNode !== undefined &&
+      tryLowerConstantInteger(parameter, ctx) !== undefined &&
+      tryLowerConstantInteger(yNode, ctx) !== undefined &&
+      tryLowerConstantInteger(zNode, ctx) !== undefined
     ) {
-      const yNode = parameters[index + 1];
-      const zNode = parameters[index + 2];
-      if (
-        yNode !== undefined &&
-        zNode !== undefined &&
-        (yNode.kind === SyntaxKind.INTEGER ||
-          yNode.kind === SyntaxKind.FLOATING_POINT) &&
-        (zNode.kind === SyntaxKind.INTEGER ||
-          zNode.kind === SyntaxKind.FLOATING_POINT)
-      ) {
-        offset = {
-          x: parameter.value,
-          y: yNode.value,
-          z: zNode.value,
-        };
-        index += 3;
-        continue;
-      }
+      offset = {
+        x: resolveOffsetComponent(parameter, ctx, location),
+        y: resolveOffsetComponent(yNode, ctx, location),
+        z: resolveOffsetComponent(zNode, ctx, location),
+      };
+      index += 3;
+      continue;
     }
 
     break;
@@ -119,6 +110,7 @@ export const lowerObjectAttach = (
   const { offset, absoluteOrientation, nextIndex } = parseOptionalObjectOffset(
     parameters,
     2,
+    ctx,
     location,
   );
   if (nextIndex !== parameters.length) {

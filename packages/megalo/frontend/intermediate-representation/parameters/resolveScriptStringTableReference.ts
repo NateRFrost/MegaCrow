@@ -5,6 +5,7 @@ import type { IR } from "..";
 import { assertSyntaxKind } from "../diagnostics/assertSyntaxKind";
 import { assertSymbolKind } from "../diagnostics/assertSymbolKind";
 import {
+  literalStringTableEntry,
   type StringTable,
   type StringTableReference,
 } from "../game/string_table";
@@ -21,7 +22,7 @@ export const resolveStringTableEntry = (
   assertSyntaxKind(node, [SyntaxKind.QUOTED_STRING, SyntaxKind.REFERENCE]);
   switch (node.kind) {
     case SyntaxKind.QUOTED_STRING:
-      return table.addEntry({ english: node.value });
+      return table.addEntry(literalStringTableEntry(node.value));
     case SyntaxKind.REFERENCE: {
       const symbol = symbolTable.getSymbol(node.symbolId);
       assertSymbolKind(symbol, SymbolKind.String);

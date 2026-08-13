@@ -1,4 +1,5 @@
 import type { ASTParameterNode } from "../../../../abstract-syntax-tree/parameters";
+import { SyntaxKind } from "../../../../abstract-syntax-tree/kinds";
 import type { SourceCodeLocation } from "../../../../diagnostics";
 import { diagnosticMessages } from "../../../../diagnostics/messages";
 import { LowerError } from "../../../error";
@@ -22,6 +23,12 @@ const timerIndexFromParameter = (
   ctx: ElementLowerContext,
   location: SourceCodeLocation,
 ): number => {
+  if (
+    (node.kind === SyntaxKind.KEYWORD || node.kind === SyntaxKind.REFERENCE) &&
+    (node.kind === SyntaxKind.KEYWORD ? node.value : node.identifier) === "none"
+  ) {
+    return -1;
+  }
   const timer = resolveCustomTimerReference(
     node,
     asParameterLoweringContext(ctx),

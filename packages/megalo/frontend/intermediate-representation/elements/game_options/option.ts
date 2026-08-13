@@ -1,9 +1,11 @@
 import type {
   UserDefinedOptionNode,
+  UserDefinedOptionOverrideNode,
   UserDefinedOptionValueNode,
 } from "../../../abstract-syntax-tree/elements/game_options";
 import { dxAssertionScope } from "../../diagnostics";
 import { assertNotErrorNode } from "../../diagnostics/assertNotErrorNode";
+import { LowerError } from "../../error";
 import type {
   SelectUserDefinedOption,
   UserDefinedOptionValue,
@@ -54,6 +56,17 @@ export const lowerOption = (
   dxAssertionScope(ctx.diagnostics, () => {
     assertNotErrorNode(entry.name);
 
+    // Proto pool walk: option display name + description, then value rows.
+    const name = resolveScriptStringTableReference(
+      entry.displayName,
+      ctx.ir,
+      ctx.symbolTable
+    );
+    const description = resolveScriptStringTableReference(
+      entry.description,
+      ctx.ir,
+      ctx.symbolTable
+    );
     const values = entry.values.map((value) => lowerOptionValue(value, ctx));
     const defaultNumber = lowerConstantNumber(entry.defaultValue, ctx).value;
     let defaultValueIndex = values.findIndex(
@@ -64,16 +77,8 @@ export const lowerOption = (
     }
 
     const option: SelectUserDefinedOption = {
-      name: resolveScriptStringTableReference(
-        entry.displayName,
-        ctx.ir,
-        ctx.symbolTable
-      ),
-      description: resolveScriptStringTableReference(
-        entry.description,
-        ctx.ir,
-        ctx.symbolTable
-      ),
+      name,
+      description,
       locked: entry.modifiers.lock ? true : undefined,
       hidden: entry.modifiers.hide ? true : undefined,
       values,
@@ -98,6 +103,32 @@ export const lowerOption = (
       "currentValueIndex",
       entry.defaultValue.location
     );
+    const { userDefinedOptions: maxOptions } =
+      ctx.frontend.versionConfiguration.limits;
+    if (ctx.ir.gameVariant.userDefinedOptions.length >= maxOptions) {
+      throw new LowerError("Too many user defined options!", entry.location);
+    }
     ctx.ir.gameVariant.userDefinedOptions.push(option);
+  });
+};
+
+export const lowerOptionOverride = (
+  entry: UserDefinedOptionOverrideNode,
+  ctx: ElementLowerContext
+) => {
+  dxAssertionScope(ctx.diagnostics, () => {
+    const value = lowerConstantNumber(entry.value, ctx).value;
+    const override = {
+      target:
+        entry.target.kind === "name"
+          ? { kind: "name" as const, value: entry.target.value }
+          : { kind: "index" as const, value: entry.target.value },
+      value,
+      locked: entry.modifiers.lock ? true : undefined,
+      hidden: entry.modifiers.hide ? true : undefined,
+      location: entry.location,
+    };
+    ctx.ir.baseOverrides.userDefinedOptions.push(override);
+    ctx.ir.locations.record(override, "value", entry.value.location);
   });
 };

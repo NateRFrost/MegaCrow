@@ -17,61 +17,8 @@ import {
 import {
   resolveObjectReference,
   resolveObjectTypeReference,
-  resolveScriptStringTableReference,
 } from "../../../parameters";
-import { requireKeyword } from "../helpers";
-
-const resolveObjectListKeywordIndex = (
-  node: ASTParameterNode,
-  objectType: ObjectListType,
-  ctx: ElementLowerContext,
-  location: SourceCodeLocation,
-): number => {
-  const name =
-    node.kind === SyntaxKind.KEYWORD
-      ? node.value
-      : node.kind === SyntaxKind.REFERENCE
-        ? ctx.symbolTable.getSymbol(node.symbolId)?.name
-        : undefined;
-  if (name === undefined) {
-    throw new LowerError(
-      diagnosticMessages.expectedParameterType(objectType, ""),
-      node.location ?? location,
-    );
-  }
-
-  const symbol = ctx.symbolTable
-    .toArray()
-    .find(
-      (entry) =>
-        entry.kind === SymbolKind.ObjectListItem &&
-        entry.objectType === objectType &&
-        entry.name === name,
-    );
-  if (symbol?.kind !== SymbolKind.ObjectListItem) {
-    throw new LowerError(
-      diagnosticMessages.expectedParameterType(objectType, name),
-      node.location ?? location,
-    );
-  }
-  return symbol.index;
-};
-
-const resolveObjectTypeParameter = (
-  node: ASTParameterNode,
-  ctx: ElementLowerContext,
-  location: SourceCodeLocation,
-): number => {
-  if (node.kind === SyntaxKind.REFERENCE) {
-    return resolveObjectTypeReference(node, asParameterLoweringContext(ctx));
-  }
-  return resolveObjectListKeywordIndex(
-    node,
-    ObjectListType.Objects,
-    ctx,
-    location,
-  );
-};
+import { lowerConstantInteger } from "../../../parameters/common";
 
 const resolveObjectFilterIndex = (
   node: ASTParameterNode,
@@ -97,6 +44,7 @@ const resolveObjectFilterIndex = (
 const parseOffset = (
   parameters: ASTParameterNode[],
   startIndex: number,
+  ctx: ElementLowerContext,
   location: SourceCodeLocation,
 ): ObjectOffset => {
   const xNode = parameters[startIndex];
@@ -112,17 +60,21 @@ const parseOffset = (
     );
   }
 
+  const paramCtx = asParameterLoweringContext(ctx);
   const parseComponent = (node: ASTParameterNode, axis: string): number => {
-    if (
-      node.kind === SyntaxKind.INTEGER ||
-      node.kind === SyntaxKind.FLOATING_POINT
-    ) {
-      return node.value;
+    try {
+      return lowerConstantInteger(
+        node,
+        paramCtx,
+        `${axis} offset`,
+        location,
+      ).value;
+    } catch {
+      throw new LowerError(
+        diagnosticMessages.expectedParameterType(`${axis} offset`, ""),
+        node.location,
+      );
     }
-    throw new LowerError(
-      diagnosticMessages.expectedParameterType(`${axis} offset`, ""),
-      node.location,
-    );
   };
 
   return {
@@ -137,29 +89,39 @@ const resolveVariantNameIndex = (
   ctx: ElementLowerContext,
   location: SourceCodeLocation,
 ): number => {
-  if (node.kind === SyntaxKind.REFERENCE) {
-    const symbol = ctx.symbolTable.getSymbol(node.symbolId);
-    if (symbol?.kind === SymbolKind.String) {
-      return resolveScriptStringTableReference(node, ctx.ir, ctx.symbolTable);
-    }
-  }
-
-  const name = requireKeyword(node, location);
-  const stringSymbol = ctx.symbolTable
-    .toArray()
-    .find((entry) => entry.kind === SymbolKind.String && entry.name === name);
-  if (stringSymbol?.kind === SymbolKind.String) {
-    return ctx.ir.gameVariant.scriptStrings.addEntry(
-      stringSymbol.languageContents,
-      stringSymbol.id,
+  // MegaloEdit ReadStringIdName: identifier or quoted string from
+  // object_lists/strings.txt (1-based line index).
+  const name =
+    node.kind === SyntaxKind.KEYWORD
+      ? node.value
+      : node.kind === SyntaxKind.QUOTED_STRING
+        ? node.value
+        : node.kind === SyntaxKind.REFERENCE
+          ? (ctx.symbolTable.getSymbol(node.symbolId)?.name ?? node.identifier)
+          : undefined;
+  if (name === undefined) {
+    throw new LowerError(
+      diagnosticMessages.expectedParameterType("object variant name", ""),
+      node.location ?? location,
     );
   }
 
-  if (/^\d+$/.test(name)) {
-    return Number(name);
+  const listItem = ctx.symbolTable
+    .toArray()
+    .find(
+      (entry) =>
+        entry.kind === SymbolKind.ObjectListItem &&
+        entry.objectType === ObjectListType.Strings &&
+        entry.name === name,
+    );
+  if (listItem?.kind === SymbolKind.ObjectListItem) {
+    return listItem.index + 1;
   }
 
-  return ctx.ir.gameVariant.scriptStrings.addEntry({ english: name });
+  throw new LowerError(
+    diagnosticMessages.expectedParameterType("object variant name", name),
+    node.location ?? location,
+  );
 };
 
 const CREATE_OBJECT_KEYWORDS = new Set([
@@ -178,19 +140,24 @@ export const lowerCreateObject = (
   ctx: ElementLowerContext,
   location: SourceCodeLocation,
 ): Action => {
-  if (parameters.length < 3) {
+  if (parameters.length < 1) {
     throw new LowerError(
-      diagnosticMessages.invalidParameterCount(3, parameters.length),
+      diagnosticMessages.invalidParameterCount(1, parameters.length),
       location,
     );
   }
 
   const paramCtx = asParameterLoweringContext(ctx);
+  let placeAtObject: ReturnType<typeof resolveObjectReference> | undefined;
   const result: Action & { type: ActionType.CreateObject } = {
     type: ActionType.CreateObject,
     parameters: {
-      objectType: resolveObjectTypeParameter(parameters[0]!, ctx, location),
-      place_at_object: resolveObjectReference(parameters[2]!, paramCtx),
+      objectType: resolveObjectTypeReference(
+        parameters[0]!,
+        paramCtx
+      ),
+      // Filled below once `at` is seen; required before return.
+      place_at_object: undefined!,
     },
   };
 
@@ -202,10 +169,8 @@ export const lowerCreateObject = (
 
     switch (node.value) {
       case "at":
-        result.parameters.place_at_object = resolveObjectReference(
-          parameters[++i]!,
-          paramCtx,
-        );
+        placeAtObject = resolveObjectReference(parameters[++i]!, paramCtx);
+        result.parameters.place_at_object = placeAtObject;
         break;
       case "set":
         result.parameters.object_reference_out = resolveObjectReference(
@@ -230,7 +195,7 @@ export const lowerCreateObject = (
         result.parameters.absoluteOrientation = true;
         break;
       case "offset":
-        result.parameters.offset = parseOffset(parameters, i + 1, location);
+        result.parameters.offset = parseOffset(parameters, i + 1, ctx, location);
         i += 3;
         break;
       case "variant":
@@ -252,6 +217,13 @@ export const lowerCreateObject = (
         }
         break;
     }
+  }
+
+  if (placeAtObject === undefined) {
+    throw new LowerError(
+      diagnosticMessages.expectedParameterType("at <object>", ""),
+      location,
+    );
   }
 
   return result;

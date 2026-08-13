@@ -24,8 +24,8 @@ export type GameEngineCustomVariant = {
   localizedName?: StringTable;
   localizedDescription?: StringTable;
   localizedCategory?: StringTable;
-  engineIcon: number;
-  engineCategory: EngineCategories;
+  engineIcon?: number;
+  engineCategory?: EngineCategories;
   mapPermissions?: MegaloGameEngineMapPermissions;
   playerRatings?: Partial<{
     ratingScale: number;

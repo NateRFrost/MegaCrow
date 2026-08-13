@@ -24,16 +24,33 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
         expectParameterCount(1, property.parameters);
         dxAssertionScope(diagnostics, () => {
           const parameter = property.parameters[0]!;
-          const localizedName = new StringTable();
-          resolveStringTableEntry(parameter, localizedName, symbolTable);
-          setField(
-            ir.locations,
-            diagnostics,
-            ir.gameVariant,
-            "localizedName",
-            localizedName,
-            parameter.location
-          );
+          if (ir.baseFilePath !== undefined) {
+            const localizedName = new StringTable();
+            resolveStringTableEntry(parameter, localizedName, symbolTable);
+            setField(
+              ir.locations,
+              diagnostics,
+              ir.gameVariant,
+              "localizedName",
+              localizedName,
+              parameter.location
+            );
+          } else {
+            const titleIndex = resolveStringTableEntry(
+              parameter,
+              ir.gameVariant.scriptStrings,
+              symbolTable
+            );
+            // 1-based into scriptStrings (0 = none).
+            setField(
+              ir.locations,
+              diagnostics,
+              ir.gameVariant,
+              "baseNameStringIndex",
+              titleIndex + 1,
+              parameter.location
+            );
+          }
         });
         break;
       case "description":

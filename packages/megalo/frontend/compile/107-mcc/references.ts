@@ -403,7 +403,8 @@ const encodeReplaceableToken = (
 
 export const encodeDynamicString = (value: DynamicString): c_dynamic_string => {
   const target = new c_dynamic_string();
-  target.m_string_index = value.stringIndex;
+  // 1-indexed, 0 is none
+  target.m_string_index = value.stringIndex + 1;
   target.m_tokens = value.tokens.map(encodeReplaceableToken);
   return target;
 };
@@ -465,9 +466,11 @@ export const encodePlayerPurchaseModeFlags = (
   return flags;
 };
 
-/** BLF `e_boundary_shape`: unused=0, sphere=1, cylinder=2, box=3. */
+/** BLF `e_boundary_shape`: none=0, sphere=1, cylinder=2, box=3. */
 export const encodeBoundaryShape = (value: BoundaryShape): number => {
   switch (value) {
+    case BoundaryShape.None:
+      return 0;
     case BoundaryShape.Sphere:
       return 1;
     case BoundaryShape.Cylinder:

@@ -52,6 +52,9 @@ export const compileLoadoutPalettes = (
     if (targetPalette === undefined) {
       return;
     }
+    for (const targetLoadout of targetPalette.m_loadouts) {
+      targetLoadout.initialize();
+    }
     palette.loadouts?.forEach((loadout, loadoutIndex) => {
       const targetLoadout = targetPalette.m_loadouts[loadoutIndex];
       if (targetLoadout !== undefined) {

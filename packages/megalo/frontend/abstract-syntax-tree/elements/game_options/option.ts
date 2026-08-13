@@ -13,6 +13,7 @@ import {
   GameOptionEntryKind,
   type GameOptionModifiers,
   type UserDefinedOptionNode,
+  type UserDefinedOptionOverrideNode,
   type UserDefinedOptionValueNode,
 } from "./types";
 
@@ -43,42 +44,100 @@ const parseUserDefinedOptionValue = (
   };
 };
 
-export const parseUserDefinedOption = (
+const parseOptionOverrideShorthand = (
+  ctx: ParserContext,
+  keywordToken: Token,
+  modifiers: GameOptionModifiers,
+  targetToken: Token
+): UserDefinedOptionOverrideNode => {
+  const target =
+    targetToken.kind === TokenKind.QuotedString
+      ? {
+          kind: "name" as const,
+          value: targetToken.value,
+          location: targetToken.location,
+        }
+      : {
+          kind: "index" as const,
+          value: Number.parseInt(targetToken.value, 10),
+          location: targetToken.location,
+        };
+
+  const value = parseIntegerInitialValue(ctx, targetToken);
+  return {
+    kind: GameOptionEntryKind.OPTION_OVERRIDE,
+    modifiers,
+    target,
+    value,
+    location: locationSpan(keywordToken.location, value.location),
+  };
+};
+
+export function parseUserDefinedOption(
+  ctx: ParserContext,
+  keywordToken: Token,
+  modifiers: GameOptionModifiers,
+  ranged: true
+): UserDefinedOptionNode;
+export function parseUserDefinedOption(
+  ctx: ParserContext,
+  keywordToken: Token,
+  modifiers: GameOptionModifiers,
+  ranged: false
+): UserDefinedOptionNode | UserDefinedOptionOverrideNode;
+export function parseUserDefinedOption(
   ctx: ParserContext,
   keywordToken: Token,
   modifiers: GameOptionModifiers,
   ranged: boolean
-): UserDefinedOptionNode => {
-  const nameToken = ctx.getToken();
+): UserDefinedOptionNode | UserDefinedOptionOverrideNode {
+  const nameToken = ctx.peekToken();
+  // Base-derived shorthand: option "Display Name" <value>  |  option <index> <value>
+  if (
+    !ranged &&
+    nameToken &&
+    (nameToken.kind === TokenKind.QuotedString ||
+      nameToken.kind === TokenKind.Integer)
+  ) {
+    ctx.getToken();
+    return parseOptionOverrideShorthand(
+      ctx,
+      keywordToken,
+      modifiers,
+      nameToken
+    );
+  }
+
+  const consumedName = ctx.getToken();
   let name: UserDefinedOptionNode["name"];
-  if (nameToken.kind === TokenKind.Identifier) {
+  if (consumedName.kind === TokenKind.Identifier) {
     ctx.symbolParser.addGameOptionToScope({
-      name: nameToken.value,
-      declaration: nameToken.location,
+      name: consumedName.value,
+      declaration: consumedName.location,
       type: VariableType.Number,
     });
     name = {
-      value: nameToken.value,
-      location: nameToken.location,
+      value: consumedName.value,
+      location: consumedName.location,
     };
   } else {
     ctx.diagnostics.addError(
       diagnosticMessages.expectedTokenKind(
         TokenKind.Identifier,
-        nameToken.kind,
-        nameToken.value
+        consumedName.kind,
+        consumedName.value
       ),
-      nameToken.location
+      consumedName.location
     );
     name = {
       kind: SyntaxKind.INVALID,
-      location: nameToken.location,
+      location: consumedName.location,
     };
   }
 
-  const displayName = parseStringLiteralOrReference(ctx, nameToken);
-  const description = parseStringLiteralOrReference(ctx, nameToken);
-  const defaultValue = parseIntegerInitialValue(ctx, nameToken);
+  const displayName = parseStringLiteralOrReference(ctx, consumedName);
+  const description = parseStringLiteralOrReference(ctx, consumedName);
+  const defaultValue = parseIntegerInitialValue(ctx, consumedName);
   const values: UserDefinedOptionValueNode[] = [];
 
   while (ctx.hasMore()) {
@@ -97,7 +156,7 @@ export const parseUserDefinedOption = (
       continue;
     }
 
-    values.push(parseUserDefinedOptionValue(ctx, ranged, nameToken));
+    values.push(parseUserDefinedOptionValue(ctx, ranged, consumedName));
   }
 
   const lastLocation = values.at(-1)?.location ?? defaultValue.location;
@@ -114,11 +173,11 @@ export const parseUserDefinedOption = (
     values,
     location: locationSpan(keywordToken.location, lastLocation),
   };
-};
+}
 
 export const optionParser = (
   ctx: ParserContext,
   keywordToken: Token,
   modifiers: GameOptionModifiers
-): UserDefinedOptionNode =>
+): UserDefinedOptionNode | UserDefinedOptionOverrideNode =>
   parseUserDefinedOption(ctx, keywordToken, modifiers, false);

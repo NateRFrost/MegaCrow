@@ -47,6 +47,26 @@ export const encodeGameEngineCategory = (
       return e_game_engine_category.heroic;
     case EngineCategories.legendary:
       return e_game_engine_category.legendary;
+    case EngineCategories.mythic:
+      return e_game_engine_category.mythic;
+    case EngineCategories.mantis:
+      return e_game_engine_category.mantis;
+    case EngineCategories.shishka:
+      return e_game_engine_category.shishka;
+    case EngineCategories.huevos:
+      return e_game_engine_category.huevos;
+    case EngineCategories.jonnyo:
+      return e_game_engine_category.jonnyo;
+    case EngineCategories.dangerboy:
+      return e_game_engine_category.dangerboy;
+    case EngineCategories.holiday:
+      return e_game_engine_category.holiday;
+    case EngineCategories.community:
+      return e_game_engine_category.community;
+    case EngineCategories.matchmaking:
+      return e_game_engine_category.matchmaking;
+    case EngineCategories.pre_game_warm_up:
+      return e_game_engine_category.pre_game_warm_up;
     default: {
       const _exhaustive: never = value;
       return _exhaustive;

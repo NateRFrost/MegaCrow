@@ -17,7 +17,8 @@ const MAX_MIN = 0x7f;
 const compileObjectFilter = (filter: ObjectFilter): c_object_filter => {
   const target = new c_object_filter();
   if (filter.label !== undefined) {
-    target.m_label_string_index = filter.label;
+    // 1-indexed, 0 is no label.
+    target.m_label_string_index = filter.label + 1;
   }
   if (filter.objectType !== undefined) {
     target.m_valid_parameters.object_type = true;
@@ -76,8 +77,9 @@ export const compileMapObjects = (
     .map(compileObjectFilter);
 
   for (let index = 0; index < objectsUsed.length; index++) {
-    if (objectsUsed[index] === true) {
-      gameVariant.m_game_engine.m_objects_used[index] = true;
+    if (objectsUsed[index] !== true) {
+      continue;
     }
+    gameVariant.m_game_engine.m_objects_used[index] = true;
   }
 };

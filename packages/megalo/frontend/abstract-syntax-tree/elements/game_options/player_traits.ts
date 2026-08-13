@@ -1,8 +1,9 @@
 import type { MegaloVersion } from "../../../../version";
+import type { FrontendContext } from "../../../context";
 import type { SourceCodeLocation } from "../../../diagnostics";
 import { diagnosticMessages } from "../../../diagnostics/messages";
 import { ObjectListType } from "../../../object-lists";
-import type { Token } from "../../../tokens";
+import { type Token, TokenKind } from "../../../tokens";
 import type { ParserContext } from "../../context";
 import {
   type ASTErrorNode,
@@ -12,6 +13,7 @@ import {
 } from "../../kinds";
 import {
   type ASTParameterNode,
+  KeywordParameter,
   ObjectListParameter,
   parameterParserBuilder as buildParameterParser,
   type ParameterParser,
@@ -23,7 +25,10 @@ import {
 } from "../../parameters/string_literal_or_reference";
 import { grenadeCountParser } from "../../parameters/types/grenade-count";
 import { locationSpan, parseIdentifier } from "./shared";
-import { GameOptionEntryKind, type GameOptionModifiers } from "./types";
+import {
+  GameOptionEntryKind,
+  type GameOptionModifiers,
+} from "./types";
 
 export type PlayerTraitOptionNode = {
   identifier: string;
@@ -86,11 +91,61 @@ export type PlayerTraitsElementNode = {
   options: PlayerTraitOptionNode[];
 };
 
+export type PlayerTraitsOverrideNode = {
+  kind: GameOptionEntryKind.PLAYER_TRAITS_OVERRIDE;
+  modifiers: GameOptionModifiers;
+  target:
+    | { kind: "name"; value: string; location: SourceCodeLocation }
+    | { kind: "index"; value: number; location: SourceCodeLocation };
+  options: PlayerTraitOptionNode[];
+  location: SourceCodeLocation;
+};
+
+const parsePlayerTraitsOverride = (
+  ctx: ParserContext,
+  keywordToken: Token,
+  modifiers: GameOptionModifiers,
+  targetToken: Token
+): PlayerTraitsOverrideNode => {
+  const target =
+    targetToken.kind === TokenKind.QuotedString
+      ? {
+          kind: "name" as const,
+          value: targetToken.value,
+          location: targetToken.location,
+        }
+      : {
+          kind: "index" as const,
+          value: Number.parseInt(targetToken.value, 10),
+          location: targetToken.location,
+        };
+
+  const { options, location } = parsePlayerTraitOptions(ctx, keywordToken);
+  return {
+    kind: GameOptionEntryKind.PLAYER_TRAITS_OVERRIDE,
+    modifiers,
+    target,
+    options,
+    location: locationSpan(keywordToken.location, location),
+  };
+};
+
 export const playerTraitsParser = (
   ctx: ParserContext,
   keywordToken: Token,
   modifiers: GameOptionModifiers
-): PlayerTraitsElementNode => {
+): PlayerTraitsElementNode | PlayerTraitsOverrideNode => {
+  const peek = ctx.peekToken();
+  // Base-derived shorthand: player_traits "Display Name" … end
+  //                        | player_traits <index> … end
+  if (
+    peek &&
+    (peek.kind === TokenKind.QuotedString || peek.kind === TokenKind.Integer)
+  ) {
+    ctx.getToken();
+    return parsePlayerTraitsOverride(ctx, keywordToken, modifiers, peek);
+  }
+
   const name = parseIdentifier(ctx, keywordToken);
   if (!isAstErrorNode(name)) {
     ctx.symbolParser.addPlayerTraitsToScope(name.value, name.location);
@@ -127,85 +182,110 @@ export class PlayerTraitParserRepository {
   private registerParsers(megaloVersion: MegaloVersion) {
     this.registerParser(
       "damage_resistance",
-      buildParameterParser([ParameterType.Keyword], [ParameterType.Number])
+      buildParameterParser([ParameterType.Keyword], [ParameterType.Integer])
     );
     this.registerParser(
       "body_recharge",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser([ParameterType.Integer])
     );
     this.registerParser(
       "shield_recharge",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser([ParameterType.Integer])
     );
     this.registerParser(
       "vampirism",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser([ParameterType.Integer])
     );
     this.registerParser(
       "headshot_immunity",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser([ParameterType.Integer])
     );
     this.registerParser(
       "body_multiplier",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser([ParameterType.Integer])
     );
     this.registerParser(
       "shield_multiplier",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser([ParameterType.Integer])
     );
     this.registerParser(
       "assassination_immunity",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser([ParameterType.Integer])
     );
     this.registerParser(
       "damage_modifier",
-      buildParameterParser([ParameterType.Keyword], [ParameterType.Number])
+      buildParameterParser([ParameterType.Keyword], [ParameterType.Integer])
     );
     this.registerParser(
       "melee_damage_modifier",
-      buildParameterParser([ParameterType.Keyword], [ParameterType.Number])
+      buildParameterParser([ParameterType.Keyword], [ParameterType.Integer])
     );
     this.registerParser(
       "initial_primary_weapon",
-      buildParameterParser([ObjectListParameter(ObjectListType.Weapons)])
+      buildParameterParser(
+        [KeywordParameter("none")],
+        [KeywordParameter("default")],
+        [KeywordParameter("random")],
+        [ObjectListParameter(ObjectListType.Weapons)]
+      )
     );
     this.registerParser(
       "initial_secondary_weapon",
-      buildParameterParser([ObjectListParameter(ObjectListType.Weapons)])
+      buildParameterParser(
+        [KeywordParameter("none")],
+        [KeywordParameter("default")],
+        [KeywordParameter("random")],
+        [ObjectListParameter(ObjectListType.Weapons)]
+      )
     );
     this.registerParser(
       "initial_equipment",
-      buildParameterParser([ObjectListParameter(ObjectListType.Equipment)])
+      buildParameterParser(
+        [KeywordParameter("none")],
+        [KeywordParameter("default")],
+        [KeywordParameter("random")],
+        [ObjectListParameter(ObjectListType.Equipment)]
+      )
     );
     this.registerParser("initial_grenades", grenadeCountParser);
     this.registerParser(
       "recharging_grenades",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser([ParameterType.Integer])
     );
     this.registerParser(
       "infinite_ammo",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser(
+        [ParameterType.Integer]
+      )
     );
     this.registerParser(
       "bottomless_clip",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser(
+        [ParameterType.Integer]
+      )
     );
     this.registerParser(
       "weapon_pickup",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser(
+        [ParameterType.Integer]
+      )
     );
     this.registerParser(
       "drop_equipment",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser(
+        [ParameterType.Integer]
+      )
     );
     this.registerParser(
       "infinite_equipment",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser(
+        [ParameterType.Integer]
+      )
     );
-    this.registerParser("speed", buildParameterParser([ParameterType.Number]));
+    this.registerParser("speed", buildParameterParser([ParameterType.Integer]));
     this.registerParser(
       "gravity",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser([ParameterType.Integer])
     );
     this.registerParser(
       "vehicle_usage",
@@ -213,7 +293,7 @@ export class PlayerTraitParserRepository {
     );
     this.registerParser(
       "jump_modifier",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser([ParameterType.Integer])
     );
     this.registerParser(
       "sprinting",
@@ -239,7 +319,7 @@ export class PlayerTraitParserRepository {
       "color",
       buildParameterParser(
         [ParameterType.Keyword],
-        [ParameterType.Number, ParameterType.Number, ParameterType.Number]
+        [ParameterType.Integer, ParameterType.Integer, ParameterType.Integer]
       )
     );
     this.registerParser(
@@ -248,12 +328,12 @@ export class PlayerTraitParserRepository {
     );
     this.registerParser(
       "tracker_range",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser([ParameterType.Integer])
     );
   }
 
-  public constructor(megaloVersion: MegaloVersion) {
-    this.registerParsers(megaloVersion);
+  public constructor(frontend: FrontendContext) {
+    this.registerParsers(frontend.megaloVersion);
   }
 
   public getParser(name: string): ParameterParser | undefined {

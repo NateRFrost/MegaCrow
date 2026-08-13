@@ -9,6 +9,10 @@ import {
   type ElementLowerContext,
 } from "../../../parameters/context";
 import { resolveVariantVariable } from "../../../parameters";
+import {
+  coerceVariantOperands,
+  isBareNoneOperand,
+} from "../../../parameters/references/coerce";
 import { parseMathOperation, requireParamCount } from "../helpers";
 
 export const lowerSet = (
@@ -22,12 +26,21 @@ export const lowerSet = (
   const rightNode = parameters[2]!;
   const paramCtx = asParameterLoweringContext(ctx);
 
+  const leftWasNone = isBareNoneOperand(leftNode);
+  const rightWasNone = isBareNoneOperand(rightNode);
+  const [left, right] = coerceVariantOperands(
+    resolveVariantVariable(leftNode, paramCtx),
+    resolveVariantVariable(rightNode, paramCtx),
+    rightWasNone,
+    leftWasNone
+  );
+
   return {
     type: ActionType.Set,
     parameters: {
-      left: resolveVariantVariable(leftNode, paramCtx),
+      left,
       operation: parseMathOperation(operationNode, location),
-      right: resolveVariantVariable(rightNode, paramCtx),
+      right,
     },
   };
 };

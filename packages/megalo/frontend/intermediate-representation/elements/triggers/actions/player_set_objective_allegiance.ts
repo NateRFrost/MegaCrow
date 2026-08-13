@@ -20,7 +20,7 @@ export const lowerPlayerSetObjectiveAllegiance = (
 
   location: SourceCodeLocation,
 ): Action => {
-  if (parameters.length < 2 || parameters.length > 3) {
+  if (parameters.length !== 2) {
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(2, parameters.length),
 

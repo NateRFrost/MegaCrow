@@ -45,9 +45,9 @@ export const lowerSetProgressBar = (
   ctx: ElementLowerContext,
   location: SourceCodeLocation,
 ): Action => {
-  if (parameters.length < 3) {
+  if (parameters.length < 2) {
     throw new LowerError(
-      diagnosticMessages.invalidParameterCount(3, parameters.length),
+      diagnosticMessages.invalidParameterCount(2, parameters.length),
       location,
     );
   }
@@ -62,7 +62,18 @@ export const lowerSetProgressBar = (
     location,
   );
   const timerNode = parameters[nextIndex];
-  if (timerNode === undefined || nextIndex + 1 !== parameters.length) {
+  // MegaloEdit: when filter is `no_one`, timer is omitted and the byte stays 0
+  if (timerNode === undefined) {
+    return {
+      type: ActionType.SetProgressBar,
+      parameters: {
+        object,
+        playerFilterModifier: filter,
+        timerIndex: 0,
+      },
+    };
+  }
+  if (nextIndex + 1 !== parameters.length) {
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(
         nextIndex + 1,

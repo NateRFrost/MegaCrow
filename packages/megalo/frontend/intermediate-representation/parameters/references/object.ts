@@ -155,7 +155,10 @@ const resolveObjectReferenceUnchecked = (
   node: ASTParameterNode,
   ctx: ParameterLoweringContext
 ): ObjectReference => {
-  const { base, member } = splitParameterMember(node, ctx.symbolTable);
+  const { base, member, baseSymbol, location } = splitParameterMember(
+    node,
+    ctx.symbolTable
+  );
 
   const qualifiedPlayer = parseQualifiedTemporaryName(base);
   if (qualifiedPlayer?.storage === "player" && !member) {
@@ -176,14 +179,28 @@ const resolveObjectReferenceUnchecked = (
     };
   }
 
+  if (
+    baseSymbol?.type === VariableType.Object &&
+    !member &&
+    !isBuiltInVariable(baseSymbol)
+  ) {
+    return encodeObjectVariableReference(baseSymbol, ctx.variableSlots);
+  }
+
   if (!member) {
+    if (base === "none") {
+      return encodeNoObjectReference();
+    }
     const named = encodeNamedGlobalObjectReference(ctx, base);
     if (named) {
       return named;
     }
   }
 
-  const slot = ctx.symbolTable.findVariableByName(base);
+  const slot =
+    baseSymbol?.type === VariableType.Object
+      ? baseSymbol
+      : ctx.symbolTable.findVariableByName(base);
   if (slot?.type === VariableType.Object && !member && !isBuiltInVariable(slot)) {
     return encodeObjectVariableReference(slot, ctx.variableSlots);
   }
@@ -192,7 +209,7 @@ const resolveObjectReferenceUnchecked = (
     if (member) {
       return {
         type: ObjectReferenceType.PlayerObject,
-        player: resolveExplicitPlayerForBase(ctx, base),
+        player: resolveExplicitPlayerForBase(ctx, base, baseSymbol),
         variableIndex:
           resolveScopedObjectMemberIndex(
             ctx.symbolTable,
@@ -204,7 +221,7 @@ const resolveObjectReferenceUnchecked = (
     }
     return {
       type: ObjectReferenceType.PlayerBiped,
-      player: resolveExplicitPlayerForBase(ctx, base),
+      player: resolveExplicitPlayerForBase(ctx, base, baseSymbol),
     };
   }
 
@@ -219,7 +236,7 @@ const resolveObjectReferenceUnchecked = (
       : undefined;
     return {
       type: ObjectReferenceType.TeamObject,
-      team: resolveExplicitTeamForBase(ctx, base),
+      team: resolveExplicitTeamForBase(ctx, base, baseSymbol, location),
       variableIndex: teamObjectIndex ?? 0,
     };
   }
@@ -236,7 +253,7 @@ const resolveObjectReferenceUnchecked = (
     if (objectNumberIndex !== undefined) {
       return {
         type: ObjectReferenceType.ObjectObject,
-        object: resolveExplicitObjectForBase(ctx, base),
+        object: resolveExplicitObjectForBase(ctx, base, baseSymbol),
         variableIndex: objectNumberIndex,
       };
     }
@@ -249,7 +266,7 @@ const resolveObjectReferenceUnchecked = (
     if (objectObjectIndex !== undefined) {
       return {
         type: ObjectReferenceType.ObjectObject,
-        object: resolveExplicitObjectForBase(ctx, base),
+        object: resolveExplicitObjectForBase(ctx, base, baseSymbol),
         variableIndex: objectObjectIndex,
       };
     }
@@ -258,7 +275,7 @@ const resolveObjectReferenceUnchecked = (
   if (member) {
     return {
       type: ObjectReferenceType.ObjectObject,
-      object: resolveExplicitObjectForBase(ctx, base),
+      object: resolveExplicitObjectForBase(ctx, base, baseSymbol),
       variableIndex: Number(member.replace("number_", "")) || 0,
     };
   }
@@ -267,12 +284,12 @@ const resolveObjectReferenceUnchecked = (
   if (slot && isBuiltInVariable(slot) && slot.type === VariableType.Object) {
     return {
       type: ObjectReferenceType.GlobalObject,
-      object: resolveExplicitObjectForBase(ctx, base),
+      object: resolveExplicitObjectForBase(ctx, base, baseSymbol),
     };
   }
 
   return {
     type: ObjectReferenceType.GlobalObject,
-    object: resolveExplicitObjectForBase(ctx, base),
+    object: resolveExplicitObjectForBase(ctx, base, baseSymbol),
   };
 };

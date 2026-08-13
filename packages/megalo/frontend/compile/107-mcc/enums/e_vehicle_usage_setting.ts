@@ -9,20 +9,20 @@ export const encodeVehicleUsageSetting = (
       return e_vehicle_usage_setting.unchanged;
     case VehicleUsage.None:
       return e_vehicle_usage_setting.none;
-    case VehicleUsage.Full:
-      return e_vehicle_usage_setting.full;
     case VehicleUsage.Passenger:
       return e_vehicle_usage_setting.passenger;
-    case VehicleUsage.NotPassenger:
-      return e_vehicle_usage_setting.not_passenger;
     case VehicleUsage.Driver:
       return e_vehicle_usage_setting.driver;
     case VehicleUsage.Gunner:
       return e_vehicle_usage_setting.gunner;
+    case VehicleUsage.NotPassenger:
+      return e_vehicle_usage_setting.not_passenger;
     case VehicleUsage.NotDriver:
       return e_vehicle_usage_setting.not_driver;
     case VehicleUsage.NotGunner:
       return e_vehicle_usage_setting.not_gunner;
+    case VehicleUsage.Full:
+      return e_vehicle_usage_setting.full;
     default: {
       const _exhaustive: never = value;
       return _exhaustive;

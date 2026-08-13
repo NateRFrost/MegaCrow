@@ -1,8 +1,8 @@
 import type { MegaloVersion } from "../../version";
 import type { ParserSymbolContext } from "../abstract-syntax-tree/symbol-context";
+import type { FrontendContext } from "../context";
 import { BUILT_IN_LOCATION } from "../diagnostics";
 import type { BuiltInGameOptionName } from "../language-configuration/omni/game_options";
-import { TEAM_DESIGNATORS } from "../language-configuration/omni/teams";
 import { VariableScope, VariableType } from ".";
 
 export const addBuiltInConstants = (
@@ -22,7 +22,7 @@ export const addBuiltInConstants = (
 };
 
 export const addBuiltInVariables = (
-  megaloVersion: MegaloVersion,
+  frontend: FrontendContext,
   symbolParser: ParserSymbolContext
 ): void => {
   const addBuiltInVariable = (
@@ -64,11 +64,25 @@ export const addBuiltInVariables = (
   addBuiltInVariable("sudden_death_timer", VariableType.Timer);
   addBuiltInVariable("grace_period_timer", VariableType.Timer);
 
-  // Team designators — always-available Team refs (see language/references#team-designators).
-  // `none` is registered above as the shared empty sentinel.
-  for (const designator of TEAM_DESIGNATORS) {
-    addBuiltInVariable(designator, VariableType.Team);
+  addBuiltInVariable("local_player", VariableType.Player);
+  addBuiltInVariable("target_player", VariableType.Player);
+
+  addBuiltInVariable("target_object", VariableType.Object);
+
+  addBuiltInVariable("neutral", VariableType.Team);
+  addBuiltInVariable("local_team", VariableType.Team);
+  // MegaloEdit Headache #2: encoded as TargetTeam; MegaloEdit does not parse this name.
+  if (frontend.megacrowExtensions.targetTeam) {
+    addBuiltInVariable("target_team", VariableType.Team);
   }
+  addBuiltInVariable("attackers", VariableType.Team);
+  addBuiltInVariable("defenders", VariableType.Team);
+  addBuiltInVariable("third_party", VariableType.Team);
+  addBuiltInVariable("fourth_party", VariableType.Team);
+  addBuiltInVariable("fifth_party", VariableType.Team);
+  addBuiltInVariable("sixth_party", VariableType.Team);
+  addBuiltInVariable("seventh_party", VariableType.Team);
+  addBuiltInVariable("eighth_party", VariableType.Team);
 };
 
 export const addBuiltInGameOptions = (

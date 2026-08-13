@@ -14,12 +14,22 @@ import type { ElementLowerContext } from "../parameters";
 import { lowerGrenadeCount } from "../parameters/grenadeCount";
 import { setField } from "../setField";
 
+const OBJECT_LIST_SENTINELS: Record<string, number> = {
+  none: -1,
+  default: -2,
+  random: -3,
+};
+
 const lowerObjectListKeyword = (
   node: ASTParameterNode,
   objectType: ObjectListType,
-  ctx: ElementLowerContext
+  ctx: ElementLowerContext,
+  allowSentinels = false
 ): Located<number> => {
   assertSyntaxKind(node, SyntaxKind.KEYWORD);
+  if (allowSentinels && OBJECT_LIST_SENTINELS[node.value] !== undefined) {
+    return located(OBJECT_LIST_SENTINELS[node.value]!, node.location);
+  }
   const symbol = ctx.symbolTable
     .toArray()
     .find(
@@ -73,7 +83,8 @@ export const loadoutLowerer = (
           const value = lowerObjectListKeyword(
             parameter,
             ObjectListType.Weapons,
-            ctx
+            ctx,
+            true
           );
           setField(
             ctx.ir.locations,
@@ -89,7 +100,8 @@ export const loadoutLowerer = (
           const value = lowerObjectListKeyword(
             parameter,
             ObjectListType.Weapons,
-            ctx
+            ctx,
+            true
           );
           setField(
             ctx.ir.locations,
@@ -105,7 +117,8 @@ export const loadoutLowerer = (
           const value = lowerObjectListKeyword(
             parameter,
             ObjectListType.Equipment,
-            ctx
+            ctx,
+            true
           );
           setField(
             ctx.ir.locations,
@@ -136,6 +149,9 @@ export const loadoutLowerer = (
 
   dxAssertionScope(ctx.diagnostics, () => {
     assertNotErrorNode(name);
-    ctx.loadoutsByName.set(name.value, traits);
+    // Megalo Headache #1
+    if (!ctx.loadoutsByName.has(name.value)) {
+      ctx.loadoutsByName.set(name.value, traits);
+    }
   });
 };

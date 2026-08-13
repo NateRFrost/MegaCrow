@@ -1,26 +1,27 @@
 import type { AST } from "../abstract-syntax-tree";
-import {
-  BUILT_IN_LOCATION,
-  type Diagnostics,
-  type SourceLocation,
-} from "../diagnostics";
+import { ElementKind } from "../abstract-syntax-tree/elements";
+import type { FrontendContext } from "../context";
+import { type Diagnostics, type SourceLocation } from "../diagnostics";
 import type { ObjectLists } from "../object-lists";
-import type { VersionConfiguration } from "../version-configuration";
-import { ELEMENT_LOWERERS } from "./elements";
+import { assertAllowedInBaseDerived } from "./diagnostics/assertAllowedInBaseDerived";
+import { dxAssertionScope } from "./diagnostics";
+import { ELEMENT_LOWERERS, baseLowerer } from "./elements";
 import type { ElementLowerContext } from "./parameters";
 import type { GameEngineCustomVariant } from "./game/game_variant";
 import { StringTable } from "./game/string_table";
 import type { VariableMetadata } from "./game/megalogamengine/megalogamengine_variable_metadata";
+import type {
+  PlayerTraitOptionOverride,
+  UserDefinedOptionOverride,
+} from "./game/megalogamengine/megalogamengine_user_defined_options";
 import {
   createFieldLocations,
   type FieldLocations,
 } from "./locations";
-import { applyBaseName } from "./postprocessing/applyBaseName";
 import { applyDefaultLoadoutCameraTime } from "./postprocessing/applyDefaultLoadoutCameraTime";
 import { applyMetadata } from "./postprocessing/applyMetadata";
 import { applyVariableMetadata } from "./postprocessing/applyVariableMetadata";
 import { buildVariableSlotMap } from "./preprocessing/symbols";
-
 
 export type Located<T> = {
   value: T;
@@ -28,11 +29,26 @@ export type Located<T> = {
 };
 
 export type IR = {
+  // We use this more as a presence indicator for whether a file is base-derived,
+  // Its possible we cant find the file, in which case baseFileBytes isnt set,
+  // but the file is still base derived and we wanna know about that.
   baseFilePath?: string;
+  // Raw bytes of the base .mglo file.
   baseFileBytes?: Uint8Array;
+  // Anything applied on top of a base file that doesnt fit within the typical
+  // GameEngineCustomVariant struct.
+  baseOverrides: BaseOverrides;
   gameVariant: GameEngineCustomVariant;
+  /** Source locations for IR leaves (diagnostics / unused-override warnings). */
   locations: FieldLocations;
 };
+
+export type BaseOverrides = {
+  userDefinedOptions: UserDefinedOptionOverride[];
+  playerTraits: PlayerTraitOptionOverride[];
+};
+
+export type { PlayerTraitOptionOverride, UserDefinedOptionOverride };
 
 export type LowerContext = {
   objectLists?: ObjectLists;
@@ -52,24 +68,23 @@ const emptyVariableMetadata = (): VariableMetadata => ({
 });
 
 export class Lowerer {
-  private readonly versionConfiguration: VersionConfiguration;
-  public constructor(versionConfiguration: VersionConfiguration) {
-    this.versionConfiguration = versionConfiguration;
-  }
+  public constructor(private readonly frontend: FrontendContext) {}
 
   public lower(
     ast: AST,
     diagnostics: Diagnostics,
     context: LowerContext = {}
   ): IR {
-    void context;
-
     const ir = this.buildDefaultIR();
+    if (this.frontend.megacrowExtensions.notBuiltIn) {
+      ir.gameVariant.baseVariant.builtIn = false;
+    }
     const lowerContext: ElementLowerContext = {
+      frontend: this.frontend,
       symbolTable: ast.symbolTable,
       variableSlots: buildVariableSlotMap(
+        this.frontend,
         ast.symbolTable,
-        this.versionConfiguration.limits,
         diagnostics
       ),
       ir,
@@ -77,34 +92,49 @@ export class Lowerer {
       loadoutsByName: new Map(),
       loadoutPalettesByName: new Map(),
       variableDeclarations: new Map(),
+      inPregameTrigger: false,
     };
 
-    ast.elements.forEach((element) => {
-      const elementLowerer = ELEMENT_LOWERERS.get(element.elementKind);
-      if (elementLowerer) {
-        elementLowerer(element, lowerContext);
-      } else {
-        console.warn(`lowerer for ${element.elementKind} NYI`);
+    // Base element always goes first.
+    for (const element of ast.elements) {
+      if (element.elementKind !== ElementKind.BASE) {
+        continue;
       }
-    });
+      baseLowerer(element, lowerContext);
+    }
 
-    this.postprocess(ir, lowerContext);
+    for (const element of ast.elements) {
+      if (element.elementKind === ElementKind.BASE) {
+        continue;
+      }
+      dxAssertionScope(diagnostics, () => {
+        assertAllowedInBaseDerived(element, lowerContext);
+        const elementLowerer = ELEMENT_LOWERERS.get(element.elementKind);
+        if (elementLowerer) {
+          elementLowerer(element, lowerContext);
+        } else {
+          console.warn(`lowerer for ${element.elementKind} NYI`);
+        }
+      });
+    }
+
+    this.postprocess(ir, lowerContext, context);
 
     return ir;
   }
 
-  private postprocess(ir: IR, ctx: ElementLowerContext) {
+  private postprocess(
+    ir: IR,
+    ctx: ElementLowerContext,
+    _lowerCtx: LowerContext
+  ) {
     applyDefaultLoadoutCameraTime(ir);
-    applyBaseName(ir);
     applyMetadata(ir);
     applyVariableMetadata(ir, ctx);
   }
 
   private buildDefaultIR(): IR {
     const scriptStrings = new StringTable();
-    const defaultNameIndex = scriptStrings.addEntry({
-      english: "Custom Game",
-    });
 
     const locations = createFieldLocations();
     const gameVariant: GameEngineCustomVariant = {
@@ -127,7 +157,7 @@ export class Lowerer {
             isOnline: false,
           },
         },
-        builtIn: false,
+        builtIn: true,
         miscellaneousOptions: {},
         respawnOptions: {},
         socialOptions: {},
@@ -138,12 +168,12 @@ export class Lowerer {
       playerTraits: [],
       userDefinedOptions: [],
       scriptStrings,
-      baseNameStringIndex: defaultNameIndex,
+      baseNameStringIndex: 0,
       localizedName: undefined,
       localizedDescription: undefined,
       localizedCategory: undefined,
-      engineIcon: 0,
-      engineCategory: 0,
+      engineIcon: undefined,
+      engineCategory: undefined,
       mapPermissions: undefined,
       playerRatings: undefined,
       scoreToWinRound: undefined,
@@ -177,11 +207,12 @@ export class Lowerer {
       tu1Settings: {},
     };
 
-    locations.record(gameVariant, "engineIcon", BUILT_IN_LOCATION);
-    locations.record(gameVariant, "engineCategory", BUILT_IN_LOCATION);
-
     return {
       baseFilePath: undefined,
+      baseOverrides: {
+        userDefinedOptions: [],
+        playerTraits: [],
+      },
       gameVariant,
       locations,
     };
@@ -191,4 +222,3 @@ export class Lowerer {
 export type { FieldLocations } from "./locations";
 export { createFieldLocations } from "./locations";
 export { setField } from "./setField";
-

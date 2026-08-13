@@ -176,6 +176,10 @@ const parseGameStatEntry = (ctx: ParserContext): GameStatEntryNode => {
   const grouping = parseGrouping(ctx, anchor);
   const sort = parseSort(ctx, anchor);
 
+  if (!isAstErrorNode(name)) {
+    ctx.symbolParser.addGameStatToScope(name.value, name.location);
+  }
+
   return {
     name,
     type,

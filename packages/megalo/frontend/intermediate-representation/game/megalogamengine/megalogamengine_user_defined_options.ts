@@ -1,9 +1,29 @@
+import type { SourceLocation } from "../../../diagnostics";
+import type { PlayerTraits } from "../game_engine_player_traits";
 import type { StringTableReference } from "../string_table";
 
 export type UserDefinedOptionValue = {
   value: number;
   name?: StringTableReference;
   description?: StringTableReference;
+};
+
+export type UserDefinedOptionOverride = {
+  target:
+    | { kind: "name"; value: string }
+    | { kind: "index"; value: number };
+  value: number;
+  locked?: boolean;
+  hidden?: boolean;
+  location: SourceLocation;
+};
+
+export type PlayerTraitOptionOverride = {
+  target:
+    | { kind: "name"; value: string }
+    | { kind: "index"; value: number };
+  traits: PlayerTraits;
+  location: SourceLocation;
 };
 
 type UserDefinedOptionBase = {

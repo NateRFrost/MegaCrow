@@ -23,11 +23,17 @@ const lineStartLocation = (
 ): SourceCodeLocation => ({
   type: SourceLocationType.SOURCE_CODE,
   start: {
-    offset: location.start.offset,
+    localOffset: location.start.localOffset,
+    absoluteOffset: location.start.absoluteOffset,
     line: location.start.line,
     column: 1,
   },
-  end: { offset: location.start.offset, line: location.start.line, column: 1 },
+  end: {
+    localOffset: location.start.localOffset,
+    absoluteOffset: location.start.absoluteOffset,
+    line: location.start.line,
+    column: 1,
+  },
 });
 
 const syntheticLineLocation = (
@@ -35,8 +41,18 @@ const syntheticLineLocation = (
   near: SourceCodeLocation
 ): SourceCodeLocation => ({
   type: SourceLocationType.SOURCE_CODE,
-  start: { offset: near.end.offset, line, column: 1 },
-  end: { offset: near.end.offset, line, column: 1 },
+  start: {
+    localOffset: near.end.localOffset,
+    absoluteOffset: near.end.absoluteOffset,
+    line,
+    column: 1,
+  },
+  end: {
+    localOffset: near.end.localOffset,
+    absoluteOffset: near.end.absoluteOffset,
+    line,
+    column: 1,
+  },
 });
 
 const isLeadingComment = (tokens: Tokens, index: number): boolean => {

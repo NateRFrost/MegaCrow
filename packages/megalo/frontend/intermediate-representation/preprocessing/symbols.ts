@@ -1,3 +1,4 @@
+import type { FrontendContext } from "../../context";
 import type { Diagnostics } from "../../diagnostics";
 import { diagnosticMessages } from "../../diagnostics/messages";
 import type { VariableLimits } from "../../version-configuration";
@@ -11,17 +12,11 @@ import {
   VariableType,
 } from "../../symbol-table";
 
-/** Occupants that share one physical slot (non-overlapping temporaries). */
 type SlotOccupants = SymbolId[];
-/** Slot index → occupants. */
 type TypeSlots = SlotOccupants[];
 type ScopeSlots = Record<VariableType, TypeSlots>;
 type VariableSlotTable = Record<VariableScope, ScopeSlots>;
 
-/**
- * Effective storage for a symbol after temporary packing and overflow.
- * Lookup by SymbolId during reference lowering.
- */
 export type ResolvedVariableSlot = {
   scope: VariableScope;
   type: VariableType;
@@ -62,65 +57,51 @@ const emptySlotTable = (): VariableSlotTable => ({
   [VariableScope.Temporary]: emptyScopeSlots(),
 });
 
-const rangeEndOffset = (symbol: SymbolTableVariableEntry): number =>
-  symbol.range.end.offset;
-
-const rangesOverlap = (
-  a: SymbolTableVariableEntry,
-  b: SymbolTableVariableEntry
-): boolean => {
-  const aStart = a.range.start.offset;
-  const aEnd = rangeEndOffset(a);
-  const bStart = b.range.start.offset;
-  const bEnd = rangeEndOffset(b);
-  // Open-ended (BUILT_IN_POSITION end = -1) always overlaps.
-  if (aEnd < 0 || bEnd < 0) {
-    return true;
-  }
-  return aStart < bEnd && bStart < aEnd;
-};
-
-const slotConflictsWith = (
-  occupants: SlotOccupants,
-  candidate: SymbolTableVariableEntry,
-  byId: Map<SymbolId, SymbolTableVariableEntry>
-): boolean =>
-  occupants.some((id) => {
-    const existing = byId.get(id);
-    return existing !== undefined && rangesOverlap(existing, candidate);
-  });
-
-const assignSequentialSlots = (
-  symbols: readonly SymbolTableVariableEntry[],
-  slots: TypeSlots
+const assignTemporariesByLifetime = (
+  temporariesByType: Map<VariableType, SymbolTableVariableEntry[]>,
+  table: VariableSlotTable
 ): void => {
-  for (const symbol of symbols) {
-    slots.push([symbol.id]);
-  }
-};
+  // For each type of variable (Timer, Number, Team, Player, Object)
+  for (const type of VARIABLE_TYPES) {
+    // Get all the temporaries of this type, and sort them by declaration order.
+    const sortedTemporaryVariableEntries = [...(temporariesByType.get(type) ?? [])].sort(
+      (left, right) =>
+        left.range.start.absoluteOffset - right.range.start.absoluteOffset ||
+        left.id - right.id
+    );
+    // We keep track of the slots that are currently in use, and the slots that are free.
+    // When a temporary variable goes out of scope, we add the slot index to the free list.
+    // When a temporary variable is declared, we add the slot index to the live list.
+    // When we need to assign a new slot to a temporary variable, we take the first free slot.
+    // If there are no free slots, we assign a new slot to the temporary variable.
+    const liveSlotIndices: { endOffset: number; index: number }[] = [];
+    const freeSlotIndices: number[] = [];
+    let nextFreeSlotIndex = 0;
 
-const packTemporarySlots = (
-  symbols: readonly SymbolTableVariableEntry[],
-  byId: Map<SymbolId, SymbolTableVariableEntry>
-): TypeSlots => {
-  const ordered = [...symbols].sort(
-    (a, b) => a.range.start.offset - b.range.start.offset
-  );
-  const slots: TypeSlots = [];
-  for (const symbol of ordered) {
-    let placed = false;
-    for (const occupants of slots) {
-      if (!slotConflictsWith(occupants, symbol, byId)) {
-        occupants.push(symbol.id);
-        placed = true;
-        break;
+    for (const temporaryVariableEntry of sortedTemporaryVariableEntries) {
+      const start = temporaryVariableEntry.range.start.absoluteOffset;
+      // Release slots whose lifetime ended at or before this declaration.
+      for (let i = liveSlotIndices.length - 1; i >= 0; i--) {
+        const entry = liveSlotIndices[i]!;
+        if (entry.endOffset <= start) {
+          freeSlotIndices.push(entry.index);
+          liveSlotIndices.splice(i, 1);
+        }
       }
-    }
-    if (!placed) {
-      slots.push([symbol.id]);
+      freeSlotIndices.sort((a, b) => a - b);
+
+      const currentSlotIndex = freeSlotIndices.length > 0 ? freeSlotIndices.shift()! : nextFreeSlotIndex++;
+      const slotsForVariableType = table[VariableScope.Temporary][type];
+      while (slotsForVariableType.length <= currentSlotIndex) {
+        slotsForVariableType.push([]);
+      }
+      slotsForVariableType[currentSlotIndex]!.push(temporaryVariableEntry.id);
+      liveSlotIndices.push({
+        endOffset: temporaryVariableEntry.range.end.absoluteOffset,
+        index: currentSlotIndex,
+      });
     }
   }
-  return slots;
 };
 
 const overflowTemporaries = (
@@ -200,15 +181,18 @@ const flattenSlotTable = (table: VariableSlotTable): VariableSlotMap => {
   return map;
 };
 
-/**
- * Assign slot indices per (scope, type).
- * Temporaries are packed by lifetime; excess temporary slots overflow into free globals.
- */
+// Our symbol table is quite rich, it has information about variable scopes
+// and has no limits to how many variables can be used.
+// At lower we need to start to pack these symbols within Blam! constraints.
+// Megalo has a limited space for variables, and uses fixed slots (eg global_1, global_2, temporary_1, temporary_2, etc.)
+// When lowering anything that uses one of our variables, we need to know which slot our symbol gets assinged to.
+// This function builds a map of symbol id to slot index.
 export const buildVariableSlotMap = (
+  frontend: FrontendContext,
   table: SymbolTable,
-  limits: VariableLimits,
   diagnostics: Diagnostics
 ): VariableSlotMap => {
+  const limits = frontend.versionConfiguration.limits.variables;
   const slotTable = emptySlotTable();
   const byId = new Map<SymbolId, SymbolTableVariableEntry>();
   const temporariesByType = new Map<VariableType, SymbolTableVariableEntry[]>();
@@ -227,17 +211,24 @@ export const buildVariableSlotMap = (
     slotTable[symbol.scope][symbol.type].push([symbol.id]);
   }
 
-  for (const type of VARIABLE_TYPES) {
-    const temps = temporariesByType.get(type) ?? [];
-    slotTable[VariableScope.Temporary][type] = packTemporarySlots(temps, byId);
+  assignTemporariesByLifetime(temporariesByType, slotTable);
 
-    const temporaryLimit = limits[VariableScope.Temporary][type] ?? 0;
-    const globalLimit = limits[VariableScope.Global][type] ?? 0;
-    overflowTemporaries(slotTable, type, temporaryLimit, globalLimit);
+  // If there are too many temporaries, they spill over into any unused global slots.
+  // For pre-107-mcc, there are no temporary slots, all of them spill into globals.
+  if (
+    frontend.compilerSettings
+      .temporaryVariablesCanOverflowIntoUnusedGlobalVariables
+  ) {
+    for (const type of VARIABLE_TYPES) {
+      // MegaloEdit: temps beyond the dedicated pool spill into free global
+      // metadata slots. Wire refs for overflowed slots use Global* / GlobalNumber.
+      const temporaryLimit = limits[VariableScope.Temporary][type];
+      const globalLimit = limits[VariableScope.Global][type];
+      if (temporaryLimit !== undefined && globalLimit !== undefined) {
+        overflowTemporaries(slotTable, type, temporaryLimit, globalLimit);
+      }
+    }
   }
-
-  // Non-temporary scopes are already sequential; reaffirm order is declaration order.
-  void assignSequentialSlots;
 
   emitLimitDiagnostics(slotTable, limits, byId, diagnostics);
   return flattenSlotTable(slotTable);

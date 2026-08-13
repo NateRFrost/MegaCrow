@@ -8,22 +8,57 @@ import { LowerError } from "../error";
 import type { ParameterLoweringContext } from "./context";
 
 /**
- * Lower a flat parameter list as a number (literal or named constant).
+ * MegaloEdit `ReadConstantInteger` / `ParseConstantInteger`:
  */
-export const lowerNumberParam = (
-  parameters: ASTParameterNode[],
-  ctx: ParameterLoweringContext,
+export const tryLowerConstantInteger = (
+  node: ASTParameterNode,
+  ctx: Pick<ParameterLoweringContext, "symbolTable">
+): Located<number> | undefined => {
+  if (node.kind === SyntaxKind.INTEGER) {
+    return located(node.value, node.location);
+  }
+  if (node.kind === SyntaxKind.REFERENCE) {
+    const symbol = ctx.symbolTable.getSymbol(node.symbolId);
+    if (symbol?.kind === SymbolKind.Constant) {
+      return located(symbol.value, node.location);
+    }
+  }
+  return undefined;
+};
+
+export const lowerConstantInteger = (
+  node: ASTParameterNode,
+  ctx: Pick<ParameterLoweringContext, "symbolTable">,
   expected: string,
   location: SourceCodeLocation
 ): Located<number> => {
-  const node = parameters[0];
-  if (node === undefined) {
-    throw new LowerError(
-      diagnosticMessages.expectedParameterType(expected, ""),
-      location
-    );
+  const value = tryLowerConstantInteger(node, ctx);
+  if (value !== undefined) {
+    return value;
   }
+  const got =
+    node.kind === SyntaxKind.KEYWORD
+      ? node.value
+      : node.kind === SyntaxKind.REFERENCE
+        ? node.identifier
+        : node.kind === SyntaxKind.FLOATING_POINT
+          ? String(node.value)
+          : "";
+  throw new LowerError(
+    diagnosticMessages.expectedParameterType(expected, got),
+    node.location ?? location
+  );
+};
 
+/**
+ * MegaloEdit ReadConstantReal: float or int literal, or named number constant.
+ */
+export const lowerFloatParam = (
+  node: ASTParameterNode,
+  ctx: Pick<ParameterLoweringContext, "symbolTable">,
+  expected: string,
+  location: SourceCodeLocation
+): Located<number> => {
   if (
     node.kind === SyntaxKind.INTEGER ||
     node.kind === SyntaxKind.FLOATING_POINT
@@ -40,18 +75,22 @@ export const lowerNumberParam = (
 
   throw new LowerError(
     diagnosticMessages.expectedParameterType(expected, ""),
-    node.location
+    node.location ?? location
   );
 };
 
-/**
- * Lower a boolean from a number parameter (0 = false, non-zero = true).
- */
 export const lowerBooleanParam = (
   parameters: ASTParameterNode[],
   ctx: ParameterLoweringContext,
   location: SourceCodeLocation
 ): Located<boolean> => {
-  const value = lowerNumberParam(parameters, ctx, "boolean", location);
+  const node = parameters[0];
+  if (node === undefined) {
+    throw new LowerError(
+      diagnosticMessages.expectedParameterType("boolean", ""),
+      location
+    );
+  }
+  const value = lowerConstantInteger(node, ctx, "boolean", location);
   return located(value.value !== 0, value.location);
 };

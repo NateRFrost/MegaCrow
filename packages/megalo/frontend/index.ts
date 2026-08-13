@@ -1,34 +1,50 @@
 import type { SupportedMegaloVersion } from "../version";
 import { Parser } from "./abstract-syntax-tree";
 import { type Compiler, getCompilerForVersion } from "./compile";
+import type { CompilerSettings } from "./compiler-settings";
+import { FrontendContext } from "./context";
 import { Diagnostics } from "./diagnostics";
 import { Lowerer } from "./intermediate-representation";
 import type { ObjectLists } from "./object-lists";
+import type { MegacrowExtensions } from "./megacrow-extensions";
 import { Lexer } from "./tokens";
-import {
-  getConfigurationForVersion,
-  type VersionConfiguration,
-} from "./version-configuration";
+
+export { FrontendContext } from "./context";
 
 // The frontend is Workspace lifecycle - it is instanced per workspace.
 export class Frontend {
-  private readonly megaloVersion: SupportedMegaloVersion;
-
+  private readonly frontend: FrontendContext;
   private readonly lexer: Lexer;
   private readonly parser: Parser;
-  private readonly versionConfiguration: VersionConfiguration;
   private readonly lowerer: Lowerer;
   private readonly compiler: Compiler;
 
-  public constructor(megaloVersion: SupportedMegaloVersion) {
-    this.megaloVersion = megaloVersion;
-    this.lexer = new Lexer(this.megaloVersion);
-    this.parser = new Parser(this.megaloVersion);
-    this.versionConfiguration = getConfigurationForVersion(
-      this.megaloVersion
+  public constructor(
+    megaloVersion: SupportedMegaloVersion,
+    megacrowExtensions?: Partial<MegacrowExtensions>,
+    compilerSettings?: Partial<CompilerSettings>
+  ) {
+    this.frontend = new FrontendContext(
+      megaloVersion,
+      megacrowExtensions,
+      compilerSettings
     );
-    this.lowerer = new Lowerer(this.versionConfiguration);
-    this.compiler = getCompilerForVersion(this.megaloVersion);
+    this.lexer = new Lexer(this.frontend);
+    this.parser = new Parser(this.frontend);
+    this.lowerer = new Lowerer(this.frontend);
+    this.compiler = getCompilerForVersion(this.frontend.megaloVersion);
+  }
+
+  public setMegacrowExtensions(
+    megacrowExtensions?: Partial<MegacrowExtensions>
+  ): void {
+    this.frontend.setMegacrowExtensions(megacrowExtensions);
+  }
+
+  public setCompilerSettings(
+    compilerSettings?: Partial<CompilerSettings>
+  ): void {
+    this.frontend.setCompilerSettings(compilerSettings);
   }
 
   public analyzeSource(source: string, objectLists: ObjectLists = {}) {

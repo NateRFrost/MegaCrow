@@ -1,4 +1,5 @@
 import type { MegaloVersion } from "../../../../version";
+import type { FrontendContext } from "../../../context";
 import {
   type SourceCodeLocation,
   SourceLocationType,
@@ -211,7 +212,6 @@ export class ConditionParserRepository {
       [
         ObjectListParameter(ObjectListType.Objects),
         ParameterType.QuotedString,
-        ParameterType.Number,
         ParameterType.Keyword,
       ],
     ]);
@@ -237,8 +237,8 @@ export class ConditionParserRepository {
     this.registerParser("game_is_forge", () => []);
   }
 
-  public constructor(megaloVersion: MegaloVersion) {
-    this.registerParsers(megaloVersion);
+  public constructor(frontend: FrontendContext) {
+    this.registerParsers(frontend.megaloVersion);
   }
 
   public getParser(name: string): ConditionOperandParser | undefined {

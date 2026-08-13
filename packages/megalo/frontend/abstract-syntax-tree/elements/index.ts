@@ -1,4 +1,5 @@
 import type { MegaloVersion } from "../../../version";
+import type { FrontendContext } from "../../context";
 import type { SourceCodeLocation } from "../../diagnostics";
 import type { Token } from "../../tokens";
 import type { ASTNode, SyntaxKind } from "..";
@@ -139,8 +140,8 @@ export class ElementParserRepository {
     this.registerParser("trigger", triggerParser);
   }
 
-  public constructor(megaloVersion: MegaloVersion) {
-    this.registerParsers(megaloVersion);
+  public constructor(frontend: FrontendContext) {
+    this.registerParsers(frontend.megaloVersion);
   }
 
   public getParser(name: string): ElementParser<ASTElementNode> | undefined {

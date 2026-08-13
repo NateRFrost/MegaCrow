@@ -1,7 +1,7 @@
 /**
  * Declarative parameter-signature matcher.
  *
- * Production element lowerers should use explicit helpers (`lowerNumberParam`,
+ * Production element lowerers should use explicit helpers (`lowerConstantInteger`,
  * `resolvePlayerReference`, etc.) instead. This module remains for unit tests
  * and as a reference for the parse-time `parameterParserBuilder` twin.
  */
@@ -18,7 +18,6 @@ import { dxAssertionScope } from "../diagnostics";
 import { LowerError } from "../error";
 import { lowerConstantNumber } from "./constantNumber";
 import type { ObjectReferenceType } from "../game/megalogamengine/megalogamengine_references";
-import type { VariableType as VariantVariableType } from "../game/megalogamengine/megalogamengine_variant_variable";
 import type { ParameterLoweringContext } from "./context";
 import { resolveScriptStringTableReference } from "./resolveScriptStringTableReference";
 import {
@@ -100,7 +99,6 @@ type TeamLoweringSpec = {
 type VariantVariableLoweringSpec = {
   readonly kind: LoweringSpecKind.VariantVariable;
   readonly name: string;
-  readonly preferredType?: VariantVariableType;
 };
 
 type KeywordLoweringSpec = {
@@ -193,12 +191,10 @@ export const teamParam = (name: string): TeamLoweringSpec => ({
 });
 
 export const variantVariableParam = (
-  name: string,
-  preferredType?: VariantVariableType
+  name: string
 ): VariantVariableLoweringSpec => ({
   kind: LoweringSpecKind.VariantVariable,
   name,
-  preferredType,
 });
 
 export const keywordParam = (
@@ -248,10 +244,7 @@ const looksLikeCustomVariable = (
   node: ASTParameterNode,
   ctx: ParameterLoweringContext
 ): boolean => {
-  if (
-    node.kind === SyntaxKind.INTEGER ||
-    node.kind === SyntaxKind.FLOATING_POINT
-  ) {
+  if (node.kind === SyntaxKind.INTEGER) {
     return true;
   }
   if (node.kind === SyntaxKind.MEMBER_REFERENCE) {
@@ -361,14 +354,11 @@ const looksLikeString = (
   return symbol?.kind === SymbolKind.String;
 };
 
-const looksLikeNumber = (
+const looksLikeInteger = (
   node: ASTParameterNode,
   ctx: ParameterLoweringContext
 ): boolean => {
-  if (
-    node.kind === SyntaxKind.INTEGER ||
-    node.kind === SyntaxKind.FLOATING_POINT
-  ) {
+  if (node.kind === SyntaxKind.INTEGER) {
     return true;
   }
   if (node.kind !== SyntaxKind.REFERENCE) {
@@ -383,6 +373,12 @@ const looksLikeNumber = (
   );
 };
 
+const looksLikeFloat = (
+  node: ASTParameterNode,
+  ctx: ParameterLoweringContext
+): boolean =>
+  node.kind === SyntaxKind.FLOATING_POINT || looksLikeInteger(node, ctx);
+
 const matchesSpec = (
   node: ASTParameterNode,
   spec: LoweringSpec,
@@ -394,8 +390,9 @@ const matchesSpec = (
         node.kind === SyntaxKind.KEYWORD && node.value === spec.value
       );
     case LoweringSpecKind.Number:
+      return looksLikeInteger(node, ctx) || looksLikeCustomVariable(node, ctx);
     case LoweringSpecKind.Float:
-      return looksLikeNumber(node, ctx) || looksLikeCustomVariable(node, ctx);
+      return looksLikeFloat(node, ctx) || looksLikeCustomVariable(node, ctx);
     case LoweringSpecKind.String:
       return looksLikeString(node, ctx);
     case LoweringSpecKind.CustomVariable:
@@ -529,7 +526,7 @@ const lowerSpec = (
       return {
         name: spec.name,
         value: located(
-          resolveVariantVariable(node, ctx, spec.preferredType),
+          resolveVariantVariable(node, ctx),
           node.location
         ),
       };
@@ -764,8 +761,18 @@ export const buildParameterLowerer = (
 
       const anchor: SourceLocation = nodes[0]?.location ?? {
         type: SourceLocationType.SOURCE_CODE,
-        start: { offset: 0, line: 1, column: 1 },
-        end: { offset: 0, line: 1, column: 1 },
+        start: {
+          localOffset: 0,
+          absoluteOffset: 0,
+          line: 1,
+          column: 1,
+        },
+        end: {
+          localOffset: 0,
+          absoluteOffset: 0,
+          line: 1,
+          column: 1,
+        },
       };
 
       result = lowerSignatureStrict(nodes, bestSignature, ctx, anchor);

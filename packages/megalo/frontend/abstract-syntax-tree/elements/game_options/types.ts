@@ -8,6 +8,7 @@ import type { IntegerInitialValue, NumericInitialValue } from "../constants";
 import type {
   PlayerTraitOptionNode,
   PlayerTraitsElementNode,
+  PlayerTraitsOverrideNode,
 } from "./player_traits";
 
 export type { ASTStringLiteralOrReference } from "../../parameters/string_literal_or_reference";
@@ -17,6 +18,9 @@ export enum GameOptionEntryKind {
   OPTION = 1,
   RANGED_OPTION = 2,
   PLAYER_TRAITS = 3,
+  // Base-derived
+  OPTION_OVERRIDE = 4,
+  PLAYER_TRAITS_OVERRIDE = 5,
 }
 
 export enum OverrideValueKind {
@@ -47,6 +51,18 @@ export type UserDefinedOptionNode = {
   values: UserDefinedOptionValueNode[];
   location: SourceCodeLocation;
 };
+
+export type UserDefinedOptionOverrideNode = {
+  kind: GameOptionEntryKind.OPTION_OVERRIDE;
+  modifiers: GameOptionModifiers;
+  target:
+    | { kind: "name"; value: string; location: SourceCodeLocation }
+    | { kind: "index"; value: number; location: SourceCodeLocation };
+  value: IntegerInitialValue;
+  location: SourceCodeLocation;
+};
+
+export type { PlayerTraitsOverrideNode };
 
 export type OverrideSimpleValueNode = {
   kind: OverrideValueKind.SIMPLE;
@@ -101,7 +117,9 @@ export type OverrideEntryNode = {
 export type GameOptionEntryNode =
   | OverrideEntryNode
   | UserDefinedOptionNode
-  | PlayerTraitsElementNode;
+  | UserDefinedOptionOverrideNode
+  | PlayerTraitsElementNode
+  | PlayerTraitsOverrideNode;
 
 export type GameOptionsElementNode =
   ASTElementBase<ElementKind.GAME_OPTIONS> & {

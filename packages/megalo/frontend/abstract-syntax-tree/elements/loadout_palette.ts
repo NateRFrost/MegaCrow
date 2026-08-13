@@ -1,4 +1,5 @@
 import type { MegaloVersion } from "../../../version";
+import type { FrontendContext } from "../../context";
 import type { SourceCodeLocation } from "../../diagnostics";
 import { diagnosticMessages } from "../../diagnostics/messages";
 import { type Token, TokenKind } from "../../tokens";
@@ -56,8 +57,8 @@ export class LoadoutPaletteParserRepository {
     this.registerParser("item", buildParameterParser([ParameterType.Loadout]));
   }
 
-  public constructor(megaloVersion: MegaloVersion) {
-    this.registerParsers(megaloVersion);
+  public constructor(frontend: FrontendContext) {
+    this.registerParsers(frontend.megaloVersion);
   }
 
   public getParser(name: string): ParameterParser | undefined {

@@ -1,3 +1,4 @@
+import type { LoadoutPaletteType } from "./LoadoutPaletteType";
 import type { StringTableReference } from "../string_table";
 import type { HUDMeterInputType } from "./megalogamengine_hud_widgets";
 import type {
@@ -188,7 +189,9 @@ export type NavpointSetVisibleParameters = {
 
 export type NavpointSetIconParameters = {
   navpoint: ObjectReference;
-  icon: StringTableReference;
+  icon: number;
+  /** Present when icon is `num` (11). */
+  number?: CustomVariableReference;
 };
 
 export enum NavpointPriority {
@@ -221,10 +224,15 @@ export type SetParameters = {
 };
 
 export enum BoundaryShape {
-  Sphere = 0,
-  Box = 1,
+  None = 0,
+  Sphere = 1,
   Cylinder = 2,
+  Box = 3,
 }
+
+type NoneBoundaryParameters = {
+  shape: BoundaryShape.None;
+};
 
 type SphereBoundaryParameters = {
   shape: BoundaryShape.Sphere;
@@ -234,19 +242,23 @@ type SphereBoundaryParameters = {
 type BoxBoundaryParameters = {
   shape: BoundaryShape.Box;
   width: CustomVariableReference;
-  height: CustomVariableReference;
   depth: CustomVariableReference;
+  /** MegaloEdit script order: … neg_height pos_height */
+  negHeight: CustomVariableReference;
+  posHeight: CustomVariableReference;
 };
 
 type CylinderBoundaryParameters = {
   shape: BoundaryShape.Cylinder;
   radius: CustomVariableReference;
-  height: CustomVariableReference;
+  negHeight: CustomVariableReference;
+  posHeight: CustomVariableReference;
 };
 
 export type SetBoundaryParameters = {
   object: ObjectReference;
 } & (
+  | NoneBoundaryParameters
   | SphereBoundaryParameters
   | BoxBoundaryParameters
   | CylinderBoundaryParameters
@@ -471,7 +483,7 @@ export type SubmitIncidentWithCustomValueParameters = {
 
 export type SetLoadoutPaletteParameters = {
   target: TeamOrPlayerTarget;
-  loadoutPaletteIndex: number;
+  loadoutPaletteIndex: LoadoutPaletteType;
 };
 
 export type PlayerGetWeaponParameters = {
@@ -513,7 +525,7 @@ export enum BipedGiveWeaponMode {
 
 export type BipedGiveWeaponParameters = {
   biped: ObjectReference;
-  weapon: ObjectReference;
+  weapon: ObjectTypeReference;
   mode: BipedGiveWeaponMode;
 };
 

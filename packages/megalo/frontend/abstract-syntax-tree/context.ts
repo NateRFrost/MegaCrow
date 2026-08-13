@@ -1,4 +1,4 @@
-import type { MegaloVersion } from "../../version";
+import type { FrontendContext } from "../context";
 import {
   type Diagnostics,
   type SourceCodeLocation,
@@ -35,7 +35,7 @@ export class ParserContext {
 
   public constructor(
     tokens: Tokens,
-    megaloVersion: MegaloVersion,
+    frontend: FrontendContext,
     diagnostics: Diagnostics,
     symbolTable: SymbolBinder,
     objectLists: ObjectLists = {},
@@ -47,26 +47,22 @@ export class ParserContext {
     this.symbolParser =
       sharedSymbolParser ??
       new ParserSymbolContext(
-        megaloVersion,
+        frontend,
         diagnostics,
         symbolTable,
         objectLists
       );
     this.playerTraitParserRepository = new PlayerTraitParserRepository(
-      megaloVersion
+      frontend
     );
-    this.loadoutParserRepository = new LoadoutParserRepository(megaloVersion);
+    this.loadoutParserRepository = new LoadoutParserRepository(frontend);
     this.loadoutPaletteParserRepository = new LoadoutPaletteParserRepository(
-      megaloVersion
+      frontend
     );
-    this.teamsParserRepository = new TeamsParserRepository(megaloVersion);
-    this.engineDataParserRepository = new EngineDataParserRepository(
-      megaloVersion
-    );
-    this.actionParserRepository = new ActionParserRepository(megaloVersion);
-    this.conditionParserRepository = new ConditionParserRepository(
-      megaloVersion
-    );
+    this.teamsParserRepository = new TeamsParserRepository(frontend);
+    this.engineDataParserRepository = new EngineDataParserRepository(frontend);
+    this.actionParserRepository = new ActionParserRepository(frontend);
+    this.conditionParserRepository = new ConditionParserRepository(frontend);
   }
 
   public getToken(): Token {
@@ -112,8 +108,18 @@ export class ParserContext {
     const lastToken = this.tokens.at(-1);
     const location: SourceCodeLocation = lastToken?.location ?? {
       type: SourceLocationType.SOURCE_CODE,
-      start: { offset: 0, line: 1, column: 1 },
-      end: { offset: 0, line: 1, column: 1 },
+      start: {
+        localOffset: 0,
+        absoluteOffset: 0,
+        line: 1,
+        column: 1,
+      },
+      end: {
+        localOffset: 0,
+        absoluteOffset: 0,
+        line: 1,
+        column: 1,
+      },
     };
     this.diagnostics.addError(
       diagnosticMessages.expectedEndBeforeEof(),

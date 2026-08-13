@@ -1,4 +1,4 @@
-﻿import {
+import {
   type c_game_engine_custom_variant,
   c_action,
   e_biped_give_weapon_mode,
@@ -115,9 +115,10 @@
   s_action_timer_reset_parameters,
   s_action_timer_set_rate_parameters,
   s_action_weapon_set_pickup_priority_parameters,
+  e_action_type,
   e_fireteam_filter_flags,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import type { Diagnostics } from "../../diagnostics";
+import { BUILT_IN_LOCATION, type Diagnostics } from "../../diagnostics";
 import type { IR } from "../../intermediate-representation";
 import {
   ActionType,
@@ -126,7 +127,8 @@ import {
   type FireteamFilter,
   type SetBoundaryParameters,
 } from "../../intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import type { ObjectTypeReference } from "../../intermediate-representation/game/megalogamengine/megalogamengine_references";
+import type { Trigger } from "../../intermediate-representation/game/megalogamengine/megalogamengine_trigger";
+import { encodeNoObjectReference } from "../../intermediate-representation/parameters";
 import { encodeActionType } from "./enums/e_action_type";
 import { encodeMathOperation } from "./enums/e_math_operation";
 import {
@@ -165,19 +167,23 @@ const assignSetBoundaryParameters = (
   params.m_object = encodeObjectReference(boundary.object);
   params.m_shape = encodeBoundaryShape(boundary.shape) as typeof params.m_shape;
   switch (boundary.shape) {
+    case BoundaryShape.None:
+      break;
     case BoundaryShape.Sphere:
       params.m_variable_1 = encodeCustomVariableReference(boundary.radius);
       break;
     case BoundaryShape.Box:
+      // MegaloEdit encode order: width, depth, pos_height, neg_height
       params.m_variable_1 = encodeCustomVariableReference(boundary.width);
       params.m_variable_2 = encodeCustomVariableReference(boundary.depth);
-      params.m_variable_3 = encodeCustomVariableReference(boundary.height);
-      params.m_variable_4 = encodeCustomVariableReference(boundary.height);
+      params.m_variable_3 = encodeCustomVariableReference(boundary.posHeight);
+      params.m_variable_4 = encodeCustomVariableReference(boundary.negHeight);
       break;
     case BoundaryShape.Cylinder:
+      // MegaloEdit encode order: radius, pos_height, neg_height
       params.m_variable_1 = encodeCustomVariableReference(boundary.radius);
-      params.m_variable_2 = encodeCustomVariableReference(boundary.height);
-      params.m_variable_3 = encodeCustomVariableReference(boundary.height);
+      params.m_variable_2 = encodeCustomVariableReference(boundary.posHeight);
+      params.m_variable_3 = encodeCustomVariableReference(boundary.negHeight);
       break;
     default: {
       const _exhaustive: never = boundary;
@@ -202,14 +208,12 @@ const compileAction = (_action: Action, _diagnostics: Diagnostics): c_action => 
       const params = new s_action_create_object_parameters();
       params.m_object_type = encodeObjectTypeReference(action.parameters.objectType);
       params.m_object_reference_1 = encodeObjectReference(
+        action.parameters.object_reference_out ?? encodeNoObjectReference()
+      );
+      params.m_object_reference_2 = encodeObjectReference(
         action.parameters.place_at_object
       );
-      if (action.parameters.object_reference_out !== undefined) {
-        params.m_object_reference_2 = encodeObjectReference(
-          action.parameters.object_reference_out
-        );
-      }
-      params.m_filter_index = action.parameters.labelIndex ?? 0;
+      params.m_filter_index = action.parameters.labelIndex ?? -1;
       params.m_flags = encodeCreateObjectFlags(action.parameters);
       params.m_offset = encodeObjectOffset(action.parameters.offset ?? { x: 0, y: 0, z: 0 });
       params.m_variant_name_index = action.parameters.variantNameIndex ?? 0;
@@ -237,6 +241,11 @@ const compileAction = (_action: Action, _diagnostics: Diagnostics): c_action => 
       params.m_navpoint_icon = Number(
         action.parameters.icon
       ) as unknown as e_chud_navpoint_icon_type;
+      if (action.parameters.number !== undefined) {
+        params.m_navpoint_number = encodeCustomVariableReference(
+          action.parameters.number
+        );
+      }
       target.m_navpoint_set_icon_parameters = params;
       break;
     }
@@ -942,7 +951,7 @@ const compileAction = (_action: Action, _diagnostics: Diagnostics): c_action => 
       const params = new s_action_biped_give_weapon_parameters();
       params.m_object = encodeObjectReference(action.parameters.biped);
       params.m_object_type = encodeObjectTypeReference(
-        action.parameters.weapon as unknown as ObjectTypeReference
+        action.parameters.weapon
       );
       params.m_mode = action.parameters.mode as unknown as e_biped_give_weapon_mode;
       target.m_biped_give_weapon_parameters = params;
@@ -1053,12 +1062,84 @@ const compileAction = (_action: Action, _diagnostics: Diagnostics): c_action => 
   }
   return target;
 };
+
+const validatePregameActionRange = (
+  actions: readonly c_action[],
+  triggers: readonly Trigger[],
+  firstAction: number,
+  actionCount: number,
+  diagnostics: Diagnostics
+): void => {
+  for (let i = firstAction; i < firstAction + actionCount; i++) {
+    const action = actions[i];
+    if (action === undefined) {
+      continue;
+    }
+    if (!action.executable_pregame()) {
+      diagnostics.addError(
+        "This action can't be used inside a pregame trigger",
+        BUILT_IN_LOCATION
+      );
+    }
+    if (
+      action.m_type === e_action_type.begin &&
+      action.m_begin_parameters !== undefined
+    ) {
+      validatePregameActionRange(
+        actions,
+        triggers,
+        action.m_begin_parameters.m_first_action_index,
+        action.m_begin_parameters.m_action_count,
+        diagnostics
+      );
+    }
+    if (
+      action.m_type === e_action_type.for_each &&
+      action.m_for_each_parameters !== undefined
+    ) {
+      const nested = triggers[action.m_for_each_parameters.m_trigger_index];
+      if (nested !== undefined) {
+        validatePregameActionRange(
+          actions,
+          triggers,
+          nested.firstAction,
+          nested.actionCount,
+          diagnostics
+        );
+      }
+    }
+  }
+};
+
+// Check that pregame trigger actions are valid
+// also runs thru nested triggers (begin, foreach)
+const validatePregameActions = (
+  ir: IR,
+  actions: readonly c_action[],
+  diagnostics: Diagnostics
+): void => {
+  const { pregameTriggerIndex, triggers } = ir.gameVariant.gameEngine;
+  if (pregameTriggerIndex < 0 || pregameTriggerIndex >= triggers.length) {
+    return;
+  }
+  const trigger = triggers[pregameTriggerIndex]!;
+  validatePregameActionRange(
+    actions,
+    triggers,
+    trigger.firstAction,
+    trigger.actionCount,
+    diagnostics
+  );
+};
+
 export const compileActions = (
   ir: IR,
   gameVariant: c_game_engine_custom_variant,
   diagnostics: Diagnostics
 ): void => {
-  gameVariant.m_game_engine.m_actions = ir.gameVariant.gameEngine.actions.map(
-    (action) => compileAction(action, diagnostics)
+  const actions = ir.gameVariant.gameEngine.actions.map((action) =>
+    compileAction(action, diagnostics)
   );
+  gameVariant.m_game_engine.m_actions = actions;
+  validatePregameActions(ir, actions, diagnostics);
 };

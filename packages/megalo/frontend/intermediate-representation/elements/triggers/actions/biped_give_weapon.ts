@@ -11,7 +11,10 @@ import {
   asParameterLoweringContext,
   type ElementLowerContext,
 } from "../../../parameters/context";
-import { resolveObjectReference } from "../../../parameters";
+import {
+  resolveObjectReference,
+  resolveObjectTypeReference,
+} from "../../../parameters";
 import { requireKeyword, requireParamCount } from "../helpers";
 
 const BIPED_GIVE_WEAPON_MODE_BY_NAME: Record<string, BipedGiveWeaponMode> = {
@@ -23,7 +26,7 @@ const BIPED_GIVE_WEAPON_MODE_BY_NAME: Record<string, BipedGiveWeaponMode> = {
 export const lowerBipedGiveWeapon = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   requireParamCount(parameters, 3, location);
   const modeName = requireKeyword(parameters[2]!, location).toLowerCase();
@@ -31,7 +34,7 @@ export const lowerBipedGiveWeapon = (
   if (mode === undefined) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType("weapon slot", modeName),
-      parameters[2]!.location,
+      parameters[2]!.location
     );
   }
   const paramCtx = asParameterLoweringContext(ctx);
@@ -39,7 +42,7 @@ export const lowerBipedGiveWeapon = (
     type: ActionType.BipedGiveWeapon,
     parameters: {
       biped: resolveObjectReference(parameters[0]!, paramCtx),
-      weapon: resolveObjectReference(parameters[1]!, paramCtx),
+      weapon: resolveObjectTypeReference(parameters[1]!, paramCtx),
       mode,
     },
   };

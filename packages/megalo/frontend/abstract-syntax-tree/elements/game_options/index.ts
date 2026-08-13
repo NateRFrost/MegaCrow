@@ -27,7 +27,9 @@ export type {
   OverrideNestedBodyNode,
   OverridePlayerTraitsNameNode,
   OverrideSimpleValueNode,
+  PlayerTraitsOverrideNode,
   UserDefinedOptionNode,
+  UserDefinedOptionOverrideNode,
   UserDefinedOptionValueNode,
 } from "./types";
 

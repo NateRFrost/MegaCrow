@@ -1,4 +1,4 @@
-export { Frontend } from "./frontend";
+export { Frontend, FrontendContext } from "./frontend";
 export {
   DiagnosticSeverity,
   SourceLocationType,
@@ -15,3 +15,13 @@ export {
 export { decodeMglo, readMgloEncodingVersion } from "./decode-mglo";
 export { loadObjectListsForVersion } from "./load-object-lists";
 export type { ResolveIncludeFn } from "./frontend/abstract-syntax-tree";
+export {
+  DEFAULT_MEGACROW_EXTENSIONS,
+  resolveMegacrowExtensions,
+  type MegacrowExtensions,
+} from "./frontend/megacrow-extensions";
+export {
+  DEFAULT_COMPILER_SETTINGS,
+  resolveCompilerSettings,
+  type CompilerSettings,
+} from "./frontend/compiler-settings";

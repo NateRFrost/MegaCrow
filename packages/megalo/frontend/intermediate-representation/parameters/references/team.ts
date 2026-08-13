@@ -13,7 +13,6 @@ import { requireResolvedVariableSlot } from "../../preprocessing/symbols";
 import type { ParameterLoweringContext } from "../context";
 import {
   enumSlotValue,
-  parseExplicitTeam,
   parseIndexSuffix,
   parseQualifiedTemporaryName,
 } from "../explicit";
@@ -39,24 +38,30 @@ export const resolveTeamReference = (
   node: ASTParameterNode,
   ctx: ParameterLoweringContext
 ): TeamReference => {
-  const { base, member } = splitParameterMember(node, ctx.symbolTable);
+  const { base, member, baseSymbol, location } = splitParameterMember(
+    node,
+    ctx.symbolTable
+  );
 
   if (member === "team" && isPlayerReferenceBase(ctx, base)) {
     return {
       type: TeamReferenceType.PlayerOwnerTeam,
-      player: resolveExplicitPlayerForBase(ctx, base),
+      player: resolveExplicitPlayerForBase(ctx, base, baseSymbol),
       variableIndex: 0,
     };
   }
   if (member === "team" && isObjectReferenceBase(ctx, base, member)) {
     return {
       type: TeamReferenceType.ObjectOwnerTeam,
-      object: resolveExplicitObjectForBase(ctx, base),
+      object: resolveExplicitObjectForBase(ctx, base, baseSymbol),
       variableIndex: 0,
     };
   }
   if (member === "team" && isTeamReferenceBase(ctx, base)) {
-    const teamSlot = ctx.symbolTable.findVariableByName(base);
+    const teamSlot =
+      baseSymbol?.type === VariableType.Team
+        ? baseSymbol
+        : ctx.symbolTable.findVariableByName(base);
     if (teamSlot?.type === VariableType.Team && !isBuiltInVariable(teamSlot)) {
       const resolved = requireResolvedVariableSlot(
         ctx.variableSlots,
@@ -79,7 +84,7 @@ export const resolveTeamReference = (
     }
     return {
       type: TeamReferenceType.GlobalTeam,
-      team: resolveExplicitTeamForBase(ctx, base),
+      team: resolveExplicitTeamForBase(ctx, base, baseSymbol, location),
     };
   }
 
@@ -94,13 +99,13 @@ export const resolveTeamReference = (
     if (objectTeamIndex !== undefined) {
       return {
         type: TeamReferenceType.ObjectTeam,
-        object: resolveExplicitObjectForBase(ctx, base),
+        object: resolveExplicitObjectForBase(ctx, base, baseSymbol),
         variableIndex: objectTeamIndex,
       };
     }
   }
 
-  if (!member && (base === "none" || base === "no_player")) {
+  if (!member && base === "none") {
     return {
       type: TeamReferenceType.GlobalTeam,
       team: ExplicitTeam.None,
@@ -111,11 +116,19 @@ export const resolveTeamReference = (
   if (qualifiedTeam?.storage === "team" && !member) {
     return {
       type: TeamReferenceType.GlobalTeam,
-      team: parseExplicitTeam(`temporary_${qualifiedTeam.index}`),
+      team: resolveExplicitTeamForBase(
+        ctx,
+        `temporary_${qualifiedTeam.index}`,
+        undefined,
+        location
+      ),
     };
   }
 
-  const slot = ctx.symbolTable.findVariableByName(base);
+  const slot =
+    baseSymbol?.type === VariableType.Team
+      ? baseSymbol
+      : ctx.symbolTable.findVariableByName(base);
   if (slot?.type === VariableType.Team) {
     if (!isBuiltInVariable(slot)) {
       const resolved = requireResolvedVariableSlot(ctx.variableSlots, slot.id);
@@ -136,7 +149,7 @@ export const resolveTeamReference = (
     }
     return {
       type: TeamReferenceType.GlobalTeam,
-      team: resolveExplicitTeamForBase(ctx, base),
+      team: resolveExplicitTeamForBase(ctx, base, baseSymbol, location),
     };
   }
 
@@ -147,6 +160,6 @@ export const resolveTeamReference = (
 
   return {
     type: TeamReferenceType.GlobalTeam,
-    team: parseExplicitTeam(base),
+    team: resolveExplicitTeamForBase(ctx, base, undefined, location),
   };
 };

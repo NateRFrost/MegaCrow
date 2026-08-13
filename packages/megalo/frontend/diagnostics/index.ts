@@ -1,5 +1,10 @@
+import type { ObjectListType } from "../object-lists";
+
 export type SourcePosition = {
-  offset: number;
+  /** Offset within the owning file’s text (IDE / IncludeLocation.source). */
+  localOffset: number;
+  /** Offset in the unfurled program (temp packing / total order). */
+  absoluteOffset: number;
   // Megalo does not support multi-line tokens, so tokens start and end on the same line.
   // However, SourcePosition is not just used for single token locations.
   line: number;
@@ -7,7 +12,8 @@ export type SourcePosition = {
 };
 
 export const BUILT_IN_POSITION: SourcePosition = {
-  offset: -1,
+  localOffset: -1,
+  absoluteOffset: -1,
   line: -1,
   column: -1,
 };
@@ -45,11 +51,6 @@ export type BuiltInLocation = {
   type: SourceLocationType.BUILT_IN;
 };
 
-/**
- * Location of an entry in an external object list (weapons.txt, objects.txt, ...).
- * `source.line` is the entry index; column is always 0; offset is -1.
- */
-import type { ObjectListType } from "../object-lists";
 
 export type ObjectListLocation = {
   type: SourceLocationType.OBJECT_LIST;

@@ -195,6 +195,17 @@ export const diagnosticMessages = {
     return translate("object_filter_min_out_of_range");
   },
 
+  iconIndexOutOfRange(): string {
+    return translate("icon_index_out_of_range");
+  },
+
+  objectTypeIndexOutOfRange(index: number, max: number): string {
+    return translate("object_type_index_out_of_range", {
+      index: String(index),
+      max: String(max),
+    });
+  },
+
   fireteamCountOutOfRange(value: number, max: number): string {
     return translate("fireteam_count_out_of_range", {
       value: String(value),
@@ -214,7 +225,35 @@ export const diagnosticMessages = {
     return "This is not a valid object type.";
   },
 
+  duplicateDeclarationNameIgnored(kind: string, name: string): string {
+    return translate("duplicate_declaration_name_ignored", { kind, name });
+  },
+
   onlyOneBaseDirectiveAllowed(): string {
     return translate("only_one_base_directive_allowed");
+  },
+
+  elementNotAllowedInBaseDerived(element: string): string {
+    return translate("element_not_allowed_in_base_derived", { element });
+  },
+
+  gameOptionNotAllowedInBaseDerived(entry: string): string {
+    return translate("game_option_not_allowed_in_base_derived", { entry });
+  },
+
+  gameOptionOverrideRequiresBase(entry: string): string {
+    return translate("game_option_override_requires_base", { entry });
+  },
+
+  lockingHidingPlayerTraitsNotSupported(): string {
+    return translate("locking_hiding_player_traits_not_supported");
+  },
+
+  megacrowExtensionRequired(extension: string, sourceName: string): string {
+    return translate("megacrow_extension_required", { extension, sourceName });
+  },
+
+  timerRateSnapped(got: string, used: string): string {
+    return translate("timer_rate_snapped", { got, used });
   },
 };

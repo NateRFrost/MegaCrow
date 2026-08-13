@@ -33,6 +33,10 @@ import {
   resolveTeamReference,
   resolveVariantVariable,
 } from "../../parameters";
+import {
+  coerceVariantOperands,
+  isBareNoneOperand,
+} from "../../parameters/references/coerce";
 
 const COMPARISON_BY_NAME: Record<ComparisonOperatorName, NumericComparison> = {
   less_than: NumericComparison.LessThan,
@@ -181,12 +185,20 @@ const lowerGameIsForge: ConditionLowerer = (_statement, _ctx, base) => ({
 const lowerIf: ConditionLowerer = (statement, ctx, base) => {
   const [leftNode, comparisonNode, rightNode] = requireOperands(statement, 3);
   const paramCtx = asParameterLoweringContext(ctx);
+  const leftParam = asParam(leftNode);
+  const rightParam = asParam(rightNode);
+  const [left, right] = coerceVariantOperands(
+    resolveVariantVariable(leftParam, paramCtx),
+    resolveVariantVariable(rightParam, paramCtx),
+    isBareNoneOperand(rightParam),
+    isBareNoneOperand(leftParam)
+  );
   return {
     ...base,
     type: ConditionType.If,
     parameters: {
-      left: resolveVariantVariable(asParam(leftNode), paramCtx),
-      right: resolveVariantVariable(asParam(rightNode), paramCtx),
+      left,
+      right,
       comparison: parseComparison(comparisonNode),
     },
   };

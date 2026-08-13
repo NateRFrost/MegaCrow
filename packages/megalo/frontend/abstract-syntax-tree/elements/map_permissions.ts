@@ -3,7 +3,6 @@ import { diagnosticMessages } from "../../diagnostics/messages";
 import { type Token, TokenKind } from "../../tokens";
 import {
   type ASTErrorNode,
-  type ASTFloatingPointNode,
   type ASTIntegerNode,
   type ASTReferenceNode,
   SyntaxKind,
@@ -20,7 +19,6 @@ import {
 
 export type MapPermissionsValueNode =
   | ASTIntegerNode
-  | ASTFloatingPointNode
   | ASTReferenceNode
   | ASTKeywordParameterNode
   | ASTErrorNode;
@@ -60,14 +58,6 @@ const parseMapPermissionsValue = (
       kind: SyntaxKind.INTEGER,
       location: valueToken.location,
       value: Number.parseInt(valueToken.value, 10),
-    };
-  }
-
-  if (valueToken.kind === TokenKind.FloatingPoint) {
-    return {
-      kind: SyntaxKind.FLOATING_POINT,
-      location: valueToken.location,
-      value: Number.parseFloat(valueToken.value),
     };
   }
 

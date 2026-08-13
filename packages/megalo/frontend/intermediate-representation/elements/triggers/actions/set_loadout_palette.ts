@@ -2,8 +2,11 @@ import type { ASTParameterNode } from "../../../../abstract-syntax-tree/paramete
 import { SyntaxKind } from "../../../../abstract-syntax-tree";
 import type { SourceCodeLocation } from "../../../../diagnostics";
 import { diagnosticMessages } from "../../../../diagnostics/messages";
-import { SymbolKind } from "../../../../symbol-table";
 import { LowerError } from "../../../error";
+import {
+  LOADOUT_PALETTE_TYPE_BY_NAME,
+  type LoadoutPaletteType,
+} from "../../../game/megalogamengine/LoadoutPaletteType";
 import {
   ActionType,
   type Action,
@@ -11,63 +14,41 @@ import {
 import { type ElementLowerContext } from "../../../parameters/context";
 import { parseTeamOrPlayerTarget } from "../helpers";
 
-const resolveDeclaredSymbolIndex = (
+const resolveLoadoutPaletteType = (
   node: ASTParameterNode,
-  ctx: ElementLowerContext,
-  kind: SymbolKind.HudWidget | SymbolKind.LoadoutPalette,
-  expected: string,
-  location: SourceCodeLocation,
-): number => {
-  if (node.kind !== SyntaxKind.REFERENCE) {
+  location: SourceCodeLocation
+): LoadoutPaletteType => {
+  const name =
+    node.kind === SyntaxKind.KEYWORD
+      ? node.value
+      : node.kind === SyntaxKind.REFERENCE
+        ? node.identifier
+        : undefined;
+  if (name === undefined) {
     throw new LowerError(
-      diagnosticMessages.expectedParameterType(expected, ""),
-      node.location ?? location,
+      diagnosticMessages.expectedParameterType("loadout palette type", ""),
+      node.location ?? location
     );
   }
-
-  const symbol = ctx.symbolTable.getSymbol(node.symbolId);
-  if (symbol?.kind !== kind) {
+  const type = LOADOUT_PALETTE_TYPE_BY_NAME[name];
+  if (type === undefined) {
     throw new LowerError(
-      diagnosticMessages.expectedParameterType(expected, ""),
-      node.location,
+      diagnosticMessages.expectedParameterType("loadout palette type", name),
+      node.location
     );
   }
-
-  const entries = ctx.symbolTable
-    .toArray()
-    .filter((entry) => entry.kind === kind);
-  const index = entries.findIndex((entry) => entry.id === symbol.id);
-  if (index < 0) {
-    throw new LowerError(
-      diagnosticMessages.expectedParameterType(expected, symbol.name),
-      node.location,
-    );
-  }
-  return index;
+  return type;
 };
-
-const resolveLoadoutPaletteIndex = (
-  node: ASTParameterNode,
-  ctx: ElementLowerContext,
-  location: SourceCodeLocation,
-): number =>
-  resolveDeclaredSymbolIndex(
-    node,
-    ctx,
-    SymbolKind.LoadoutPalette,
-    "loadout palette",
-    location,
-  );
 
 export const lowerSetLoadoutPalette = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   if (parameters.length !== 3) {
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(3, parameters.length),
-      location,
+      location
     );
   }
 
@@ -75,16 +56,16 @@ export const lowerSetLoadoutPalette = (
     parameters,
     0,
     ctx,
-    location,
+    location
   );
   const paletteNode = parameters[nextIndex];
   if (paletteNode === undefined || nextIndex + 1 !== parameters.length) {
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(
         nextIndex + 1,
-        parameters.length,
+        parameters.length
       ),
-      location,
+      location
     );
   }
 
@@ -92,11 +73,8 @@ export const lowerSetLoadoutPalette = (
     type: ActionType.SetLoadoutPalette,
     parameters: {
       target,
-      loadoutPaletteIndex: resolveLoadoutPaletteIndex(
-        paletteNode,
-        ctx,
-        location,
-      ),
+      loadoutPaletteIndex: resolveLoadoutPaletteType(paletteNode, location),
     },
   };
 };
+

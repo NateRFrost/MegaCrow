@@ -32,6 +32,16 @@ export const lowerRangedOption = (
 ) => {
   dxAssertionScope(ctx.diagnostics, () => {
     assertNotErrorNode(entry.name);
+    const name = resolveScriptStringTableReference(
+      entry.displayName,
+      ctx.ir,
+      ctx.symbolTable
+    );
+    const description = resolveScriptStringTableReference(
+      entry.description,
+      ctx.ir,
+      ctx.symbolTable
+    );
 
     if (entry.values.length < 2) {
       throw new LowerError(
@@ -52,16 +62,8 @@ export const lowerRangedOption = (
     ctx.ir.locations.record(defaultValue, "value", defaultNumeric.location);
 
     const option: RangedUserDefinedOption = {
-      name: resolveScriptStringTableReference(
-        entry.displayName,
-        ctx.ir,
-        ctx.symbolTable
-      ),
-      description: resolveScriptStringTableReference(
-        entry.description,
-        ctx.ir,
-        ctx.symbolTable
-      ),
+      name,
+      description,
       locked: entry.modifiers.lock ? true : undefined,
       hidden: entry.modifiers.hide ? true : undefined,
       defaultValue,
@@ -82,6 +84,11 @@ export const lowerRangedOption = (
       "currentValue",
       entry.defaultValue.location
     );
+    const { userDefinedOptions: maxOptions } =
+      ctx.frontend.versionConfiguration.limits;
+    if (ctx.ir.gameVariant.userDefinedOptions.length >= maxOptions) {
+      throw new LowerError("Too many user defined options!", entry.location);
+    }
     ctx.ir.gameVariant.userDefinedOptions.push(option);
   });
 };

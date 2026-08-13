@@ -1,4 +1,5 @@
 import type { MegaloVersion } from "../../../version";
+import type { FrontendContext } from "../../context";
 import type { SourceCodeLocation } from "../../diagnostics";
 import { diagnosticMessages } from "../../diagnostics/messages";
 import { type Token, TokenKind } from "../../tokens";
@@ -77,20 +78,20 @@ export class TeamsParserRepository {
       this.teamOptionParsers,
       "color",
       buildParameterParser([
-        ParameterType.Number,
-        ParameterType.Number,
-        ParameterType.Number,
+        ParameterType.Integer,
+        ParameterType.Integer,
+        ParameterType.Integer,
       ])
     );
     this.registerParser(
       this.teamOptionParsers,
       "fireteam_count",
-      buildParameterParser([ParameterType.Number])
+      buildParameterParser([ParameterType.Integer])
     );
   }
 
-  public constructor(megaloVersion: MegaloVersion) {
-    this.registerParsers(megaloVersion);
+  public constructor(frontend: FrontendContext) {
+    this.registerParsers(frontend.megaloVersion);
   }
 
   public getBlockParser(name: string): ParameterParser | undefined {

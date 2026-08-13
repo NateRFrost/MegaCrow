@@ -30,7 +30,7 @@ export const lowerTeamSetCoopSpawning = (
         asParameterLoweringContext(ctx),
       ),
 
-      coopSpawningEnabled: parseBooleanLiteral(parameters[1]!, location),
+      coopSpawningEnabled: parseBooleanLiteral(parameters[1]!, ctx, location),
     },
   };
 };

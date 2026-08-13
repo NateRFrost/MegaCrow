@@ -39,8 +39,14 @@ export const resolvePlayerReference = (
   node: ASTParameterNode,
   ctx: ParameterLoweringContext
 ): PlayerReference => {
-  const { base, member } = splitParameterMember(node, ctx.symbolTable);
-  const slot = ctx.symbolTable.findVariableByName(base);
+  const { base, member, baseSymbol, location } = splitParameterMember(
+    node,
+    ctx.symbolTable
+  );
+  const slot =
+    baseSymbol?.type === VariableType.Player
+      ? baseSymbol
+      : ctx.symbolTable.findVariableByName(base);
 
   if (slot?.type === VariableType.Player && !member && !isBuiltInVariable(slot)) {
     const resolved = requireResolvedVariableSlot(ctx.variableSlots, slot.id);
@@ -99,7 +105,7 @@ export const resolvePlayerReference = (
       : undefined;
     return {
       type: PlayerReferenceType.TeamPlayer,
-      team: resolveExplicitTeamForBase(ctx, base),
+      team: resolveExplicitTeamForBase(ctx, base, baseSymbol, location),
       variableIndex: teamPlayerIndex ?? 0,
     };
   }
@@ -107,6 +113,7 @@ export const resolvePlayerReference = (
   if (
     base !== "none" &&
     (base === "current_object" ||
+      baseSymbol?.type === VariableType.Object ||
       ctx.symbolTable.findVariableByName(base)?.type === VariableType.Object ||
       isObjectReferenceBase(ctx, base, member))
   ) {
@@ -124,16 +131,18 @@ export const resolvePlayerReference = (
       if (
         member === undefined ||
         objectPlayerIndex !== undefined ||
+        baseSymbol?.type === VariableType.Object ||
         ctx.symbolTable.findVariableByName(base)?.type === VariableType.Object ||
         base === "current_object"
       ) {
         if (
           base === "current_object" ||
+          baseSymbol?.type === VariableType.Object ||
           ctx.symbolTable.findVariableByName(base)?.type === VariableType.Object
         ) {
           return {
             type: PlayerReferenceType.ObjectPlayer,
-            object: resolveExplicitObjectForBase(ctx, base),
+            object: resolveExplicitObjectForBase(ctx, base, baseSymbol),
             variableIndex: objectPlayerIndex ?? 0,
           };
         }
@@ -156,7 +165,7 @@ export const resolvePlayerReference = (
     ) {
       return {
         type: PlayerReferenceType.ObjectPlayer,
-        object: resolveExplicitObjectForBase(ctx, base),
+        object: resolveExplicitObjectForBase(ctx, base, baseSymbol),
         variableIndex: objectPlayerIndex,
       };
     }
@@ -165,7 +174,7 @@ export const resolvePlayerReference = (
   if (member) {
     return {
       type: PlayerReferenceType.PlayerPlayer,
-      player: resolveExplicitPlayerForBase(ctx, base),
+      player: resolveExplicitPlayerForBase(ctx, base, baseSymbol),
       variableIndex:
         resolveScopedVariableMemberIndex(
           ctx.symbolTable,
@@ -180,6 +189,6 @@ export const resolvePlayerReference = (
 
   return {
     type: PlayerReferenceType.GlobalPlayer,
-    player: resolveExplicitPlayerForBase(ctx, base),
+    player: resolveExplicitPlayerForBase(ctx, base, baseSymbol),
   };
 };

@@ -4,7 +4,7 @@ import {
   type PlayerTraits,
   VehicleUsage,
 } from "../../../game/game_engine_player_traits";
-import { lowerNumberParam } from "../../../parameters";
+import { lowerConstantInteger } from "../../../parameters";
 import { setField } from "../../../setField";
 import {
   resolveEnumKeyword,
@@ -30,12 +30,18 @@ export const lowerMovementOption = (
   traits: PlayerTraits,
   args: TraitOptionArgs
 ): boolean => {
-  const { parameters, first, ctx, location } = args;
+  const { first, ctx, location } = args;
   const { diagnostics, ir } = ctx;
 
   switch (identifier) {
     case "speed": {
-      const value = lowerNumberParam(parameters, ctx, "percentage", location);
+      if (first === undefined) {
+        throw new LowerError(
+          diagnosticMessages.expectedParameterType("percentage", ""),
+          location
+        );
+      }
+      const value = lowerConstantInteger(first, ctx, "percentage", location);
       setField(
         ir.locations,
         diagnostics,
@@ -47,7 +53,13 @@ export const lowerMovementOption = (
       return true;
     }
     case "gravity": {
-      const value = lowerNumberParam(parameters, ctx, "percentage", location);
+      if (first === undefined) {
+        throw new LowerError(
+          diagnosticMessages.expectedParameterType("percentage", ""),
+          location
+        );
+      }
+      const value = lowerConstantInteger(first, ctx, "percentage", location);
       setField(
         ir.locations,
         diagnostics,
@@ -77,7 +89,13 @@ export const lowerMovementOption = (
       return true;
     }
     case "jump_modifier": {
-      const value = lowerNumberParam(parameters, ctx, "integer", location);
+      if (first === undefined) {
+        throw new LowerError(
+          diagnosticMessages.expectedParameterType("integer", ""),
+          location
+        );
+      }
+      const value = lowerConstantInteger(first, ctx, "integer", location);
       setField(
         ir.locations,
         diagnostics,

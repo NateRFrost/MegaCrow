@@ -25,6 +25,8 @@ import { TEAM_DESIGNATOR_INDICES } from "../parameters/explicit";
 import { setField } from "../setField";
 import type { ElementLowerer } from ".";
 
+const MAX_FIRETEAM_COUNT = 16;
+
 const BLOCK_MODEL_OVERRIDE: Record<string, TeamOptionsModelOverrideType> = {
   spartan: TeamOptionsModelOverrideType.Spartan,
   elite: TeamOptionsModelOverrideType.Elite,
@@ -47,8 +49,6 @@ const DESIGNATOR_SWITCH_TYPE: Record<string, DesignatorSwitchType> = {
 };
 
 const DESIGNATOR_SWITCH_TYPE_NAMES = Object.keys(DESIGNATOR_SWITCH_TYPE);
-
-const MAX_FIRETEAM_COUNT = 16;
 
 const requireKeyword = (
   property: TeamsPropertyNode,
@@ -83,6 +83,7 @@ const lowerStringName = (
       parameter.location
     );
   }
+  ctx.ir.gameVariant.scriptStrings.addEntry(symbol.languageContents, symbol.id);
   return { ...symbol.languageContents };
 };
 
@@ -162,7 +163,6 @@ const lowerTeam = (
         const [rNode, gNode, bNode] = property.parameters;
         const numericKinds = [
           SyntaxKind.INTEGER,
-          SyntaxKind.FLOATING_POINT,
           SyntaxKind.REFERENCE,
         ] as const;
         assertSyntaxKind(rNode!, numericKinds);
@@ -194,7 +194,6 @@ const lowerTeam = (
         const parameter = property.parameters[0]!;
         assertSyntaxKind(parameter, [
           SyntaxKind.INTEGER,
-          SyntaxKind.FLOATING_POINT,
           SyntaxKind.REFERENCE,
         ]);
         const count = lowerConstantNumber(parameter, ctx);

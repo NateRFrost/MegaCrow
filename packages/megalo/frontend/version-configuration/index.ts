@@ -2,7 +2,7 @@ import type { SupportedMegaloVersion } from "../../version";
 import { VersionConfiguration107MCC } from "./107-mcc";
 import { VersionConfiguration } from "./version_configuration";
 
-export type { VariableLimits } from "./variables";
+export type { Limits, VariableLimits } from "./version_configuration";
 export { VersionConfiguration } from "./version_configuration";
 export { VersionConfiguration107MCC } from "./107-mcc";
 

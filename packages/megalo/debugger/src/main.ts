@@ -208,26 +208,26 @@ const sourceSpan = (
   | undefined => {
   if (location.type === SourceLocationType.SOURCE_CODE) {
     return {
-      offset: location.start.offset,
+      offset: location.start.localOffset,
       line: location.start.line,
       column: location.start.column,
-      endOffset: location.end.offset,
+      endOffset: location.end.localOffset,
     };
   }
   if (location.type === SourceLocationType.INCLUDE) {
     return {
-      offset: location.declaration.start.offset,
+      offset: location.declaration.start.localOffset,
       line: location.declaration.start.line,
       column: location.declaration.start.column,
-      endOffset: location.declaration.end.offset,
+      endOffset: location.declaration.end.localOffset,
     };
   }
   if (location.type === SourceLocationType.OBJECT_LIST) {
     return {
-      offset: location.source.offset,
+      offset: location.source.localOffset,
       line: location.source.line,
       column: location.source.column,
-      endOffset: location.source.offset,
+      endOffset: location.source.localOffset,
     };
   }
   return;

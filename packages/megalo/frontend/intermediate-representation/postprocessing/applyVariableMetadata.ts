@@ -109,7 +109,10 @@ export const applyVariableMetadata = (ir: IR, ctx: ElementLowerContext) => {
           break;
         case VariableType.Team:
           metadata.teamVariables.push({
-            value: MultiplayerTeamDesignator.Neutral,
+            value:
+              initial.type === CustomVariableType.Constant
+                ? (initial.immediateValue as MultiplayerTeamDesignator)
+                : MultiplayerTeamDesignator.Neutral,
             networkState,
           });
           break;
