@@ -1,16 +1,16 @@
 import {
   type SourceCodeLocation,
   SourceLocationType,
-} from "../../../../diagnostics";
-import { diagnosticMessages } from "../../../../diagnostics/messages";
-import { TokenKind } from "../../../tokens";
-import type { ParserContext } from "../../context";
+} from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { TokenKind } from "src/frontend/tokens";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import {
   type ASTIntegerNode,
   type ASTNode,
   SyntaxKind,
-} from "../../kinds";
-import type { ASTKeywordParameterNode, ParameterParser } from "..";
+} from "src/frontend/abstract-syntax-tree/kinds";
+import type { ASTKeywordParameterNode, ParameterParser } from "src/frontend/abstract-syntax-tree/parameters";
 
 export type ASTGrenadeCountNode = ASTNode<SyntaxKind.GRENADE_COUNT> &
   (

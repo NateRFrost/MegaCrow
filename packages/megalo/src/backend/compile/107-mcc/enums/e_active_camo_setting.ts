@@ -1,5 +1,5 @@
 import { e_active_camo_setting } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { ActiveCamo } from "../../../../frontend/intermediate-representation/game/game_engine_player_traits";
+import { ActiveCamo } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 
 export const encodeActiveCamoSetting = (
   value: ActiveCamo

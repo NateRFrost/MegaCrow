@@ -1,21 +1,21 @@
-import type { MegaloCompilerContext } from "../../context";
-import type { Diagnostics } from "../../diagnostics";
-import { IncludeDiagnostics } from "../../diagnostics/include";
-import { diagnosticMessages } from "../../diagnostics/messages";
-import type { ObjectLists } from "../object-lists";
-import { SymbolBinder, type SymbolTable } from "../symbol-table";
-import { Lexer, TokenKind, type Tokens } from "../tokens";
-import { type ASTCommentNode, collectComments } from "./comment";
-import { ParserContext } from "./context";
+import type { MegaloCompilerContext } from "src/context";
+import type { Diagnostics } from "src/diagnostics";
+import { IncludeDiagnostics } from "src/diagnostics/include";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import type { ObjectLists } from "src/frontend/object-lists";
+import { SymbolBinder, type SymbolTable } from "src/frontend/symbol-table";
+import { Lexer, TokenKind, type Tokens } from "src/frontend/tokens";
+import { type ASTCommentNode, collectComments } from "src/frontend/abstract-syntax-tree/comment";
+import { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import {
   type ASTElementNode,
   ElementKind,
   ElementParserRepository,
   type IncludeElementNode,
   type LocalizedIncludeElementNode,
-} from "./elements";
-import { SyntaxKind } from "./kinds";
-import type { ParserSymbolContext } from "./symbol-context";
+} from "src/frontend/abstract-syntax-tree/elements";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import type { ParserSymbolContext } from "src/frontend/abstract-syntax-tree/symbol-context";
 
 export {
   type ASTErrorNode,
@@ -25,7 +25,7 @@ export {
   type ASTReferenceNode,
   isAstErrorNode,
   SyntaxKind,
-} from "./kinds";
+} from "src/frontend/abstract-syntax-tree/kinds";
 
 export type AST = {
   failed: boolean;

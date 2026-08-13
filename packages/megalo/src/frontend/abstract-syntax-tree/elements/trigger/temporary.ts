@@ -1,14 +1,14 @@
 import {
   type SourceCodeLocation,
   SourceLocationType,
-} from "../../../../diagnostics";
-import { diagnosticMessages } from "../../../../diagnostics/messages";
-import { variableTypeFromName } from "../../../language-configuration/omni/variables";
-import { VariableScope } from "../../../symbol-table";
-import { type Token, TokenKind } from "../../../tokens";
-import type { ParserContext } from "../../context";
-import { type ASTNode, SyntaxKind } from "../../kinds";
-import { type ASTConditionOperandNode, parseIfOperand } from "./operand";
+} from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { variableTypeFromName } from "src/frontend/language-configuration/omni/variables";
+import { VariableScope } from "src/frontend/symbol-table";
+import { type Token, TokenKind } from "src/frontend/tokens";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
+import { type ASTNode, SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import { type ASTConditionOperandNode, parseIfOperand } from "src/frontend/abstract-syntax-tree/elements/trigger/operand";
 
 export const TEMPORARY_STORAGE_NAMES = [
   "number",

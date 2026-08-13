@@ -1,7 +1,7 @@
-import { Diagnostics } from "../../../diagnostics";
-import { ASTParameterNode } from "../../abstract-syntax-tree/parameters";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import { locationSpan } from "../../abstract-syntax-tree/elements/game_options/shared";
+import { Diagnostics } from "src/diagnostics";
+import { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { locationSpan } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
 
 export const assertParameterCount = (
     count: number,

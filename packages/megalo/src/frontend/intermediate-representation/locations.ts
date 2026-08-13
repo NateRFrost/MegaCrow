@@ -1,5 +1,5 @@
-import type { SourceLocation } from "../../diagnostics";
-import { SourceLocationType } from "../../diagnostics";
+import type { SourceLocation } from "src/diagnostics";
+import { SourceLocationType } from "src/diagnostics";
 
 /**
  * Sidecar source locations for IR leaves.

@@ -1,7 +1,7 @@
-import type { OverrideEntryNode } from "../../../../abstract-syntax-tree/elements/game_options";
-import type { ElementLowerContext } from "../../../parameters/context";
-import { setField } from "../../../setField";
-import { resolveSimpleNumber } from "./helpers";
+import type { OverrideEntryNode } from "src/frontend/abstract-syntax-tree/elements/game_options";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
+import { setField } from "src/frontend/intermediate-representation/setField";
+import { resolveSimpleNumber } from "src/frontend/intermediate-representation/elements/game_options/override/helpers";
 
 /** Returns true if `optionName` was handled as a respawn override. */
 export const tryLowerRespawnOverride = (

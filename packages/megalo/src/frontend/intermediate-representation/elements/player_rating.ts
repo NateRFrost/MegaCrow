@@ -1,13 +1,13 @@
-import { SyntaxKind } from "../../abstract-syntax-tree";
-import type { PlayerRatingElementNode } from "../../abstract-syntax-tree/elements/player_rating";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import type { ElementLowerer } from ".";
-import { dxAssertionScope } from "../diagnostics";
-import { assertSyntaxKind } from "../diagnostics/assertSyntaxKind";
-import { LowerError } from "../error";
-import type { GameEngineCustomVariant } from "../game/game_variant";
-import { lowerConstantNumber } from "../parameters/constantNumber";
-import { setField } from "../setField";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { PlayerRatingElementNode } from "src/frontend/abstract-syntax-tree/elements/player_rating";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
+import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import type { GameEngineCustomVariant } from "src/frontend/intermediate-representation/game/game_variant";
+import { lowerConstantNumber } from "src/frontend/intermediate-representation/parameters/constantNumber";
+import { setField } from "src/frontend/intermediate-representation/setField";
 
 type PlayerRatings = NonNullable<GameEngineCustomVariant["playerRatings"]>;
 type NumericPlayerRatingKey = Exclude<keyof PlayerRatings, "showInScoreboard">;

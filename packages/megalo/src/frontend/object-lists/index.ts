@@ -2,7 +2,7 @@ import {
   type Diagnostics,
   type ObjectListLocation,
   SourceLocationType,
-} from "../../diagnostics";
+} from "src/diagnostics";
 
 // files that live under <megalo source folder>/object_lists/
 export enum ObjectListType {

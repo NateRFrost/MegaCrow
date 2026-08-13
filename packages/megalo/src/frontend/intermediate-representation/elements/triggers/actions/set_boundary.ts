@@ -1,23 +1,23 @@
-import type { ASTParameterNode } from "../../../../abstract-syntax-tree/parameters";
-import { SyntaxKind } from "../../../../abstract-syntax-tree";
-import type { SourceCodeLocation } from "../../../../../diagnostics";
-import { diagnosticMessages } from "../../../../../diagnostics/messages";
-import { LowerError } from "../../../error";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   ActionType,
   BoundaryShape,
   type Action,
-} from "../../../game/megalogamengine/megalogamengine_actions";
-import { type CustomVariableReference } from "../../../game/megalogamengine/megalogamengine_references";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { type CustomVariableReference } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import {
   asParameterLoweringContext,
   type ElementLowerContext,
-} from "../../../parameters/context";
+} from "src/frontend/intermediate-representation/parameters/context";
 import {
   resolveCustomVariableReference,
   resolveObjectReference,
-} from "../../../parameters";
-import { requireKeyword } from "../helpers";
+} from "src/frontend/intermediate-representation/parameters";
+import { requireKeyword } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 
 const parseBoundaryShape = (
   node: ASTParameterNode,

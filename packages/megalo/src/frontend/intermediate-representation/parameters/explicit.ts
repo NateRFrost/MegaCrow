@@ -1,15 +1,15 @@
 import {
   type TemporaryStorageName,
   isTemporaryStorageName,
-} from "../../abstract-syntax-tree/elements/trigger/temporary";
+} from "src/frontend/abstract-syntax-tree/elements/trigger/temporary";
 import {
   type TeamDesignator,
   isTeamDesignator,
-} from "../../language-configuration/omni/teams";
-import { MultiplayerTeamDesignator } from "../game/game_engine_default";
-import { ExplicitObject } from "../game/megalogamengine/megalogamengine_explicit_object";
-import { ExplicitPlayer } from "../game/megalogamengine/megalogamengine_explicit_player";
-import { ExplicitTeam } from "../game/megalogamengine/megalogamengine_explicit_team";
+} from "src/frontend/language-configuration/omni/teams";
+import { MultiplayerTeamDesignator } from "src/frontend/intermediate-representation/game/game_engine_default";
+import { ExplicitObject } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
+import { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
+import { ExplicitTeam } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
 
 const PLAYER_EXPLICIT_NAMES: Partial<Record<ExplicitPlayer, string>> = {
   [ExplicitPlayer.None]: "none",

@@ -1,14 +1,14 @@
-export { resolvePlayerReference } from "./player";
-export { resolveTeamReference } from "./team";
+export { resolvePlayerReference } from "src/frontend/intermediate-representation/parameters/references/player";
+export { resolveTeamReference } from "src/frontend/intermediate-representation/parameters/references/team";
 export {
   encodeNoObjectReference,
   resolveObjectReference,
   type ObjectReferenceSubtype,
-} from "./object";
-export { resolveObjectTypeReference } from "./objectType";
-export { resolveCustomTimerReference } from "./customTimer";
+} from "src/frontend/intermediate-representation/parameters/references/object";
+export { resolveObjectTypeReference } from "src/frontend/intermediate-representation/parameters/references/objectType";
+export { resolveCustomTimerReference } from "src/frontend/intermediate-representation/parameters/references/customTimer";
 export {
   CustomVariableKind,
   resolveCustomVariableReference,
-} from "./customVariable";
-export { resolveVariantVariable } from "./variantVariable";
+} from "src/frontend/intermediate-representation/parameters/references/customVariable";
+export { resolveVariantVariable } from "src/frontend/intermediate-representation/parameters/references/variantVariable";

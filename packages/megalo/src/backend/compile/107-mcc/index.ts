@@ -5,33 +5,33 @@ import {
 import { bitstream } from "@blamnetwork/blf";
 
 const { c_bitstream_writer, e_bitstream_byte_order } = bitstream;
-import { decodeMglo } from "../../../decode-mglo";
-import { BUILT_IN_LOCATION, type Diagnostics } from "../../../diagnostics";
-import type { IR } from "../../../frontend/intermediate-representation";
-import type { StringTable } from "../../../frontend/intermediate-representation/game/string_table";
-import { STRING_TABLE_LANGUAGES } from "../../../frontend/language-configuration/omni/strings";
-import { Compiler } from "../compiler";
-import { CompilerError } from "../../../diagnostics/error";
-import { CAPABILITES_107_MCC } from "./capabilities";
+import { decodeMglo } from "src/decode-mglo";
+import { BUILT_IN_LOCATION, type Diagnostics } from "src/diagnostics";
+import type { IR } from "src/frontend/intermediate-representation";
+import type { StringTable } from "src/frontend/intermediate-representation/game/string_table";
+import { STRING_TABLE_LANGUAGES } from "src/frontend/language-configuration/omni/strings";
+import { Compiler } from "src/backend/compile/compiler";
+import { CompilerError } from "src/diagnostics/error";
+import { CAPABILITES_107_MCC } from "src/backend/compile/107-mcc/capabilities";
 import {
   applyPlayerTraitOptionOverrides,
   applyUserDefinedOptionOverrides,
   compileGameOptions,
-} from "./game_options";
-import { compileGameStats } from "./game_stats";
-import { compileHudWidgets } from "./hud_widgets";
-import { compileLoadoutPalettes } from "./loadout_palette";
-import { compileMapObjects } from "./map_object";
-import { compileMapPermissions } from "./map_permissions";
-import { compileMetadata } from "./metadata";
-import { compilePlayerRatings } from "./player_rating";
-import { compileTeams } from "./teams";
-import { compileConditions } from "./conditions";
-import { compileActions } from "./actions";
-import { compileTriggers } from "./triggers";
-import { compileVariableMetadata } from "./variableMetadata";
-import { assertCompatibleIR, CompilerCapabilities } from "../diagnostics/assertCompatibleIR";
-import { MEGALO_VERSIONS, SupportedMegaloVersion } from "../../../version";
+} from "src/backend/compile/107-mcc/game_options";
+import { compileGameStats } from "src/backend/compile/107-mcc/game_stats";
+import { compileHudWidgets } from "src/backend/compile/107-mcc/hud_widgets";
+import { compileLoadoutPalettes } from "src/backend/compile/107-mcc/loadout_palette";
+import { compileMapObjects } from "src/backend/compile/107-mcc/map_object";
+import { compileMapPermissions } from "src/backend/compile/107-mcc/map_permissions";
+import { compileMetadata } from "src/backend/compile/107-mcc/metadata";
+import { compilePlayerRatings } from "src/backend/compile/107-mcc/player_rating";
+import { compileTeams } from "src/backend/compile/107-mcc/teams";
+import { compileConditions } from "src/backend/compile/107-mcc/conditions";
+import { compileActions } from "src/backend/compile/107-mcc/actions";
+import { compileTriggers } from "src/backend/compile/107-mcc/triggers";
+import { compileVariableMetadata } from "src/backend/compile/107-mcc/variableMetadata";
+import { assertCompatibleIR, CompilerCapabilities } from "src/backend/compile/diagnostics/assertCompatibleIR";
+import { MEGALO_VERSIONS, SupportedMegaloVersion } from "src/version";
 
 /** Reach MCC script string table bitstream layout. */
 const SCRIPT_STRINGS = {

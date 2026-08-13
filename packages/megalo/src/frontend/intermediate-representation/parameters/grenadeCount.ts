@@ -1,8 +1,8 @@
-import type { ASTGrenadeCountNode } from "../../abstract-syntax-tree/parameters";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import { type Located, located } from "..";
-import { LowerError } from "../error";
-import { GrenadeCountSetting } from "../game/game_engine_player_traits";
+import type { ASTGrenadeCountNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { type Located, located } from "src/frontend/intermediate-representation";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import { GrenadeCountSetting } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 
 export const lowerGrenadeCount = (
   node: ASTGrenadeCountNode

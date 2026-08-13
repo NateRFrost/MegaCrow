@@ -1,5 +1,5 @@
 import { e_megalo_game_statistic_sort_order } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { GameStatisticSortOrder } from "../../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_statistics";
+import { GameStatisticSortOrder } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_statistics";
 
 export const encodeGameStatisticSortOrder = (
   value: GameStatisticSortOrder

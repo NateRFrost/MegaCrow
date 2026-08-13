@@ -1,14 +1,14 @@
-import type { SourceCodeLocation } from "../../../../diagnostics";
-import { diagnosticMessages } from "../../../../diagnostics/messages";
-import { TRIGGER_EXECUTION_KINDS } from "../../../language-configuration/omni/triggers";
-import { SymbolKind, type SymbolTable } from "../../../symbol-table";
-import { LowerError } from "../../error";
-import type { CustomGameEngineDefinition } from "../../game/game_variant";
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { TRIGGER_EXECUTION_KINDS } from "src/frontend/language-configuration/omni/triggers";
+import { SymbolKind, type SymbolTable } from "src/frontend/symbol-table";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import type { CustomGameEngineDefinition } from "src/frontend/intermediate-representation/game/game_variant";
 import {
   TriggerExecutionMode,
   TriggerType,
   type Trigger,
-} from "../../game/megalogamengine/megalogamengine_trigger";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_trigger";
 
 export type TriggerHeaderInfo = {
   executionMode: TriggerExecutionMode;

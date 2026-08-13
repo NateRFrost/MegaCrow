@@ -1,22 +1,22 @@
-import type { MegaloVersion } from "../../../version";
-import type { MegaloCompilerContext } from "../../../context";
-import type { SourceCodeLocation } from "../../../diagnostics";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import { type Token, TokenKind } from "../../tokens";
-import type { ParserContext } from "../context";
-import { isAstErrorNode, SyntaxKind } from "../kinds";
+import type { MegaloVersion } from "src/version";
+import type { MegaloCompilerContext } from "src/context";
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { type Token, TokenKind } from "src/frontend/tokens";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
+import { isAstErrorNode, SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
 import {
   type ASTParameterNode,
   parameterParserBuilder as buildParameterParser,
   type ParameterParser,
   ParameterType,
-} from "../parameters";
-import { type ASTElementBase, ElementKind } from ".";
+} from "src/frontend/abstract-syntax-tree/parameters";
+import { type ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
 import {
   isEndToken,
   locationSpan,
   parseIdentifier,
-} from "./game_options/shared";
+} from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
 
 export type TeamsPropertyNode = {
   identifier: string;

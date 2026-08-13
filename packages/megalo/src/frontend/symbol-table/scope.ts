@@ -1,11 +1,11 @@
-import type { MegaloVersion } from "../../version";
-import type { ParserSymbolContext } from "../abstract-syntax-tree/symbol-context";
-import { BUILT_IN_LOCATION } from "../../diagnostics";
+import type { MegaloVersion } from "src/version";
+import type { ParserSymbolContext } from "src/frontend/abstract-syntax-tree/symbol-context";
+import { BUILT_IN_LOCATION } from "src/diagnostics";
 import {
   TRIGGER_EXECUTION_KINDS,
   type TriggerExecutionKind,
-} from "../language-configuration/omni/triggers";
-import { VariableScope, VariableType } from ".";
+} from "src/frontend/language-configuration/omni/triggers";
+import { VariableScope, VariableType } from "src/frontend/symbol-table";
 
 export enum ParserScopeKind {
   Block = 0,

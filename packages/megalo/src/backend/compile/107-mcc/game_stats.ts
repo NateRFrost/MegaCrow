@@ -2,13 +2,13 @@ import {
   type c_game_engine_custom_variant,
   c_megalo_game_statistic,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { BUILT_IN_LOCATION, type Diagnostics } from "../../../diagnostics";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import type { IR } from "../../../frontend/intermediate-representation";
-import type { MegaloGameStatistic } from "../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_statistics";
-import { encodeGameStatisticFormat } from "./enums/e_megalo_game_statistic_format";
-import { encodeGameStatisticGrouping } from "./enums/e_megalo_game_statistic_grouping";
-import { encodeGameStatisticSortOrder } from "./enums/e_megalo_game_statistic_sort_order";
+import { BUILT_IN_LOCATION, type Diagnostics } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import type { IR } from "src/frontend/intermediate-representation";
+import type { MegaloGameStatistic } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_statistics";
+import { encodeGameStatisticFormat } from "src/backend/compile/107-mcc/enums/e_megalo_game_statistic_format";
+import { encodeGameStatisticGrouping } from "src/backend/compile/107-mcc/enums/e_megalo_game_statistic_grouping";
+import { encodeGameStatisticSortOrder } from "src/backend/compile/107-mcc/enums/e_megalo_game_statistic_sort_order";
 
 const MAX_GAME_STATISTICS = 4;
 

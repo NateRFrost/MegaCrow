@@ -1,6 +1,6 @@
-import { BUILT_IN_LOCATION } from "../../../diagnostics";
-import type { IR } from "..";
-import { ActionType } from "../game/megalogamengine/megalogamengine_actions";
+import { BUILT_IN_LOCATION } from "src/diagnostics";
+import type { IR } from "src/frontend/intermediate-representation";
+import { ActionType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 
 export function applyDefaultLoadoutCameraTime(ir: IR) {
   // If we're in a base variant, we don't need to apply the default loadout camera time.

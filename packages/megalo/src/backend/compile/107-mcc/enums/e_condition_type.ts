@@ -1,5 +1,5 @@
 import { e_condition_type } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { ConditionType } from "../../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions";
+import { ConditionType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions";
 
 export const encodeConditionType = (value: ConditionType): e_condition_type => {
   switch (value) {

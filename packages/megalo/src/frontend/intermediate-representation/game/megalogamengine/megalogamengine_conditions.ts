@@ -4,8 +4,8 @@ import type {
   ObjectTypeReference,
   PlayerReference,
   TeamReference,
-} from "./megalogamengine_references";
-import type { VariantVariable } from "./megalogamengine_variant_variable";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
+import type { VariantVariable } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variant_variable";
 
 export enum NumericComparison {
   LessThan = 0,

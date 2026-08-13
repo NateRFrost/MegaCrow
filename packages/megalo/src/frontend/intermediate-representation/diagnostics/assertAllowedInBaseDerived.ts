@@ -1,10 +1,10 @@
 import {
   type ASTElementNode,
   ElementKind,
-} from "../../abstract-syntax-tree/elements";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import { LowerError } from "../error";
-import type { ElementLowerContext } from "../parameters/context";
+} from "src/frontend/abstract-syntax-tree/elements";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 
 const BASE_DERIVED_ALLOWED = new Set<ElementKind>([
   ElementKind.BASE,

@@ -1,5 +1,5 @@
 import { e_vehicle_usage_setting } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { VehicleUsage } from "../../../../frontend/intermediate-representation/game/game_engine_player_traits";
+import { VehicleUsage } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 
 export const encodeVehicleUsageSetting = (
   value: VehicleUsage

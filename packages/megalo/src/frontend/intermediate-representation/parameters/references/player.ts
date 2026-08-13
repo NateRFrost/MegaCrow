@@ -1,26 +1,26 @@
-import type { ASTParameterNode } from "../../../abstract-syntax-tree/parameters";
-import { ExplicitPlayer } from "../../game/megalogamengine/megalogamengine_explicit_player";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
 import {
   type PlayerReference,
   PlayerReferenceType,
-} from "../../game/megalogamengine/megalogamengine_references";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import {
   VariableScope,
   VariableType,
   isBuiltInVariable,
-} from "../../../symbol-table";
-import { requireResolvedVariableSlot } from "../../preprocessing/symbols";
-import type { ParameterLoweringContext } from "../context";
+} from "src/frontend/symbol-table";
+import { requireResolvedVariableSlot } from "src/frontend/intermediate-representation/preprocessing/symbols";
+import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
 import {
   enumSlotValue,
   parseIndexSuffix,
   parseQualifiedTemporaryName,
-} from "../explicit";
+} from "src/frontend/intermediate-representation/parameters/explicit";
 import {
   resolveExplicitObjectForBase,
   resolveExplicitPlayerForBase,
   resolveExplicitTeamForBase,
-} from "./explicitResolve";
+} from "src/frontend/intermediate-representation/parameters/references/explicitResolve";
 import {
   isExplicitPlayerName,
   isObjectReferenceBase,
@@ -28,7 +28,7 @@ import {
   resolveScopedVariableMemberIndex,
   splitParameterMember,
   temporaryReferenceKind,
-} from "./helpers";
+} from "src/frontend/intermediate-representation/parameters/references/helpers";
 
 const encodeGlobalPlayerReference = (index: number): PlayerReference => ({
   type: PlayerReferenceType.GlobalPlayer,

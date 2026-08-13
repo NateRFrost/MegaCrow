@@ -1,9 +1,9 @@
-import type { MegaloCompilerContext } from "../../context";
+import type { MegaloCompilerContext } from "src/context";
 import {
   type Diagnostics,
   type SourceCodeLocation,
   SourceLocationType,
-} from "../../diagnostics";
+} from "src/diagnostics";
 
 // #region Types
 

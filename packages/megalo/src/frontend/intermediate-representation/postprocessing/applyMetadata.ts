@@ -1,4 +1,4 @@
-import type { IR } from "..";
+import type { IR } from "src/frontend/intermediate-representation";
 
 export function applyMetadata(ir: IR) {
   if (ir.gameVariant.localizedName) {

@@ -1,6 +1,6 @@
-import type { StringTableLanguage } from "../../language-configuration/omni/strings";
-import { STRING_TABLE_LANGUAGES } from "../../language-configuration/omni/strings";
-import { SymbolId } from "../../symbol-table";
+import type { StringTableLanguage } from "src/frontend/language-configuration/omni/strings";
+import { STRING_TABLE_LANGUAGES } from "src/frontend/language-configuration/omni/strings";
+import { SymbolId } from "src/frontend/symbol-table";
 
 type AtLeastOne<T> = {
   [K in keyof T]-?: Required<Pick<T, K>> &

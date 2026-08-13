@@ -1,18 +1,18 @@
-import { SyntaxKind } from "../../abstract-syntax-tree";
-import type { LoadoutElementNode } from "../../abstract-syntax-tree/elements/loadout";
-import type { ASTParameterNode } from "../../abstract-syntax-tree/parameters";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import { ObjectListType } from "../../object-lists";
-import { SymbolKind } from "../../symbol-table";
-import { type Located, located } from "..";
-import { dxAssertionScope } from "../diagnostics";
-import { assertNotErrorNode } from "../diagnostics/assertNotErrorNode";
-import { assertSyntaxKind } from "../diagnostics/assertSyntaxKind";
-import { LowerError } from "../error";
-import type { LoadoutTraits } from "../game/game_engine_default";
-import type { ElementLowerContext } from "../parameters";
-import { lowerGrenadeCount } from "../parameters/grenadeCount";
-import { setField } from "../setField";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { LoadoutElementNode } from "src/frontend/abstract-syntax-tree/elements/loadout";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { ObjectListType } from "src/frontend/object-lists";
+import { SymbolKind } from "src/frontend/symbol-table";
+import { type Located, located } from "src/frontend/intermediate-representation";
+import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
+import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import type { LoadoutTraits } from "src/frontend/intermediate-representation/game/game_engine_default";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters";
+import { lowerGrenadeCount } from "src/frontend/intermediate-representation/parameters/grenadeCount";
+import { setField } from "src/frontend/intermediate-representation/setField";
 
 const OBJECT_LIST_SENTINELS: Record<string, number> = {
   none: -1,

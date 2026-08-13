@@ -1,30 +1,30 @@
-import { SyntaxKind } from "../../../abstract-syntax-tree";
-import type { ConditionStatementNode } from "../../../abstract-syntax-tree/elements/trigger";
-import type { ASTConditionOperandNode } from "../../../abstract-syntax-tree/elements/trigger/operand";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ConditionStatementNode } from "src/frontend/abstract-syntax-tree/elements/trigger";
+import type { ASTConditionOperandNode } from "src/frontend/abstract-syntax-tree/elements/trigger/operand";
 import {
   COMPARISON_OPERATOR_NAMES,
   type ComparisonOperatorName,
-} from "../../../abstract-syntax-tree/elements/trigger/operand";
-import type { ASTParameterNode } from "../../../abstract-syntax-tree/parameters";
-import { diagnosticMessages } from "../../../../diagnostics/messages";
+} from "src/frontend/abstract-syntax-tree/elements/trigger/operand";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { diagnosticMessages } from "src/diagnostics/messages";
 import {
   DISPOSITION_KEYWORDS,
   type DispositionKeyword,
   type KillerTypeKeyword,
-} from "../../../language-configuration/omni/conditions";
-import { SymbolKind } from "../../../symbol-table";
-import { LowerError } from "../../error";
+} from "src/frontend/language-configuration/omni/conditions";
+import { SymbolKind } from "src/frontend/symbol-table";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   ConditionType,
   type Condition,
   Disposition,
   type PlayerDeathKillerTypeFlags,
   NumericComparison,
-} from "../../game/megalogamengine/megalogamengine_conditions";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions";
 import {
   asParameterLoweringContext,
   type ElementLowerContext,
-} from "../../parameters/context";
+} from "src/frontend/intermediate-representation/parameters/context";
 import {
   resolveCustomTimerReference,
   resolveObjectReference,
@@ -32,11 +32,11 @@ import {
   resolvePlayerReference,
   resolveTeamReference,
   resolveVariantVariable,
-} from "../../parameters";
+} from "src/frontend/intermediate-representation/parameters";
 import {
   coerceVariantOperands,
   isBareNoneOperand,
-} from "../../parameters/references/coerce";
+} from "src/frontend/intermediate-representation/parameters/references/coerce";
 
 const COMPARISON_BY_NAME: Record<ComparisonOperatorName, NumericComparison> = {
   less_than: NumericComparison.LessThan,

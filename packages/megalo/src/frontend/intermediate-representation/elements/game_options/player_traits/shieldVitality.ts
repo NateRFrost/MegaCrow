@@ -1,11 +1,11 @@
-import { SyntaxKind } from "../../../../abstract-syntax-tree";
-import { diagnosticMessages } from "../../../../../diagnostics/messages";
-import { located } from "../../..";
-import { LowerError } from "../../../error";
-import type { PlayerTraits } from "../../../game/game_engine_player_traits";
-import { lowerBooleanParam, lowerConstantInteger } from "../../../parameters";
-import { setField } from "../../../setField";
-import { resolveKeyword, type TraitOptionArgs } from "./helpers";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { located } from "src/frontend/intermediate-representation";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import type { PlayerTraits } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
+import { lowerBooleanParam, lowerConstantInteger } from "src/frontend/intermediate-representation/parameters";
+import { setField } from "src/frontend/intermediate-representation/setField";
+import { resolveKeyword, type TraitOptionArgs } from "src/frontend/intermediate-representation/elements/game_options/player_traits/helpers";
 
 /** Returns true if `identifier` was handled as a shield/vitality trait. */
 export const lowerShieldVitalityOption = (

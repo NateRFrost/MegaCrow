@@ -1,18 +1,18 @@
-import { SyntaxKind } from "../../abstract-syntax-tree";
-import type { GameStatsElementNode } from "../../abstract-syntax-tree/elements/game_stats";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import type { ElementLowerer } from ".";
-import { dxAssertionScope } from "../diagnostics";
-import { assertNotErrorNode } from "../diagnostics/assertNotErrorNode";
-import { assertSyntaxKind } from "../diagnostics/assertSyntaxKind";
-import { LowerError } from "../error";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { GameStatsElementNode } from "src/frontend/abstract-syntax-tree/elements/game_stats";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
+import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
+import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   GameStatisticFormat,
   GameStatisticGrouping,
   GameStatisticSortOrder,
   type MegaloGameStatistic,
-} from "../game/megalogamengine/megalogamengine_statistics";
-import { resolveScriptStringTableReference } from "../parameters/resolveScriptStringTableReference";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_statistics";
+import { resolveScriptStringTableReference } from "src/frontend/intermediate-representation/parameters/resolveScriptStringTableReference";
 
 const GAME_STATISTIC_FORMATS: Record<string, GameStatisticFormat> = {
   number: GameStatisticFormat.Number,

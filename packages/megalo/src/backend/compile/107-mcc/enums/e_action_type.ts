@@ -1,5 +1,5 @@
 import { e_action_type } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { ActionType } from "../../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { ActionType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 
 export const encodeActionType = (value: ActionType): e_action_type => {
   switch (value) {

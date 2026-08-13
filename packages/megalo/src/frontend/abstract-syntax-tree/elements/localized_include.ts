@@ -1,9 +1,9 @@
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import { type Token, TokenKind } from "../../tokens";
-import { type ASTErrorNode, type ASTNode, SyntaxKind } from "..";
-import type { ParserContext } from "../context";
-import { type ASTElementBase, ElementKind } from ".";
-import { locationSpan } from "./game_options/shared";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { type Token, TokenKind } from "src/frontend/tokens";
+import { type ASTErrorNode, type ASTNode, SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
+import { type ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
+import { locationSpan } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
 
 type LocalizedIncludeElementNodeFile = ASTNode<SyntaxKind.QUOTED_STRING> & {
   value: string;

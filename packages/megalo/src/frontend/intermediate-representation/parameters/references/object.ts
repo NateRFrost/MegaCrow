@@ -1,42 +1,42 @@
-import type { ASTParameterNode } from "../../../abstract-syntax-tree/parameters";
-import { ExplicitObject } from "../../game/megalogamengine/megalogamengine_explicit_object";
-import { ExplicitPlayer } from "../../game/megalogamengine/megalogamengine_explicit_player";
-import { ExplicitTeam } from "../../game/megalogamengine/megalogamengine_explicit_team";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { ExplicitObject } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
+import { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
+import { ExplicitTeam } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
 import {
   type ObjectReference,
   ObjectReferenceType,
-} from "../../game/megalogamengine/megalogamengine_references";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import {
   type SymbolTableVariableEntry,
   VariableScope,
   VariableType,
   isBuiltInVariable,
-} from "../../../symbol-table";
+} from "src/frontend/symbol-table";
 import {
   findVariableBySlot,
   requireResolvedVariableSlot,
   type VariableSlotMap,
-} from "../../preprocessing/symbols";
-import { LowerError } from "../../error";
-import type { ParameterLoweringContext } from "../context";
+} from "src/frontend/intermediate-representation/preprocessing/symbols";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
 import {
   enumSlotValue,
   parseExplicitObject,
   parseIndexSuffix,
   parseQualifiedTemporaryName,
-} from "../explicit";
+} from "src/frontend/intermediate-representation/parameters/explicit";
 import {
   resolveExplicitObjectForBase,
   resolveExplicitPlayerForBase,
   resolveExplicitTeamForBase,
-} from "./explicitResolve";
+} from "src/frontend/intermediate-representation/parameters/references/explicitResolve";
 import {
   isPlayerReferenceBase,
   isTeamReferenceBase,
   resolveScopedObjectMemberIndex,
   resolveScopedVariableMemberIndex,
   splitParameterMember,
-} from "./helpers";
+} from "src/frontend/intermediate-representation/parameters/references/helpers";
 
 export const encodeNoObjectReference = (): ObjectReference => ({
   type: ObjectReferenceType.GlobalObject,

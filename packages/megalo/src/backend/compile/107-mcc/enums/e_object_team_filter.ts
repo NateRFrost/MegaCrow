@@ -1,5 +1,5 @@
 import { e_object_team_filter } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { ObjectTeamFilter } from "../../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_map_objects";
+import { ObjectTeamFilter } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_map_objects";
 
 export const encodeObjectTeamFilter = (
   value: ObjectTeamFilter

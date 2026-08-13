@@ -1,5 +1,5 @@
-import type { Diagnostics, SourceLocation } from "../../../diagnostics";
-import { BUILT_IN_LOCATION } from "../../../diagnostics";
+import type { Diagnostics, SourceLocation } from "src/diagnostics";
+import { BUILT_IN_LOCATION } from "src/diagnostics";
 
 export const isWithinBitLength = (
   value: number,

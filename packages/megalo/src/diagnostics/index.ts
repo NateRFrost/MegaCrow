@@ -1,4 +1,4 @@
-import type { ObjectListType } from "../frontend/object-lists";
+import type { ObjectListType } from "src/frontend/object-lists";
 
 export type SourcePosition = {
   /** Offset within the owning file’s text (IDE / IncludeLocation.source). */

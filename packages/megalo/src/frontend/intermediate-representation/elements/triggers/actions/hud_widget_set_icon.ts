@@ -1,15 +1,15 @@
-import type { ASTParameterNode } from "../../../../abstract-syntax-tree/parameters";
-import { SyntaxKind } from "../../../../abstract-syntax-tree";
-import type { SourceCodeLocation } from "../../../../../diagnostics";
-import { diagnosticMessages } from "../../../../../diagnostics/messages";
-import { ObjectListType } from "../../../../object-lists";
-import { SymbolKind } from "../../../../symbol-table";
-import { LowerError } from "../../../error";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { ObjectListType } from "src/frontend/object-lists";
+import { SymbolKind } from "src/frontend/symbol-table";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   ActionType,
   type Action,
-} from "../../../game/megalogamengine/megalogamengine_actions";
-import { type ElementLowerContext } from "../../../parameters/context";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { type ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 
 const resolveDeclaredSymbolIndex = (
   node: ASTParameterNode,

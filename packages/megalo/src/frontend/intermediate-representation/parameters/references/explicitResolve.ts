@@ -1,22 +1,22 @@
-import { ExplicitObject } from "../../game/megalogamengine/megalogamengine_explicit_object";
-import { ExplicitPlayer } from "../../game/megalogamengine/megalogamengine_explicit_player";
-import { ExplicitTeam } from "../../game/megalogamengine/megalogamengine_explicit_team";
+import { ExplicitObject } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
+import { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
+import { ExplicitTeam } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
 import {
   type SymbolTableVariableEntry,
   VariableScope,
   VariableType,
   isBuiltInVariable,
-} from "../../../symbol-table";
-import { diagnosticMessages } from "../../../../diagnostics/messages";
-import type { SourceLocation } from "../../../../diagnostics";
-import { BUILT_IN_LOCATION } from "../../../../diagnostics";
+} from "src/frontend/symbol-table";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import type { SourceLocation } from "src/diagnostics";
+import { BUILT_IN_LOCATION } from "src/diagnostics";
 import {
   findVariableBySlot,
   requireResolvedVariableSlot,
   requireVariableSlot,
-} from "../../preprocessing/symbols";
-import { LowerError } from "../../error";
-import type { ParameterLoweringContext } from "../context";
+} from "src/frontend/intermediate-representation/preprocessing/symbols";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
 import {
   enumSlotValue,
   parseExplicitObject,
@@ -24,7 +24,7 @@ import {
   parseExplicitTeam,
   parseIndexSuffix,
   parseQualifiedTemporaryName,
-} from "../explicit";
+} from "src/frontend/intermediate-representation/parameters/explicit";
 
 const normalizeExplicitTemporaryBase = (base: string): string => {
   const qualified = parseQualifiedTemporaryName(base);

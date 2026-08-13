@@ -1,18 +1,18 @@
 import {
   type SourceCodeLocation,
   SourceLocationType,
-} from "../../../../diagnostics";
-import type { SymbolId } from "../../../symbol-table";
-import { TokenKind } from "../../../tokens";
-import type { ParserContext } from "../../context";
+} from "src/diagnostics";
+import type { SymbolId } from "src/frontend/symbol-table";
+import { TokenKind } from "src/frontend/tokens";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import {
   type ASTErrorNode,
   type ASTNode,
   type ASTReferenceNode,
   SyntaxKind,
-} from "../../kinds";
-import type { ASTParameterNode } from "../index";
-import { ParameterType } from "../index";
+} from "src/frontend/abstract-syntax-tree/kinds";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters/index";
+import { ParameterType } from "src/frontend/abstract-syntax-tree/parameters/index";
 
 export type ASTDynamicStringNode = ASTNode<SyntaxKind.DYNAMIC_STRING> & {
   string:

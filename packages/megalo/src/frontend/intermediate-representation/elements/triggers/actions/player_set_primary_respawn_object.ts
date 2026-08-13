@@ -1,18 +1,18 @@
-import type { ASTParameterNode } from "../../../../abstract-syntax-tree/parameters";
-import type { SourceCodeLocation } from "../../../../../diagnostics";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import type { SourceCodeLocation } from "src/diagnostics";
 import {
   ActionType,
   type Action,
-} from "../../../game/megalogamengine/megalogamengine_actions";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import {
   asParameterLoweringContext,
   type ElementLowerContext,
-} from "../../../parameters/context";
+} from "src/frontend/intermediate-representation/parameters/context";
 import {
   resolveObjectReference,
   resolvePlayerReference,
-} from "../../../parameters";
-import { requireParamCount } from "../helpers";
+} from "src/frontend/intermediate-representation/parameters";
+import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 
 export const lowerPlayerSetPrimaryRespawnObject = (
   parameters: ASTParameterNode[],

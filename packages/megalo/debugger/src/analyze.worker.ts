@@ -6,7 +6,7 @@ import {
   DiagnosticSeverity,
   Diagnostics,
 } from "../../src/diagnostics";
-import { CompilerError } from "../../src/frontend/error";
+import { CompilerError } from "../../src/diagnostics/error";
 import { Lowerer } from "../../src/frontend/intermediate-representation";
 import { setLocale } from "../../src/localization";
 import {

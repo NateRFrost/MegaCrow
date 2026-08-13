@@ -1,11 +1,11 @@
-import type { StringTableReference } from "../string_table";
+import type { StringTableReference } from "src/frontend/intermediate-representation/game/string_table";
 import type {
   CustomTimerReference,
   CustomVariableReference,
   ObjectReference,
   PlayerReference,
   TeamReference,
-} from "./megalogamengine_references";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 
 export enum ReplaceableTokenType {
   Player = 0,

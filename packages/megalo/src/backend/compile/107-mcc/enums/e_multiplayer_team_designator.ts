@@ -1,5 +1,5 @@
 import { e_multiplayer_team_designator } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { MultiplayerTeamDesignator } from "../../../../frontend/intermediate-representation/game/game_engine_default";
+import { MultiplayerTeamDesignator } from "src/frontend/intermediate-representation/game/game_engine_default";
 
 export const encodeMultiplayerTeamDesignator = (
   value: MultiplayerTeamDesignator

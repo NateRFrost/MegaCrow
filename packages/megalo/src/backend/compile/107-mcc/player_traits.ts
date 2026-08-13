@@ -1,5 +1,5 @@
 import type { c_player_traits } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import type { PlayerTraits } from "../../../frontend/intermediate-representation/game/game_engine_player_traits";
+import type { PlayerTraits } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 import {
   encodeActiveCamoSetting,
   encodeBooleanTrait,
@@ -19,7 +19,7 @@ import {
   encodeVampirismPercentage,
   encodeVehicleUsageSetting,
   encodeWaypointSetting,
-} from "./enums";
+} from "src/backend/compile/107-mcc/enums";
 
 /**
  * Encode a lowered {@link PlayerTraits} block into a BLF {@link c_player_traits}.

@@ -1,10 +1,10 @@
-import { SyntaxKind } from "../../abstract-syntax-tree";
-import type { NumericInitialValue } from "../../abstract-syntax-tree/elements/constants";
-import { SymbolKind } from "../../symbol-table";
-import { type Located, located } from "..";
-import { assertSyntaxKind } from "../diagnostics/assertSyntaxKind";
-import { assertSymbolKind } from "../diagnostics/assertSymbolKind";
-import type { ElementLowerContext } from "./context";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { NumericInitialValue } from "src/frontend/abstract-syntax-tree/elements/constants";
+import { SymbolKind } from "src/frontend/symbol-table";
+import { type Located, located } from "src/frontend/intermediate-representation";
+import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
+import { assertSymbolKind } from "src/frontend/intermediate-representation/diagnostics/assertSymbolKind";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 
 /**
  * Lower a constant/literal number only (option defaults, overrides, engine icon).

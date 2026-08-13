@@ -1,8 +1,8 @@
 import {
   type CompilerCapabilities,
   type ToCapabilities,
-} from "../diagnostics/assertCompatibleIR";
-import type { PlayerTraits } from "../../../frontend/intermediate-representation/game/game_engine_player_traits";
+} from "src/backend/compile/diagnostics/assertCompatibleIR";
+import type { PlayerTraits } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 
 const CAPABILITIES_107_MCC_PLAYER_TRAITS = {
   shieldVitality: {

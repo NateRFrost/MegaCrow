@@ -1,8 +1,8 @@
-import type { SourceCodeLocation } from "../../../../diagnostics";
-import { diagnosticMessages } from "../../../../diagnostics/messages";
-import { ObjectListType } from "../../../object-lists";
-import { TokenKind } from "../../../tokens";
-import type { ParserContext } from "../../context";
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { ObjectListType } from "src/frontend/object-lists";
+import { TokenKind } from "src/frontend/tokens";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import {
   type ASTErrorNode,
   type ASTIntegerNode,
@@ -10,7 +10,7 @@ import {
   type ASTNode,
   type ASTReferenceNode,
   SyntaxKind,
-} from "../../kinds";
+} from "src/frontend/abstract-syntax-tree/kinds";
 import {
   type ASTKeywordParameterNode,
   type ASTParameterNode,
@@ -20,7 +20,7 @@ import {
   parseMemberReference,
   parseParameterValue,
   tryParseParameterValue,
-} from "../../parameters";
+} from "src/frontend/abstract-syntax-tree/parameters";
 
 export type ASTConditionOperandNode =
   | ASTIntegerNode

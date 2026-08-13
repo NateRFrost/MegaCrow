@@ -1,6 +1,6 @@
 import rosetta from "rosetta";
-import en from "./locales/en.json";
-import ja from "./locales/ja.json";
+import en from "src/localization/locales/en.json";
+import ja from "src/localization/locales/ja.json";
 
 export type SupportedLocale = "en" | "ja";
 

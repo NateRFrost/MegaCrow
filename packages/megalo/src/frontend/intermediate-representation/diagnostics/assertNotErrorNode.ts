@@ -1,10 +1,10 @@
 import {
   type ASTErrorNode,
   isAstErrorNode,
-} from "../../abstract-syntax-tree";
-import type { SourceCodeLocation } from "../../../diagnostics";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import { LowerError } from "../error";
+} from "src/frontend/abstract-syntax-tree";
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 
 type NamedNode = { value: string; location: SourceCodeLocation };
 

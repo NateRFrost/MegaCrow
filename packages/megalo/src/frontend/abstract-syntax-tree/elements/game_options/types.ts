@@ -1,17 +1,17 @@
-import type { SourceCodeLocation } from "../../../../diagnostics";
-import type { PlayerTraitsOverrideOption } from "../../../language-configuration/omni/game_options";
-import type { ASTErrorNode, ASTReferenceNode } from "../..";
-import type { ASTKeywordParameterNode } from "../../parameters";
-import type { ASTStringLiteralOrReference } from "../../parameters/string_literal_or_reference";
-import type { ASTElementBase, ElementKind } from "..";
-import type { IntegerInitialValue, NumericInitialValue } from "../constants";
+import type { SourceCodeLocation } from "src/diagnostics";
+import type { PlayerTraitsOverrideOption } from "src/frontend/language-configuration/omni/game_options";
+import type { ASTErrorNode, ASTReferenceNode } from "src/frontend/abstract-syntax-tree";
+import type { ASTKeywordParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import type { ASTStringLiteralOrReference } from "src/frontend/abstract-syntax-tree/parameters/string_literal_or_reference";
+import type { ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
+import type { IntegerInitialValue, NumericInitialValue } from "src/frontend/abstract-syntax-tree/elements/constants";
 import type {
   PlayerTraitOptionNode,
   PlayerTraitsElementNode,
   PlayerTraitsOverrideNode,
-} from "./player_traits";
+} from "src/frontend/abstract-syntax-tree/elements/game_options/player_traits";
 
-export type { ASTStringLiteralOrReference } from "../../parameters/string_literal_or_reference";
+export type { ASTStringLiteralOrReference } from "src/frontend/abstract-syntax-tree/parameters/string_literal_or_reference";
 
 export enum GameOptionEntryKind {
   OVERRIDE = 0,

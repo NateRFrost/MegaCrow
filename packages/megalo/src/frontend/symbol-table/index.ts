@@ -1,4 +1,4 @@
-import type { MegaloCompilerContext } from "../../context";
+import type { MegaloCompilerContext } from "src/context";
 import {
   BUILT_IN_POSITION,
   type Diagnostics,
@@ -6,14 +6,14 @@ import {
   type SourceLocation,
   SourceLocationType,
   type SourcePosition,
-} from "../../diagnostics";
-import { diagnosticMessages } from "../../diagnostics/messages";
+} from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
 import {
   type StringTableEntry,
   stringTableEntry,
-} from "../intermediate-representation/game/string_table";
-import type { StringTableLanguage } from "../language-configuration/omni/strings";
-import type { ObjectListType } from "../object-lists";
+} from "src/frontend/intermediate-representation/game/string_table";
+import type { StringTableLanguage } from "src/frontend/language-configuration/omni/strings";
+import type { ObjectListType } from "src/frontend/object-lists";
 
 export enum SymbolKind {
   Constant = 0,

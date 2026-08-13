@@ -1,10 +1,10 @@
-import type { ElementLowerer } from ".";
-import type { HudWidgetsElementNode } from "../../abstract-syntax-tree/elements/hud_widgets";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import { dxAssertionScope } from "../diagnostics";
-import { assertNotErrorNode } from "../diagnostics/assertNotErrorNode";
-import { LowerError } from "../error";
-import { HudWidgetPosition } from "../game/megalogamengine/megalogamengine_hud_widgets";
+import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
+import type { HudWidgetsElementNode } from "src/frontend/abstract-syntax-tree/elements/hud_widgets";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import { HudWidgetPosition } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_hud_widgets";
 
 const HUD_WIDGET_POSITIONS: Record<string, HudWidgetPosition> = {
   top_left: HudWidgetPosition.TopLeft,

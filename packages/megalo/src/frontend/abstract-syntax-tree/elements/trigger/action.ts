@@ -1,14 +1,14 @@
-import type { MegaloVersion } from "../../../../version";
-import type { MegaloCompilerContext } from "../../../../context";
+import type { MegaloVersion } from "src/version";
+import type { MegaloCompilerContext } from "src/context";
 import {
   type SourceCodeLocation,
   SourceLocationType,
-} from "../../../../diagnostics";
-import { diagnosticMessages } from "../../../../diagnostics/messages";
-import { ObjectListType } from "../../../object-lists";
-import { type Token, TokenKind } from "../../../tokens";
-import type { ParserContext } from "../../context";
-import { type ASTNode, SyntaxKind } from "../../kinds";
+} from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { ObjectListType } from "src/frontend/object-lists";
+import { type Token, TokenKind } from "src/frontend/tokens";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
+import { type ASTNode, SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
 import {
   type ASTParameterNode,
   parameterParserBuilder as buildParameterParser,
@@ -20,13 +20,13 @@ import {
   type ParameterSlot,
   ParameterType,
   parseParameterValue,
-} from "../../parameters";
+} from "src/frontend/abstract-syntax-tree/parameters";
 import {
   type BeginStatementNode,
   type ForEachStatementNode,
   parseBegin,
   parseForEach,
-} from "./index";
+} from "src/frontend/abstract-syntax-tree/elements/trigger/index";
 
 export type ActionStatementNode = ASTNode<SyntaxKind.ACTION> & {
   name: { value: string; location: SourceCodeLocation };

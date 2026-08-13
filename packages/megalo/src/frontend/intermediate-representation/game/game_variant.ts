@@ -1,17 +1,17 @@
-import { EngineCategories } from "../engine-categories";
-import type { GameEngineBaseVariant } from "./game_engine_default";
-import type { PlayerTraitOption } from "./game_engine_traits";
-import type { Action } from "./megalogamengine/megalogamengine_actions";
-import type { Condition } from "./megalogamengine/megalogamengine_conditions";
-import type { HudWidgetPosition } from "./megalogamengine/megalogamengine_hud_widgets";
-import type { ObjectFilter } from "./megalogamengine/megalogamengine_map_objects";
-import type { MegaloGameEngineMapPermissions } from "./megalogamengine/megalogamengine_map_permissions";
-import type { MegaloGameStatistic } from "./megalogamengine/megalogamengine_statistics";
-import type { Trigger } from "./megalogamengine/megalogamengine_trigger";
-import type { UserDefinedOption } from "./megalogamengine/megalogamengine_user_defined_options";
-import type { VariableMetadata } from "./megalogamengine/megalogamengine_variable_metadata";
-import type { BuiltInGameOptionFlags } from "./parameters";
-import type { StringTable, StringTableReference } from "./string_table";
+import { EngineCategories } from "src/frontend/intermediate-representation/engine-categories";
+import type { GameEngineBaseVariant } from "src/frontend/intermediate-representation/game/game_engine_default";
+import type { PlayerTraitOption } from "src/frontend/intermediate-representation/game/game_engine_traits";
+import type { Action } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import type { Condition } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions";
+import type { HudWidgetPosition } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_hud_widgets";
+import type { ObjectFilter } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_map_objects";
+import type { MegaloGameEngineMapPermissions } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_map_permissions";
+import type { MegaloGameStatistic } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_statistics";
+import type { Trigger } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_trigger";
+import type { UserDefinedOption } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_user_defined_options";
+import type { VariableMetadata } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variable_metadata";
+import type { BuiltInGameOptionFlags } from "src/frontend/intermediate-representation/game/parameters";
+import type { StringTable, StringTableReference } from "src/frontend/intermediate-representation/game/string_table";
 
 // Based on c_game_engine_custom_variant
 // A lot of this is partial, as its applied as an override on the default game engine definition.

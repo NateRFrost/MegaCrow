@@ -7,7 +7,7 @@ import {
   SourceLocationType,
   type SourceCodeLocation,
   type SourceLocation,
-} from "./index";
+} from "src/diagnostics/index";
 
 const UNKNOWN_INCLUDE_SOURCE: SourceCodeLocation = {
   type: SourceLocationType.SOURCE_CODE,

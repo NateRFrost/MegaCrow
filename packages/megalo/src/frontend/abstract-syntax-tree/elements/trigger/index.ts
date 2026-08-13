@@ -1,37 +1,37 @@
-import type { SourceCodeLocation } from "../../../../diagnostics";
-import { diagnosticMessages } from "../../../../diagnostics/messages";
-import { TRIGGER_EXECUTION_KINDS } from "../../../language-configuration/omni/triggers";
-import type { SymbolId } from "../../../symbol-table";
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { TRIGGER_EXECUTION_KINDS } from "src/frontend/language-configuration/omni/triggers";
+import type { SymbolId } from "src/frontend/symbol-table";
 import {
   normalizeTriggerHeader,
   type ParserScope,
   ParserScopeKind,
-} from "../../../symbol-table/scope";
-import { type Token, TokenKind } from "../../../tokens";
-import type { ParserContext } from "../../context";
-import { type ASTNode, SyntaxKind } from "../../kinds";
-import { type ASTElementBase, ElementKind } from "..";
-import { isEndToken, locationSpan } from "../game_options/shared";
-import { type ActionStatementNode, parseAction } from "./action";
-import { type ConditionStatementNode, parseCondition } from "./condition";
-import { parseTemporary, type TemporaryStatementNode } from "./temporary";
+} from "src/frontend/symbol-table/scope";
+import { type Token, TokenKind } from "src/frontend/tokens";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
+import { type ASTNode, SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import { type ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
+import { isEndToken, locationSpan } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+import { type ActionStatementNode, parseAction } from "src/frontend/abstract-syntax-tree/elements/trigger/action";
+import { type ConditionStatementNode, parseCondition } from "src/frontend/abstract-syntax-tree/elements/trigger/condition";
+import { parseTemporary, type TemporaryStatementNode } from "src/frontend/abstract-syntax-tree/elements/trigger/temporary";
 
 export {
   ActionParserRepository,
   type ActionStatementNode,
   parseAction,
   type TriggerActionStatementNode,
-} from "./action";
+} from "src/frontend/abstract-syntax-tree/elements/trigger/action";
 export {
   ConditionParserRepository,
   type ConditionStatementNode,
   parseCondition,
-} from "./condition";
+} from "src/frontend/abstract-syntax-tree/elements/trigger/condition";
 export {
   parseTemporary,
   type TemporaryStatementNode,
   type TemporaryStorageName,
-} from "./temporary";
+} from "src/frontend/abstract-syntax-tree/elements/trigger/temporary";
 
 export type BeginStatementNode = ASTNode<SyntaxKind.BEGIN> & {
   statements: TriggerStatementNode[];

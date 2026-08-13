@@ -1,4 +1,4 @@
-import { VariableScope, VariableType } from "../../frontend/symbol-table";
+import { VariableScope, VariableType } from "src/frontend/symbol-table";
 
 export type VariableLimits = Record<
   VariableScope,

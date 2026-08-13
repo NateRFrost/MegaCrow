@@ -1,65 +1,65 @@
-import { SyntaxKind } from "../../../abstract-syntax-tree";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type {
   BeginStatementNode,
   ForEachStatementNode,
   TemporaryStatementNode,
   TriggerStatementNode,
-} from "../../../abstract-syntax-tree/elements/trigger";
-import type { ActionStatementNode } from "../../../abstract-syntax-tree/elements/trigger/action";
-import type { ASTParameterNode } from "../../../abstract-syntax-tree/parameters";
-import { diagnosticMessages } from "../../../../diagnostics/messages";
+} from "src/frontend/abstract-syntax-tree/elements/trigger";
+import type { ActionStatementNode } from "src/frontend/abstract-syntax-tree/elements/trigger/action";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { diagnosticMessages } from "src/diagnostics/messages";
 import {
   SymbolKind,
   VariableScope,
   VariableType,
-} from "../../../symbol-table";
-import { dxAssertionScope } from "../../diagnostics";
-import { LowerError } from "../../error";
+} from "src/frontend/symbol-table";
+import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   ActionType,
   MathOperation,
   type Action,
   type BeginParameters,
-} from "../../game/megalogamengine/megalogamengine_actions";
-import { ExplicitObject } from "../../game/megalogamengine/megalogamengine_explicit_object";
-import { ExplicitPlayer } from "../../game/megalogamengine/megalogamengine_explicit_player";
-import { ExplicitTeam } from "../../game/megalogamengine/megalogamengine_explicit_team";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { ExplicitObject } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
+import { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
+import { ExplicitTeam } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
 import {
   CustomVariableType,
   ObjectReferenceType,
   PlayerReferenceType,
   TeamReferenceType,
-} from "../../game/megalogamengine/megalogamengine_references";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import {
   VariableType as VariantVariableType,
   type VariantVariable,
-} from "../../game/megalogamengine/megalogamengine_variant_variable";
-import { enumSlotValue } from "../../parameters/explicit";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variant_variable";
+import { enumSlotValue } from "src/frontend/intermediate-representation/parameters/explicit";
 import {
   asParameterLoweringContext,
   type ElementLowerContext,
-} from "../../parameters/context";
-import { resolveVariantVariable } from "../../parameters";
+} from "src/frontend/intermediate-representation/parameters/context";
+import { resolveVariantVariable } from "src/frontend/intermediate-representation/parameters";
 import {
   coerceVariantOperands,
   isBareNoneOperand,
-} from "../../parameters/references/coerce";
+} from "src/frontend/intermediate-representation/parameters/references/coerce";
 import {
   requireResolvedVariableSlot,
   type ResolvedVariableSlot,
-} from "../../preprocessing/symbols";
-import { lowerActionStatement } from "./action_registry";
-import { lowerConditionStatement } from "./conditions";
+} from "src/frontend/intermediate-representation/preprocessing/symbols";
+import { lowerActionStatement } from "src/frontend/intermediate-representation/elements/triggers/action_registry";
+import { lowerConditionStatement } from "src/frontend/intermediate-representation/elements/triggers/conditions";
 import {
   applySpecialTriggerIndex,
   makeTrigger,
   resolveTriggerHeader,
-} from "./header";
+} from "src/frontend/intermediate-representation/elements/triggers/header";
 import {
   type ActionScopeWindow,
   type AppendTarget,
   ScopeAppendTarget,
-} from "./scope";
+} from "src/frontend/intermediate-representation/elements/triggers/scope";
 
 export type ActionScopeContext = {
   ctx: ElementLowerContext;

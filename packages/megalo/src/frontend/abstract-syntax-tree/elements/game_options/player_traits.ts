@@ -1,16 +1,16 @@
-import type { MegaloVersion } from "../../../../version";
-import type { MegaloCompilerContext } from "../../../../context";
-import type { SourceCodeLocation } from "../../../../diagnostics";
-import { diagnosticMessages } from "../../../../diagnostics/messages";
-import { ObjectListType } from "../../../object-lists";
-import { type Token, TokenKind } from "../../../tokens";
-import type { ParserContext } from "../../context";
+import type { MegaloVersion } from "src/version";
+import type { MegaloCompilerContext } from "src/context";
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { ObjectListType } from "src/frontend/object-lists";
+import { type Token, TokenKind } from "src/frontend/tokens";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import {
   type ASTErrorNode,
   type ASTNode,
   isAstErrorNode,
   type SyntaxKind,
-} from "../../kinds";
+} from "src/frontend/abstract-syntax-tree/kinds";
 import {
   type ASTParameterNode,
   KeywordParameter,
@@ -18,17 +18,17 @@ import {
   parameterParserBuilder as buildParameterParser,
   type ParameterParser,
   ParameterType,
-} from "../../parameters";
+} from "src/frontend/abstract-syntax-tree/parameters";
 import {
   type ASTStringLiteralOrReference,
   parseStringLiteralOrReference,
-} from "../../parameters/string_literal_or_reference";
-import { grenadeCountParser } from "../../parameters/types/grenade-count";
-import { locationSpan, parseIdentifier } from "./shared";
+} from "src/frontend/abstract-syntax-tree/parameters/string_literal_or_reference";
+import { grenadeCountParser } from "src/frontend/abstract-syntax-tree/parameters/types/grenade-count";
+import { locationSpan, parseIdentifier } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
 import {
   GameOptionEntryKind,
   type GameOptionModifiers,
-} from "./types";
+} from "src/frontend/abstract-syntax-tree/elements/game_options/types";
 
 export type PlayerTraitOptionNode = {
   identifier: string;

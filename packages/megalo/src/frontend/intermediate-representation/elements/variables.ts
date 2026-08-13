@@ -1,31 +1,31 @@
-import { SyntaxKind } from "../../abstract-syntax-tree";
-import type { VariablesElementNode } from "../../abstract-syntax-tree/elements/variables";
-import { SourceLocationType } from "../../../diagnostics";
-import { diagnosticMessages } from "../../../diagnostics/messages";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { VariablesElementNode } from "src/frontend/abstract-syntax-tree/elements/variables";
+import { SourceLocationType } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
 import {
   variableScopeFromName,
   variableTypeFromName,
-} from "../../language-configuration/omni/variables";
+} from "src/frontend/language-configuration/omni/variables";
 import {
   SymbolKind,
   type SymbolId,
   VariableType,
   isBuiltInVariable,
-} from "../../symbol-table";
-import { dxAssertionScope } from "../diagnostics";
-import { assertNotErrorNode } from "../diagnostics/assertNotErrorNode";
-import { LowerError } from "../error";
-import { MultiplayerTeamDesignator } from "../game/game_engine_default";
+} from "src/frontend/symbol-table";
+import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import { MultiplayerTeamDesignator } from "src/frontend/intermediate-representation/game/game_engine_default";
 import {
   CustomVariableType,
   type CustomVariableReference,
-} from "../game/megalogamengine/megalogamengine_references";
-import { MegaloVariableNetworkState } from "../game/megalogamengine/megalogamengine_variable_metadata";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
+import { MegaloVariableNetworkState } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variable_metadata";
 import type {
   ElementLowerContext,
   VariableDeclarationInfo,
-} from "../parameters/context";
-import { GAME_OPTION_CUSTOM_VARIABLE_TYPE } from "../parameters/gameOptionTypes";
+} from "src/frontend/intermediate-representation/parameters/context";
+import { GAME_OPTION_CUSTOM_VARIABLE_TYPE } from "src/frontend/intermediate-representation/parameters/gameOptionTypes";
 
 const NETWORK_STATE_BY_NAME: Record<string, MegaloVariableNetworkState> = {
   local: MegaloVariableNetworkState.Local,

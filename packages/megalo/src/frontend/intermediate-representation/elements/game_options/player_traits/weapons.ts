@@ -1,22 +1,22 @@
-import { SyntaxKind } from "../../../../abstract-syntax-tree";
-import type { ASTParameterNode } from "../../../../abstract-syntax-tree/parameters";
-import type { SourceCodeLocation } from "../../../../../diagnostics";
-import { diagnosticMessages } from "../../../../../diagnostics/messages";
-import { ObjectListType } from "../../../../object-lists";
-import { located } from "../../..";
-import { LowerError } from "../../../error";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { ObjectListType } from "src/frontend/object-lists";
+import { located } from "src/frontend/intermediate-representation";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   InfiniteAmmoSetting,
   type PlayerTraits,
-} from "../../../game/game_engine_player_traits";
-import { lowerBooleanParam } from "../../../parameters";
-import { lowerGrenadeCount } from "../../../parameters/grenadeCount";
-import { setField } from "../../../setField";
+} from "src/frontend/intermediate-representation/game/game_engine_player_traits";
+import { lowerBooleanParam } from "src/frontend/intermediate-representation/parameters";
+import { lowerGrenadeCount } from "src/frontend/intermediate-representation/parameters/grenadeCount";
+import { setField } from "src/frontend/intermediate-representation/setField";
 import {
   lowerObjectListIndex,
   resolveKeyword,
   type TraitOptionArgs,
-} from "./helpers";
+} from "src/frontend/intermediate-representation/elements/game_options/player_traits/helpers";
 
 const EQUIPMENT_USAGE_ENABLED = new Set(["on", "enabled"]);
 const EQUIPMENT_USAGE_DISABLED = new Set(["off", "disabled"]);

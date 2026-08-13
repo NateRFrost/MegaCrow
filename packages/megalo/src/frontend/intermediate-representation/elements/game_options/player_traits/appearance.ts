@@ -1,13 +1,13 @@
-import { diagnosticMessages } from "../../../../../diagnostics/messages";
-import { LowerError } from "../../../error";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   ActiveCamo,
   ForcedChangeColor,
   type PlayerTraits,
   WaypointVisibility,
-} from "../../../game/game_engine_player_traits";
-import { setField } from "../../../setField";
-import { resolveEnumKeyword, type TraitOptionArgs } from "./helpers";
+} from "src/frontend/intermediate-representation/game/game_engine_player_traits";
+import { setField } from "src/frontend/intermediate-representation/setField";
+import { resolveEnumKeyword, type TraitOptionArgs } from "src/frontend/intermediate-representation/elements/game_options/player_traits/helpers";
 
 const ACTIVE_CAMO: Record<string, ActiveCamo> = {
   off: ActiveCamo.Off,

@@ -2,20 +2,20 @@ import {
   GameOptionEntryKind,
   type GameOptionEntryNode,
   type GameOptionsElementNode,
-} from "../../../abstract-syntax-tree/elements/game_options";
-import { diagnosticMessages } from "../../../../diagnostics/messages";
-import type { ElementLowerer } from "..";
-import { dxAssertionScope } from "../../diagnostics";
-import { isBaseDerived } from "../../diagnostics/assertAllowedInBaseDerived";
-import { LowerError } from "../../error";
-import type { ElementLowerContext } from "../../parameters/context";
-import { lowerOption, lowerOptionOverride } from "./option";
-import { lowerOverride } from "./override";
+} from "src/frontend/abstract-syntax-tree/elements/game_options";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
+import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { isBaseDerived } from "src/frontend/intermediate-representation/diagnostics/assertAllowedInBaseDerived";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
+import { lowerOption, lowerOptionOverride } from "src/frontend/intermediate-representation/elements/game_options/option";
+import { lowerOverride } from "src/frontend/intermediate-representation/elements/game_options/override";
 import {
   lowerPlayerTraits,
   lowerPlayerTraitsOptionOverride,
-} from "./player_traits";
-import { lowerRangedOption } from "./ranged_option";
+} from "src/frontend/intermediate-representation/elements/game_options/player_traits";
+import { lowerRangedOption } from "src/frontend/intermediate-representation/elements/game_options/ranged_option";
 
 const lowerEntry = (entry: GameOptionEntryNode, ctx: ElementLowerContext) => {
   if (isBaseDerived(ctx)) {

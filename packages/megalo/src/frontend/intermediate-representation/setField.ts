@@ -1,6 +1,6 @@
-import type { Diagnostics, SourceLocation } from "../../diagnostics";
-import { markCurrentValueUnused } from "./diagnostics/markCurrentValueUnused";
-import type { FieldLocations } from "./locations";
+import type { Diagnostics, SourceLocation } from "src/diagnostics";
+import { markCurrentValueUnused } from "src/frontend/intermediate-representation/diagnostics/markCurrentValueUnused";
+import type { FieldLocations } from "src/frontend/intermediate-representation/locations";
 
 /**
  * Assign a plain IR leaf and record its source location.

@@ -1,9 +1,9 @@
-import type { MegaloVersion } from "../../version";
-import type { ParserSymbolContext } from "../abstract-syntax-tree/symbol-context";
-import type { MegaloCompilerContext } from "../../context";
-import { BUILT_IN_LOCATION } from "../../diagnostics";
-import type { BuiltInGameOptionName } from "../language-configuration/omni/game_options";
-import { VariableScope, VariableType } from ".";
+import type { MegaloVersion } from "src/version";
+import type { ParserSymbolContext } from "src/frontend/abstract-syntax-tree/symbol-context";
+import type { MegaloCompilerContext } from "src/context";
+import { BUILT_IN_LOCATION } from "src/diagnostics";
+import type { BuiltInGameOptionName } from "src/frontend/language-configuration/omni/game_options";
+import { VariableScope, VariableType } from "src/frontend/symbol-table";
 
 export const addBuiltInConstants = (
   megaloVersion: MegaloVersion,

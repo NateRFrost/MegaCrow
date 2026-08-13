@@ -1,19 +1,19 @@
-import type { ASTParameterNode } from "../../../../abstract-syntax-tree/parameters";
-import type { SourceCodeLocation } from "../../../../../diagnostics";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import type { SourceCodeLocation } from "src/diagnostics";
 import {
   ActionType,
   type Action,
-} from "../../../game/megalogamengine/megalogamengine_actions";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import {
   asParameterLoweringContext,
   type ElementLowerContext,
-} from "../../../parameters/context";
-import { resolveVariantVariable } from "../../../parameters";
+} from "src/frontend/intermediate-representation/parameters/context";
+import { resolveVariantVariable } from "src/frontend/intermediate-representation/parameters";
 import {
   coerceVariantOperands,
   isBareNoneOperand,
-} from "../../../parameters/references/coerce";
-import { parseMathOperation, requireParamCount } from "../helpers";
+} from "src/frontend/intermediate-representation/parameters/references/coerce";
+import { parseMathOperation, requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 
 export const lowerSet = (
   parameters: ASTParameterNode[],

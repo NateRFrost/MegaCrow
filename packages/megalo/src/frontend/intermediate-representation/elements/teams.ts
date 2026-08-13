@@ -1,29 +1,29 @@
-import { SyntaxKind } from "../../abstract-syntax-tree";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type {
   TeamNode,
   TeamsElementNode,
   TeamsPropertyNode,
-} from "../../abstract-syntax-tree/elements/teams";
-import type { SourceCodeLocation } from "../../../diagnostics";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import { isTeamDesignator } from "../../language-configuration/omni/teams";
-import { SymbolKind } from "../../symbol-table";
-import { dxAssertionScope } from "../diagnostics";
-import { assertSyntaxKind } from "../diagnostics/assertSyntaxKind";
-import { LowerError } from "../error";
+} from "src/frontend/abstract-syntax-tree/elements/teams";
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { isTeamDesignator } from "src/frontend/language-configuration/omni/teams";
+import { SymbolKind } from "src/frontend/symbol-table";
+import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   DesignatorSwitchType,
   type GameEngineTeamOptionsTeam,
   MultiplayerTeamDesignator,
   PlayerModelChoice,
   TeamOptionsModelOverrideType,
-} from "../game/game_engine_default";
-import type { StringTableEntry } from "../game/string_table";
-import type { ElementLowerContext } from "../parameters";
-import { lowerConstantNumber } from "../parameters/constantNumber";
-import { TEAM_DESIGNATOR_INDICES } from "../parameters/explicit";
-import { setField } from "../setField";
-import type { ElementLowerer } from ".";
+} from "src/frontend/intermediate-representation/game/game_engine_default";
+import type { StringTableEntry } from "src/frontend/intermediate-representation/game/string_table";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters";
+import { lowerConstantNumber } from "src/frontend/intermediate-representation/parameters/constantNumber";
+import { TEAM_DESIGNATOR_INDICES } from "src/frontend/intermediate-representation/parameters/explicit";
+import { setField } from "src/frontend/intermediate-representation/setField";
+import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
 
 const MAX_FIRETEAM_COUNT = 16;
 

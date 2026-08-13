@@ -1,5 +1,5 @@
 import { e_megalo_game_statistic_format } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { GameStatisticFormat } from "../../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_statistics";
+import { GameStatisticFormat } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_statistics";
 
 export const encodeGameStatisticFormat = (
   value: GameStatisticFormat

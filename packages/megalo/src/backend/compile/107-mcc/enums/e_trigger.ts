@@ -5,7 +5,7 @@ import {
 import {
   TriggerExecutionMode,
   TriggerType,
-} from "../../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_trigger";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_trigger";
 
 export const encodeTriggerExecutionMode = (
   value: TriggerExecutionMode

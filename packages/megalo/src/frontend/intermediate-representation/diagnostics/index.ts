@@ -1,5 +1,5 @@
-import { Diagnostics } from "../../../diagnostics";
-import { LowerError } from "../error";
+import { Diagnostics } from "src/diagnostics";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 
 export const dxAssertionScope = (diagnostics: Diagnostics, func: () => void) => {
     try {

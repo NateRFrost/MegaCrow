@@ -1,13 +1,13 @@
-import { SyntaxKind } from "../../abstract-syntax-tree";
-import type { MapPermissionsElementNode } from "../../abstract-syntax-tree/elements/map_permissions";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import type { ElementLowerer } from ".";
-import { dxAssertionScope } from "../diagnostics";
-import { assertSyntaxKind } from "../diagnostics/assertSyntaxKind";
-import { LowerError } from "../error";
-import { lowerConstantNumber } from "../parameters/constantNumber";
-import { setField } from "../setField";
-import { markCurrentValueUnused } from "../diagnostics/markCurrentValueUnused";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { MapPermissionsElementNode } from "src/frontend/abstract-syntax-tree/elements/map_permissions";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
+import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import { lowerConstantNumber } from "src/frontend/intermediate-representation/parameters/constantNumber";
+import { setField } from "src/frontend/intermediate-representation/setField";
+import { markCurrentValueUnused } from "src/frontend/intermediate-representation/diagnostics/markCurrentValueUnused";
 
 const MAP_PERMISSION_KEYS = ["default", "exception"] as const;
 

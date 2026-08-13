@@ -1,13 +1,13 @@
-import type { ASTParameterNode } from "../../../abstract-syntax-tree/parameters";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import {
   type VariantVariable,
   VariableType as VariantVariableType,
-} from "../../game/megalogamengine/megalogamengine_variant_variable";
-import { VariableScope, VariableType } from "../../../symbol-table";
-import type { ParameterLoweringContext } from "../context";
-import { resolveGameOptionCustomVariableType } from "../gameOptionTypes";
-import { resolveCustomTimerReference } from "./customTimer";
-import { resolveCustomVariableReference } from "./customVariable";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variant_variable";
+import { VariableScope, VariableType } from "src/frontend/symbol-table";
+import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
+import { resolveGameOptionCustomVariableType } from "src/frontend/intermediate-representation/parameters/gameOptionTypes";
+import { resolveCustomTimerReference } from "src/frontend/intermediate-representation/parameters/references/customTimer";
+import { resolveCustomVariableReference } from "src/frontend/intermediate-representation/parameters/references/customVariable";
 import {
   isObjectReferenceBase,
   isPlayerReferenceBase,
@@ -17,10 +17,10 @@ import {
   resolveScopedVariableMemberIndex,
   splitParameterMember,
   temporaryReferenceKind,
-} from "./helpers";
-import { encodeNoObjectReference, resolveObjectReference } from "./object";
-import { resolvePlayerReference } from "./player";
-import { resolveTeamReference } from "./team";
+} from "src/frontend/intermediate-representation/parameters/references/helpers";
+import { encodeNoObjectReference, resolveObjectReference } from "src/frontend/intermediate-representation/parameters/references/object";
+import { resolvePlayerReference } from "src/frontend/intermediate-representation/parameters/references/player";
+import { resolveTeamReference } from "src/frontend/intermediate-representation/parameters/references/team";
 
 const memberSubjectScope = (
   ctx: ParameterLoweringContext,

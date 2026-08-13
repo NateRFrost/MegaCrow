@@ -1,5 +1,5 @@
 import { e_infinite_ammo_setting } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { InfiniteAmmoSetting } from "../../../../frontend/intermediate-representation/game/game_engine_player_traits";
+import { InfiniteAmmoSetting } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 
 export const encodeInfiniteAmmoSetting = (
   value: InfiniteAmmoSetting

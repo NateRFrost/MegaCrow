@@ -1,15 +1,15 @@
-import type { SupportedMegaloVersion } from "./version";
-import { Parser } from "./frontend/abstract-syntax-tree";
-import { type Compiler, getCompilerForVersion } from "./backend/compile";
-import type { CompilerSettings } from "./compiler-settings";
-import { MegaloCompilerContext } from "./context";
-import { Diagnostics } from "./diagnostics";
-import { Lowerer } from "./frontend/intermediate-representation";
-import type { ObjectLists } from "./frontend/object-lists";
-import type { MegacrowExtensions } from "./megacrow-extensions";
-import { Lexer } from "./frontend/tokens";
+import type { SupportedMegaloVersion } from "src/version";
+import { Parser } from "src/frontend/abstract-syntax-tree";
+import { type Compiler, getCompilerForVersion } from "src/backend/compile";
+import type { CompilerSettings } from "src/compiler-settings";
+import { MegaloCompilerContext } from "src/context";
+import { Diagnostics } from "src/diagnostics";
+import { Lowerer } from "src/frontend/intermediate-representation";
+import type { ObjectLists } from "src/frontend/object-lists";
+import type { MegacrowExtensions } from "src/megacrow-extensions";
+import { Lexer } from "src/frontend/tokens";
 
-export { MegaloCompilerContext } from "./context";
+export { MegaloCompilerContext } from "src/context";
 
 // Workspace lifecycle — one instance per workspace.
 export class MegaloCompiler {

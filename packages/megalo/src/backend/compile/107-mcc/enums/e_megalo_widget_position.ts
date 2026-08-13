@@ -1,5 +1,5 @@
 import { e_megalo_widget_position } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { HudWidgetPosition } from "../../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_hud_widgets";
+import { HudWidgetPosition } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_hud_widgets";
 
 export const encodeHudWidgetPosition = (
   value: HudWidgetPosition

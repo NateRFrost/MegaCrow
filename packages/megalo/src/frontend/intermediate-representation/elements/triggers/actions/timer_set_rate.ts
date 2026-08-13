@@ -1,18 +1,18 @@
-import type { ASTParameterNode } from "../../../../abstract-syntax-tree/parameters";
-import type { SourceCodeLocation } from "../../../../../diagnostics";
-import { diagnosticMessages } from "../../../../../diagnostics/messages";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
 import {
   ActionType,
   GameEngineTimerRate,
   type Action,
-} from "../../../game/megalogamengine/megalogamengine_actions";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import {
   asParameterLoweringContext,
   type ElementLowerContext,
-} from "../../../parameters/context";
-import { resolveCustomTimerReference } from "../../../parameters";
-import { lowerFloatParam } from "../../../parameters/common";
-import { requireParamCount } from "../helpers";
+} from "src/frontend/intermediate-representation/parameters/context";
+import { resolveCustomTimerReference } from "src/frontend/intermediate-representation/parameters";
+import { lowerFloatParam } from "src/frontend/intermediate-representation/parameters/common";
+import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 
 /**
  * MegaloEdit `timer_rate_from_real_rate`

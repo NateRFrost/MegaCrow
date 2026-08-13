@@ -1,5 +1,5 @@
 import { e_team_scoring_method } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { TeamScoringMethod } from "../../../../frontend/intermediate-representation/game/game_engine_default";
+import { TeamScoringMethod } from "src/frontend/intermediate-representation/game/game_engine_default";
 
 export const encodeTeamScoringMethod = (
   value: TeamScoringMethod

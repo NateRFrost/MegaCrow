@@ -1,11 +1,11 @@
-import { SyntaxKind } from "../../abstract-syntax-tree";
-import type { LoadoutPaletteElementNode } from "../../abstract-syntax-tree/elements/loadout_palette";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import { dxAssertionScope } from "../diagnostics";
-import { assertNotErrorNode } from "../diagnostics/assertNotErrorNode";
-import { LowerError } from "../error";
-import type { LoadoutPaletteTraits } from "../game/game_engine_default";
-import type { ElementLowerContext } from "../parameters";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { LoadoutPaletteElementNode } from "src/frontend/abstract-syntax-tree/elements/loadout_palette";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import type { LoadoutPaletteTraits } from "src/frontend/intermediate-representation/game/game_engine_default";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters";
 
 export const loadoutPaletteLowerer = (
   element: LoadoutPaletteElementNode,

@@ -1,5 +1,5 @@
 import { e_megalo_game_statistic_grouping } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { GameStatisticGrouping } from "../../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_statistics";
+import { GameStatisticGrouping } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_statistics";
 
 export const encodeGameStatisticGrouping = (
   value: GameStatisticGrouping

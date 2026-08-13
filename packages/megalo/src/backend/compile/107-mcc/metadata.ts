@@ -6,8 +6,8 @@ import {
   e_gui_game_mode,
   s_content_item_game_variant_metadata,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import type { IR } from "../../../frontend/intermediate-representation";
-import { encodeGameEngineCategory } from "./enums/e_game_engine_category";
+import type { IR } from "src/frontend/intermediate-representation";
+import { encodeGameEngineCategory } from "src/backend/compile/107-mcc/enums/e_game_engine_category";
 
 export const compileMetadata = (
   ir: IR,

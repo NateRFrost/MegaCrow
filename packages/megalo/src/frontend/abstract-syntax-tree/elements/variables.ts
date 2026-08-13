@@ -1,5 +1,5 @@
-import { type SourceCodeLocation, SourceLocationType } from "../../../diagnostics";
-import { diagnosticMessages } from "../../../diagnostics/messages";
+import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
 import {
   isNumericVariableType,
   isVariableScopeName,
@@ -8,21 +8,21 @@ import {
   type VariableTypeName,
   variableScopeFromName,
   variableTypeFromName,
-} from "../../language-configuration/omni/variables";
-import { type Token, TokenKind } from "../../tokens";
+} from "src/frontend/language-configuration/omni/variables";
+import { type Token, TokenKind } from "src/frontend/tokens";
 import {
   type ASTErrorNode,
   type ASTReferenceNode,
   isAstErrorNode,
   SyntaxKind,
-} from "..";
-import type { ParserContext } from "../context";
-import { type ASTElementBase, ElementKind } from ".";
+} from "src/frontend/abstract-syntax-tree";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
+import { type ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
 import {
   type IntegerInitialValue,
   parseIntegerInitialValue,
-} from "./constants";
-import { locationSpan } from "./game_options/shared";
+} from "src/frontend/abstract-syntax-tree/elements/constants";
+import { locationSpan } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
 
 type VariableEntryNodeNetwork = { value: string; location: SourceCodeLocation };
 type VariableEntryNodeType = {

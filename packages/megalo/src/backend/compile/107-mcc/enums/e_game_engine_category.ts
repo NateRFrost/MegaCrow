@@ -1,5 +1,5 @@
 import { e_game_engine_category } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { EngineCategories } from "../../../../frontend/intermediate-representation/engine-categories";
+import { EngineCategories } from "src/frontend/intermediate-representation/engine-categories";
 
 export const encodeGameEngineCategory = (
   value: EngineCategories

@@ -1,19 +1,19 @@
-import type { SourceCodeLocation } from "../../../../diagnostics";
-import { diagnosticMessages } from "../../../../diagnostics/messages";
-import { type Token, TokenKind } from "../../../tokens";
-import { SyntaxKind } from "../..";
-import type { ParserContext } from "../../context";
-import { ElementKind } from "..";
-import { optionParser } from "./option";
-import { overrideParser } from "./override";
-import { playerTraitsParser } from "./player_traits";
-import { rangedOptionParser } from "./ranged_option";
-import { isEndToken, locationSpan } from "./shared";
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { type Token, TokenKind } from "src/frontend/tokens";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
+import { ElementKind } from "src/frontend/abstract-syntax-tree/elements";
+import { optionParser } from "src/frontend/abstract-syntax-tree/elements/game_options/option";
+import { overrideParser } from "src/frontend/abstract-syntax-tree/elements/game_options/override";
+import { playerTraitsParser } from "src/frontend/abstract-syntax-tree/elements/game_options/player_traits";
+import { rangedOptionParser } from "src/frontend/abstract-syntax-tree/elements/game_options/ranged_option";
+import { isEndToken, locationSpan } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
 import type {
   GameOptionEntryNode,
   GameOptionModifiers,
   GameOptionsElementNode,
-} from "./types";
+} from "src/frontend/abstract-syntax-tree/elements/game_options/types";
 
 export type {
   ASTStringLiteralOrReference,
@@ -31,9 +31,9 @@ export type {
   UserDefinedOptionNode,
   UserDefinedOptionOverrideNode,
   UserDefinedOptionValueNode,
-} from "./types";
+} from "src/frontend/abstract-syntax-tree/elements/game_options/types";
 
-export { GameOptionEntryKind, OverrideValueKind } from "./types";
+export { GameOptionEntryKind, OverrideValueKind } from "src/frontend/abstract-syntax-tree/elements/game_options/types";
 
 export const gameOptionsParser = (
   ctx: ParserContext,

@@ -1,32 +1,32 @@
-import { SyntaxKind } from "../../../abstract-syntax-tree/kinds";
-import type { ASTParameterNode } from "../../../abstract-syntax-tree/parameters";
-import { ExplicitObject } from "../../game/megalogamengine/megalogamengine_explicit_object";
-import { ExplicitPlayer } from "../../game/megalogamengine/megalogamengine_explicit_player";
-import { ExplicitTeam } from "../../game/megalogamengine/megalogamengine_explicit_team";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { ExplicitObject } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
+import { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
+import { ExplicitTeam } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
 import {
   type CustomVariableReference,
   CustomVariableType,
-} from "../../game/megalogamengine/megalogamengine_references";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import {
   SymbolKind,
   type SymbolTableVariableEntry,
   VariableScope,
   VariableType,
   isBuiltInVariable,
-} from "../../../symbol-table";
+} from "src/frontend/symbol-table";
 import {
   requireResolvedVariableSlot,
   type VariableSlotMap,
-} from "../../preprocessing/symbols";
-import { LowerError } from "../../error";
-import type { ParameterLoweringContext } from "../context";
-import { parseIndexSuffix } from "../explicit";
-import { resolveGameOptionCustomVariableType } from "../gameOptionTypes";
+} from "src/frontend/intermediate-representation/preprocessing/symbols";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
+import { parseIndexSuffix } from "src/frontend/intermediate-representation/parameters/explicit";
+import { resolveGameOptionCustomVariableType } from "src/frontend/intermediate-representation/parameters/gameOptionTypes";
 import {
   resolveExplicitObjectForBase,
   resolveExplicitPlayerForBase,
   resolveExplicitTeamForBase,
-} from "./explicitResolve";
+} from "src/frontend/intermediate-representation/parameters/references/explicitResolve";
 import {
   isExplicitPlayerName,
   isObjectReferenceBase,
@@ -35,7 +35,7 @@ import {
   resolveScopedVariableMemberIndex,
   splitParameterMember,
   type SplitMember,
-} from "./helpers";
+} from "src/frontend/intermediate-representation/parameters/references/helpers";
 
 /** Simplified kind selector used by the lowering signature system. */
 export enum CustomVariableKind {

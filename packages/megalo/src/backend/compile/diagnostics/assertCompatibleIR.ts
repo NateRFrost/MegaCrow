@@ -1,12 +1,12 @@
-import { getLabel, type SupportedMegaloVersion } from "../../../version";
+import { getLabel, type SupportedMegaloVersion } from "src/version";
 import {
   BUILT_IN_LOCATION,
   type Diagnostics,
   type SourceLocation,
-} from "../../../diagnostics";
-import type { FieldLocations, IR } from "../../../frontend/intermediate-representation";
-import { translate } from "../../../localization";
-import { Compiler } from "../compiler";
+} from "src/diagnostics";
+import type { FieldLocations, IR } from "src/frontend/intermediate-representation";
+import { translate } from "src/localization";
+import { Compiler } from "src/backend/compile/compiler";
 
 type Primitive = string | number | boolean | bigint;
 

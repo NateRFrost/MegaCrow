@@ -1,5 +1,5 @@
 import type { c_game_engine_custom_variant } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import type { IR } from "../../../frontend/intermediate-representation";
+import type { IR } from "src/frontend/intermediate-representation";
 
 export const compilePlayerRatings = (
   ir: IR,

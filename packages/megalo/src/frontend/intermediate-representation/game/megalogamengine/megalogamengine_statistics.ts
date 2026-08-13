@@ -1,4 +1,4 @@
-import type { StringTableReference } from "../string_table";
+import type { StringTableReference } from "src/frontend/intermediate-representation/game/string_table";
 
 export enum GameStatisticFormat {
   Number = 0,

@@ -1,9 +1,9 @@
-import type { ContentItemMetadata } from "../saved_games/saved_game_files";
+import type { ContentItemMetadata } from "src/frontend/intermediate-representation/saved_games/saved_game_files";
 import type {
   GrenadeCountSetting,
   PlayerTraits,
-} from "./game_engine_player_traits";
-import type { StringTableEntry, StringTableReference } from "./string_table";
+} from "src/frontend/intermediate-representation/game/game_engine_player_traits";
+import type { StringTableEntry, StringTableReference } from "src/frontend/intermediate-representation/game/string_table";
 
 export type GameEngineMiscellaneousOptions = Partial<{
   teamsEnabled: boolean;

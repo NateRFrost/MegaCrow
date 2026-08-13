@@ -1,18 +1,18 @@
-import { type ASTElementNode, ElementKind } from "../../abstract-syntax-tree/elements";
-import type { ElementLowerContext } from "../parameters/context";
-import { baseLowerer } from "./base";
-import { engineDataLowerer } from "./engine_data";
-import { gameOptionsLowerer } from "./game_options";
-import { gameStatsLowerer } from "./game_stats";
-import { hudWidgetsLowerer } from "./hud_widgets";
-import { loadoutLowerer } from "./loadout";
-import { loadoutPaletteLowerer } from "./loadout_palette";
-import { mapObjectLowerer } from "./map_object";
-import { mapPermissionsLowerer } from "./map_permissions";
-import { playerRatingLowerer } from "./player_rating";
-import { teamsLowerer } from "./teams";
-import { triggersLowerer } from "./triggers";
-import { variablesLowerer } from "./variables";
+import { type ASTElementNode, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
+import { baseLowerer } from "src/frontend/intermediate-representation/elements/base";
+import { engineDataLowerer } from "src/frontend/intermediate-representation/elements/engine_data";
+import { gameOptionsLowerer } from "src/frontend/intermediate-representation/elements/game_options";
+import { gameStatsLowerer } from "src/frontend/intermediate-representation/elements/game_stats";
+import { hudWidgetsLowerer } from "src/frontend/intermediate-representation/elements/hud_widgets";
+import { loadoutLowerer } from "src/frontend/intermediate-representation/elements/loadout";
+import { loadoutPaletteLowerer } from "src/frontend/intermediate-representation/elements/loadout_palette";
+import { mapObjectLowerer } from "src/frontend/intermediate-representation/elements/map_object";
+import { mapPermissionsLowerer } from "src/frontend/intermediate-representation/elements/map_permissions";
+import { playerRatingLowerer } from "src/frontend/intermediate-representation/elements/player_rating";
+import { teamsLowerer } from "src/frontend/intermediate-representation/elements/teams";
+import { triggersLowerer } from "src/frontend/intermediate-representation/elements/triggers";
+import { variablesLowerer } from "src/frontend/intermediate-representation/elements/variables";
 
 export type ElementLowerer<T extends ASTElementNode> = (
   element: T,

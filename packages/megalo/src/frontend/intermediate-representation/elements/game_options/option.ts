@@ -2,17 +2,17 @@ import type {
   UserDefinedOptionNode,
   UserDefinedOptionOverrideNode,
   UserDefinedOptionValueNode,
-} from "../../../abstract-syntax-tree/elements/game_options";
-import { dxAssertionScope } from "../../diagnostics";
-import { assertNotErrorNode } from "../../diagnostics/assertNotErrorNode";
-import { LowerError } from "../../error";
+} from "src/frontend/abstract-syntax-tree/elements/game_options";
+import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 import type {
   SelectUserDefinedOption,
   UserDefinedOptionValue,
-} from "../../game/megalogamengine/megalogamengine_user_defined_options";
-import type { ElementLowerContext } from "../../parameters/context";
-import { lowerConstantNumber } from "../../parameters/constantNumber";
-import { resolveScriptStringTableReference } from "../../parameters/resolveScriptStringTableReference";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_user_defined_options";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
+import { lowerConstantNumber } from "src/frontend/intermediate-representation/parameters/constantNumber";
+import { resolveScriptStringTableReference } from "src/frontend/intermediate-representation/parameters/resolveScriptStringTableReference";
 
 const lowerOptionValue = (
   valueNode: UserDefinedOptionValueNode,

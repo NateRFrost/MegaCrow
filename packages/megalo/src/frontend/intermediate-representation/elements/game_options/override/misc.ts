@@ -1,11 +1,11 @@
-import type { OverrideEntryNode } from "../../../../abstract-syntax-tree/elements/game_options";
-import type { ElementLowerContext } from "../../../parameters/context";
-import { setField } from "../../../setField";
+import type { OverrideEntryNode } from "src/frontend/abstract-syntax-tree/elements/game_options";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
+import { setField } from "src/frontend/intermediate-representation/setField";
 import {
   resolveSimpleBoolean,
   resolveSimpleNumber,
   resolveTeamScoringMode,
-} from "./helpers";
+} from "src/frontend/intermediate-representation/elements/game_options/override/helpers";
 
 /** Returns true if `optionName` was handled as a misc override. */
 export const tryLowerMiscOverride = (

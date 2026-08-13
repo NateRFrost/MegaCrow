@@ -1,21 +1,21 @@
-import type { ASTParameterNode } from "../../../../abstract-syntax-tree/parameters";
-import type { SourceCodeLocation } from "../../../../../diagnostics";
-import { diagnosticMessages } from "../../../../../diagnostics/messages";
-import { LowerError } from "../../../error";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   ActionType,
   BipedGiveWeaponMode,
   type Action,
-} from "../../../game/megalogamengine/megalogamengine_actions";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import {
   asParameterLoweringContext,
   type ElementLowerContext,
-} from "../../../parameters/context";
+} from "src/frontend/intermediate-representation/parameters/context";
 import {
   resolveObjectReference,
   resolveObjectTypeReference,
-} from "../../../parameters";
-import { requireKeyword, requireParamCount } from "../helpers";
+} from "src/frontend/intermediate-representation/parameters";
+import { requireKeyword, requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 
 const BIPED_GIVE_WEAPON_MODE_BY_NAME: Record<string, BipedGiveWeaponMode> = {
   primary: BipedGiveWeaponMode.Primary,

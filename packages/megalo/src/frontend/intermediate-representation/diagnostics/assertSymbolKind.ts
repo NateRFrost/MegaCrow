@@ -1,7 +1,7 @@
-import { BUILT_IN_LOCATION } from "../../../diagnostics";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import { SymbolKind, type SymbolTableEntry } from "../../symbol-table";
-import { LowerError } from "../error";
+import { BUILT_IN_LOCATION } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { SymbolKind, type SymbolTableEntry } from "src/frontend/symbol-table";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 
 const symbolKindName = (kind: SymbolKind): string => {
   const name = SymbolKind[kind];

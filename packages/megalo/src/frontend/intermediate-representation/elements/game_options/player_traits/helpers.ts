@@ -1,12 +1,12 @@
-import { SyntaxKind } from "../../../../abstract-syntax-tree";
-import type { ASTParameterNode } from "../../../../abstract-syntax-tree/parameters";
-import type { SourceCodeLocation } from "../../../../../diagnostics";
-import { diagnosticMessages } from "../../../../../diagnostics/messages";
-import { ObjectListType } from "../../../../object-lists";
-import { type Located, located } from "../../..";
-import { LowerError } from "../../../error";
-import type { ParameterLoweringContext } from "../../../parameters";
-import { resolveObjectTypeReference } from "../../../parameters/references";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { ObjectListType } from "src/frontend/object-lists";
+import { type Located, located } from "src/frontend/intermediate-representation";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters";
+import { resolveObjectTypeReference } from "src/frontend/intermediate-representation/parameters/references";
 
 export const parameterLocation = (
   parameters: ASTParameterNode[],

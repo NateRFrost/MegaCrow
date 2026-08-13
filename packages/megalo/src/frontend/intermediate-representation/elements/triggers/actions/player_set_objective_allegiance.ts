@@ -1,17 +1,17 @@
-import type { ASTParameterNode } from "../../../../abstract-syntax-tree/parameters";
-import type { SourceCodeLocation } from "../../../../../diagnostics";
-import { diagnosticMessages } from "../../../../../diagnostics/messages";
-import { LowerError } from "../../../error";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   ActionType,
   type Action,
-} from "../../../game/megalogamengine/megalogamengine_actions";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import {
   asParameterLoweringContext,
   type ElementLowerContext,
-} from "../../../parameters/context";
-import { resolvePlayerReference } from "../../../parameters";
-import { lowerDynamicString } from "../dynamicString";
+} from "src/frontend/intermediate-representation/parameters/context";
+import { resolvePlayerReference } from "src/frontend/intermediate-representation/parameters";
+import { lowerDynamicString } from "src/frontend/intermediate-representation/elements/triggers/dynamicString";
 
 export const lowerPlayerSetObjectiveAllegiance = (
   parameters: ASTParameterNode[],

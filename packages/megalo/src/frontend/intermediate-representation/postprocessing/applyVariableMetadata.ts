@@ -1,22 +1,22 @@
 import {
   MultiplayerTeamDesignator,
-} from "../game/game_engine_default";
+} from "src/frontend/intermediate-representation/game/game_engine_default";
 import {
   CustomVariableType,
   type CustomVariableReference,
-} from "../game/megalogamengine/megalogamengine_references";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import {
   MegaloVariableNetworkState,
   type VariableMetadata,
-} from "../game/megalogamengine/megalogamengine_variable_metadata";
-import type { ElementLowerContext } from "../parameters/context";
-import type { ResolvedVariableSlot } from "../preprocessing/symbols";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variable_metadata";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
+import type { ResolvedVariableSlot } from "src/frontend/intermediate-representation/preprocessing/symbols";
 import {
   VariableScope,
   VariableType,
   type SymbolId,
-} from "../../symbol-table";
-import type { IR } from "..";
+} from "src/frontend/symbol-table";
+import type { IR } from "src/frontend/intermediate-representation";
 
 const emptyMetadata = (): VariableMetadata => ({
   numericVariables: [],

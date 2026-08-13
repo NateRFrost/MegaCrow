@@ -118,19 +118,19 @@ import {
   e_action_type,
   e_fireteam_filter_flags,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { BUILT_IN_LOCATION, type Diagnostics } from "../../../diagnostics";
-import type { IR } from "../../../frontend/intermediate-representation";
+import { BUILT_IN_LOCATION, type Diagnostics } from "src/diagnostics";
+import type { IR } from "src/frontend/intermediate-representation";
 import {
   ActionType,
   BoundaryShape,
   type Action,
   type FireteamFilter,
   type SetBoundaryParameters,
-} from "../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import type { Trigger } from "../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_trigger";
-import { encodeNoObjectReference } from "../../../frontend/intermediate-representation/parameters";
-import { encodeActionType } from "./enums/e_action_type";
-import { encodeMathOperation } from "./enums/e_math_operation";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import type { Trigger } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_trigger";
+import { encodeNoObjectReference } from "src/frontend/intermediate-representation/parameters";
+import { encodeActionType } from "src/backend/compile/107-mcc/enums/e_action_type";
+import { encodeMathOperation } from "src/backend/compile/107-mcc/enums/e_math_operation";
 import {
   encodeBoundaryShape,
   encodeCreateObjectFlags,
@@ -147,7 +147,7 @@ import {
   encodeTeamOrPlayerTarget,
   encodeTeamReference,
   encodeVariantVariable,
-} from "./references";
+} from "src/backend/compile/107-mcc/references";
 const encodeFireteamFilter = (value: FireteamFilter): e_fireteam_filter_flags => {
   const flags = new e_fireteam_filter_flags();
   flags.fireteam1 = value.fireteam1;

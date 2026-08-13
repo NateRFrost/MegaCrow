@@ -1,20 +1,20 @@
-import { SyntaxKind } from "../../../../abstract-syntax-tree";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import {
   type OverrideEntryNode,
   OverrideValueKind,
-} from "../../../../abstract-syntax-tree/elements/game_options";
-import { diagnosticMessages } from "../../../../../diagnostics/messages";
-import { dxAssertionScope } from "../../../diagnostics";
-import { LowerError } from "../../../error";
-import type { ElementLowerContext } from "../../../parameters/context";
-import { applyBuiltinLockHide } from "./helpers";
-import { lowerLoadoutPaletteOverride } from "./loadoutPalette";
-import { tryLowerMapOverride } from "./map";
-import { tryLowerMiscOverride } from "./misc";
-import { lowerPlayerTraitsOverride } from "./playerTraits";
-import { tryLowerRespawnOverride } from "./respawn";
-import { tryLowerSocialOverride } from "./social";
-import { tryLowerTu1Override } from "./tu1";
+} from "src/frontend/abstract-syntax-tree/elements/game_options";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
+import { applyBuiltinLockHide } from "src/frontend/intermediate-representation/elements/game_options/override/helpers";
+import { lowerLoadoutPaletteOverride } from "src/frontend/intermediate-representation/elements/game_options/override/loadoutPalette";
+import { tryLowerMapOverride } from "src/frontend/intermediate-representation/elements/game_options/override/map";
+import { tryLowerMiscOverride } from "src/frontend/intermediate-representation/elements/game_options/override/misc";
+import { lowerPlayerTraitsOverride } from "src/frontend/intermediate-representation/elements/game_options/override/playerTraits";
+import { tryLowerRespawnOverride } from "src/frontend/intermediate-representation/elements/game_options/override/respawn";
+import { tryLowerSocialOverride } from "src/frontend/intermediate-representation/elements/game_options/override/social";
+import { tryLowerTu1Override } from "src/frontend/intermediate-representation/elements/game_options/override/tu1";
 
 /**
  * @link https://blam-network.github.io/megalo/language/elements/game-options#override

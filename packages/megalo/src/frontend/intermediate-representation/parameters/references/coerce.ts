@@ -4,16 +4,16 @@ import {
   type PlayerReference,
   PlayerReferenceType,
   TeamReferenceType,
-} from "../../game/megalogamengine/megalogamengine_references";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import {
   type VariantVariable,
   VariableType as VariantVariableType,
-} from "../../game/megalogamengine/megalogamengine_variant_variable";
-import { ExplicitObject } from "../../game/megalogamengine/megalogamengine_explicit_object";
-import { ExplicitPlayer } from "../../game/megalogamengine/megalogamengine_explicit_player";
-import { ExplicitTeam } from "../../game/megalogamengine/megalogamengine_explicit_team";
-import { SyntaxKind } from "../../../abstract-syntax-tree/kinds";
-import type { ASTParameterNode } from "../../../abstract-syntax-tree/parameters";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variant_variable";
+import { ExplicitObject } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
+import { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
+import { ExplicitTeam } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 
 /** Bare `none` typed as the partner operand's variant kind (proto `noneVariant`). */
 export const noneVariantVariable = (

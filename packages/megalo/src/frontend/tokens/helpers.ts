@@ -1,5 +1,5 @@
-import { type SourceCodeLocation, SourceLocationType } from "../../diagnostics";
-import type { Tokens } from ".";
+import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
+import type { Tokens } from "src/frontend/tokens";
 
 /// <summary>
 /// Returns the location of a span of tokens.

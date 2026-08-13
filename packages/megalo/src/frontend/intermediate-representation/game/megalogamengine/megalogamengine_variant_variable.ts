@@ -4,7 +4,7 @@ import type {
   ObjectReference,
   PlayerReference,
   TeamReference,
-} from "./megalogamengine_references";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 
 export enum VariableType {
   CustomVariable = 0,

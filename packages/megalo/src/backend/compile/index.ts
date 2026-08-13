@@ -1,8 +1,8 @@
-import type { SupportedMegaloVersion } from "../../version";
-import { Compiler107MCC } from "./107-mcc";
-import type { Compiler } from "./compiler";
+import type { SupportedMegaloVersion } from "src/version";
+import { Compiler107MCC } from "src/backend/compile/107-mcc";
+import type { Compiler } from "src/backend/compile/compiler";
 
-export { Compiler } from "./compiler";
+export { Compiler } from "src/backend/compile/compiler";
 
 export const getCompilerForVersion = ({
   version,

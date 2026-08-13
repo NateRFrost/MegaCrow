@@ -1,19 +1,19 @@
-import { SyntaxKind } from "../../abstract-syntax-tree";
-import type { MapObjectElementNode } from "../../abstract-syntax-tree/elements/map_object";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import type { ElementLowerer } from ".";
-import { dxAssertionScope } from "../diagnostics";
-import { assertNotErrorNode } from "../diagnostics/assertNotErrorNode";
-import { assertSyntaxKind } from "../diagnostics/assertSyntaxKind";
-import { LowerError } from "../error";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { MapObjectElementNode } from "src/frontend/abstract-syntax-tree/elements/map_object";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
+import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
+import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   type ObjectFilter,
   ObjectTeamFilter,
-} from "../game/megalogamengine/megalogamengine_map_objects";
-import { asParameterLoweringContext } from "../parameters/context";
-import { resolveObjectTypeReference } from "../parameters/references";
-import { resolveScriptStringTableReference } from "../parameters/resolveScriptStringTableReference";
-import { setField } from "../setField";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_map_objects";
+import { asParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
+import { resolveObjectTypeReference } from "src/frontend/intermediate-representation/parameters/references";
+import { resolveScriptStringTableReference } from "src/frontend/intermediate-representation/parameters/resolveScriptStringTableReference";
+import { setField } from "src/frontend/intermediate-representation/setField";
 
 const OBJECT_TEAM_FILTERS: Record<string, ObjectTeamFilter> = {
   none: ObjectTeamFilter.None,

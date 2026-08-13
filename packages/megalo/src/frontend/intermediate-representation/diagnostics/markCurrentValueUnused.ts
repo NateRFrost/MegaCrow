@@ -1,6 +1,6 @@
-import type { Diagnostics, SourceLocation } from "../../../diagnostics";
-import { SourceLocationType } from "../../../diagnostics";
-import { diagnosticMessages } from "../../../diagnostics/messages";
+import type { Diagnostics, SourceLocation } from "src/diagnostics";
+import { SourceLocationType } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
 
 /**
  * When an IR field already has a value and is overwritten, mark that current

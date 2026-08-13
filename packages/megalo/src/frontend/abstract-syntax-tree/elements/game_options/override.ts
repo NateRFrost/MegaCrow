@@ -1,12 +1,12 @@
-import { diagnosticMessages } from "../../../../diagnostics/messages";
-import { isPlayerTraitsOverrideOption } from "../../../language-configuration/omni/game_options";
-import { SymbolKind } from "../../../symbol-table";
-import { type Token, TokenKind } from "../../../tokens";
-import { isAstErrorNode, SyntaxKind } from "../..";
-import type { ParserContext } from "../../context";
-import { parseNumericInitialValue } from "../constants";
-import { parsePlayerTraitOptions } from "./player_traits";
-import { isEndToken, locationSpan, parseIdentifier } from "./shared";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { isPlayerTraitsOverrideOption } from "src/frontend/language-configuration/omni/game_options";
+import { SymbolKind } from "src/frontend/symbol-table";
+import { type Token, TokenKind } from "src/frontend/tokens";
+import { isAstErrorNode, SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
+import { parseNumericInitialValue } from "src/frontend/abstract-syntax-tree/elements/constants";
+import { parsePlayerTraitOptions } from "src/frontend/abstract-syntax-tree/elements/game_options/player_traits";
+import { isEndToken, locationSpan, parseIdentifier } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
 import {
   GameOptionEntryKind,
   type GameOptionModifiers,
@@ -14,7 +14,7 @@ import {
   type OverrideNameNode,
   type OverrideSimpleValueNode,
   OverrideValueKind,
-} from "./types";
+} from "src/frontend/abstract-syntax-tree/elements/game_options/types";
 
 const parseOverrideName = (
   ctx: ParserContext,

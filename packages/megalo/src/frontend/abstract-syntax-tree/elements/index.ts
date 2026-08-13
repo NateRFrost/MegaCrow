@@ -1,49 +1,49 @@
-import type { MegaloVersion } from "../../../version";
-import type { MegaloCompilerContext } from "../../../context";
-import type { SourceCodeLocation } from "../../../diagnostics";
-import type { Token } from "../../tokens";
-import type { ASTNode, SyntaxKind } from "..";
-import type { ParserContext } from "../context";
+import type { MegaloVersion } from "src/version";
+import type { MegaloCompilerContext } from "src/context";
+import type { SourceCodeLocation } from "src/diagnostics";
+import type { Token } from "src/frontend/tokens";
+import type { ASTNode, SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 
-import { type ConstantsElementNode, constantsParser } from "./constants";
-import { type GameOptionsElementNode, gameOptionsParser } from "./game_options";
+import { type ConstantsElementNode, constantsParser } from "src/frontend/abstract-syntax-tree/elements/constants";
+import { type GameOptionsElementNode, gameOptionsParser } from "src/frontend/abstract-syntax-tree/elements/game_options";
 
-export { GameOptionEntryKind, OverrideValueKind } from "./game_options";
-export type { IncludeElementNode } from "./include";
-export type { LocalizedIncludeElementNode } from "./localized_include";
-export type { BaseElementNode } from "./base";
+export { GameOptionEntryKind, OverrideValueKind } from "src/frontend/abstract-syntax-tree/elements/game_options";
+export type { IncludeElementNode } from "src/frontend/abstract-syntax-tree/elements/include";
+export type { LocalizedIncludeElementNode } from "src/frontend/abstract-syntax-tree/elements/localized_include";
+export type { BaseElementNode } from "src/frontend/abstract-syntax-tree/elements/base";
 
-import { type BaseElementNode, baseParser } from "./base";
-import { type EngineDataElementNode, engineDataParser } from "./engine_data";
-import { type GameStatsElementNode, gameStatsParser } from "./game_stats";
-import { type HudWidgetsElementNode, hudWidgetsParser } from "./hud_widgets";
-import { type IncludeElementNode, includeParser } from "./include";
-import { type LoadoutElementNode, loadoutParser } from "./loadout";
+import { type BaseElementNode, baseParser } from "src/frontend/abstract-syntax-tree/elements/base";
+import { type EngineDataElementNode, engineDataParser } from "src/frontend/abstract-syntax-tree/elements/engine_data";
+import { type GameStatsElementNode, gameStatsParser } from "src/frontend/abstract-syntax-tree/elements/game_stats";
+import { type HudWidgetsElementNode, hudWidgetsParser } from "src/frontend/abstract-syntax-tree/elements/hud_widgets";
+import { type IncludeElementNode, includeParser } from "src/frontend/abstract-syntax-tree/elements/include";
+import { type LoadoutElementNode, loadoutParser } from "src/frontend/abstract-syntax-tree/elements/loadout";
 import {
   type LoadoutPaletteElementNode,
   loadoutPaletteParser,
-} from "./loadout_palette";
+} from "src/frontend/abstract-syntax-tree/elements/loadout_palette";
 import {
   type LocalizedIncludeElementNode,
   localizedIncludeParser,
-} from "./localized_include";
-import { type MapObjectElementNode, mapObjectParser } from "./map_object";
+} from "src/frontend/abstract-syntax-tree/elements/localized_include";
+import { type MapObjectElementNode, mapObjectParser } from "src/frontend/abstract-syntax-tree/elements/map_object";
 import {
   type MapPermissionsElementNode,
   mapPermissionsParser,
-} from "./map_permissions";
+} from "src/frontend/abstract-syntax-tree/elements/map_permissions";
 import {
   type PlayerRatingElementNode,
   playerRatingParser,
-} from "./player_rating";
+} from "src/frontend/abstract-syntax-tree/elements/player_rating";
 import {
   type RequisitionPaletteElementNode,
   requisitionPaletteParser,
-} from "./requisition_palette";
-import { type StringTableElementNode, stringTableParser } from "./string_table";
-import { type TeamsElementNode, teamsParser } from "./teams";
-import { type TriggerElementNode, triggerParser } from "./trigger";
-import { type VariablesElementNode, variablesParser } from "./variables";
+} from "src/frontend/abstract-syntax-tree/elements/requisition_palette";
+import { type StringTableElementNode, stringTableParser } from "src/frontend/abstract-syntax-tree/elements/string_table";
+import { type TeamsElementNode, teamsParser } from "src/frontend/abstract-syntax-tree/elements/teams";
+import { type TriggerElementNode, triggerParser } from "src/frontend/abstract-syntax-tree/elements/trigger";
+import { type VariablesElementNode, variablesParser } from "src/frontend/abstract-syntax-tree/elements/variables";
 
 // REGISTERING NEW ELEMENTS:
 // - Add an ElementKind enum value.

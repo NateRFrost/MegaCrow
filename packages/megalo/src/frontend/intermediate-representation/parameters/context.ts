@@ -1,14 +1,14 @@
-import type { Diagnostics } from "../../../diagnostics";
-import type { MegaloCompilerContext } from "../../../context";
-import type { SymbolId, SymbolTable } from "../../symbol-table";
-import type { VariableSlotMap } from "../preprocessing/symbols";
-import type { IR } from "..";
+import type { Diagnostics } from "src/diagnostics";
+import type { MegaloCompilerContext } from "src/context";
+import type { SymbolId, SymbolTable } from "src/frontend/symbol-table";
+import type { VariableSlotMap } from "src/frontend/intermediate-representation/preprocessing/symbols";
+import type { IR } from "src/frontend/intermediate-representation";
 import type {
   LoadoutPaletteTraits,
   LoadoutTraits,
-} from "../game/game_engine_default";
-import type { CustomVariableReference } from "../game/megalogamengine/megalogamengine_references";
-import type { MegaloVariableNetworkState } from "../game/megalogamengine/megalogamengine_variable_metadata";
+} from "src/frontend/intermediate-representation/game/game_engine_default";
+import type { CustomVariableReference } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
+import type { MegaloVariableNetworkState } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variable_metadata";
 
 export type VariableDeclarationInfo = {
   networkState: MegaloVariableNetworkState;

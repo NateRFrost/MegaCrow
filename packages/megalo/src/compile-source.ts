@@ -1,23 +1,23 @@
-import { getCompilerForVersion } from "./backend/compile";
-import { MegaloCompilerContext } from "./context";
+import { getCompilerForVersion } from "src/backend/compile";
+import { MegaloCompilerContext } from "src/context";
 import {
   BUILT_IN_LOCATION,
   type Diagnostic,
   Diagnostics,
-} from "./diagnostics";
-import { CompilerError } from "./diagnostics/error";
-import { Lowerer } from "./frontend/intermediate-representation";
-import type { IR } from "./frontend/intermediate-representation";
-import type { ObjectLists } from "./frontend/object-lists";
-import { Lexer } from "./frontend/tokens";
+} from "src/diagnostics";
+import { CompilerError } from "src/diagnostics/error";
+import { Lowerer } from "src/frontend/intermediate-representation";
+import type { IR } from "src/frontend/intermediate-representation";
+import type { ObjectLists } from "src/frontend/object-lists";
+import { Lexer } from "src/frontend/tokens";
 import {
   Parser,
   type ResolveIncludeFn,
-} from "./frontend/abstract-syntax-tree";
-import { loadObjectListsForVersion } from "./load-object-lists";
-import type { CompilerSettings } from "./compiler-settings";
-import type { MegacrowExtensions } from "./megacrow-extensions";
-import type { SupportedMegaloVersion } from "./version";
+} from "src/frontend/abstract-syntax-tree";
+import { loadObjectListsForVersion } from "src/load-object-lists";
+import type { CompilerSettings } from "src/compiler-settings";
+import type { MegacrowExtensions } from "src/megacrow-extensions";
+import type { SupportedMegaloVersion } from "src/version";
 
 export type ResolveBaseFileFn = (
   path: string,

@@ -1,7 +1,7 @@
-import type { MegaloCompilerContext } from "../../../context";
-import type { Diagnostics } from "../../../diagnostics";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import type { VariableLimits } from "../../../backend/version-configuration";
+import type { MegaloCompilerContext } from "src/context";
+import type { Diagnostics } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import type { VariableLimits } from "src/backend/version-configuration";
 import {
   isBuiltInVariable,
   type SymbolId,
@@ -10,7 +10,7 @@ import {
   type SymbolTableVariableEntry,
   VariableScope,
   VariableType,
-} from "../../symbol-table";
+} from "src/frontend/symbol-table";
 
 type SlotOccupants = SymbolId[];
 type TypeSlots = SlotOccupants[];

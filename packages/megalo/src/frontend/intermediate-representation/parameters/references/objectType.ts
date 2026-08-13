@@ -1,12 +1,12 @@
-import { SyntaxKind } from "../../../abstract-syntax-tree/kinds";
-import type { ASTParameterNode } from "../../../abstract-syntax-tree/parameters";
-import type { SourceLocation } from "../../../../diagnostics";
-import { diagnosticMessages } from "../../../../diagnostics/messages";
-import { ObjectListType } from "../../../object-lists";
-import { SymbolKind } from "../../../symbol-table";
-import { LowerError } from "../../error";
-import type { ObjectTypeReference } from "../../game/megalogamengine/megalogamengine_references";
-import type { ParameterLoweringContext } from "../context";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import type { SourceLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { ObjectListType } from "src/frontend/object-lists";
+import { SymbolKind } from "src/frontend/symbol-table";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import type { ObjectTypeReference } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
+import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
 
 const objectTypeName = (node: ASTParameterNode): string | undefined => {
   switch (node.kind) {

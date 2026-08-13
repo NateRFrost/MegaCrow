@@ -3,15 +3,15 @@ import {
   e_megalo_variable_network_state,
   type s_variable_metadata,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import type { IR } from "../../../frontend/intermediate-representation";
+import type { IR } from "src/frontend/intermediate-representation";
 import {
   MegaloVariableNetworkState,
   type VariableMetadata,
-} from "../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_variable_metadata";
-import { encodeMultiplayerTeamDesignator } from "./enums/e_multiplayer_team_designator";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variable_metadata";
+import { encodeMultiplayerTeamDesignator } from "src/backend/compile/107-mcc/enums/e_multiplayer_team_designator";
 import {
   encodeCustomVariableReference,
-} from "./references";
+} from "src/backend/compile/107-mcc/references";
 
 const encodeNetworkState = (
   value: MegaloVariableNetworkState

@@ -1,4 +1,4 @@
-import type { SourceLocation } from "./index";
+import type { SourceLocation } from "src/diagnostics/index";
 
 export class CompilerError extends Error {
   public readonly location?: SourceLocation;

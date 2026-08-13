@@ -1,14 +1,14 @@
-import type { TriggerElementNode } from "../../../abstract-syntax-tree/elements/trigger";
-import { dxAssertionScope } from "../../diagnostics";
-import { LowerError } from "../../error";
-import type { ElementLowerer } from "..";
+import type { TriggerElementNode } from "src/frontend/abstract-syntax-tree/elements/trigger";
+import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
 import {
   applySpecialTriggerIndex,
   makeTrigger,
   resolveTriggerHeader,
-} from "./header";
-import { GameEngineAppendTarget } from "./scope";
-import { lowerActionScope } from "./statements";
+} from "src/frontend/intermediate-representation/elements/triggers/header";
+import { GameEngineAppendTarget } from "src/frontend/intermediate-representation/elements/triggers/scope";
+import { lowerActionScope } from "src/frontend/intermediate-representation/elements/triggers/statements";
 
 export const triggersLowerer: ElementLowerer<TriggerElementNode> = (
   element,

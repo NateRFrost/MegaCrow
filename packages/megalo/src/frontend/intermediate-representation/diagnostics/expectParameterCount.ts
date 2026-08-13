@@ -1,6 +1,6 @@
-import { ASTParameterNode } from "../../abstract-syntax-tree/parameters";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import { CompilerError } from "../../../diagnostics/error";
+import { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { CompilerError } from "src/diagnostics/error";
 
 export const expectParameterCount = (
         count: number,

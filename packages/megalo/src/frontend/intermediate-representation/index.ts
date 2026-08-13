@@ -1,27 +1,27 @@
-import type { AST } from "../abstract-syntax-tree";
-import { ElementKind } from "../abstract-syntax-tree/elements";
-import type { MegaloCompilerContext } from "../../context";
-import { type Diagnostics, type SourceLocation } from "../../diagnostics";
-import type { ObjectLists } from "../object-lists";
-import { assertAllowedInBaseDerived } from "./diagnostics/assertAllowedInBaseDerived";
-import { dxAssertionScope } from "./diagnostics";
-import { ELEMENT_LOWERERS, baseLowerer } from "./elements";
-import type { ElementLowerContext } from "./parameters";
-import type { GameEngineCustomVariant } from "./game/game_variant";
-import { StringTable } from "./game/string_table";
-import type { VariableMetadata } from "./game/megalogamengine/megalogamengine_variable_metadata";
+import type { AST } from "src/frontend/abstract-syntax-tree";
+import { ElementKind } from "src/frontend/abstract-syntax-tree/elements";
+import type { MegaloCompilerContext } from "src/context";
+import { type Diagnostics, type SourceLocation } from "src/diagnostics";
+import type { ObjectLists } from "src/frontend/object-lists";
+import { assertAllowedInBaseDerived } from "src/frontend/intermediate-representation/diagnostics/assertAllowedInBaseDerived";
+import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { ELEMENT_LOWERERS, baseLowerer } from "src/frontend/intermediate-representation/elements";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters";
+import type { GameEngineCustomVariant } from "src/frontend/intermediate-representation/game/game_variant";
+import { StringTable } from "src/frontend/intermediate-representation/game/string_table";
+import type { VariableMetadata } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variable_metadata";
 import type {
   PlayerTraitOptionOverride,
   UserDefinedOptionOverride,
-} from "./game/megalogamengine/megalogamengine_user_defined_options";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_user_defined_options";
 import {
   createFieldLocations,
   type FieldLocations,
-} from "./locations";
-import { applyDefaultLoadoutCameraTime } from "./postprocessing/applyDefaultLoadoutCameraTime";
-import { applyMetadata } from "./postprocessing/applyMetadata";
-import { applyVariableMetadata } from "./postprocessing/applyVariableMetadata";
-import { buildVariableSlotMap } from "./preprocessing/symbols";
+} from "src/frontend/intermediate-representation/locations";
+import { applyDefaultLoadoutCameraTime } from "src/frontend/intermediate-representation/postprocessing/applyDefaultLoadoutCameraTime";
+import { applyMetadata } from "src/frontend/intermediate-representation/postprocessing/applyMetadata";
+import { applyVariableMetadata } from "src/frontend/intermediate-representation/postprocessing/applyVariableMetadata";
+import { buildVariableSlotMap } from "src/frontend/intermediate-representation/preprocessing/symbols";
 
 export type Located<T> = {
   value: T;
@@ -219,6 +219,6 @@ export class Lowerer {
   }
 }
 
-export type { FieldLocations } from "./locations";
-export { createFieldLocations } from "./locations";
-export { setField } from "./setField";
+export type { FieldLocations } from "src/frontend/intermediate-representation/locations";
+export { createFieldLocations } from "src/frontend/intermediate-representation/locations";
+export { setField } from "src/frontend/intermediate-representation/setField";

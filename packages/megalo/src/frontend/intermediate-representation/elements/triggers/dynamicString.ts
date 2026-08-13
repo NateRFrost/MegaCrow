@@ -1,21 +1,21 @@
-import { SyntaxKind } from "../../../abstract-syntax-tree";
-import type { ASTParameterNode } from "../../../abstract-syntax-tree/parameters";
-import type { ASTDynamicStringNode } from "../../../abstract-syntax-tree/parameters/types/dynamic-string";
-import { LowerError } from "../../error";
-import type { DynamicString } from "../../game/megalogamengine/megalogamengine_text";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import type { ASTDynamicStringNode } from "src/frontend/abstract-syntax-tree/parameters/types/dynamic-string";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import type { DynamicString } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_text";
 import {
   ReplaceableTokenType,
   type ReplaceableToken,
-} from "../../game/megalogamengine/megalogamengine_text";
-import { VariableType as VariantVariableType } from "../../game/megalogamengine/megalogamengine_variant_variable";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_text";
+import { VariableType as VariantVariableType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variant_variable";
 import {
   asParameterLoweringContext,
   type ElementLowerContext,
-} from "../../parameters/context";
+} from "src/frontend/intermediate-representation/parameters/context";
 import {
   resolveScriptStringTableReference,
   resolveVariantVariable,
-} from "../../parameters";
+} from "src/frontend/intermediate-representation/parameters";
 
 const lowerReplacement = (
   node: ASTParameterNode,

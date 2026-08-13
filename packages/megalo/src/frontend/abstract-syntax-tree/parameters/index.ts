@@ -1,14 +1,14 @@
-import { type SourceCodeLocation, SourceLocationType } from "../../../diagnostics";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import type { ObjectListType } from "../../object-lists";
+import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import type { ObjectListType } from "src/frontend/object-lists";
 import {
   type SymbolId,
   SymbolKind,
   type SymbolTableEntry,
   VariableType,
-} from "../../symbol-table";
-import { TokenKind } from "../../tokens";
-import type { ParserContext } from "../context";
+} from "src/frontend/symbol-table";
+import { TokenKind } from "src/frontend/tokens";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import {
   type ASTErrorNode,
   type ASTFloatingPointNode,
@@ -17,18 +17,18 @@ import {
   type ASTNode,
   type ASTReferenceNode,
   SyntaxKind,
-} from "../kinds";
+} from "src/frontend/abstract-syntax-tree/kinds";
 import {
   type ASTDynamicStringNode,
   parseDynamicString,
   tryParseDynamicString,
-} from "./types/dynamic-string";
-import type { ASTGrenadeCountNode } from "./types/grenade-count";
+} from "src/frontend/abstract-syntax-tree/parameters/types/dynamic-string";
+import type { ASTGrenadeCountNode } from "src/frontend/abstract-syntax-tree/parameters/types/grenade-count";
 
-export type { ASTDynamicStringNode } from "./types/dynamic-string";
-export { scanDynamicStringPlaceholders } from "./types/dynamic-string";
-export type { ASTGrenadeCountNode } from "./types/grenade-count";
-export { grenadeCountParser } from "./types/grenade-count";
+export type { ASTDynamicStringNode } from "src/frontend/abstract-syntax-tree/parameters/types/dynamic-string";
+export { scanDynamicStringPlaceholders } from "src/frontend/abstract-syntax-tree/parameters/types/dynamic-string";
+export type { ASTGrenadeCountNode } from "src/frontend/abstract-syntax-tree/parameters/types/grenade-count";
+export { grenadeCountParser } from "src/frontend/abstract-syntax-tree/parameters/types/grenade-count";
 
 export enum ParameterType {
   Keyword = 0,

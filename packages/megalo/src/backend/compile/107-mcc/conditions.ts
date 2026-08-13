@@ -22,16 +22,16 @@ import {
   s_condition_team_is_active_parameters,
   s_condition_timer_expired_parameters,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import type { Diagnostics } from "../../../diagnostics";
-import type { IR } from "../../../frontend/intermediate-representation";
+import type { Diagnostics } from "src/diagnostics";
+import type { IR } from "src/frontend/intermediate-representation";
 import {
   ConditionType,
   Disposition,
   NumericComparison,
   type Condition,
   type PlayerDeathKillerTypeFlags,
-} from "../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions";
-import { encodeConditionType } from "./enums/e_condition_type";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions";
+import { encodeConditionType } from "src/backend/compile/107-mcc/enums/e_condition_type";
 import {
   encodeCustomTimerReference,
   encodeObjectReference,
@@ -39,7 +39,7 @@ import {
   encodePlayerReference,
   encodeTeamReference,
   encodeVariantVariable,
-} from "./references";
+} from "src/backend/compile/107-mcc/references";
 
 const encodeNumericComparison = (
   value: NumericComparison

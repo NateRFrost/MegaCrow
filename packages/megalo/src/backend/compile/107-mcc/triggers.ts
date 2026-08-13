@@ -2,12 +2,12 @@ import {
   type c_game_engine_custom_variant,
   c_trigger,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import type { IR } from "../../../frontend/intermediate-representation";
-import type { Trigger } from "../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_trigger";
+import type { IR } from "src/frontend/intermediate-representation";
+import type { Trigger } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_trigger";
 import {
   encodeTriggerExecutionMode,
   encodeTriggerType,
-} from "./enums/e_trigger";
+} from "src/backend/compile/107-mcc/enums/e_trigger";
 
 const compileTrigger = (trigger: Trigger): c_trigger => {
   const target = new c_trigger();

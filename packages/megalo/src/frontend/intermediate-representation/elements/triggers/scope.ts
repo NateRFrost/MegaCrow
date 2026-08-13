@@ -1,6 +1,6 @@
-import type { Action } from "../../game/megalogamengine/megalogamengine_actions";
-import type { Condition } from "../../game/megalogamengine/megalogamengine_conditions";
-import type { CustomGameEngineDefinition } from "../../game/game_variant";
+import type { Action } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import type { Condition } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions";
+import type { CustomGameEngineDefinition } from "src/frontend/intermediate-representation/game/game_variant";
 
 /**
  * Append target for conditions/actions, matching managedmegalo's

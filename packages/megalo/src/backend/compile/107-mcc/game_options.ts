@@ -6,25 +6,25 @@ import {
   s_user_defined_option_value,
   s_player_trait_option,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import type { Diagnostics } from "../../../diagnostics";
+import type { Diagnostics } from "src/diagnostics";
 import type {
   IR,
   PlayerTraitOptionOverride,
   UserDefinedOptionOverride,
-} from "../../../frontend/intermediate-representation";
+} from "src/frontend/intermediate-representation";
 import type {
   VehicleSet,
   WeaponSet,
-} from "../../../frontend/intermediate-representation/game/game_engine_default";
-import type { PlayerTraits } from "../../../frontend/intermediate-representation/game/game_engine_player_traits";
+} from "src/frontend/intermediate-representation/game/game_engine_default";
+import type { PlayerTraits } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 import type {
   RangedUserDefinedOption,
   UserDefinedOption,
   UserDefinedOptionValue,
-} from "../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_user_defined_options";
-import type { BuiltInGameOptionFlags } from "../../../frontend/intermediate-representation/game/parameters";
-import { encodeTeamScoringMethod } from "./enums/e_team_scoring_method";
-import { encodePlayerTraits } from "./player_traits";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_user_defined_options";
+import type { BuiltInGameOptionFlags } from "src/frontend/intermediate-representation/game/parameters";
+import { encodeTeamScoringMethod } from "src/backend/compile/107-mcc/enums/e_team_scoring_method";
+import { encodePlayerTraits } from "src/backend/compile/107-mcc/player_traits";
 
 const encodeWeaponSet = (value: WeaponSet): number => {
   switch (value) {

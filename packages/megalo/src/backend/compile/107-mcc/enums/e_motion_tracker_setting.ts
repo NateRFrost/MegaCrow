@@ -1,5 +1,5 @@
 import { e_motion_tracker_setting } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { MotionTrackerMode } from "../../../../frontend/intermediate-representation/game/game_engine_player_traits";
+import { MotionTrackerMode } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 
 export const encodeMotionTrackerSetting = (
   value: MotionTrackerMode

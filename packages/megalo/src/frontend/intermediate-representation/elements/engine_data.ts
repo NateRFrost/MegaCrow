@@ -1,17 +1,17 @@
-import { ElementLowerer } from ".";
-import { assertSyntaxKind } from "../diagnostics/assertSyntaxKind";
-import { expectParameterCount } from "../diagnostics/expectParameterCount";
-import { SyntaxKind } from "../../abstract-syntax-tree";
-import { assertSymbolKind } from "../diagnostics/assertSymbolKind";
-import { SymbolKind } from "../../symbol-table";
-import { StringTable } from "../game/string_table";
-import { dxAssertionScope } from "../diagnostics";
-import { EngineDataElementNode } from "../../abstract-syntax-tree/elements/engine_data";
-import { parseEnumCategory as parseEngineCategory } from "../engine-categories";
-import { ENGINE_CATEGORY_STRING_PREFIX } from "../../language-configuration/omni/engine_data";
-import { lowerConstantNumber } from "../parameters/constantNumber";
-import { resolveStringTableEntry } from "../parameters/resolveScriptStringTableReference";
-import { setField } from "../setField";
+import { ElementLowerer } from "src/frontend/intermediate-representation/elements";
+import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
+import { expectParameterCount } from "src/frontend/intermediate-representation/diagnostics/expectParameterCount";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import { assertSymbolKind } from "src/frontend/intermediate-representation/diagnostics/assertSymbolKind";
+import { SymbolKind } from "src/frontend/symbol-table";
+import { StringTable } from "src/frontend/intermediate-representation/game/string_table";
+import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { EngineDataElementNode } from "src/frontend/abstract-syntax-tree/elements/engine_data";
+import { parseEnumCategory as parseEngineCategory } from "src/frontend/intermediate-representation/engine-categories";
+import { ENGINE_CATEGORY_STRING_PREFIX } from "src/frontend/language-configuration/omni/engine_data";
+import { lowerConstantNumber } from "src/frontend/intermediate-representation/parameters/constantNumber";
+import { resolveStringTableEntry } from "src/frontend/intermediate-representation/parameters/resolveScriptStringTableReference";
+import { setField } from "src/frontend/intermediate-representation/setField";
 
 export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
   element,

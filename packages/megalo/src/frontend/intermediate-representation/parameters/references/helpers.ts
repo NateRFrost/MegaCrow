@@ -1,27 +1,27 @@
-import { SyntaxKind } from "../../../abstract-syntax-tree/kinds";
-import type { ASTParameterNode } from "../../../abstract-syntax-tree/parameters";
-import type { SourceLocation } from "../../../../diagnostics";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import type { SourceLocation } from "src/diagnostics";
 import {
   SymbolKind,
   type SymbolTable,
   type SymbolTableVariableEntry,
   VariableScope,
   VariableType,
-} from "../../../symbol-table";
+} from "src/frontend/symbol-table";
 import {
   findVariableBySlot,
   getVariableSlot,
   type VariableSlotMap,
-} from "../../preprocessing/symbols";
-import { LowerError } from "../../error";
-import type { ParameterLoweringContext } from "../context";
+} from "src/frontend/intermediate-representation/preprocessing/symbols";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
 import {
   isTemporaryCompiledName,
   parseQualifiedTemporaryName,
   tryParseExplicitObject,
   tryParseExplicitPlayer,
   tryParseExplicitTeam,
-} from "../explicit";
+} from "src/frontend/intermediate-representation/parameters/explicit";
 
 export type SplitMember = {
   readonly base: string;

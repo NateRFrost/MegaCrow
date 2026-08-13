@@ -1,6 +1,6 @@
-import type { ExplicitObject } from "./megalogamengine_explicit_object";
-import type { ExplicitPlayer } from "./megalogamengine_explicit_player";
-import type { ExplicitTeam } from "./megalogamengine_explicit_team";
+import type { ExplicitObject } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
+import type { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
+import type { ExplicitTeam } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
 
 export enum CustomVariableType {
   Constant = 0,

@@ -1,5 +1,5 @@
 import { e_grenade_count_setting } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { GrenadeCountSetting } from "../../../../frontend/intermediate-representation/game/game_engine_player_traits";
+import { GrenadeCountSetting } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 
 export const encodeGrenadeCountSetting = (
   value: GrenadeCountSetting

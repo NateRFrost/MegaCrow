@@ -1,7 +1,7 @@
-import { SyntaxKind } from "../../abstract-syntax-tree/kinds";
-import type { ASTParameterNode } from "../../abstract-syntax-tree/parameters";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import { LowerError } from "../error";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 
 type ASTParameterNodeOfKind<K extends SyntaxKind> = Extract<
   ASTParameterNode,

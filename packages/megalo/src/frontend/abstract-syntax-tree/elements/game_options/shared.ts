@@ -1,11 +1,11 @@
 import {
   type SourceCodeLocation,
   SourceLocationType,
-} from "../../../../diagnostics";
-import { diagnosticMessages } from "../../../../diagnostics/messages";
-import { type Token, TokenKind } from "../../../tokens";
-import { type ASTErrorNode, type ASTReferenceNode, SyntaxKind } from "../..";
-import type { ParserContext } from "../../context";
+} from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { type Token, TokenKind } from "src/frontend/tokens";
+import { type ASTErrorNode, type ASTReferenceNode, SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 
 export const isEndToken = (token: Token | undefined): boolean =>
   token?.kind === TokenKind.Identifier && token.value === "end";

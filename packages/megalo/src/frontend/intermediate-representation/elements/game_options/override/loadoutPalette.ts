@@ -1,17 +1,17 @@
 import {
   type OverrideEntryNode,
   OverrideValueKind,
-} from "../../../../abstract-syntax-tree/elements/game_options";
-import { SourceCodeLocation } from "../../../../../diagnostics";
-import { diagnosticMessages } from "../../../../../diagnostics/messages";
-import { assertNotErrorNode } from "../../../diagnostics/assertNotErrorNode";
-import { LowerError } from "../../../error";
+} from "src/frontend/abstract-syntax-tree/elements/game_options";
+import { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   LOADOUT_PALETTE_TYPE_BY_NAME,
   LoadoutPaletteType,
-} from "../../../game/megalogamengine/LoadoutPaletteType";
-import type { ElementLowerContext } from "../../../parameters/context";
-import { setField } from "../../../setField";
+} from "src/frontend/intermediate-representation/game/megalogamengine/LoadoutPaletteType";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
+import { setField } from "src/frontend/intermediate-representation/setField";
 
 const resolveLoadoutPaletteType = (
   tier: string,

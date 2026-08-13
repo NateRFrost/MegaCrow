@@ -31,9 +31,9 @@ import {
   s_team_or_player_target,
   s_variant_variable,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import type { ExplicitObject } from "../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
-import type { ExplicitPlayer } from "../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
-import type { ExplicitTeam } from "../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
+import type { ExplicitObject } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
+import type { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
+import type { ExplicitTeam } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
 import {
   CustomTimerType,
   CustomVariableType,
@@ -46,17 +46,17 @@ import {
   type ObjectTypeReference,
   type PlayerReference,
   type TeamReference,
-} from "../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import {
   ReplaceableTokenType,
   type DynamicString,
   type ReplaceableToken,
-} from "../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_text";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_text";
 import {
   VariableType,
   type VariantVariable,
-} from "../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_variant_variable";
-import { HUDMeterInputType } from "../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_hud_widgets";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variant_variable";
+import { HUDMeterInputType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_hud_widgets";
 import {
   BoundaryShape,
   PlayerFilterType,
@@ -67,7 +67,7 @@ import {
   type PlayerFilterModifier,
   type PlayerPurchaseMode,
   type TeamOrPlayerTarget,
-} from "../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 
 export const encodeExplicitPlayer = (
   value: ExplicitPlayer

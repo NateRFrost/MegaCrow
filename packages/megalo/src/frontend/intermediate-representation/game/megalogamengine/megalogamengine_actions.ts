@@ -1,6 +1,6 @@
-import type { LoadoutPaletteType } from "./LoadoutPaletteType";
-import type { StringTableReference } from "../string_table";
-import type { HUDMeterInputType } from "./megalogamengine_hud_widgets";
+import type { LoadoutPaletteType } from "src/frontend/intermediate-representation/game/megalogamengine/LoadoutPaletteType";
+import type { StringTableReference } from "src/frontend/intermediate-representation/game/string_table";
+import type { HUDMeterInputType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_hud_widgets";
 import type {
   CustomTimerReference,
   CustomVariableReference,
@@ -8,10 +8,10 @@ import type {
   ObjectTypeReference,
   PlayerReference,
   TeamReference,
-} from "./megalogamengine_references";
-import type { MegaloSound } from "./megalogamengine_sounds";
-import type { DynamicString } from "./megalogamengine_text";
-import type { VariantVariable } from "./megalogamengine_variant_variable";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
+import type { MegaloSound } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_sounds";
+import type { DynamicString } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_text";
+import type { VariantVariable } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variant_variable";
 
 export enum ActionType {
   SetScore = 0,

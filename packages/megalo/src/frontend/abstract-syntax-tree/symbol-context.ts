@@ -1,19 +1,19 @@
-import type { MegaloCompilerContext } from "../../context";
+import type { MegaloCompilerContext } from "src/context";
 import {
   type Diagnostics,
   type SourceCodeLocation,
   type SourceLocation,
   SourceLocationType,
   type SourcePosition,
-} from "../../diagnostics";
-import { diagnosticMessages } from "../../diagnostics/messages";
-import { CompilerError } from "../../diagnostics/error";
+} from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { CompilerError } from "src/diagnostics/error";
 import {
   OBJECT_LIST_TYPES,
   type ObjectLists,
   type ObjectListType,
   objectListLocation,
-} from "../object-lists";
+} from "src/frontend/object-lists";
 import {
   type SymbolBinder,
   type SymbolId,
@@ -21,18 +21,18 @@ import {
   type SymbolTableEntry,
   VariableScope,
   VariableType,
-} from "../symbol-table";
+} from "src/frontend/symbol-table";
 import {
   addBuiltInConstants,
   addBuiltInGameOptions,
   addBuiltInVariables,
-} from "../symbol-table/built-in";
+} from "src/frontend/symbol-table/built-in";
 import {
   addBuiltInScopeVariables,
   type ParserScope,
   ParserScopeKind,
-} from "../symbol-table/scope";
-import { VARIABLE_TYPE_NAMES } from "../language-configuration/omni/variables";
+} from "src/frontend/symbol-table/scope";
+import { VARIABLE_TYPE_NAMES } from "src/frontend/language-configuration/omni/variables";
 
 /**
  * SymbolParser is used by the parser to refer to variables in scope.

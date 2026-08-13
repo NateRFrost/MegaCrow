@@ -1,36 +1,36 @@
-import type { ASTParameterNode } from "../../../abstract-syntax-tree/parameters";
-import { ExplicitObject } from "../../game/megalogamengine/megalogamengine_explicit_object";
-import { ExplicitPlayer } from "../../game/megalogamengine/megalogamengine_explicit_player";
-import { ExplicitTeam } from "../../game/megalogamengine/megalogamengine_explicit_team";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { ExplicitObject } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
+import { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
+import { ExplicitTeam } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
 import {
   type CustomTimerReference,
   CustomTimerType,
-} from "../../game/megalogamengine/megalogamengine_references";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import {
   type SymbolTableVariableEntry,
   VariableScope,
   VariableType,
   isBuiltInVariable,
-} from "../../../symbol-table";
+} from "src/frontend/symbol-table";
 import {
   findVariableBySlot,
   requireResolvedVariableSlot,
   type VariableSlotMap,
-} from "../../preprocessing/symbols";
-import type { ParameterLoweringContext } from "../context";
-import { parseIndexSuffix } from "../explicit";
+} from "src/frontend/intermediate-representation/preprocessing/symbols";
+import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
+import { parseIndexSuffix } from "src/frontend/intermediate-representation/parameters/explicit";
 import {
   resolveExplicitObjectForBase,
   resolveExplicitPlayerForBase,
   resolveExplicitTeamForBase,
-} from "./explicitResolve";
+} from "src/frontend/intermediate-representation/parameters/references/explicitResolve";
 import {
   isObjectReferenceBase,
   isPlayerReferenceBase,
   isTeamReferenceBase,
   resolveScopedVariableMemberIndex,
   splitParameterMember,
-} from "./helpers";
+} from "src/frontend/intermediate-representation/parameters/references/helpers";
 
 const encodeTimerVariable = (
   slot: SymbolTableVariableEntry,

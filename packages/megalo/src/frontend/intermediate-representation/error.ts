@@ -1,4 +1,4 @@
-import { SourceLocation } from "../../diagnostics";
+import { SourceLocation } from "src/diagnostics";
 
 export class LowerError extends Error {
     public readonly location: SourceLocation;

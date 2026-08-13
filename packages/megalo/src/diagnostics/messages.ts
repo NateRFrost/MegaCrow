@@ -1,6 +1,6 @@
-import { formatAlternatives, translate } from "../localization";
-import { TokenKind } from "../frontend/tokens";
-import type { SourceLocation } from "./index";
+import { formatAlternatives, translate } from "src/localization";
+import { TokenKind } from "src/frontend/tokens";
+import type { SourceLocation } from "src/diagnostics/index";
 
 const expectedOneOf = (alternatives: readonly string[], got: string): string =>
   translate("expected_one_of", {

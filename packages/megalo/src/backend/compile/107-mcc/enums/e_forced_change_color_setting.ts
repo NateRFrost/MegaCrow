@@ -1,5 +1,5 @@
 import { e_forced_change_color_setting } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { ForcedChangeColor } from "../../../../frontend/intermediate-representation/game/game_engine_player_traits";
+import { ForcedChangeColor } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 
 export const encodeForcedChangeColorSetting = (
   value: ForcedChangeColor

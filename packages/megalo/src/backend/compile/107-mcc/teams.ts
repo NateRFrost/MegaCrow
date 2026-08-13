@@ -4,19 +4,19 @@ import {
   e_multiplayer_team_designator,
   k_game_variant_team_count,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { BUILT_IN_LOCATION, type Diagnostics } from "../../../diagnostics";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import type { IR } from "../../../frontend/intermediate-representation";
+import { BUILT_IN_LOCATION, type Diagnostics } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import type { IR } from "src/frontend/intermediate-representation";
 import {
   type Color,
   type GameEngineTeamOptionsTeam,
   TeamOptionsModelOverrideType,
-} from "../../../frontend/intermediate-representation/game/game_engine_default";
-import { STRING_TABLE_LANGUAGES } from "../../../frontend/language-configuration/omni/strings";
-import { encodeDesignatorSwitchType } from "./enums/e_game_engine_team_options_designator_switch_type";
-import { encodeTeamOptionsModelOverrideType } from "./enums/e_game_engine_team_options_model_override_type";
-import { encodeMultiplayerTeamDesignator } from "./enums/e_multiplayer_team_designator";
-import { encodePlayerModelChoice } from "./enums/e_player_model_choice";
+} from "src/frontend/intermediate-representation/game/game_engine_default";
+import { STRING_TABLE_LANGUAGES } from "src/frontend/language-configuration/omni/strings";
+import { encodeDesignatorSwitchType } from "src/backend/compile/107-mcc/enums/e_game_engine_team_options_designator_switch_type";
+import { encodeTeamOptionsModelOverrideType } from "src/backend/compile/107-mcc/enums/e_game_engine_team_options_model_override_type";
+import { encodeMultiplayerTeamDesignator } from "src/backend/compile/107-mcc/enums/e_multiplayer_team_designator";
+import { encodePlayerModelChoice } from "src/backend/compile/107-mcc/enums/e_player_model_choice";
 
 /** Pack an RGB {@link Color} into the 0xFFRRGGBB integer the compiled format uses. */
 const encodeColor = (color: Color): number =>

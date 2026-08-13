@@ -1,7 +1,7 @@
 import {
   CustomVariableType,
   type TypeOnlyCustomVariableReference,
-} from "../game/megalogamengine/megalogamengine_references";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 
 /**
  * Maps built-in game option / global names to their concrete CustomVariableType.

@@ -1,21 +1,21 @@
-import type { MegaloCompilerContext } from "../../context";
+import type { MegaloCompilerContext } from "src/context";
 import {
   type Diagnostics,
   type SourceCodeLocation,
   SourceLocationType,
-} from "../../diagnostics";
-import { diagnosticMessages } from "../../diagnostics/messages";
-import type { ObjectLists } from "../object-lists";
-import type { SymbolBinder } from "../symbol-table";
-import { type Token, TokenKind, type Tokens } from "../tokens";
-import { EngineDataParserRepository } from "./elements/engine_data";
-import { PlayerTraitParserRepository } from "./elements/game_options/player_traits";
-import { LoadoutParserRepository } from "./elements/loadout";
-import { LoadoutPaletteParserRepository } from "./elements/loadout_palette";
-import { TeamsParserRepository } from "./elements/teams";
-import { ActionParserRepository } from "./elements/trigger/action";
-import { ConditionParserRepository } from "./elements/trigger/condition";
-import { ParserSymbolContext } from "./symbol-context";
+} from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import type { ObjectLists } from "src/frontend/object-lists";
+import type { SymbolBinder } from "src/frontend/symbol-table";
+import { type Token, TokenKind, type Tokens } from "src/frontend/tokens";
+import { EngineDataParserRepository } from "src/frontend/abstract-syntax-tree/elements/engine_data";
+import { PlayerTraitParserRepository } from "src/frontend/abstract-syntax-tree/elements/game_options/player_traits";
+import { LoadoutParserRepository } from "src/frontend/abstract-syntax-tree/elements/loadout";
+import { LoadoutPaletteParserRepository } from "src/frontend/abstract-syntax-tree/elements/loadout_palette";
+import { TeamsParserRepository } from "src/frontend/abstract-syntax-tree/elements/teams";
+import { ActionParserRepository } from "src/frontend/abstract-syntax-tree/elements/trigger/action";
+import { ConditionParserRepository } from "src/frontend/abstract-syntax-tree/elements/trigger/condition";
+import { ParserSymbolContext } from "src/frontend/abstract-syntax-tree/symbol-context";
 
 // Used by the parse function to track it's progress & refer to variables in scope.
 export class ParserContext {

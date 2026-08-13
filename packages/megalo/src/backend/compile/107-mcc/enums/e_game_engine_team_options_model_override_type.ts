@@ -1,4 +1,4 @@
-import { TeamOptionsModelOverrideType } from "../../../../frontend/intermediate-representation/game/game_engine_default";
+import { TeamOptionsModelOverrideType } from "src/frontend/intermediate-representation/game/game_engine_default";
 
 /** Block-level model override is a 3-bit integer in the BLF layout (not a typed enum). */
 export const encodeTeamOptionsModelOverrideType = (

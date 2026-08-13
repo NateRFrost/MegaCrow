@@ -5,21 +5,21 @@
  * `resolvePlayerReference`, etc.) instead. This module remains for unit tests
  * and as a reference for the parse-time `parameterParserBuilder` twin.
  */
-import { isAstErrorNode, SyntaxKind } from "../../abstract-syntax-tree/kinds";
-import type { ASTParameterNode } from "../../abstract-syntax-tree/parameters";
+import { isAstErrorNode, SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import {
   type SourceLocation,
   SourceLocationType,
-} from "../../../diagnostics";
-import type { ObjectListType } from "../../object-lists";
-import { SymbolKind, VariableType, isBuiltInVariable } from "../../symbol-table";
-import { type Located, located } from "..";
-import { dxAssertionScope } from "../diagnostics";
-import { LowerError } from "../error";
-import { lowerConstantNumber } from "./constantNumber";
-import type { ObjectReferenceType } from "../game/megalogamengine/megalogamengine_references";
-import type { ParameterLoweringContext } from "./context";
-import { resolveScriptStringTableReference } from "./resolveScriptStringTableReference";
+} from "src/diagnostics";
+import type { ObjectListType } from "src/frontend/object-lists";
+import { SymbolKind, VariableType, isBuiltInVariable } from "src/frontend/symbol-table";
+import { type Located, located } from "src/frontend/intermediate-representation";
+import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import { lowerConstantNumber } from "src/frontend/intermediate-representation/parameters/constantNumber";
+import type { ObjectReferenceType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
+import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
+import { resolveScriptStringTableReference } from "src/frontend/intermediate-representation/parameters/resolveScriptStringTableReference";
 import {
   CustomVariableKind,
   resolveCustomTimerReference,
@@ -29,10 +29,10 @@ import {
   resolvePlayerReference,
   resolveTeamReference,
   resolveVariantVariable,
-} from "./references";
+} from "src/frontend/intermediate-representation/parameters/references";
 
-export { CustomVariableKind } from "./references";
-export type { ParameterLoweringContext } from "./context";
+export { CustomVariableKind } from "src/frontend/intermediate-representation/parameters/references";
+export type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
 
 export enum LoweringSpecKind {
   Number = 0,

@@ -1,5 +1,5 @@
 import { e_waypoint_setting } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { WaypointVisibility } from "../../../../frontend/intermediate-representation/game/game_engine_player_traits";
+import { WaypointVisibility } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 
 export const encodeWaypointSetting = (
   value: WaypointVisibility

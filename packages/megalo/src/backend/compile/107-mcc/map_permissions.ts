@@ -1,7 +1,7 @@
 import type { c_game_engine_custom_variant } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { BUILT_IN_LOCATION, type Diagnostics } from "../../../diagnostics";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import type { IR } from "../../../frontend/intermediate-representation";
+import { BUILT_IN_LOCATION, type Diagnostics } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import type { IR } from "src/frontend/intermediate-representation";
 
 const MAX_MAP_PERMISSION_EXCEPTIONS = 32;
 /** Signed 16-bit map id range used by ManagedMegalo (`num + 0x8000 <= 0xffff`). */

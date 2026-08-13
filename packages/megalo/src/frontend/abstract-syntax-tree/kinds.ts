@@ -1,5 +1,5 @@
-import type { SourceCodeLocation } from "../../diagnostics";
-import type { SymbolId } from "../symbol-table";
+import type { SourceCodeLocation } from "src/diagnostics";
+import type { SymbolId } from "src/frontend/symbol-table";
 
 // A numeric const enum is used for efficiency.
 export enum SyntaxKind {

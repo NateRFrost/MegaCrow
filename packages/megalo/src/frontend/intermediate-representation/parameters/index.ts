@@ -1,15 +1,15 @@
 export type {
   ElementLowerContext,
   ParameterLoweringContext,
-} from "./context";
-export { asParameterLoweringContext } from "./context";
+} from "src/frontend/intermediate-representation/parameters/context";
+export { asParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
 export {
   lowerFloatParam,
   lowerBooleanParam,
   lowerConstantInteger,
   tryLowerConstantInteger,
-} from "./common";
-export { lowerConstantNumber } from "./constantNumber";
+} from "src/frontend/intermediate-representation/parameters/common";
+export { lowerConstantNumber } from "src/frontend/intermediate-representation/parameters/constantNumber";
 export {
   parseExplicitObject,
   parseExplicitPlayer,
@@ -21,8 +21,8 @@ export {
   isTemporaryCompiledName,
   parseQualifiedTemporaryName,
   parseIndexSuffix,
-} from "./explicit";
-export { GAME_OPTION_CUSTOM_VARIABLE_TYPE } from "./gameOptionTypes";
+} from "src/frontend/intermediate-representation/parameters/explicit";
+export { GAME_OPTION_CUSTOM_VARIABLE_TYPE } from "src/frontend/intermediate-representation/parameters/gameOptionTypes";
 export {
   CustomVariableKind,
   resolvePlayerReference,
@@ -33,8 +33,8 @@ export {
   resolveCustomVariableReference,
   resolveVariantVariable,
   encodeNoObjectReference,
-} from "./references";
+} from "src/frontend/intermediate-representation/parameters/references";
 export {
   resolveScriptStringTableReference,
   resolveStringTableEntry,
-} from "./resolveScriptStringTableReference";
+} from "src/frontend/intermediate-representation/parameters/resolveScriptStringTableReference";

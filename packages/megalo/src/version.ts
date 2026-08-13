@@ -1,4 +1,4 @@
-import { translate } from "./localization";
+import { translate } from "src/localization";
 
 type MegaloFlavour = undefined | "mcc";
 

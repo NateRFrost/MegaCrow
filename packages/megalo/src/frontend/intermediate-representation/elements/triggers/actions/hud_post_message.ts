@@ -1,15 +1,15 @@
-import type { ASTParameterNode } from "../../../../abstract-syntax-tree/parameters";
-import type { SourceCodeLocation } from "../../../../../diagnostics";
-import { diagnosticMessages } from "../../../../../diagnostics/messages";
-import { LowerError } from "../../../error";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   ActionType,
   type Action,
-} from "../../../game/megalogamengine/megalogamengine_actions";
-import type { ElementLowerContext } from "../../../parameters/context";
-import { lowerDynamicString } from "../dynamicString";
-import { parseTeamOrPlayerTarget } from "../helpers";
-import { parseSoundIndex } from "../parse_sound";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
+import { lowerDynamicString } from "src/frontend/intermediate-representation/elements/triggers/dynamicString";
+import { parseTeamOrPlayerTarget } from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import { parseSoundIndex } from "src/frontend/intermediate-representation/elements/triggers/parse_sound";
 
 export const lowerHudPostMessage = (
   parameters: ASTParameterNode[],

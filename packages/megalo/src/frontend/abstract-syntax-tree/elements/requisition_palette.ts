@@ -1,27 +1,27 @@
-import { type SourceCodeLocation, SourceLocationType } from "../../../diagnostics";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import { ObjectListType } from "../../object-lists";
-import { type Token, TokenKind } from "../../tokens";
+import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { ObjectListType } from "src/frontend/object-lists";
+import { type Token, TokenKind } from "src/frontend/tokens";
 import {
   type ASTErrorNode,
   type ASTNode,
   type ASTReferenceNode,
   SyntaxKind,
-} from "..";
-import type { ParserContext } from "../context";
-import { isAstErrorNode } from "../kinds";
+} from "src/frontend/abstract-syntax-tree";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
+import { isAstErrorNode } from "src/frontend/abstract-syntax-tree/kinds";
 import {
   type ASTKeywordParameterNode,
   ObjectListParameter,
   ParameterType,
   tryParseParameterValue,
-} from "../parameters";
-import { type ASTElementBase, ElementKind } from ".";
+} from "src/frontend/abstract-syntax-tree/parameters";
+import { type ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
 import {
   isEndToken,
   locationSpan,
   parseIdentifier,
-} from "./game_options/shared";
+} from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
 
 type RequisitionPaletteIdentifierNode = {
   value: string;

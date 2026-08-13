@@ -1,16 +1,16 @@
-import { type SourceCodeLocation, SourceLocationType } from "../../../diagnostics";
-import { diagnosticMessages } from "../../../diagnostics/messages";
-import { type Token, TokenKind } from "../../tokens";
-import { type ASTErrorNode, type ASTIntegerNode, SyntaxKind } from "..";
-import type { ParserContext } from "../context";
-import { isAstErrorNode } from "../kinds";
-import type { ASTKeywordParameterNode } from "../parameters";
+import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { type Token, TokenKind } from "src/frontend/tokens";
+import { type ASTErrorNode, type ASTIntegerNode, SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
+import { isAstErrorNode } from "src/frontend/abstract-syntax-tree/kinds";
+import type { ASTKeywordParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import {
   type ASTStringLiteralOrReference,
   parseStringLiteralOrReference,
-} from "../parameters/string_literal_or_reference";
-import { type ASTElementBase, ElementKind } from ".";
-import { isEndToken, locationSpan } from "./game_options/shared";
+} from "src/frontend/abstract-syntax-tree/parameters/string_literal_or_reference";
+import { type ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
+import { isEndToken, locationSpan } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
 
 const GAME_STAT_FORMAT_KINDS = new Set([
   "number",

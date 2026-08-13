@@ -1,16 +1,16 @@
-import type { ASTParameterNode } from "../../../../abstract-syntax-tree/parameters";
-import { SyntaxKind } from "../../../../abstract-syntax-tree";
-import type { SourceCodeLocation } from "../../../../../diagnostics";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { SourceCodeLocation } from "src/diagnostics";
 import {
   ActionType,
   TeamOrPlayerTargetKind,
   type Action,
   type TeamOrPlayerTarget,
-} from "../../../game/megalogamengine/megalogamengine_actions";
-import { MegaloSound } from "../../../game/megalogamengine/megalogamengine_sounds";
-import type { ElementLowerContext } from "../../../parameters/context";
-import { hasOptionalKeyword, parseTeamOrPlayerTarget } from "../helpers";
-import { parseSoundIndex } from "../parse_sound";
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { MegaloSound } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_sounds";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
+import { hasOptionalKeyword, parseTeamOrPlayerTarget } from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import { parseSoundIndex } from "src/frontend/intermediate-representation/elements/triggers/parse_sound";
 
 export const lowerPlaySound = (
   parameters: ASTParameterNode[],

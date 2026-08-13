@@ -1,5 +1,5 @@
 import { e_math_operation } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { MathOperation } from "../../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { MathOperation } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 
 export const encodeMathOperation = (
   value: MathOperation

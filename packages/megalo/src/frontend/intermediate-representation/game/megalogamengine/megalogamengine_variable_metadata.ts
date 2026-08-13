@@ -1,5 +1,5 @@
-import type { MultiplayerTeamDesignator } from "../game_engine_default";
-import type { CustomVariableReference } from "./megalogamengine_references";
+import type { MultiplayerTeamDesignator } from "src/frontend/intermediate-representation/game/game_engine_default";
+import type { CustomVariableReference } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 
 export enum MegaloVariableNetworkState {
   Local = 0,

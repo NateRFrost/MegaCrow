@@ -1,18 +1,18 @@
-import type { MegaloVersion } from "../../../../version";
-import type { MegaloCompilerContext } from "../../../../context";
+import type { MegaloVersion } from "src/version";
+import type { MegaloCompilerContext } from "src/context";
 import {
   type SourceCodeLocation,
   SourceLocationType,
-} from "../../../../diagnostics";
-import { diagnosticMessages } from "../../../../diagnostics/messages";
+} from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
 import {
   DISPOSITION_KEYWORDS,
   KILLER_TYPE_KEYWORDS,
-} from "../../../language-configuration/omni/conditions";
-import { ObjectListType } from "../../../object-lists";
-import { type Token, TokenKind } from "../../../tokens";
-import type { ParserContext } from "../../context";
-import { type ASTNode, SyntaxKind } from "../../kinds";
+} from "src/frontend/language-configuration/omni/conditions";
+import { ObjectListType } from "src/frontend/object-lists";
+import { type Token, TokenKind } from "src/frontend/tokens";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
+import { type ASTNode, SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
 import {
   KeywordParameter,
   ObjectListParameter,
@@ -20,13 +20,13 @@ import {
   type ParameterSignature,
   ParameterType,
   parameterParserBuilder,
-} from "../../parameters";
+} from "src/frontend/abstract-syntax-tree/parameters";
 import {
   type ASTConditionOperandNode,
   type ConditionOperandParser,
   isComparisonToken,
   parseIfOperand,
-} from "./operand";
+} from "src/frontend/abstract-syntax-tree/elements/trigger/operand";
 
 export type ConditionStatementNode = ASTNode<SyntaxKind.CONDITION> & {
   negated: boolean;
