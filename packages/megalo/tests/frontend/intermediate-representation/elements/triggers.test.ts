@@ -157,16 +157,17 @@ end
 
     expect(diagnostics.getErrors()).toEqual([]);
     expect(triggers).toHaveLength(2);
+    // Pre-order: parent trigger is reserved before nested for_each body.
     expect(triggers[0]).toMatchObject({
-      executionMode: TriggerExecutionMode.Player,
-      triggerType: TriggerType.Subroutine,
-      firstAction: 0,
-      actionCount: 1,
-    });
-    expect(triggers[1]).toMatchObject({
       executionMode: TriggerExecutionMode.General,
       triggerType: TriggerType.Normal,
       firstAction: 1,
+      actionCount: 1,
+    });
+    expect(triggers[1]).toMatchObject({
+      executionMode: TriggerExecutionMode.Player,
+      triggerType: TriggerType.Subroutine,
+      firstAction: 0,
       actionCount: 1,
     });
     expect(actions.map((action) => action.type)).toEqual([
@@ -175,7 +176,7 @@ end
     ]);
     expect(actions[1]).toMatchObject({
       type: ActionType.ForEach,
-      parameters: { triggerIndex: 0 },
+      parameters: { triggerIndex: 1 },
     });
   });
 

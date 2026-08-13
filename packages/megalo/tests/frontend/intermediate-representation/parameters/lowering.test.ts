@@ -217,8 +217,9 @@ describe("buildParameterLowerer", () => {
       stringParam("named"),
     ])(nodes, ctx);
 
-    expect(Number(result.byName("literal")?.value)).toBeGreaterThan(0);
-    expect(Number(result.byName("named")?.value)).toBeGreaterThan(0);
+    expect(Number(result.byName("literal")?.value)).toBe(0);
+    expect(Number(result.byName("named")?.value)).toBe(1);
+    expect(ctx.ir.gameVariant.scriptStrings.toArray()).toHaveLength(2);
   });
 
   it("maps built-in game options to specific CustomVariableType values", () => {
