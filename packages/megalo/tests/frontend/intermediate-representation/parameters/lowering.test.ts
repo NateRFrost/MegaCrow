@@ -1,19 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { ParserContext } from "../../../../src/frontend/abstract-syntax-tree/context";
-import {
-  KeywordParameter,
-  ObjectListParameter,
-  OptionalParameter,
-  ParameterType,
-  parameterParserBuilder,
-  type ParameterParser,
-} from "../../../../src/frontend/abstract-syntax-tree/parameters";
+import { MegaloCompilerContext } from "../../../../src/context";
 import {
   BUILT_IN_LOCATION,
   Diagnostics,
   type SourceCodeLocation,
   SourceLocationType,
 } from "../../../../src/diagnostics";
+import { ParserContext } from "../../../../src/frontend/abstract-syntax-tree/context";
+import {
+  KeywordParameter,
+  ObjectListParameter,
+  OptionalParameter,
+  type ParameterParser,
+  ParameterType,
+  parameterParserBuilder,
+} from "../../../../src/frontend/abstract-syntax-tree/parameters";
+import { Lowerer } from "../../../../src/frontend/intermediate-representation";
 import { ExplicitPlayer } from "../../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
 import {
   CustomTimerType,
@@ -21,7 +23,6 @@ import {
   ObjectReferenceType,
   PlayerReferenceType,
 } from "../../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
-import { Lowerer } from "../../../../src/frontend/intermediate-representation";
 import type { ParameterLoweringContext } from "../../../../src/frontend/intermediate-representation/parameters";
 import {
   buildParameterLowerer,
@@ -30,23 +31,22 @@ import {
   customVariableParam,
   keywordParam,
   numberParam,
+  OptionalParam,
   objectParam,
   objectTypeParam,
-  OptionalParam,
   playerParam,
   stringParam,
 } from "../../../../src/frontend/intermediate-representation/parameters/lowering";
-import { ObjectListType } from "../../../../src/frontend/object-lists";
 import { buildVariableSlotMap } from "../../../../src/frontend/intermediate-representation/preprocessing/symbols";
+import { ObjectListType } from "../../../../src/frontend/object-lists";
 import {
+  isBuiltInVariable,
   SymbolBinder,
   VariableScope,
   VariableType,
-  isBuiltInVariable,
 } from "../../../../src/frontend/symbol-table";
 import { Lexer } from "../../../../src/frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../../src/version";
-import { MegaloCompilerContext } from "../../../../src/context";
 
 const version = MEGALO_VERSIONS["107-mcc"];
 const frontend = new MegaloCompilerContext(version);
@@ -67,12 +67,12 @@ const loc = (line = 1): SourceCodeLocation => ({
   },
 });
 
-type Harness = {
-  nodes: ReturnType<ParameterParser>;
+interface Harness {
   ctx: ParameterLoweringContext;
   diagnostics: Diagnostics;
+  nodes: ReturnType<ParameterParser>;
   symbolTable: ReturnType<SymbolBinder["getSymbolTable"]>;
-};
+}
 
 const setup = (
   source: string,
@@ -85,7 +85,9 @@ const setup = (
   const diagnostics = new Diagnostics();
   const tokens = new Lexer(frontend).lex(source, diagnostics);
   const symbolBinder = new SymbolBinder(frontend, diagnostics);
-  const parseCtx = new ParserContext(tokens, frontend,
+  const parseCtx = new ParserContext(
+    tokens,
+    frontend,
     diagnostics,
     symbolBinder,
     options?.objectLists ?? {}
@@ -188,14 +190,14 @@ describe("buildParameterLowerer", () => {
       ParameterType.Integer,
     ]);
     const { nodes, ctx } = setup("10 k_max_count", parser);
-    const result = buildParameterLowerer([
-      numberParam("a"),
-      numberParam("b"),
-    ])(nodes, ctx);
+    const result = buildParameterLowerer([numberParam("a"), numberParam("b")])(
+      nodes,
+      ctx
+    );
 
     expect(result.byName("a")?.value).toBe(10);
     expect(result.byName("b")?.value).toBe(42);
-    expect(result[0]!.name).toBe("a");
+    expect(result[0]?.name).toBe("a");
   });
 
   it("lowers float literals", () => {
@@ -339,7 +341,7 @@ describe("buildParameterLowerer", () => {
     });
     const nodes = parameterParserBuilder([
       ObjectListParameter(ObjectListType.Objects),
-    ])(parseCtx, tokens[0]!.location);
+    ])(parseCtx, tokens[0]?.location);
     const symbolTable = binder.getSymbolTable();
     const variableSlots = buildVariableSlotMap(
       frontend,
@@ -442,9 +444,11 @@ describe("buildParameterLowerer", () => {
 
     const timer = setup("health_meter my_timer", meterParser);
     expect(
-      (lower(timer.nodes.slice(1), timer.ctx).byName("timer")?.value as {
-        type: CustomTimerType;
-      }).type
+      (
+        lower(timer.nodes.slice(1), timer.ctx).byName("timer")?.value as {
+          type: CustomTimerType;
+        }
+      ).type
     ).toBe(CustomTimerType.Global);
 
     const numbers = setup("health_meter 50 100", meterParser);

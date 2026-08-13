@@ -1,7 +1,7 @@
-import { SupportedMegaloVersion } from "src/version";
+import type { CompilerCapabilities } from "src/backend/compile/diagnostics/assertCompatibleIR";
 import type { Diagnostics } from "src/diagnostics";
 import type { IR } from "src/frontend/intermediate-representation";
-import { CompilerCapabilities } from "src/backend/compile/diagnostics/assertCompatibleIR";
+import type { SupportedMegaloVersion } from "src/version";
 
 export abstract class Compiler {
   public abstract dryRun(ir: IR, diagnostics: Diagnostics): void;

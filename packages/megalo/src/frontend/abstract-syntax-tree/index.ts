@@ -2,10 +2,10 @@ import type { MegaloCompilerContext } from "src/context";
 import type { Diagnostics } from "src/diagnostics";
 import { IncludeDiagnostics } from "src/diagnostics/include";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import type { ObjectLists } from "src/frontend/object-lists";
-import { SymbolBinder, type SymbolTable } from "src/frontend/symbol-table";
-import { Lexer, TokenKind, type Tokens } from "src/frontend/tokens";
-import { type ASTCommentNode, collectComments } from "src/frontend/abstract-syntax-tree/comment";
+import {
+  type ASTCommentNode,
+  collectComments,
+} from "src/frontend/abstract-syntax-tree/comment";
 import { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import {
   type ASTElementNode,
@@ -16,6 +16,9 @@ import {
 } from "src/frontend/abstract-syntax-tree/elements";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
 import type { ParserSymbolContext } from "src/frontend/abstract-syntax-tree/symbol-context";
+import type { ObjectLists } from "src/frontend/object-lists";
+import { SymbolBinder, type SymbolTable } from "src/frontend/symbol-table";
+import { Lexer, TokenKind, type Tokens } from "src/frontend/tokens";
 
 export {
   type ASTErrorNode,
@@ -27,13 +30,13 @@ export {
   SyntaxKind,
 } from "src/frontend/abstract-syntax-tree/kinds";
 
-export type AST = {
-  failed: boolean;
+export interface AST {
   comments: ASTCommentNode[];
   elements: ASTElementNode[];
-  symbolTable: SymbolTable;
+  failed: boolean;
   includedPaths?: ReadonlySet<string>;
-};
+  symbolTable: SymbolTable;
+}
 
 export type ResolveIncludeFn = (
   path: string,
@@ -41,23 +44,26 @@ export type ResolveIncludeFn = (
     kind: "include" | "localized_include";
     fromUri?: string;
   }
-) => Promise<{ text: string; uri: string } | null>;
+) =>
+  | { text: string; uri: string }
+  | null
+  | Promise<{ text: string; uri: string } | null>;
 
-export type ParseOptions = {
-  objectLists?: ObjectLists;
-  resolveInclude?: ResolveIncludeFn;
-  /** URI of the document being parsed (for relative include resolution). */
-  fromUri?: string;
-  // We need to keep track of the include stack to detect cyclical includes.
-  includeStack?: string[];
-  // We need to keep track of included paths because Megalo
-  // only resolves includes once per file.
-  includedPaths?: Set<string>;
+export interface ParseOptions {
   // Keeps track of current absolute offset,
   // passed as an object so we can update the number using the reference.
   // optional because ParseOptions is also used by parseAsync, which manages this.
   absoluteOffsetState?: { next: number };
-};
+  /** URI of the document being parsed (for relative include resolution). */
+  fromUri?: string;
+  // We need to keep track of included paths because Megalo
+  // only resolves includes once per file.
+  includedPaths?: Set<string>;
+  // We need to keep track of the include stack to detect cyclical includes.
+  includeStack?: string[];
+  objectLists?: ObjectLists;
+  resolveInclude?: ResolveIncludeFn;
+}
 
 // Parser is Frontend lifecycle - it is instanced per workspace.
 export class Parser {

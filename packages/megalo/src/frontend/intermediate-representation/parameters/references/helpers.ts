@@ -1,18 +1,6 @@
+import type { SourceLocation } from "src/diagnostics";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import type { SourceLocation } from "src/diagnostics";
-import {
-  SymbolKind,
-  type SymbolTable,
-  type SymbolTableVariableEntry,
-  VariableScope,
-  VariableType,
-} from "src/frontend/symbol-table";
-import {
-  findVariableBySlot,
-  getVariableSlot,
-  type VariableSlotMap,
-} from "src/frontend/intermediate-representation/preprocessing/symbols";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
 import {
@@ -22,13 +10,25 @@ import {
   tryParseExplicitPlayer,
   tryParseExplicitTeam,
 } from "src/frontend/intermediate-representation/parameters/explicit";
+import {
+  findVariableBySlot,
+  getVariableSlot,
+  type VariableSlotMap,
+} from "src/frontend/intermediate-representation/preprocessing/symbols";
+import {
+  SymbolKind,
+  type SymbolTable,
+  type SymbolTableVariableEntry,
+  VariableScope,
+  VariableType,
+} from "src/frontend/symbol-table";
 
-export type SplitMember = {
+export interface SplitMember {
   readonly base: string;
-  readonly member?: string;
   readonly baseSymbol?: SymbolTableVariableEntry;
   readonly location: SourceLocation;
-};
+  readonly member?: string;
+}
 
 export const splitParameterMember = (
   node: ASTParameterNode,
@@ -36,12 +36,12 @@ export const splitParameterMember = (
 ): SplitMember => {
   if (node.kind === SyntaxKind.MEMBER_REFERENCE) {
     const baseSymbol =
-      node.rootSymbolId !== undefined
-        ? (() => {
+      node.rootSymbolId === undefined
+        ? symbolTable.findVariableByName(node.root)
+        : (() => {
             const entry = symbolTable.getSymbol(node.rootSymbolId);
             return entry?.kind === SymbolKind.Variable ? entry : undefined;
-          })()
-        : symbolTable.findVariableByName(node.root);
+          })();
     return {
       base: node.root,
       member: node.member.value,
@@ -89,7 +89,7 @@ export const temporaryReferenceKind = (
     return qualified.storage;
   }
   if (!/^temporary_\d+$/.test(name)) {
-    return undefined;
+    return;
   }
   switch (ctx.triggerExecutionMode) {
     case "object":
@@ -181,7 +181,7 @@ export const resolveScopedVariableMemberIndex = (
       }
     }
   }
-  return undefined;
+  return;
 };
 
 export const resolveScopedObjectMemberIndex = (
@@ -323,12 +323,12 @@ export const isTeamReferenceBase = (
   if (parseQualifiedTemporaryName(base)?.storage === "team") {
     return true;
   }
-  if (member && /^global_(\d+)$/.test(base)) {
-    if (
-      memberResolvesOnTeamScope(ctx.symbolTable, ctx.variableSlots, member)
-    ) {
-      return true;
-    }
+  if (
+    member &&
+    /^global_(\d+)$/.test(base) &&
+    memberResolvesOnTeamScope(ctx.symbolTable, ctx.variableSlots, member)
+  ) {
+    return true;
   }
   if (isPlayerReferenceBase(ctx, base)) {
     return false;

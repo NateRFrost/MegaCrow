@@ -4,6 +4,10 @@ import {
   e_multiplayer_team_designator,
   k_game_variant_team_count,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
+import { encodeDesignatorSwitchType } from "src/backend/compile/107-mcc/enums/e_game_engine_team_options_designator_switch_type";
+import { encodeTeamOptionsModelOverrideType } from "src/backend/compile/107-mcc/enums/e_game_engine_team_options_model_override_type";
+import { encodeMultiplayerTeamDesignator } from "src/backend/compile/107-mcc/enums/e_multiplayer_team_designator";
+import { encodePlayerModelChoice } from "src/backend/compile/107-mcc/enums/e_player_model_choice";
 import { BUILT_IN_LOCATION, type Diagnostics } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
 import type { IR } from "src/frontend/intermediate-representation";
@@ -13,10 +17,6 @@ import {
   TeamOptionsModelOverrideType,
 } from "src/frontend/intermediate-representation/game/game_engine_default";
 import { STRING_TABLE_LANGUAGES } from "src/frontend/language-configuration/omni/strings";
-import { encodeDesignatorSwitchType } from "src/backend/compile/107-mcc/enums/e_game_engine_team_options_designator_switch_type";
-import { encodeTeamOptionsModelOverrideType } from "src/backend/compile/107-mcc/enums/e_game_engine_team_options_model_override_type";
-import { encodeMultiplayerTeamDesignator } from "src/backend/compile/107-mcc/enums/e_multiplayer_team_designator";
-import { encodePlayerModelChoice } from "src/backend/compile/107-mcc/enums/e_player_model_choice";
 
 /** Pack an RGB {@link Color} into the 0xFFRRGGBB integer the compiled format uses. */
 const encodeColor = (color: Color): number =>
@@ -31,7 +31,7 @@ const emptyTeamNameStrings = (): (string | null)[][] =>
 const compileTeamNameTable = (
   name: NonNullable<GameEngineTeamOptionsTeam["name"]>
 ): (string | null)[][] => {
-  // MegaloEdit repeats the English team name in every language slot 
+  // MegaloEdit repeats the English team name in every language slot
   const english =
     name.english ??
     STRING_TABLE_LANGUAGES.map((language) => name[language]).find(
@@ -47,13 +47,13 @@ const compileTeamOption = (
   teamIndex: number
 ): void => {
   target.m_team_enabled = true;
-  if (team.designator !== undefined) {
+  if (team.designator === undefined) {
+    // Missing designator defaults to the team slot index.
+    target.m_team_initial_designator = teamIndex;
+  } else {
     target.m_team_initial_designator = encodeMultiplayerTeamDesignator(
       team.designator
     );
-  } else {
-    // Missing designator defaults to the team slot index.
-    target.m_team_initial_designator = teamIndex;
   }
   if (team.model !== undefined) {
     target.m_model_override = encodePlayerModelChoice(team.model);

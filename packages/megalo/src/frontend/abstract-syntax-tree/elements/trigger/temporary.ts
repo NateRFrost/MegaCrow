@@ -1,14 +1,17 @@
-import {
-  type SourceCodeLocation,
-  SourceLocationType,
-} from "src/diagnostics";
+import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
+import {
+  type ASTConditionOperandNode,
+  parseIfOperand,
+} from "src/frontend/abstract-syntax-tree/elements/trigger/operand";
+import {
+  type ASTNode,
+  SyntaxKind,
+} from "src/frontend/abstract-syntax-tree/kinds";
 import { variableTypeFromName } from "src/frontend/language-configuration/omni/variables";
 import { VariableScope } from "src/frontend/symbol-table";
 import { type Token, TokenKind } from "src/frontend/tokens";
-import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
-import { type ASTNode, SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
-import { type ASTConditionOperandNode, parseIfOperand } from "src/frontend/abstract-syntax-tree/elements/trigger/operand";
 
 export const TEMPORARY_STORAGE_NAMES = [
   "number",
@@ -132,12 +135,12 @@ export const parseTemporary = (
         location: temporaryToken.location,
       },
       name:
-        symbolId !== undefined
-          ? {
+        symbolId === undefined
+          ? (name ?? { value: "", location: temporaryToken.location })
+          : {
               ...(name ?? { value: "", location: temporaryToken.location }),
               symbolId,
-            }
-          : (name ?? { value: "", location: temporaryToken.location }),
+            },
       initial: {
         kind: SyntaxKind.INVALID,
         location: temporaryToken.location,
@@ -155,10 +158,7 @@ export const parseTemporary = (
   return {
     kind: SyntaxKind.TEMPORARY,
     storage: storage ?? { value: "number", location: temporaryToken.location },
-    name:
-      symbolId !== undefined
-        ? { ...nameNode, symbolId }
-        : nameNode,
+    name: symbolId === undefined ? nameNode : { ...nameNode, symbolId },
     initial,
     location: locationSpan(temporaryToken.location, initial.location),
   };

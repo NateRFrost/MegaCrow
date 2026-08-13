@@ -1,18 +1,18 @@
 import { describe, expect, it } from "vitest";
+import { MegaloCompilerContext } from "../../../src/context";
+import { Diagnostics } from "../../../src/diagnostics";
 import { Parser, SyntaxKind } from "../../../src/frontend/abstract-syntax-tree";
 import {
   ElementKind,
   GameOptionEntryKind,
   OverrideValueKind,
 } from "../../../src/frontend/abstract-syntax-tree/elements";
-import { Diagnostics } from "../../../src/diagnostics";
 import {
   SymbolKind,
   type SymbolTableGameOptionEntry,
 } from "../../../src/frontend/symbol-table";
 import { Lexer } from "../../../src/frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../src/version";
-import { MegaloCompilerContext } from "../../../src/context";
 
 const parse = (source: string) => {
   const diagnostics = new Diagnostics();
@@ -567,8 +567,7 @@ end
 
     const traits = symbolTable.filter(
       (entry) =>
-        entry.kind === SymbolKind.PlayerTraits &&
-        entry.name === "shared_traits"
+        entry.kind === SymbolKind.PlayerTraits && entry.name === "shared_traits"
     );
     expect(traits).toHaveLength(2);
     expect(traits[0]).toMatchObject({ index: 0 });

@@ -1,24 +1,14 @@
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
-import type { VariablesElementNode } from "src/frontend/abstract-syntax-tree/elements/variables";
 import { SourceLocationType } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import {
-  variableScopeFromName,
-  variableTypeFromName,
-} from "src/frontend/language-configuration/omni/variables";
-import {
-  SymbolKind,
-  type SymbolId,
-  VariableType,
-  isBuiltInVariable,
-} from "src/frontend/symbol-table";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { VariablesElementNode } from "src/frontend/abstract-syntax-tree/elements/variables";
 import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
 import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import { MultiplayerTeamDesignator } from "src/frontend/intermediate-representation/game/game_engine_default";
 import {
-  CustomVariableType,
   type CustomVariableReference,
+  CustomVariableType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import { MegaloVariableNetworkState } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variable_metadata";
 import type {
@@ -26,6 +16,16 @@ import type {
   VariableDeclarationInfo,
 } from "src/frontend/intermediate-representation/parameters/context";
 import { GAME_OPTION_CUSTOM_VARIABLE_TYPE } from "src/frontend/intermediate-representation/parameters/gameOptionTypes";
+import {
+  variableScopeFromName,
+  variableTypeFromName,
+} from "src/frontend/language-configuration/omni/variables";
+import {
+  isBuiltInVariable,
+  type SymbolId,
+  SymbolKind,
+  VariableType,
+} from "src/frontend/symbol-table";
 
 const NETWORK_STATE_BY_NAME: Record<string, MegaloVariableNetworkState> = {
   local: MegaloVariableNetworkState.Local,
@@ -55,7 +55,7 @@ const teamDesignatorInitial = (
 ): CustomVariableReference | undefined => {
   const designator = TEAM_INITIAL_DESIGNATOR[name];
   if (designator === undefined) {
-    return undefined;
+    return;
   }
   return {
     type: CustomVariableType.Constant,

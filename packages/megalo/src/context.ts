@@ -1,16 +1,16 @@
-import type { SupportedMegaloVersion } from "src/version";
-import {
-  resolveCompilerSettings,
-  type CompilerSettings,
-} from "src/compiler-settings";
-import {
-  resolveMegacrowExtensions,
-  type MegacrowExtensions,
-} from "src/megacrow-extensions";
 import {
   getConfigurationForVersion,
   type VersionConfiguration,
 } from "src/backend/version-configuration";
+import {
+  type CompilerSettings,
+  resolveCompilerSettings,
+} from "src/compiler-settings";
+import {
+  type MegacrowExtensions,
+  resolveMegacrowExtensions,
+} from "src/megacrow-extensions";
+import type { SupportedMegaloVersion } from "src/version";
 
 export class MegaloCompilerContext {
   public readonly megaloVersion: SupportedMegaloVersion;

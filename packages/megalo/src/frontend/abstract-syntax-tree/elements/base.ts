@@ -1,9 +1,16 @@
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { type Token, TokenKind } from "src/frontend/tokens";
-import { type ASTErrorNode, type ASTNode, SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import {
+  type ASTErrorNode,
+  type ASTNode,
+  SyntaxKind,
+} from "src/frontend/abstract-syntax-tree";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
-import { type ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
+import {
+  type ASTElementBase,
+  ElementKind,
+} from "src/frontend/abstract-syntax-tree/elements";
 import { locationSpan } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+import { type Token, TokenKind } from "src/frontend/tokens";
 
 type BaseElementNodeFile = ASTNode<SyntaxKind.QUOTED_STRING> & {
   value: string;

@@ -2,10 +2,12 @@ import {
   type c_game_engine_custom_variant,
   k_game_variant_parameter_flags,
   type s_game_variant_parameter_flags,
+  s_player_trait_option,
   s_user_defined_option,
   s_user_defined_option_value,
-  s_player_trait_option,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
+import { encodeTeamScoringMethod } from "src/backend/compile/107-mcc/enums/e_team_scoring_method";
+import { encodePlayerTraits } from "src/backend/compile/107-mcc/player_traits";
 import type { Diagnostics } from "src/diagnostics";
 import type {
   IR,
@@ -23,8 +25,6 @@ import type {
   UserDefinedOptionValue,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_user_defined_options";
 import type { BuiltInGameOptionFlags } from "src/frontend/intermediate-representation/game/parameters";
-import { encodeTeamScoringMethod } from "src/backend/compile/107-mcc/enums/e_team_scoring_method";
-import { encodePlayerTraits } from "src/backend/compile/107-mcc/player_traits";
 
 const encodeWeaponSet = (value: WeaponSet): number => {
   switch (value) {
@@ -184,7 +184,7 @@ const resolveOverrideOptionIndex = (
         `Option index ${index} was out of range [0,${options.length})`,
         override.location
       );
-      return undefined;
+      return;
     }
     return index;
   }
@@ -197,7 +197,7 @@ const resolveOverrideOptionIndex = (
       `Couldn't find an option with this name => ${override.target.value}`,
       override.location
     );
-    return undefined;
+    return;
   }
   return index;
 };
@@ -260,7 +260,7 @@ export const applyUserDefinedOptionOverrides = (
     const label =
       override.target.kind === "name"
         ? override.target.value
-        : englishOptionName(gametype, option) ?? String(index);
+        : (englishOptionName(gametype, option) ?? String(index));
 
     applyUserDefinedOptionValue(
       option,
@@ -297,10 +297,10 @@ const resolveOverridePlayerTraitIndex = (
     const index = override.target.value;
     if (index < 0 || index >= traits.length) {
       diagnostics.addError(
-        `player trait index out of range`,
+        "player trait index out of range",
         override.location
       );
-      return undefined;
+      return;
     }
     return index;
   }
@@ -315,7 +315,7 @@ const resolveOverridePlayerTraitIndex = (
       `string '${override.target.value}' is not the name of a player trait option`,
       override.location
     );
-    return undefined;
+    return;
   }
   return index;
 };
@@ -386,12 +386,10 @@ export const compileGameOptions = (
     misc.m_round_limit = miscellaneousOptions.roundCount;
   }
   if (miscellaneousOptions.earlyVictoryWinCount !== undefined) {
-    misc.m_early_victory_win_count =
-      miscellaneousOptions.earlyVictoryWinCount;
+    misc.m_early_victory_win_count = miscellaneousOptions.earlyVictoryWinCount;
   }
   if (miscellaneousOptions.suddenDeathTimeLimitSeconds !== undefined) {
-    misc.m_sudden_death_time =
-      miscellaneousOptions.suddenDeathTimeLimitSeconds;
+    misc.m_sudden_death_time = miscellaneousOptions.suddenDeathTimeLimitSeconds;
   }
   if (miscellaneousOptions.gracePeriodTimeLimitSeconds !== undefined) {
     misc.m_grace_period = miscellaneousOptions.gracePeriodTimeLimitSeconds;
@@ -605,16 +603,13 @@ export const compileGameOptions = (
     tu1.m_armor_lock_damage_drain = tu1Settings.armorLockDamageDrain;
   }
   if (tu1Settings.armorLockDamageDrainLimit !== undefined) {
-    tu1.m_armor_lock_damage_drain_limit =
-      tu1Settings.armorLockDamageDrainLimit;
+    tu1.m_armor_lock_damage_drain_limit = tu1Settings.armorLockDamageDrainLimit;
   }
   if (tu1Settings.activeCamoEnergyCurveMin !== undefined) {
-    tu1.m_active_camo_energy_curve_min =
-      tu1Settings.activeCamoEnergyCurveMin;
+    tu1.m_active_camo_energy_curve_min = tu1Settings.activeCamoEnergyCurveMin;
   }
   if (tu1Settings.activeCamoEnergyCurveMax !== undefined) {
-    tu1.m_active_camo_energy_curve_max =
-      tu1Settings.activeCamoEnergyCurveMax;
+    tu1.m_active_camo_energy_curve_max = tu1Settings.activeCamoEnergyCurveMax;
   }
   if (tu1Settings.magnumDamage !== undefined) {
     tu1.m_magnum_damage = tu1Settings.magnumDamage;

@@ -1,17 +1,17 @@
-import { ElementLowerer } from "src/frontend/intermediate-representation/elements";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { EngineDataElementNode } from "src/frontend/abstract-syntax-tree/elements/engine_data";
+import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { assertSymbolKind } from "src/frontend/intermediate-representation/diagnostics/assertSymbolKind";
 import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
 import { expectParameterCount } from "src/frontend/intermediate-representation/diagnostics/expectParameterCount";
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
-import { assertSymbolKind } from "src/frontend/intermediate-representation/diagnostics/assertSymbolKind";
-import { SymbolKind } from "src/frontend/symbol-table";
-import { StringTable } from "src/frontend/intermediate-representation/game/string_table";
-import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
-import { EngineDataElementNode } from "src/frontend/abstract-syntax-tree/elements/engine_data";
+import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
 import { parseEnumCategory as parseEngineCategory } from "src/frontend/intermediate-representation/engine-categories";
-import { ENGINE_CATEGORY_STRING_PREFIX } from "src/frontend/language-configuration/omni/engine_data";
+import { StringTable } from "src/frontend/intermediate-representation/game/string_table";
 import { lowerConstantNumber } from "src/frontend/intermediate-representation/parameters/constantNumber";
 import { resolveStringTableEntry } from "src/frontend/intermediate-representation/parameters/resolveScriptStringTableReference";
 import { setField } from "src/frontend/intermediate-representation/setField";
+import { ENGINE_CATEGORY_STRING_PREFIX } from "src/frontend/language-configuration/omni/engine_data";
+import { SymbolKind } from "src/frontend/symbol-table";
 
 export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
   element,
@@ -24,18 +24,7 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
         expectParameterCount(1, property.parameters);
         dxAssertionScope(diagnostics, () => {
           const parameter = property.parameters[0]!;
-          if (ir.baseFilePath !== undefined) {
-            const localizedName = new StringTable();
-            resolveStringTableEntry(parameter, localizedName, symbolTable);
-            setField(
-              ir.locations,
-              diagnostics,
-              ir.gameVariant,
-              "localizedName",
-              localizedName,
-              parameter.location
-            );
-          } else {
+          if (ir.baseFilePath === undefined) {
             const titleIndex = resolveStringTableEntry(
               parameter,
               ir.gameVariant.scriptStrings,
@@ -50,6 +39,17 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
               titleIndex + 1,
               parameter.location
             );
+          } else {
+            const localizedName = new StringTable();
+            resolveStringTableEntry(parameter, localizedName, symbolTable);
+            setField(
+              ir.locations,
+              diagnostics,
+              ir.gameVariant,
+              "localizedName",
+              localizedName,
+              parameter.location
+            );
           }
         });
         break;
@@ -58,11 +58,7 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
         dxAssertionScope(diagnostics, () => {
           const parameter = property.parameters[0]!;
           const localizedDescription = new StringTable();
-          resolveStringTableEntry(
-            parameter,
-            localizedDescription,
-            symbolTable
-          );
+          resolveStringTableEntry(parameter, localizedDescription, symbolTable);
           setField(
             ir.locations,
             diagnostics,

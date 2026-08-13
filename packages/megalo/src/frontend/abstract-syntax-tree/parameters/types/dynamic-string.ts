@@ -1,9 +1,4 @@
-import {
-  type SourceCodeLocation,
-  SourceLocationType,
-} from "src/diagnostics";
-import type { SymbolId } from "src/frontend/symbol-table";
-import { TokenKind } from "src/frontend/tokens";
+import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import {
   type ASTErrorNode,
@@ -13,6 +8,8 @@ import {
 } from "src/frontend/abstract-syntax-tree/kinds";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters/index";
 import { ParameterType } from "src/frontend/abstract-syntax-tree/parameters/index";
+import type { SymbolId } from "src/frontend/symbol-table";
+import { TokenKind } from "src/frontend/tokens";
 
 export type ASTDynamicStringNode = ASTNode<SyntaxKind.DYNAMIC_STRING> & {
   string:
@@ -92,7 +89,7 @@ const makeReferenceNode = (
   };
 };
 
-export type DynamicStringParserDeps = {
+export interface DynamicStringParserDeps {
   parseReplacement: (
     ctx: ParserContext,
     type: ParameterType
@@ -102,7 +99,7 @@ export type DynamicStringParserDeps = {
     anchor: SourceCodeLocation,
     type: ParameterType
   ) => ASTParameterNode;
-};
+}
 
 export const tryParseDynamicString = (
   ctx: ParserContext,

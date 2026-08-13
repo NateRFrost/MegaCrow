@@ -49,8 +49,7 @@ export const BUILT_IN_GAME_OPTION_NAMES = [
   "tu1_magnum_fire_recovery_time_multiplier",
 ] as const;
 
-export type BuiltInGameOptionName =
-  (typeof BUILT_IN_GAME_OPTION_NAMES)[number];
+export type BuiltInGameOptionName = (typeof BUILT_IN_GAME_OPTION_NAMES)[number];
 
 export const isBuiltInGameOptionName = (
   value: string

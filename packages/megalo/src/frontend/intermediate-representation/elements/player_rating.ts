@@ -1,9 +1,9 @@
+import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { PlayerRatingElementNode } from "src/frontend/abstract-syntax-tree/elements/player_rating";
-import { diagnosticMessages } from "src/diagnostics/messages";
-import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
 import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
 import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
+import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import type { GameEngineCustomVariant } from "src/frontend/intermediate-representation/game/game_variant";
 import { lowerConstantNumber } from "src/frontend/intermediate-representation/parameters/constantNumber";

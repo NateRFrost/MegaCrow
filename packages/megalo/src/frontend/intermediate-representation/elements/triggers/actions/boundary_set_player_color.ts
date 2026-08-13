@@ -1,23 +1,23 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { SourceCodeLocation } from "src/diagnostics";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import {
-  ActionType,
   type Action,
+  ActionType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
 import {
-  PlayerReferenceType,
   type PlayerReference,
+  PlayerReferenceType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
-import {
-  asParameterLoweringContext,
-  type ElementLowerContext,
-} from "src/frontend/intermediate-representation/parameters/context";
 import {
   resolveObjectReference,
   resolvePlayerReference,
 } from "src/frontend/intermediate-representation/parameters";
-import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import {
+  asParameterLoweringContext,
+  type ElementLowerContext,
+} from "src/frontend/intermediate-representation/parameters/context";
 
 const extractBoundaryPlayerColorIndex = (player: PlayerReference): number => {
   if (player.type !== PlayerReferenceType.GlobalPlayer) {
@@ -42,7 +42,7 @@ const extractBoundaryPlayerColorIndex = (player: PlayerReference): number => {
 export const lowerBoundarySetPlayerColor = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   requireParamCount(parameters, 2, location);
   const paramCtx = asParameterLoweringContext(ctx);

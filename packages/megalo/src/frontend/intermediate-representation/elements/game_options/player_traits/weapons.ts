@@ -1,9 +1,16 @@
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { ObjectListType } from "src/frontend/object-lists";
-import { located } from "src/frontend/intermediate-representation";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import {
+  type Located,
+  located,
+} from "src/frontend/intermediate-representation";
+import {
+  lowerObjectListIndex,
+  resolveKeyword,
+  type TraitOptionArgs,
+} from "src/frontend/intermediate-representation/elements/game_options/player_traits/helpers";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   InfiniteAmmoSetting,
@@ -12,11 +19,7 @@ import {
 import { lowerBooleanParam } from "src/frontend/intermediate-representation/parameters";
 import { lowerGrenadeCount } from "src/frontend/intermediate-representation/parameters/grenadeCount";
 import { setField } from "src/frontend/intermediate-representation/setField";
-import {
-  lowerObjectListIndex,
-  resolveKeyword,
-  type TraitOptionArgs,
-} from "src/frontend/intermediate-representation/elements/game_options/player_traits/helpers";
+import { ObjectListType } from "src/frontend/object-lists";
 
 const EQUIPMENT_USAGE_ENABLED = new Set(["on", "enabled"]);
 const EQUIPMENT_USAGE_DISABLED = new Set(["off", "disabled"]);
@@ -36,7 +39,7 @@ const lowerWeaponOrEquipmentIndex = (
   const first = parameters[0];
   const sentinel = resolveKeyword(first);
   if (sentinel !== undefined && OBJECT_LIST_SENTINELS[sentinel] !== undefined) {
-    return located(OBJECT_LIST_SENTINELS[sentinel]!, first!.location);
+    return located(OBJECT_LIST_SENTINELS[sentinel]!, first?.location);
   }
   return lowerObjectListIndex(parameters, ctx, objectType, location);
 };
@@ -59,7 +62,7 @@ export const lowerWeaponsOption = (
           location
         );
       }
-      let value;
+      let value: Located<"fatality" | number>;
       if (resolveKeyword(firstParam) === "fatality") {
         value = located("fatality" as const, firstParam.location);
       } else if (firstParam.kind === SyntaxKind.INTEGER) {
@@ -88,7 +91,7 @@ export const lowerWeaponsOption = (
           location
         );
       }
-      let value;
+      let value: Located<"fatality" | number>;
       if (resolveKeyword(firstParam) === "fatality") {
         value = located("fatality" as const, firstParam.location);
       } else if (firstParam.kind === SyntaxKind.INTEGER) {
@@ -169,9 +172,7 @@ export const lowerWeaponsOption = (
         throw new LowerError(
           diagnosticMessages.expectedParameterType(
             "grenade_count",
-            grenadeCount?.kind === SyntaxKind.KEYWORD
-              ? grenadeCount.value
-              : ""
+            grenadeCount?.kind === SyntaxKind.KEYWORD ? grenadeCount.value : ""
           ),
           location
         );

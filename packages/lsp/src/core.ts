@@ -1,50 +1,50 @@
 import {
-  compileSource,
-  DiagnosticSeverity as MegaloSeverity,
-  SourceLocationType,
   type CompileSourceOptions,
+  compileSource,
   type Diagnostic as MegaloDiagnostic,
+  DiagnosticSeverity as MegaloSeverity,
   type ObjectLists,
+  SourceLocationType,
   type SupportedMegaloVersion,
 } from "@megacrow/megalo";
 import {
-  DiagnosticSeverity,
   type Diagnostic,
+  DiagnosticSeverity,
 } from "vscode-languageserver/browser";
 
 export const MEGACROW_COMPILE_METHOD = "megacrow/compile";
 export const MEGACROW_RESOLVE_INCLUDE_METHOD = "megacrow/resolveInclude";
 export const MEGACROW_RESOLVE_BASE_FILE_METHOD = "megacrow/resolveBaseFile";
 
-export type MegacrowCompileParams = {
-  textDocument: { uri: string };
+export interface MegacrowCompileParams {
+  objectLists?: ObjectLists;
   /** When omitted, the server uses the last synced document text for the URI. */
   text?: string;
-  objectLists?: ObjectLists;
-};
+  textDocument: { uri: string };
+}
 
-export type MegacrowCompileResult = {
-  ok: boolean;
-  diagnostics: Diagnostic[];
+export interface MegacrowCompileResult {
   /** Base64-encoded `.mglo` bytes when compilation succeeded. */
   dataBase64?: string;
+  diagnostics: Diagnostic[];
   error?: string;
-};
+  ok: boolean;
+}
 
-export type MegacrowResolveIncludeParams = {
-  path: string;
-  kind: "include" | "localized_include";
+export interface MegacrowResolveIncludeParams {
   fromUri?: string;
-};
+  kind: "include" | "localized_include";
+  path: string;
+}
 
 export type MegacrowResolveIncludeResult =
   | { text: string; uri: string }
   | { error: string };
 
-export type MegacrowResolveBaseFileParams = {
-  path: string;
+export interface MegacrowResolveBaseFileParams {
   fromUri?: string;
-};
+  path: string;
+}
 
 export type MegacrowResolveBaseFileResult =
   | { dataBase64: string }

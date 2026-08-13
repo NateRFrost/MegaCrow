@@ -1,7 +1,5 @@
 import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { SymbolKind } from "src/frontend/symbol-table";
-import { type Token, TokenKind } from "src/frontend/tokens";
 import {
   type ASTErrorNode,
   type ASTNode,
@@ -9,12 +7,26 @@ import {
   SyntaxKind,
 } from "src/frontend/abstract-syntax-tree";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
-import { ParameterType, tryParseParameterValue } from "src/frontend/abstract-syntax-tree/parameters";
-import { type ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
+import {
+  type ASTElementBase,
+  ElementKind,
+} from "src/frontend/abstract-syntax-tree/elements";
 import { locationSpan } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+import {
+  ParameterType,
+  tryParseParameterValue,
+} from "src/frontend/abstract-syntax-tree/parameters";
+import { SymbolKind } from "src/frontend/symbol-table";
+import { type Token, TokenKind } from "src/frontend/tokens";
 
-type ConstantEntryNodeType = { value: "number"; location: SourceCodeLocation };
-type ConstantEntryNodeName = { value: string; location: SourceCodeLocation };
+interface ConstantEntryNodeType {
+  location: SourceCodeLocation;
+  value: "number";
+}
+interface ConstantEntryNodeName {
+  location: SourceCodeLocation;
+  value: string;
+}
 
 export type IntegerInitialValue =
   | (ASTNode<SyntaxKind.INTEGER> & { value: number })
@@ -25,12 +37,12 @@ export type NumericInitialValue =
   | IntegerInitialValue
   | (ASTNode<SyntaxKind.FLOATING_POINT> & { value: number });
 
-export type ConstantEntryNode = {
-  type: ConstantEntryNodeType | ASTErrorNode;
-  name: ConstantEntryNodeName | ASTErrorNode;
-  value: IntegerInitialValue;
+export interface ConstantEntryNode {
   location: SourceCodeLocation;
-};
+  name: ConstantEntryNodeName | ASTErrorNode;
+  type: ConstantEntryNodeType | ASTErrorNode;
+  value: IntegerInitialValue;
+}
 
 export type ConstantsElementNode = ASTElementBase<ElementKind.CONSTANTS> & {
   entries: ConstantEntryNode[];
@@ -171,7 +183,7 @@ const resolveConstantInitialNumber = (
       return target.value;
     }
   }
-  return undefined;
+  return;
 };
 
 const parseConstantEntry = (ctx: ParserContext): ConstantEntryNode => {

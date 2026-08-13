@@ -1,16 +1,19 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { SourceCodeLocation } from "src/diagnostics";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import {
-  ActionType,
-  TeamOrPlayerTargetKind,
+  hasOptionalKeyword,
+  parseTeamOrPlayerTarget,
+} from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import { parseSoundIndex } from "src/frontend/intermediate-representation/elements/triggers/parse_sound";
+import {
   type Action,
+  ActionType,
   type TeamOrPlayerTarget,
+  TeamOrPlayerTargetKind,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import { MegaloSound } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_sounds";
 import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
-import { hasOptionalKeyword, parseTeamOrPlayerTarget } from "src/frontend/intermediate-representation/elements/triggers/helpers";
-import { parseSoundIndex } from "src/frontend/intermediate-representation/elements/triggers/parse_sound";
 
 export const lowerPlaySound = (
   parameters: ASTParameterNode[],
@@ -28,7 +31,7 @@ export const lowerPlaySound = (
     };
   }
 
-  const soundNode = parameters[parameters.length - 1]!;
+  const soundNode = parameters.at(-1)!;
   const beforeSound = parameters.slice(0, -1);
   const immediate = hasOptionalKeyword(beforeSound, "immediate");
   const targetNodes = beforeSound.filter(

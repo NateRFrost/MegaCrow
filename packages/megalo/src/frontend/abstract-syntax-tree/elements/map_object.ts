@@ -1,44 +1,50 @@
 import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
 import {
-  isMapObjectPropertyKey,
-  MAP_OBJECT_PROPERTY_KEYS,
-  type MapObjectPropertyKey,
-} from "src/frontend/language-configuration/omni/map_object";
-import { ObjectListType } from "src/frontend/object-lists";
-import { type Token, TokenKind } from "src/frontend/tokens";
-import {
   type ASTErrorNode,
   type ASTIntegerNode,
   type ASTReferenceNode,
   SyntaxKind,
 } from "src/frontend/abstract-syntax-tree";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
+import {
+  type ASTElementBase,
+  ElementKind,
+} from "src/frontend/abstract-syntax-tree/elements";
+import {
+  isEndToken,
+  locationSpan,
+  parseIdentifier,
+} from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
 import { isAstErrorNode } from "src/frontend/abstract-syntax-tree/kinds";
 import type { ASTKeywordParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import {
   type ASTStringLiteralOrReference,
   parseStringLiteralOrReference,
 } from "src/frontend/abstract-syntax-tree/parameters/string_literal_or_reference";
-import { type ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
 import {
-  isEndToken,
-  locationSpan,
-  parseIdentifier,
-} from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+  isMapObjectPropertyKey,
+  MAP_OBJECT_PROPERTY_KEYS,
+  type MapObjectPropertyKey,
+} from "src/frontend/language-configuration/omni/map_object";
+import { ObjectListType } from "src/frontend/object-lists";
+import { type Token, TokenKind } from "src/frontend/tokens";
 
-type MapObjectFilterNameNode = { value: string; location: SourceCodeLocation };
+interface MapObjectFilterNameNode {
+  location: SourceCodeLocation;
+  value: string;
+}
 
 export type MapObjectPropertyValueNode =
   | ASTStringLiteralOrReference
   | ASTKeywordParameterNode
   | ASTIntegerNode;
 
-export type MapObjectPropertyNode = {
+export interface MapObjectPropertyNode {
   key: MapObjectPropertyKey;
-  value: MapObjectPropertyValueNode;
   location: SourceCodeLocation;
-};
+  value: MapObjectPropertyValueNode;
+}
 
 export type MapObjectElementNode = ASTElementBase<ElementKind.MAP_OBJECT> & {
   filterName: MapObjectFilterNameNode | ASTErrorNode;

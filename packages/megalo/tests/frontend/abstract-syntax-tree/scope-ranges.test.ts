@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { MegaloCompilerContext } from "../../../src/context";
+import { Diagnostics } from "../../../src/diagnostics";
 import { Parser, SyntaxKind } from "../../../src/frontend/abstract-syntax-tree";
 import { ElementKind } from "../../../src/frontend/abstract-syntax-tree/elements";
-import { Diagnostics } from "../../../src/diagnostics";
 import { SymbolKind, VariableType } from "../../../src/frontend/symbol-table";
 import { Lexer } from "../../../src/frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../src/version";
-import { MegaloCompilerContext } from "../../../src/context";
 
 const parse = (source: string) => {
   const diagnostics = new Diagnostics();
@@ -49,8 +49,8 @@ describe("symbol scope ranges and symbolId stamping", () => {
 
     expect(globalScore).toBeDefined();
     expect(temporaryScore).toBeDefined();
-    expect(temporaryScore!.range.start.localOffset).toBeGreaterThanOrEqual(0);
-    expect(temporaryScore!.range.end.localOffset).toBeGreaterThan(
+    expect(temporaryScore?.range.start.localOffset).toBeGreaterThanOrEqual(0);
+    expect(temporaryScore?.range.end.localOffset).toBeGreaterThan(
       temporaryScore!.range.start.localOffset
     );
   });
@@ -79,7 +79,7 @@ describe("symbol scope ranges and symbolId stamping", () => {
         entry.range.end.localOffset === -1
     );
     expect(score).toBeDefined();
-    expect(score!.references.length).toBeGreaterThanOrEqual(1);
+    expect(score?.references.length).toBeGreaterThanOrEqual(1);
 
     const trigger = ast.elements.find(
       (element) => element.elementKind === ElementKind.TRIGGER
@@ -120,7 +120,7 @@ describe("symbol scope ranges and symbolId stamping", () => {
     const reference = findReference(ast);
     expect(reference).toMatchObject({
       kind: SyntaxKind.REFERENCE,
-      symbolId: score!.id,
+      symbolId: score?.id,
     });
   });
 });

@@ -1,12 +1,12 @@
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { SourceLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { ObjectListType } from "src/frontend/object-lists";
-import { SymbolKind } from "src/frontend/symbol-table";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import type { ObjectTypeReference } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
+import { ObjectListType } from "src/frontend/object-lists";
+import { SymbolKind } from "src/frontend/symbol-table";
 
 const objectTypeName = (node: ASTParameterNode): string | undefined => {
   switch (node.kind) {
@@ -17,7 +17,7 @@ const objectTypeName = (node: ASTParameterNode): string | undefined => {
     case SyntaxKind.QUOTED_STRING:
       return node.value;
     default:
-      return undefined;
+      return;
   }
 };
 

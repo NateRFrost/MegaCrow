@@ -1,6 +1,5 @@
 import type { TriggerElementNode } from "src/frontend/abstract-syntax-tree/elements/trigger";
 import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
-import { LowerError } from "src/frontend/intermediate-representation/error";
 import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
 import {
   applySpecialTriggerIndex,
@@ -9,6 +8,7 @@ import {
 } from "src/frontend/intermediate-representation/elements/triggers/header";
 import { GameEngineAppendTarget } from "src/frontend/intermediate-representation/elements/triggers/scope";
 import { lowerActionScope } from "src/frontend/intermediate-representation/elements/triggers/statements";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 
 export const triggersLowerer: ElementLowerer<TriggerElementNode> = (
   element,

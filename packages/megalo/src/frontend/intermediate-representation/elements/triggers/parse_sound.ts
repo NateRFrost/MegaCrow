@@ -1,14 +1,14 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  megaloSoundFromName,
   type MegaloSound,
+  megaloSoundFromName,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_sounds";
-import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 import { parseIndexSuffix } from "src/frontend/intermediate-representation/parameters";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 
 export const parseSoundIndex = (
   node: ASTParameterNode,

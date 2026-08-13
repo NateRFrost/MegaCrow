@@ -1,7 +1,10 @@
-import type { Token } from "src/frontend/tokens";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import { parseUserDefinedOption } from "src/frontend/abstract-syntax-tree/elements/game_options/option";
-import type { GameOptionModifiers, UserDefinedOptionNode } from "src/frontend/abstract-syntax-tree/elements/game_options/types";
+import type {
+  GameOptionModifiers,
+  UserDefinedOptionNode,
+} from "src/frontend/abstract-syntax-tree/elements/game_options/types";
+import type { Token } from "src/frontend/tokens";
 
 export const rangedOptionParser = (
   ctx: ParserContext,

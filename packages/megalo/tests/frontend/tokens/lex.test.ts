@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { MegaloCompilerContext } from "../../../src/context";
 import { Diagnostics } from "../../../src/diagnostics";
 import {
   Lexer,
@@ -7,7 +8,6 @@ import {
   type Tokens,
 } from "../../../src/frontend/tokens/index";
 import { MEGALO_VERSIONS } from "../../../src/version";
-import { MegaloCompilerContext } from "../../../src/context";
 
 const kinds = (source: string): TokenKind[] =>
   new Lexer(new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"]))
@@ -20,7 +20,10 @@ const values = (source: string): string[] =>
     .map((token) => token.value);
 
 const tokens = (source: string): Tokens =>
-  new Lexer(new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"])).lex(source, new Diagnostics());
+  new Lexer(new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"])).lex(
+    source,
+    new Diagnostics()
+  );
 
 const expectToken = (
   token: Token,
@@ -228,7 +231,7 @@ end`;
       ">>",
     ]);
     expect(kinds("+= -= *= /= = %= &= |= ^= ~= << >>")).toEqual(
-      Array(12).fill(TokenKind.Operator)
+      new Array(12).fill(TokenKind.Operator)
     );
   });
 

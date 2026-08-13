@@ -1,12 +1,15 @@
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
 import {
   type ASTErrorNode,
   isAstErrorNode,
 } from "src/frontend/abstract-syntax-tree";
-import type { SourceCodeLocation } from "src/diagnostics";
-import { diagnosticMessages } from "src/diagnostics/messages";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 
-type NamedNode = { value: string; location: SourceCodeLocation };
+interface NamedNode {
+  location: SourceCodeLocation;
+  value: string;
+}
 
 export function assertNotErrorNode(
   node: NamedNode | ASTErrorNode

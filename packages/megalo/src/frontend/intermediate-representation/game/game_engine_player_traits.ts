@@ -1,4 +1,3 @@
-
 export type DamageResistance = "invulnerable" | number;
 export type DamageModifier = "fatality" | number;
 
@@ -127,10 +126,10 @@ export type PlayerTraitSensors = Partial<{
   motionTrackerRange: number;
 }>;
 
-export type PlayerTraits = {
+export interface PlayerTraits {
+  appearance: PlayerTraitAppearance;
+  movement: PlayerTraitMovement;
+  sensors: PlayerTraitSensors;
   shieldVitality: PlayerTraitShieldVitality;
   weapons: PlayerTraitWeapons;
-  movement: PlayerTraitMovement;
-  appearance: PlayerTraitAppearance;
-  sensors: PlayerTraitSensors;
-};
+}

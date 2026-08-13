@@ -1,5 +1,30 @@
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
+import {
+  type ASTElementBase,
+  ElementKind,
+} from "src/frontend/abstract-syntax-tree/elements";
+import {
+  isEndToken,
+  locationSpan,
+} from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+import {
+  type ActionStatementNode,
+  parseAction,
+} from "src/frontend/abstract-syntax-tree/elements/trigger/action";
+import {
+  type ConditionStatementNode,
+  parseCondition,
+} from "src/frontend/abstract-syntax-tree/elements/trigger/condition";
+import {
+  parseTemporary,
+  type TemporaryStatementNode,
+} from "src/frontend/abstract-syntax-tree/elements/trigger/temporary";
+import {
+  type ASTNode,
+  SyntaxKind,
+} from "src/frontend/abstract-syntax-tree/kinds";
 import { TRIGGER_EXECUTION_KINDS } from "src/frontend/language-configuration/omni/triggers";
 import type { SymbolId } from "src/frontend/symbol-table";
 import {
@@ -8,13 +33,6 @@ import {
   ParserScopeKind,
 } from "src/frontend/symbol-table/scope";
 import { type Token, TokenKind } from "src/frontend/tokens";
-import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
-import { type ASTNode, SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
-import { type ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
-import { isEndToken, locationSpan } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
-import { type ActionStatementNode, parseAction } from "src/frontend/abstract-syntax-tree/elements/trigger/action";
-import { type ConditionStatementNode, parseCondition } from "src/frontend/abstract-syntax-tree/elements/trigger/condition";
-import { parseTemporary, type TemporaryStatementNode } from "src/frontend/abstract-syntax-tree/elements/trigger/temporary";
 
 export {
   ActionParserRepository,
@@ -67,7 +85,9 @@ const lookupObjectFilterReference = (
   name: string,
   location: SourceCodeLocation
 ): SymbolId | undefined => {
-  if ((TRIGGER_EXECUTION_KINDS as readonly string[]).includes(name.toLowerCase())) {
+  if (
+    (TRIGGER_EXECUTION_KINDS as readonly string[]).includes(name.toLowerCase())
+  ) {
     return;
   }
 

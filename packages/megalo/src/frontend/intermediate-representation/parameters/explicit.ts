@@ -1,15 +1,15 @@
 import {
-  type TemporaryStorageName,
   isTemporaryStorageName,
+  type TemporaryStorageName,
 } from "src/frontend/abstract-syntax-tree/elements/trigger/temporary";
-import {
-  type TeamDesignator,
-  isTeamDesignator,
-} from "src/frontend/language-configuration/omni/teams";
 import { MultiplayerTeamDesignator } from "src/frontend/intermediate-representation/game/game_engine_default";
 import { ExplicitObject } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
 import { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
 import { ExplicitTeam } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
+import {
+  isTeamDesignator,
+  type TeamDesignator,
+} from "src/frontend/language-configuration/omni/teams";
 
 const PLAYER_EXPLICIT_NAMES: Partial<Record<ExplicitPlayer, string>> = {
   [ExplicitPlayer.None]: "none",
@@ -56,11 +56,11 @@ export const parseQualifiedTemporaryName = (
 ): { storage: TemporaryStorage; index: number } | undefined => {
   const match = /^temporary_(object|player|team)_(\d+)$/.exec(name);
   if (!match) {
-    return undefined;
+    return;
   }
   const storage = match[1];
   if (!isTemporaryStorageName(storage) || storage === "number") {
-    return undefined;
+    return;
   }
   return {
     storage,
@@ -129,7 +129,7 @@ export const tryParseExplicitPlayer = (
   try {
     return parseExplicitPlayer(name);
   } catch {
-    return undefined;
+    return;
   }
 };
 
@@ -158,7 +158,7 @@ export const tryParseExplicitObject = (
   try {
     return parseExplicitObject(name);
   } catch {
-    return undefined;
+    return;
   }
 };
 
@@ -191,7 +191,7 @@ export const tryParseExplicitTeam = (
   try {
     return parseExplicitTeam(name);
   } catch {
-    return undefined;
+    return;
   }
 };
 
@@ -205,5 +205,5 @@ export const parseIndexSuffix = (
   if (name.startsWith(`${prefix}_`)) {
     return Number(name.slice(prefix.length + 1));
   }
-  return undefined;
+  return;
 };

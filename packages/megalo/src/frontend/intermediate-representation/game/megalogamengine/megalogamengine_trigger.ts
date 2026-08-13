@@ -1,4 +1,3 @@
-
 export enum TriggerExecutionMode {
   General = 0,
   Player = 1,
@@ -19,12 +18,12 @@ export enum TriggerType {
   Pregame = 7,
 }
 
-export type Trigger = {
-  executionMode: TriggerExecutionMode;
-  triggerType: TriggerType;
-  objectFilterIndex?: number;
-  firstCondition: number;
-  conditionCount: number;
-  firstAction: number;
+export interface Trigger {
   actionCount: number;
-};
+  conditionCount: number;
+  executionMode: TriggerExecutionMode;
+  firstAction: number;
+  firstCondition: number;
+  objectFilterIndex?: number;
+  triggerType: TriggerType;
+}

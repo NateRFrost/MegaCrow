@@ -4,12 +4,6 @@ import {
   type TeamReference,
   TeamReferenceType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
-import {
-  VariableScope,
-  VariableType,
-  isBuiltInVariable,
-} from "src/frontend/symbol-table";
-import { requireResolvedVariableSlot } from "src/frontend/intermediate-representation/preprocessing/symbols";
 import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
 import {
   enumSlotValue,
@@ -28,6 +22,12 @@ import {
   resolveScopedVariableMemberIndex,
   splitParameterMember,
 } from "src/frontend/intermediate-representation/parameters/references/helpers";
+import { requireResolvedVariableSlot } from "src/frontend/intermediate-representation/preprocessing/symbols";
+import {
+  isBuiltInVariable,
+  VariableScope,
+  VariableType,
+} from "src/frontend/symbol-table";
 
 const encodeGlobalTeamReference = (index: number): TeamReference => ({
   type: TeamReferenceType.GlobalTeam,

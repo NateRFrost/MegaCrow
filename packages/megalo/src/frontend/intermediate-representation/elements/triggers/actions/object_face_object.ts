@@ -1,33 +1,33 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  ActionType,
   type Action,
+  ActionType,
   type ObjectOffset,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import {
-  asParameterLoweringContext,
-  type ElementLowerContext,
-} from "src/frontend/intermediate-representation/parameters/context";
 import {
   lowerConstantInteger,
   resolveObjectReference,
 } from "src/frontend/intermediate-representation/parameters";
+import {
+  asParameterLoweringContext,
+  type ElementLowerContext,
+} from "src/frontend/intermediate-representation/parameters/context";
 
 const resolveOffsetComponent = (
   node: ASTParameterNode,
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): number => lowerConstantInteger(node, ctx, "integer", location).value;
 
 const parseOptionalObjectOffset = (
   parameters: ASTParameterNode[],
   startIndex: number,
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): {
   offset: ObjectOffset;
   nextIndex: number;
@@ -45,9 +45,9 @@ const parseOptionalObjectOffset = (
         throw new LowerError(
           diagnosticMessages.invalidParameterCount(
             index + 4,
-            parameters.length,
+            parameters.length
           ),
-          location,
+          location
         );
       }
       offset = {
@@ -68,12 +68,12 @@ const parseOptionalObjectOffset = (
 export const lowerObjectFaceObject = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   if (parameters.length < 2) {
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(2, parameters.length),
-      location,
+      location
     );
   }
   const paramCtx = asParameterLoweringContext(ctx);
@@ -81,12 +81,12 @@ export const lowerObjectFaceObject = (
     parameters,
     2,
     ctx,
-    location,
+    location
   );
   if (nextIndex !== parameters.length) {
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(nextIndex, parameters.length),
-      location,
+      location
     );
   }
   return {

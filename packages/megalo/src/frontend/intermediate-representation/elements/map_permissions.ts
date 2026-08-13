@@ -1,13 +1,13 @@
+import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { MapPermissionsElementNode } from "src/frontend/abstract-syntax-tree/elements/map_permissions";
-import { diagnosticMessages } from "src/diagnostics/messages";
-import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
 import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
 import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
+import { markCurrentValueUnused } from "src/frontend/intermediate-representation/diagnostics/markCurrentValueUnused";
+import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import { lowerConstantNumber } from "src/frontend/intermediate-representation/parameters/constantNumber";
 import { setField } from "src/frontend/intermediate-representation/setField";
-import { markCurrentValueUnused } from "src/frontend/intermediate-representation/diagnostics/markCurrentValueUnused";
 
 const MAP_PERMISSION_KEYS = ["default", "exception"] as const;
 
@@ -15,7 +15,10 @@ export const mapPermissionsLowerer: ElementLowerer<
   MapPermissionsElementNode
 > = (element, ctx) => {
   // Each map_permissions block replaces the previous one.
-  markCurrentValueUnused(ctx.ir.locations.get(ctx.ir.gameVariant, "mapPermissions"), ctx.diagnostics);
+  markCurrentValueUnused(
+    ctx.ir.locations.get(ctx.ir.gameVariant, "mapPermissions"),
+    ctx.diagnostics
+  );
   const permissions = {
     exceptMapIds: [] as number[],
     allowByDefault: true,
@@ -31,10 +34,7 @@ export const mapPermissionsLowerer: ElementLowerer<
       switch (entry.key) {
         case "default": {
           if (entry.value.kind === SyntaxKind.KEYWORD) {
-            if (
-              entry.value.value !== "true" &&
-              entry.value.value !== "false"
-            ) {
+            if (entry.value.value !== "true" && entry.value.value !== "false") {
               throw new LowerError(
                 diagnosticMessages.expectedOneOf(
                   ["'true'", "'false'"],

@@ -1,6 +1,6 @@
+import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { LoadoutPaletteElementNode } from "src/frontend/abstract-syntax-tree/elements/loadout_palette";
-import { diagnosticMessages } from "src/diagnostics/messages";
 import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
 import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
 import { LowerError } from "src/frontend/intermediate-representation/error";
@@ -30,7 +30,7 @@ export const loadoutPaletteLowerer = (
           item.location
         );
       }
-      palette.loadouts!.push(loadout);
+      palette.loadouts?.push(loadout);
     }
 
     // Megalo Headache #1

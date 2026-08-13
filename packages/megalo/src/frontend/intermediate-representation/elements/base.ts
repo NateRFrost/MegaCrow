@@ -1,6 +1,6 @@
+import { diagnosticMessages } from "src/diagnostics/messages";
 import type { BaseElementNode } from "src/frontend/abstract-syntax-tree/elements";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
-import { diagnosticMessages } from "src/diagnostics/messages";
 import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
 import { setField } from "src/frontend/intermediate-representation/setField";
 

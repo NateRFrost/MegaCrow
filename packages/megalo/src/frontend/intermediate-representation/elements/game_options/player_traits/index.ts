@@ -1,12 +1,19 @@
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
 import type {
   PlayerTraitOptionNode,
   PlayerTraitsElementNode,
   PlayerTraitsOverrideNode,
 } from "src/frontend/abstract-syntax-tree/elements/game_options/player_traits";
-import type { SourceCodeLocation } from "src/diagnostics";
-import { diagnosticMessages } from "src/diagnostics/messages";
 import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
 import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
+import { lowerAppearanceOption } from "src/frontend/intermediate-representation/elements/game_options/player_traits/appearance";
+import { parameterLocation } from "src/frontend/intermediate-representation/elements/game_options/player_traits/helpers";
+import { lowerMovementOption } from "src/frontend/intermediate-representation/elements/game_options/player_traits/movement";
+import { lowerSensorsOption } from "src/frontend/intermediate-representation/elements/game_options/player_traits/sensors";
+import { lowerShieldVitalityOption } from "src/frontend/intermediate-representation/elements/game_options/player_traits/shieldVitality";
+import { lowerWeaponsOption } from "src/frontend/intermediate-representation/elements/game_options/player_traits/weapons";
+import { emptyPlayerTraits } from "src/frontend/intermediate-representation/elements/game_options/shared";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import type { PlayerTraits } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 import type { PlayerTraitOption } from "src/frontend/intermediate-representation/game/game_engine_traits";
@@ -16,13 +23,6 @@ import {
   type ParameterLoweringContext,
 } from "src/frontend/intermediate-representation/parameters";
 import { resolveScriptStringTableReference } from "src/frontend/intermediate-representation/parameters/resolveScriptStringTableReference";
-import { emptyPlayerTraits } from "src/frontend/intermediate-representation/elements/game_options/shared";
-import { lowerAppearanceOption } from "src/frontend/intermediate-representation/elements/game_options/player_traits/appearance";
-import { parameterLocation } from "src/frontend/intermediate-representation/elements/game_options/player_traits/helpers";
-import { lowerMovementOption } from "src/frontend/intermediate-representation/elements/game_options/player_traits/movement";
-import { lowerSensorsOption } from "src/frontend/intermediate-representation/elements/game_options/player_traits/sensors";
-import { lowerShieldVitalityOption } from "src/frontend/intermediate-representation/elements/game_options/player_traits/shieldVitality";
-import { lowerWeaponsOption } from "src/frontend/intermediate-representation/elements/game_options/player_traits/weapons";
 
 export const lowerPlayerTraitOptions = (
   options: PlayerTraitOptionNode[],
@@ -84,11 +84,7 @@ export const lowerPlayerTraits = (
       traits,
     };
     ctx.ir.locations.record(option, "name", entry.displayName.location);
-    ctx.ir.locations.record(
-      option,
-      "description",
-      entry.description.location
-    );
+    ctx.ir.locations.record(option, "description", entry.description.location);
     ctx.ir.locations.record(option, "traits", entry.location);
     ctx.ir.gameVariant.playerTraits.push(option);
   });

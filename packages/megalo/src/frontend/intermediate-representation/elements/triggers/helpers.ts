@@ -1,47 +1,47 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   MathOperation,
-  PlayerFilterType,
-  TeamOrPlayerTargetKind,
   type PlayerFilterModifier,
+  PlayerFilterType,
   type TeamOrPlayerTarget,
+  TeamOrPlayerTargetKind,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import {
-  asParameterLoweringContext,
-  type ElementLowerContext,
-} from "src/frontend/intermediate-representation/parameters/context";
 import {
   resolveCustomVariableReference,
   resolvePlayerReference,
   resolveTeamReference,
   tryLowerConstantInteger,
 } from "src/frontend/intermediate-representation/parameters";
+import {
+  asParameterLoweringContext,
+  type ElementLowerContext,
+} from "src/frontend/intermediate-representation/parameters/context";
 
 export const requireParamCount = (
   parameters: ASTParameterNode[],
   count: number,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): void => {
   if (parameters.length !== count) {
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(count, parameters.length),
-      location,
+      location
     );
   }
 };
 
 export const requireKeyword = (
   node: ASTParameterNode | undefined,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): string => {
   if (node === undefined || node.kind !== SyntaxKind.KEYWORD) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType("keyword", ""),
-      node?.location ?? location,
+      node?.location ?? location
     );
   }
   return node.value;
@@ -49,11 +49,11 @@ export const requireKeyword = (
 
 export const hasOptionalKeyword = (
   parameters: ASTParameterNode[],
-  keyword: string,
+  keyword: string
 ): boolean =>
   parameters.some(
     (parameter) =>
-      parameter.kind === SyntaxKind.KEYWORD && parameter.value === keyword,
+      parameter.kind === SyntaxKind.KEYWORD && parameter.value === keyword
   );
 
 /**
@@ -62,7 +62,7 @@ export const hasOptionalKeyword = (
 export const parseBooleanLiteral = (
   node: ASTParameterNode,
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): boolean => {
   const value = tryLowerConstantInteger(node, ctx);
   if (value !== undefined) {
@@ -76,7 +76,7 @@ export const parseBooleanLiteral = (
         : "";
   throw new LowerError(
     diagnosticMessages.expectedParameterType("boolean", got),
-    node.location ?? location,
+    node.location ?? location
   );
 };
 
@@ -88,20 +88,20 @@ export const parseTeamOrPlayerTarget = (
   parameters: ASTParameterNode[],
   startIndex: number,
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): { target: TeamOrPlayerTarget; nextIndex: number } => {
   const first = parameters[startIndex];
   if (first === undefined) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType("team or player target", ""),
-      location,
+      location
     );
   }
 
   if (first.kind !== SyntaxKind.KEYWORD) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType("team or player target", ""),
-      first.location,
+      first.location
     );
   }
 
@@ -119,9 +119,9 @@ export const parseTeamOrPlayerTarget = (
         throw new LowerError(
           diagnosticMessages.invalidParameterCount(
             2,
-            parameters.length - startIndex,
+            parameters.length - startIndex
           ),
-          location,
+          location
         );
       }
       return {
@@ -138,9 +138,9 @@ export const parseTeamOrPlayerTarget = (
         throw new LowerError(
           diagnosticMessages.invalidParameterCount(
             2,
-            parameters.length - startIndex,
+            parameters.length - startIndex
           ),
-          location,
+          location
         );
       }
       return {
@@ -155,9 +155,9 @@ export const parseTeamOrPlayerTarget = (
       throw new LowerError(
         diagnosticMessages.expectedParameterType(
           "team or player target",
-          first.value,
+          first.value
         ),
-        first.location,
+        first.location
       );
   }
 };
@@ -202,14 +202,14 @@ const MATH_OPERATION_BY_NAME: Record<string, MathOperation> = {
 
 export const parseMathOperation = (
   node: ASTParameterNode,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): MathOperation => {
   const name = requireKeyword(node, location).toLowerCase();
   const operation = MATH_OPERATION_BY_NAME[name];
   if (operation === undefined) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType("math operation", name),
-      node.location,
+      node.location
     );
   }
   return operation;
@@ -232,13 +232,13 @@ export const parsePlayerFilterModifier = (
   parameters: ASTParameterNode[],
   startIndex: number,
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): { filter: PlayerFilterModifier; nextIndex: number } => {
   const first = parameters[startIndex];
   if (first === undefined) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType("player filter", ""),
-      location,
+      location
     );
   }
 
@@ -249,9 +249,9 @@ export const parsePlayerFilterModifier = (
       throw new LowerError(
         diagnosticMessages.invalidParameterCount(
           3,
-          parameters.length - startIndex,
+          parameters.length - startIndex
         ),
-        location,
+        location
       );
     }
     const paramCtx = asParameterLoweringContext(ctx);
@@ -270,7 +270,7 @@ export const parsePlayerFilterModifier = (
   if (type === undefined) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType("player filter", name),
-      first.location,
+      first.location
     );
   }
   return {

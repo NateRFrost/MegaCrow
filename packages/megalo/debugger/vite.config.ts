@@ -34,8 +34,10 @@ const resolveBlfPackageRoots = (): string[] => {
 
 const blfPackageRoots = resolveBlfPackageRoots();
 
-const stripViteId = (id: string): string =>
-  id.replace(/\\/g, "/").split("?")[0]!.split("#")[0]!;
+const stripViteId = (id: string): string => {
+  const withoutQuery = id.replace(/\\/g, "/").split("?")[0] ?? id;
+  return withoutQuery.split("#")[0] ?? withoutQuery;
+};
 
 const isBlfImporter = (importer: string): boolean => {
   const importerPath = stripViteId(importer);
@@ -81,7 +83,7 @@ const blfDirectoryIndexPlugin = (): Plugin => ({
       }
       return null;
     }
-    if (!importer || !isBlfImporter(importer)) {
+    if (!(importer && isBlfImporter(importer))) {
       return null;
     }
     return resolveDirectoryIndex(
@@ -138,7 +140,7 @@ const bundleAnalyzeWorkerDevPlugin = (): Plugin => {
       });
       const outputs = Array.isArray(result) ? result : [result];
       const first = outputs[0];
-      if (!first || !("output" in first)) {
+      if (!(first && "output" in first)) {
         throw new Error("analyze worker bundle produced no output");
       }
       const entry = first.output.find(
@@ -182,8 +184,7 @@ const bundleAnalyzeWorkerDevPlugin = (): Plugin => {
       server.middlewares.use(async (req, res, next) => {
         const url = req.url ?? "";
         if (
-          !url.includes("analyze.worker.ts") ||
-          !url.includes("worker_file")
+          !(url.includes("analyze.worker.ts") && url.includes("worker_file"))
         ) {
           next();
           return;

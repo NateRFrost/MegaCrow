@@ -49,7 +49,7 @@ export enum VariableScope {
 
 export type SymbolId = number;
 
-export type SymbolTableEntryBase = {
+export interface SymbolTableEntryBase {
   id: SymbolId;
   name: string;
 
@@ -62,7 +62,7 @@ export type SymbolTableEntryBase = {
   range: SourceCodeLocation;
 
   references: SourceCodeLocation[];
-};
+}
 
 const declarationRange = (declaration: SourceLocation): SourceCodeLocation => {
   if (declaration.type === SourceLocationType.BUILT_IN) {
@@ -101,9 +101,8 @@ export type SymbolTableVariableEntry = SymbolTableEntryBase & {
 };
 
 /** True when the variable was injected by the compiler (not user-declared). */
-export const isBuiltInVariable = (
-  symbol: SymbolTableVariableEntry
-): boolean => symbol.declaration.type === SourceLocationType.BUILT_IN;
+export const isBuiltInVariable = (symbol: SymbolTableVariableEntry): boolean =>
+  symbol.declaration.type === SourceLocationType.BUILT_IN;
 
 export type SymbolTableGameOptionEntry = SymbolTableEntryBase & {
   kind: SymbolKind.GameOption;
@@ -215,17 +214,16 @@ export class SymbolTable {
     }
 
     // MegaloEdit Headache #1
-    const last = matches[matches.length - 1]!;
+    const last = matches.at(-1)!;
     const sameList = matches.filter(
-      (symbol) =>
-        symbol.scope === last.scope && symbol.type === last.type
+      (symbol) => symbol.scope === last.scope && symbol.type === last.type
     );
     if (sameList.length > 1) {
       const resolvesLastDeclared =
         last.scope === VariableScope.Temporary ||
         (last.scope === VariableScope.Global &&
           last.type !== VariableType.Timer);
-      return resolvesLastDeclared ? sameList[sameList.length - 1] : sameList[0];
+      return resolvesLastDeclared ? sameList.at(-1) : sameList[0];
     }
 
     return matches[0];
@@ -241,7 +239,7 @@ export class SymbolTable {
         return symbol.index;
       }
     }
-    return undefined;
+    return;
   }
 
   public lookupGameStatIndex(name: string): number | undefined {
@@ -250,7 +248,7 @@ export class SymbolTable {
         return symbol.index;
       }
     }
-    return undefined;
+    return;
   }
 
   public variablesOf(
@@ -276,7 +274,10 @@ export class SymbolBinder {
   private readonly table: SymbolTableEntry[] = [];
   private readonly diagnostics: Diagnostics;
 
-  public constructor(frontend: MegaloCompilerContext, diagnostics: Diagnostics) {
+  public constructor(
+    frontend: MegaloCompilerContext,
+    diagnostics: Diagnostics
+  ) {
     void frontend;
     this.diagnostics = diagnostics;
   }
@@ -463,10 +464,7 @@ export class SymbolBinder {
   }
 
   public addObjectFilter(
-    entry: Pick<
-      SymbolTableObjectFilterEntry,
-      "name" | "index" | "declaration"
-    >
+    entry: Pick<SymbolTableObjectFilterEntry, "name" | "index" | "declaration">
   ): SymbolId {
     const id = this.table.length;
     this.table.push({
@@ -482,10 +480,7 @@ export class SymbolBinder {
   }
 
   public addPlayerTraits(
-    entry: Pick<
-      SymbolTablePlayerTraitsEntry,
-      "name" | "index" | "declaration"
-    >
+    entry: Pick<SymbolTablePlayerTraitsEntry, "name" | "index" | "declaration">
   ): SymbolId {
     const id = this.table.length;
     this.table.push({

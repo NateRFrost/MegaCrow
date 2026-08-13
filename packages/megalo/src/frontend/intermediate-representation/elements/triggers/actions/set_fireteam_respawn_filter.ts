@@ -1,18 +1,18 @@
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  ActionType,
   type Action,
+  ActionType,
   type FireteamFilter,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { resolveObjectReference } from "src/frontend/intermediate-representation/parameters";
 import {
   asParameterLoweringContext,
   type ElementLowerContext,
 } from "src/frontend/intermediate-representation/parameters/context";
-import { resolveObjectReference } from "src/frontend/intermediate-representation/parameters";
 
 const emptyFireteamFilter = (): FireteamFilter => ({
   fireteam1: false,

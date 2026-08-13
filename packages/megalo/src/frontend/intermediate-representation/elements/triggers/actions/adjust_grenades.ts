@@ -1,25 +1,25 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { LowerError } from "src/frontend/intermediate-representation/error";
-import {
-  ActionType,
-  GrenadeType,
-  type Action,
-} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import {
-  asParameterLoweringContext,
-  type ElementLowerContext,
-} from "src/frontend/intermediate-representation/parameters/context";
-import {
-  resolveCustomVariableReference,
-  resolvePlayerReference,
-} from "src/frontend/intermediate-representation/parameters";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import {
   parseMathOperation,
   requireKeyword,
   requireParamCount,
 } from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import {
+  type Action,
+  ActionType,
+  GrenadeType,
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import {
+  resolveCustomVariableReference,
+  resolvePlayerReference,
+} from "src/frontend/intermediate-representation/parameters";
+import {
+  asParameterLoweringContext,
+  type ElementLowerContext,
+} from "src/frontend/intermediate-representation/parameters/context";
 
 const GRENADE_TYPE_BY_NAME: Record<string, GrenadeType> = {
   frag: GrenadeType.Frag,
@@ -29,7 +29,7 @@ const GRENADE_TYPE_BY_NAME: Record<string, GrenadeType> = {
 export const lowerAdjustGrenades = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   requireParamCount(parameters, 4, location);
   const grenadeName = requireKeyword(parameters[1]!, location).toLowerCase();
@@ -37,7 +37,7 @@ export const lowerAdjustGrenades = (
   if (grenadeType === undefined) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType("grenade type", grenadeName),
-      parameters[1]!.location,
+      parameters[1]?.location
     );
   }
   const paramCtx = asParameterLoweringContext(ctx);

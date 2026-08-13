@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { MegaloCompilerContext } from "../../../src/context";
+import { Diagnostics, SourceLocationType } from "../../../src/diagnostics";
 import { Parser, SyntaxKind } from "../../../src/frontend/abstract-syntax-tree";
 import { ParserContext } from "../../../src/frontend/abstract-syntax-tree/context";
 import { ElementKind } from "../../../src/frontend/abstract-syntax-tree/elements";
@@ -6,12 +8,10 @@ import {
   ObjectListParameter,
   parameterParserBuilder,
 } from "../../../src/frontend/abstract-syntax-tree/parameters";
-import { Diagnostics, SourceLocationType } from "../../../src/diagnostics";
 import { ObjectListType } from "../../../src/frontend/object-lists";
 import { SymbolBinder, SymbolKind } from "../../../src/frontend/symbol-table";
 import { Lexer } from "../../../src/frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../src/version";
-import { MegaloCompilerContext } from "../../../src/context";
 
 const version = MEGALO_VERSIONS["107-mcc"];
 const frontend = new MegaloCompilerContext(version);
@@ -27,7 +27,7 @@ describe("object list parameters", () => {
 
     const nodes = parameterParserBuilder([
       ObjectListParameter(ObjectListType.Weapons),
-    ])(ctx, tokens[0]!.location);
+    ])(ctx, tokens[0]?.location);
 
     expect(diagnostics.hasErrors()).toBe(false);
     expect(nodes).toHaveLength(1);
@@ -37,7 +37,7 @@ describe("object list parameters", () => {
     });
 
     const symbolId =
-      nodes[0]!.kind === SyntaxKind.REFERENCE ? nodes[0].symbolId : undefined;
+      nodes[0]?.kind === SyntaxKind.REFERENCE ? nodes[0].symbolId : undefined;
     expect(symbolId).toBeDefined();
     const entry = binder.getSymbolEntry(symbolId!);
     expect(entry).toMatchObject({
@@ -69,7 +69,7 @@ describe("object list parameters", () => {
 
     const nodes = parameterParserBuilder([
       ObjectListParameter(ObjectListType.Weapons),
-    ])(ctx, tokens[0]!.location);
+    ])(ctx, tokens[0]?.location);
 
     // Fallback lenient parse yields a keyword when the object-list slot fails.
     expect(nodes[0]?.kind).not.toBe(SyntaxKind.REFERENCE);

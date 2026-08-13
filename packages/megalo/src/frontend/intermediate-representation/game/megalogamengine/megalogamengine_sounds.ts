@@ -296,6 +296,6 @@ export const megaloSoundFromName = (name: string): MegaloSound | undefined => {
     case "charlie_under_attack":
       return MegaloSound.CharlieUnderAttack;
     default:
-      return undefined;
+      return;
   }
 };

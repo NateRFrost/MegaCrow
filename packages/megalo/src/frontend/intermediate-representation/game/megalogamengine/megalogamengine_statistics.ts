@@ -18,9 +18,9 @@ export enum GameStatisticGrouping {
   Team = 1,
 }
 
-export type MegaloGameStatistic = {
-  nameStringIndex: StringTableReference;
+export interface MegaloGameStatistic {
   format: GameStatisticFormat;
-  sortOrder: GameStatisticSortOrder;
   grouping: GameStatisticGrouping;
-};
+  nameStringIndex: StringTableReference;
+  sortOrder: GameStatisticSortOrder;
+}

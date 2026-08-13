@@ -1,10 +1,10 @@
+import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { GameStatsElementNode } from "src/frontend/abstract-syntax-tree/elements/game_stats";
-import { diagnosticMessages } from "src/diagnostics/messages";
-import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
 import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
 import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
 import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
+import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   GameStatisticFormat,
@@ -32,8 +32,8 @@ const GAME_STATISTIC_GROUPING_NAMES = Object.keys(GAME_STATISTIC_GROUPINGS);
 
 const GAME_STATISTIC_SORT_ORDERS: Record<number, GameStatisticSortOrder> = {
   [-1]: GameStatisticSortOrder.None,
-  [0]: GameStatisticSortOrder.Ascending,
-  [1]: GameStatisticSortOrder.Descending,
+  0: GameStatisticSortOrder.Ascending,
+  1: GameStatisticSortOrder.Descending,
 };
 
 export const gameStatsLowerer: ElementLowerer<GameStatsElementNode> = (

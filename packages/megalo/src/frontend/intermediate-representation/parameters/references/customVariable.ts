@@ -1,5 +1,6 @@
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 import { ExplicitObject } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
 import { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
 import { ExplicitTeam } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
@@ -7,18 +8,6 @@ import {
   type CustomVariableReference,
   CustomVariableType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
-import {
-  SymbolKind,
-  type SymbolTableVariableEntry,
-  VariableScope,
-  VariableType,
-  isBuiltInVariable,
-} from "src/frontend/symbol-table";
-import {
-  requireResolvedVariableSlot,
-  type VariableSlotMap,
-} from "src/frontend/intermediate-representation/preprocessing/symbols";
-import { LowerError } from "src/frontend/intermediate-representation/error";
 import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
 import { parseIndexSuffix } from "src/frontend/intermediate-representation/parameters/explicit";
 import { resolveGameOptionCustomVariableType } from "src/frontend/intermediate-representation/parameters/gameOptionTypes";
@@ -33,9 +22,20 @@ import {
   isPlayerReferenceBase,
   isTeamReferenceBase,
   resolveScopedVariableMemberIndex,
-  splitParameterMember,
   type SplitMember,
+  splitParameterMember,
 } from "src/frontend/intermediate-representation/parameters/references/helpers";
+import {
+  requireResolvedVariableSlot,
+  type VariableSlotMap,
+} from "src/frontend/intermediate-representation/preprocessing/symbols";
+import {
+  isBuiltInVariable,
+  SymbolKind,
+  type SymbolTableVariableEntry,
+  VariableScope,
+  VariableType,
+} from "src/frontend/symbol-table";
 
 /** Simplified kind selector used by the lowering signature system. */
 export enum CustomVariableKind {
@@ -98,7 +98,7 @@ const encodeScopedNumber = (
     "number"
   );
   if (index === undefined) {
-    return undefined;
+    return;
   }
   switch (scope) {
     case VariableScope.Team:
@@ -120,7 +120,7 @@ const encodeScopedNumber = (
         variableIndex: index,
       };
     default:
-      return undefined;
+      return;
   }
 };
 
@@ -183,7 +183,7 @@ const tryImmediateConstant = (
       immediateValue: node.value,
     };
   }
-  return undefined;
+  return;
 };
 
 /** Compiled name `global_number_N`. */
@@ -192,7 +192,7 @@ const tryCompiledGlobalNumber = (
 ): CustomVariableReference | undefined => {
   const globalIndex = parseIndexSuffix(name, "global_number");
   if (globalIndex === undefined) {
-    return undefined;
+    return;
   }
   return {
     type: CustomVariableType.GlobalNumber,
@@ -259,7 +259,7 @@ const tryBareName = (
     return encodeNumberVariable(baseSymbol, ctx.variableSlots);
   }
 
-  return undefined;
+  return;
 };
 
 /** `player.stat` / `team.stat` via declared stat name or `stat_N`. */
@@ -274,7 +274,7 @@ const tryStatMember = (
     ? (fromMap ?? Number(member.replace(/^stat_/, "")) ?? 0)
     : fromMap;
   if (fromPrefix === undefined) {
-    return undefined;
+    return;
   }
 
   if (isPlayerReferenceBase(ctx, base)) {
@@ -291,7 +291,7 @@ const tryStatMember = (
       statisticIndex: fromPrefix,
     };
   }
-  return undefined;
+  return;
 };
 
 /** Compiled member `number_N` on player/team/object bases. */
@@ -302,7 +302,7 @@ const tryCompiledNumberMember = (
   resolvedBaseVariable?: SymbolTableVariableEntry
 ): CustomVariableReference | undefined => {
   if (!member.startsWith("number_")) {
-    return undefined;
+    return;
   }
   const rawIndex = Number(member.replace(/^number_/, ""));
   const globalObjectSlot = /^object_\d+$/.test(base);
@@ -342,21 +342,21 @@ const tryCompiledNumberMember = (
   if (isObjectReferenceBase(ctx, base, member)) {
     const index = globalObjectSlot
       ? rawIndex
-      : resolveScopedVariableMemberIndex(
+      : (resolveScopedVariableMemberIndex(
           ctx.symbolTable,
           ctx.variableSlots,
           VariableScope.Object,
           VariableType.Number,
           member,
           "number"
-        ) ?? rawIndex;
+        ) ?? rawIndex);
     return {
       type: CustomVariableType.ObjectNumber,
       object: resolveExplicitObjectForBase(ctx, base, resolvedBaseVariable),
       variableIndex: index,
     };
   }
-  return undefined;
+  return;
 };
 
 /** Named number member on a scoped player/team/object (user variable name). */
@@ -374,7 +374,9 @@ const tryNamedScopedNumber = (
       member,
       resolvedBaseVariable
     );
-    if (scoped) return scoped;
+    if (scoped) {
+      return scoped;
+    }
   }
   if (
     isExplicitPlayerName(base) ||
@@ -388,7 +390,9 @@ const tryNamedScopedNumber = (
       member,
       resolvedBaseVariable
     );
-    if (scoped) return scoped;
+    if (scoped) {
+      return scoped;
+    }
   }
   if (isObjectReferenceBase(ctx, base, member)) {
     const scoped = encodeScopedNumber(
@@ -398,9 +402,11 @@ const tryNamedScopedNumber = (
       member,
       resolvedBaseVariable
     );
-    if (scoped) return scoped;
+    if (scoped) {
+      return scoped;
+    }
   }
-  return undefined;
+  return;
 };
 
 /** `.score`, `.user_data`, `.player_score` / money / rating. */
@@ -436,7 +442,11 @@ const tryBuiltinMember = (
     member === "player_rating" ||
     member === "rating"
   ) {
-    const player = resolveExplicitPlayerForBase(ctx, base, resolvedBaseVariable);
+    const player = resolveExplicitPlayerForBase(
+      ctx,
+      base,
+      resolvedBaseVariable
+    );
     if (member === "player_score") {
       return { type: CustomVariableType.PlayerScore, player };
     }
@@ -446,7 +456,7 @@ const tryBuiltinMember = (
     return { type: CustomVariableType.PlayerRating, player };
   }
 
-  return undefined;
+  return;
 };
 
 /** `option` / `option_N` name forms. */
@@ -462,7 +472,7 @@ const tryOptionName = (
   if (optionIndex !== undefined) {
     return { type: CustomVariableType.Option, optionIndex };
   }
-  return undefined;
+  return;
 };
 
 const resolveCustomVariableReferenceUnchecked = (
@@ -470,23 +480,31 @@ const resolveCustomVariableReferenceUnchecked = (
   ctx: ParameterLoweringContext
 ): CustomVariableReference => {
   const immediate = tryImmediateConstant(node);
-  if (immediate) return immediate;
+  if (immediate) {
+    return immediate;
+  }
 
   const split: SplitMember = splitParameterMember(node, ctx.symbolTable);
   const { base, member, baseSymbol } = split;
   const name = member ? `${base}.${member}` : base;
 
   const compiledGlobal = tryCompiledGlobalNumber(name);
-  if (compiledGlobal) return compiledGlobal;
+  if (compiledGlobal) {
+    return compiledGlobal;
+  }
 
   if (!member) {
     const bare = tryBareName(node, ctx, name, baseSymbol);
-    if (bare) return bare;
+    if (bare) {
+      return bare;
+    }
   }
 
   if (member) {
     const stat = tryStatMember(ctx, base, member, baseSymbol);
-    if (stat) return stat;
+    if (stat) {
+      return stat;
+    }
 
     const compiledNumber = tryCompiledNumberMember(
       ctx,
@@ -494,17 +512,25 @@ const resolveCustomVariableReferenceUnchecked = (
       member,
       baseSymbol
     );
-    if (compiledNumber) return compiledNumber;
+    if (compiledNumber) {
+      return compiledNumber;
+    }
 
     const namedScoped = tryNamedScopedNumber(ctx, base, member, baseSymbol);
-    if (namedScoped) return namedScoped;
+    if (namedScoped) {
+      return namedScoped;
+    }
 
     const builtin = tryBuiltinMember(ctx, base, member, baseSymbol);
-    if (builtin) return builtin;
+    if (builtin) {
+      return builtin;
+    }
   }
 
   const option = tryOptionName(ctx, name);
-  if (option) return option;
+  if (option) {
+    return option;
+  }
 
   // Fallback: treat identifier as constant numeric (0 if non-numeric)
   return {

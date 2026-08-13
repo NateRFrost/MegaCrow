@@ -1,9 +1,12 @@
-import type { ContentItemMetadata } from "src/frontend/intermediate-representation/saved_games/saved_game_files";
 import type {
   GrenadeCountSetting,
   PlayerTraits,
 } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
-import type { StringTableEntry, StringTableReference } from "src/frontend/intermediate-representation/game/string_table";
+import type {
+  StringTableEntry,
+  StringTableReference,
+} from "src/frontend/intermediate-representation/game/string_table";
+import type { ContentItemMetadata } from "src/frontend/intermediate-representation/saved_games/saved_game_files";
 
 export type GameEngineMiscellaneousOptions = Partial<{
   teamsEnabled: boolean;
@@ -94,11 +97,11 @@ export enum TeamOptionsModelOverrideType {
   ByDesignator = 4,
 }
 
-export type Color = {
-  r: number;
-  g: number;
+export interface Color {
   b: number;
-};
+  g: number;
+  r: number;
+}
 
 export type GameEngineTeamOptionsTeam = Partial<{
   name: StringTableEntry;
@@ -138,14 +141,14 @@ export type GameEngineLoadoutTraits = Partial<{
   loadoutPalettes: LoadoutPaletteTraits[];
 }>;
 
-export type GameEngineBaseVariant = {
-  metadata: ContentItemMetadata;
+export interface GameEngineBaseVariant {
   builtIn: boolean;
-  teamScoringMethod?: TeamScoringMethod;
+  loadoutTraits: GameEngineLoadoutTraits;
+  mapOverrideOptions: GameEngineMapOverrideOptions;
+  metadata: ContentItemMetadata;
   miscellaneousOptions: GameEngineMiscellaneousOptions;
   respawnOptions: GameEngineRespawnOptions;
   socialOptions: GameEngineSocialOptions;
-  mapOverrideOptions: GameEngineMapOverrideOptions;
   teamOptions: GameEngineTeamOptions;
-  loadoutTraits: GameEngineLoadoutTraits;
-};
+  teamScoringMethod?: TeamScoringMethod;
+}

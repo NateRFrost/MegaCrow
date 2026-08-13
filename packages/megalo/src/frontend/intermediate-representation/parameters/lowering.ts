@@ -5,23 +5,24 @@
  * `resolvePlayerReference`, etc.) instead. This module remains for unit tests
  * and as a reference for the parse-time `parameterParserBuilder` twin.
  */
-import { isAstErrorNode, SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+
+import { type SourceLocation, SourceLocationType } from "src/diagnostics";
+import {
+  isAstErrorNode,
+  SyntaxKind,
+} from "src/frontend/abstract-syntax-tree/kinds";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import {
-  type SourceLocation,
-  SourceLocationType,
-} from "src/diagnostics";
-import type { ObjectListType } from "src/frontend/object-lists";
-import { SymbolKind, VariableType, isBuiltInVariable } from "src/frontend/symbol-table";
-import { type Located, located } from "src/frontend/intermediate-representation";
+  type Located,
+  located,
+} from "src/frontend/intermediate-representation";
 import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
 import { LowerError } from "src/frontend/intermediate-representation/error";
-import { lowerConstantNumber } from "src/frontend/intermediate-representation/parameters/constantNumber";
 import type { ObjectReferenceType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
+import { lowerConstantNumber } from "src/frontend/intermediate-representation/parameters/constantNumber";
 import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
-import { resolveScriptStringTableReference } from "src/frontend/intermediate-representation/parameters/resolveScriptStringTableReference";
 import {
-  CustomVariableKind,
+  type CustomVariableKind,
   resolveCustomTimerReference,
   resolveCustomVariableReference,
   resolveObjectReference,
@@ -30,9 +31,16 @@ import {
   resolveTeamReference,
   resolveVariantVariable,
 } from "src/frontend/intermediate-representation/parameters/references";
+import { resolveScriptStringTableReference } from "src/frontend/intermediate-representation/parameters/resolveScriptStringTableReference";
+import type { ObjectListType } from "src/frontend/object-lists";
+import {
+  isBuiltInVariable,
+  SymbolKind,
+  VariableType,
+} from "src/frontend/symbol-table";
 
-export { CustomVariableKind } from "src/frontend/intermediate-representation/parameters/references";
 export type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
+export { CustomVariableKind } from "src/frontend/intermediate-representation/parameters/references";
 
 export enum LoweringSpecKind {
   Number = 0,
@@ -48,64 +56,64 @@ export enum LoweringSpecKind {
   Keyword = 10,
 }
 
-type NumberLoweringSpec = {
+interface NumberLoweringSpec {
   readonly kind: LoweringSpecKind.Number;
   readonly name: string;
-};
+}
 
-type FloatLoweringSpec = {
+interface FloatLoweringSpec {
   readonly kind: LoweringSpecKind.Float;
   readonly name: string;
-};
+}
 
-type StringLoweringSpec = {
+interface StringLoweringSpec {
   readonly kind: LoweringSpecKind.String;
   readonly name: string;
-};
+}
 
-type CustomVariableLoweringSpec = {
+interface CustomVariableLoweringSpec {
+  readonly acceptedKinds?: readonly CustomVariableKind[];
   readonly kind: LoweringSpecKind.CustomVariable;
   readonly name: string;
-  readonly acceptedKinds?: readonly CustomVariableKind[];
-};
+}
 
-type CustomTimerLoweringSpec = {
+interface CustomTimerLoweringSpec {
   readonly kind: LoweringSpecKind.CustomTimer;
   readonly name: string;
-};
+}
 
-type ObjectLoweringSpec = {
+interface ObjectLoweringSpec {
+  readonly acceptedSubtypes?: readonly ObjectReferenceType[];
   readonly kind: LoweringSpecKind.Object;
   readonly name: string;
-  readonly acceptedSubtypes?: readonly ObjectReferenceType[];
-};
+}
 
-type ObjectTypeLoweringSpec = {
+interface ObjectTypeLoweringSpec {
+  readonly acceptedObjectTypes?: readonly ObjectListType[];
   readonly kind: LoweringSpecKind.ObjectType;
   readonly name: string;
-  readonly acceptedObjectTypes?: readonly ObjectListType[];
-};
+}
 
-type PlayerLoweringSpec = {
+interface PlayerLoweringSpec {
   readonly kind: LoweringSpecKind.Player;
   readonly name: string;
-};
+}
 
-type TeamLoweringSpec = {
+interface TeamLoweringSpec {
   readonly kind: LoweringSpecKind.Team;
   readonly name: string;
-};
+}
 
-type VariantVariableLoweringSpec = {
+interface VariantVariableLoweringSpec {
   readonly kind: LoweringSpecKind.VariantVariable;
   readonly name: string;
-};
+}
 
-type KeywordLoweringSpec = {
+interface KeywordLoweringSpec {
   readonly kind: LoweringSpecKind.Keyword;
   readonly name: string;
   readonly value: string;
-};
+}
 
 export type LoweringSpec =
   | NumberLoweringSpec
@@ -120,11 +128,11 @@ export type LoweringSpec =
   | VariantVariableLoweringSpec
   | KeywordLoweringSpec;
 
-export type OptionalLoweringSlot = {
+export interface OptionalLoweringSlot {
   readonly kind: "optional";
   readonly name: string;
   readonly specs?: readonly LoweringSpec[];
-};
+}
 
 export type LoweringSlot =
   | LoweringSpec
@@ -215,10 +223,10 @@ export const OptionalParam = (
   specs: specs.length > 0 ? specs : undefined,
 });
 
-export type LoweredParameter = {
+export interface LoweredParameter {
   readonly name: string;
   readonly value: Located<unknown> | undefined;
-};
+}
 
 export type LoweredResult = LoweredParameter[] & {
   byName: (name: string) => Located<unknown> | undefined;
@@ -386,9 +394,7 @@ const matchesSpec = (
 ): boolean => {
   switch (spec.kind) {
     case LoweringSpecKind.Keyword:
-      return (
-        node.kind === SyntaxKind.KEYWORD && node.value === spec.value
-      );
+      return node.kind === SyntaxKind.KEYWORD && node.value === spec.value;
     case LoweringSpecKind.Number:
       return looksLikeInteger(node, ctx) || looksLikeCustomVariable(node, ctx);
     case LoweringSpecKind.Float:
@@ -430,10 +436,7 @@ const lowerSpec = (
   switch (spec.kind) {
     case LoweringSpecKind.Keyword: {
       if (node.kind !== SyntaxKind.KEYWORD || node.value !== spec.value) {
-        throw new LowerError(
-          `Expected keyword '${spec.value}'`,
-          node.location
-        );
+        throw new LowerError(`Expected keyword '${spec.value}'`, node.location);
       }
       return {
         name: spec.name,
@@ -448,7 +451,8 @@ const lowerSpec = (
         node.kind === SyntaxKind.INTEGER ||
         node.kind === SyntaxKind.FLOATING_POINT ||
         (node.kind === SyntaxKind.REFERENCE &&
-          ctx.symbolTable.getSymbol(node.symbolId)?.kind === SymbolKind.Constant)
+          ctx.symbolTable.getSymbol(node.symbolId)?.kind ===
+            SymbolKind.Constant)
       ) {
         return {
           name: spec.name,
@@ -485,10 +489,7 @@ const lowerSpec = (
     case LoweringSpecKind.CustomTimer:
       return {
         name: spec.name,
-        value: located(
-          resolveCustomTimerReference(node, ctx),
-          node.location
-        ),
+        value: located(resolveCustomTimerReference(node, ctx), node.location),
       };
     case LoweringSpecKind.Object:
       return {
@@ -509,26 +510,17 @@ const lowerSpec = (
     case LoweringSpecKind.Player:
       return {
         name: spec.name,
-        value: located(
-          resolvePlayerReference(node, ctx),
-          node.location
-        ),
+        value: located(resolvePlayerReference(node, ctx), node.location),
       };
     case LoweringSpecKind.Team:
       return {
         name: spec.name,
-        value: located(
-          resolveTeamReference(node, ctx),
-          node.location
-        ),
+        value: located(resolveTeamReference(node, ctx), node.location),
       };
     case LoweringSpecKind.VariantVariable:
       return {
         name: spec.name,
-        value: located(
-          resolveVariantVariable(node, ctx),
-          node.location
-        ),
+        value: located(resolveVariantVariable(node, ctx), node.location),
       };
   }
 };
@@ -539,19 +531,19 @@ const tryLowerSpec = (
   ctx: ParameterLoweringContext
 ): LoweredParameter | undefined => {
   if (!matchesSpec(node, spec, ctx)) {
-    return undefined;
+    return;
   }
   try {
     return lowerSpec(node, spec, ctx);
   } catch {
-    return undefined;
+    return;
   }
 };
 
-type MatchCursor = {
+interface MatchCursor {
   index: number;
   parameters: LoweredParameter[];
-};
+}
 
 const tryMatchSlot = (
   nodes: ASTParameterNode[],
@@ -637,14 +629,14 @@ const tryMatchSignature = (
   const cursor: MatchCursor = { index: 0, parameters: [] };
   for (const slot of signature) {
     if (!tryMatchSlot(nodes, cursor, slot, ctx)) {
-      return undefined;
+      return;
     }
   }
   // Consumed exactly (trailing nodes are allowed only if all remaining
   // signature slots were optionals that already resolved as absent — which
   // tryMatchSlot handles). Reject leftover input nodes.
   if (cursor.index !== nodes.length) {
-    return undefined;
+    return;
   }
   return cursor.parameters;
 };
@@ -687,7 +679,7 @@ const lowerSignatureStrict = (
     if (isUnionSlot(slot)) {
       const node = nodes[cursor.index];
       if (node === undefined) {
-        throw new LowerError(`Missing parameter`, anchor);
+        throw new LowerError("Missing parameter", anchor);
       }
       let lowered: LoweredParameter | undefined;
       for (const spec of slot) {

@@ -1,7 +1,7 @@
+import type { VariableLimits } from "src/backend/version-configuration";
 import type { MegaloCompilerContext } from "src/context";
 import type { Diagnostics } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import type { VariableLimits } from "src/backend/version-configuration";
 import {
   isBuiltInVariable,
   type SymbolId,
@@ -17,11 +17,11 @@ type TypeSlots = SlotOccupants[];
 type ScopeSlots = Record<VariableType, TypeSlots>;
 type VariableSlotTable = Record<VariableScope, ScopeSlots>;
 
-export type ResolvedVariableSlot = {
+export interface ResolvedVariableSlot {
+  index: number;
   scope: VariableScope;
   type: VariableType;
-  index: number;
-};
+}
 
 export type VariableSlotMap = ReadonlyMap<SymbolId, ResolvedVariableSlot>;
 
@@ -64,7 +64,9 @@ const assignTemporariesByLifetime = (
   // For each type of variable (Timer, Number, Team, Player, Object)
   for (const type of VARIABLE_TYPES) {
     // Get all the temporaries of this type, and sort them by declaration order.
-    const sortedTemporaryVariableEntries = [...(temporariesByType.get(type) ?? [])].sort(
+    const sortedTemporaryVariableEntries = [
+      ...(temporariesByType.get(type) ?? []),
+    ].sort(
       (left, right) =>
         left.range.start.absoluteOffset - right.range.start.absoluteOffset ||
         left.id - right.id
@@ -90,12 +92,15 @@ const assignTemporariesByLifetime = (
       }
       freeSlotIndices.sort((a, b) => a - b);
 
-      const currentSlotIndex = freeSlotIndices.length > 0 ? freeSlotIndices.shift()! : nextFreeSlotIndex++;
+      const currentSlotIndex =
+        freeSlotIndices.length > 0
+          ? freeSlotIndices.shift()!
+          : nextFreeSlotIndex++;
       const slotsForVariableType = table[VariableScope.Temporary][type];
       while (slotsForVariableType.length <= currentSlotIndex) {
         slotsForVariableType.push([]);
       }
-      slotsForVariableType[currentSlotIndex]!.push(temporaryVariableEntry.id);
+      slotsForVariableType[currentSlotIndex]?.push(temporaryVariableEntry.id);
       liveSlotIndices.push({
         endOffset: temporaryVariableEntry.range.end.absoluteOffset,
         index: currentSlotIndex,

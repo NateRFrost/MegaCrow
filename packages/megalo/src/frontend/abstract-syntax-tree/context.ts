@@ -5,9 +5,6 @@ import {
   SourceLocationType,
 } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import type { ObjectLists } from "src/frontend/object-lists";
-import type { SymbolBinder } from "src/frontend/symbol-table";
-import { type Token, TokenKind, type Tokens } from "src/frontend/tokens";
 import { EngineDataParserRepository } from "src/frontend/abstract-syntax-tree/elements/engine_data";
 import { PlayerTraitParserRepository } from "src/frontend/abstract-syntax-tree/elements/game_options/player_traits";
 import { LoadoutParserRepository } from "src/frontend/abstract-syntax-tree/elements/loadout";
@@ -16,6 +13,9 @@ import { TeamsParserRepository } from "src/frontend/abstract-syntax-tree/element
 import { ActionParserRepository } from "src/frontend/abstract-syntax-tree/elements/trigger/action";
 import { ConditionParserRepository } from "src/frontend/abstract-syntax-tree/elements/trigger/condition";
 import { ParserSymbolContext } from "src/frontend/abstract-syntax-tree/symbol-context";
+import type { ObjectLists } from "src/frontend/object-lists";
+import type { SymbolBinder } from "src/frontend/symbol-table";
+import { type Token, TokenKind, type Tokens } from "src/frontend/tokens";
 
 // Used by the parse function to track it's progress & refer to variables in scope.
 export class ParserContext {
@@ -46,12 +46,7 @@ export class ParserContext {
     this.tokens = tokens;
     this.symbolParser =
       sharedSymbolParser ??
-      new ParserSymbolContext(
-        frontend,
-        diagnostics,
-        symbolTable,
-        objectLists
-      );
+      new ParserSymbolContext(frontend, diagnostics, symbolTable, objectLists);
     this.playerTraitParserRepository = new PlayerTraitParserRepository(
       frontend
     );

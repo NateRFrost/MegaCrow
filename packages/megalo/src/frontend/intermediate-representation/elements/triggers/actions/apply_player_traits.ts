@@ -1,19 +1,19 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { SymbolKind } from "src/frontend/symbol-table";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  ActionType,
   type Action,
+  ActionType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { resolvePlayerReference } from "src/frontend/intermediate-representation/parameters";
 import {
   asParameterLoweringContext,
   type ElementLowerContext,
 } from "src/frontend/intermediate-representation/parameters/context";
-import { resolvePlayerReference } from "src/frontend/intermediate-representation/parameters";
-import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import { SymbolKind } from "src/frontend/symbol-table";
 
 const resolveTraitIndex = (
   node: ASTParameterNode,

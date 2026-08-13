@@ -1,0 +1,5 @@
+# Lint and format only staged files (Biome --staged avoids Windows argv limits).
+npx @biomejs/biome check --write --staged --files-ignore-unknown=true --no-errors-on-unmatched
+status=$?
+git update-index --again
+exit $status

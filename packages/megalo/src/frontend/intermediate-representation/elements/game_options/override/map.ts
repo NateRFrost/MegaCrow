@@ -1,9 +1,12 @@
 import type { OverrideEntryNode } from "src/frontend/abstract-syntax-tree/elements/game_options";
-import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
-import { setField } from "src/frontend/intermediate-representation/setField";
+import {
+  resolveSimpleBoolean,
+  resolveSimpleNumber,
+} from "src/frontend/intermediate-representation/elements/game_options/override/helpers";
 import { lowerVehicleSet } from "src/frontend/intermediate-representation/elements/game_options/vehicle_set";
 import { lowerWeaponSet } from "src/frontend/intermediate-representation/elements/game_options/weapon_set";
-import { resolveSimpleBoolean, resolveSimpleNumber } from "src/frontend/intermediate-representation/elements/game_options/override/helpers";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
+import { setField } from "src/frontend/intermediate-representation/setField";
 
 /** Returns true if `optionName` was handled as a map override. */
 export const tryLowerMapOverride = (

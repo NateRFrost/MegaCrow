@@ -1,18 +1,21 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { SourceCodeLocation } from "src/diagnostics";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import {
-  ActionType,
+  parseMathOperation,
+  requireParamCount,
+} from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import {
   type Action,
+  ActionType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import {
-  asParameterLoweringContext,
-  type ElementLowerContext,
-} from "src/frontend/intermediate-representation/parameters/context";
 import {
   resolveCustomVariableReference,
   resolveObjectReference,
 } from "src/frontend/intermediate-representation/parameters";
-import { parseMathOperation, requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import {
+  asParameterLoweringContext,
+  type ElementLowerContext,
+} from "src/frontend/intermediate-representation/parameters/context";
 
 const lowerVitalityAdjustment = (
   type:
@@ -22,7 +25,7 @@ const lowerVitalityAdjustment = (
     | ActionType.ObjectAdjustMaximumHealth,
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   requireParamCount(parameters, 3, location);
   const paramCtx = asParameterLoweringContext(ctx);
@@ -39,11 +42,11 @@ const lowerVitalityAdjustment = (
 export const lowerObjectAdjustHealth = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action =>
   lowerVitalityAdjustment(
     ActionType.ObjectAdjustHealth,
     parameters,
     ctx,
-    location,
+    location
   );

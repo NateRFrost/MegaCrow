@@ -1,9 +1,9 @@
 export {
+  type DecodedMglo,
   decodeMglo,
+  type MgloGametypeVersion,
   readMgloEncodingVersion,
   resolveGametypeVersion,
-  type DecodedMglo,
-  type MgloGametypeVersion,
 } from "../../src/decode-mglo";
 
 /** Structured-clone-safe plain JSON (Maps / bigints / etc. normalized). */

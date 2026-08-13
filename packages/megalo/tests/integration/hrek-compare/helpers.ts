@@ -1,6 +1,6 @@
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -89,24 +89,26 @@ export const toPlainJson = (value: unknown): unknown =>
     })
   );
 
-export type JsonDiff = {
-  path: string;
+export interface JsonDiff {
   megacrow: unknown;
   megaloedit: unknown;
-};
+  path: string;
+}
 
-export type DiffJsonOptions = {
+export interface DiffJsonOptions {
   /** Return true to skip a path (and its subtree). Defaults to ignoring metadata. */
   ignore?: (path: string) => boolean;
   maxDiffs?: number;
-};
+}
 
 /**
  * Paths whose subtree differs by design (compile timestamp, unique ids, author, …).
  * Matches megalo-proto-compile `IGNORE_METADATA`.
  */
 export const IGNORE_METADATA = (path: string): boolean => {
-  const normalized = path.startsWith("$.") ? path.slice(2) : path.replace(/^\$/, "");
+  const normalized = path.startsWith("$.")
+    ? path.slice(2)
+    : path.replace(/^\$/, "");
   return (
     normalized === "m_base_variant.m_metadata" ||
     normalized.startsWith("m_base_variant.m_metadata.") ||
@@ -167,7 +169,7 @@ export const diffJson = (
     const aIsObj = a !== null && typeof a === "object";
     const bIsObj = b !== null && typeof b === "object";
 
-    if (!aIsObj || !bIsObj) {
+    if (!(aIsObj && bIsObj)) {
       diffs.push({ path: p, megacrow: a, megaloedit: b });
       return;
     }
@@ -221,14 +223,14 @@ export const diffJson = (
           megacrow: undefined,
           megaloedit: bRec[key],
         });
-      } else if (!(key in bRec)) {
+      } else if (key in bRec) {
+        walk(aRec[key], bRec[key], child);
+      } else {
         diffs.push({
           path: child,
           megacrow: aRec[key],
           megaloedit: undefined,
         });
-      } else {
-        walk(aRec[key], bRec[key], child);
       }
     }
   };
@@ -237,13 +239,13 @@ export const diffJson = (
   return diffs;
 };
 
-export type MegaloEditCompileResult = {
+export interface MegaloEditCompileResult {
+  exitCode: number | null;
   ok: boolean;
   outputPath: string;
-  stdout: string;
   stderr: string;
-  exitCode: number | null;
-};
+  stdout: string;
+}
 
 export const compileWithMegaloEdit = (
   sourceFileName: string,
@@ -281,10 +283,10 @@ export const compileWithMegaloEdit = (
 };
 
 export const createFsResolvers = (baseSearchDirs: string[]) => {
-  const resolveInclude = async (
+  const resolveInclude = (
     rel: string,
     ctx: { fromUri?: string }
-  ): Promise<{ text: string; uri: string } | null> => {
+  ): { text: string; uri: string } | null => {
     const fromDir = ctx.fromUri ? path.dirname(ctx.fromUri) : HREK_MEGALO;
     const absolute = path.resolve(fromDir, rel);
     try {
@@ -295,10 +297,10 @@ export const createFsResolvers = (baseSearchDirs: string[]) => {
     }
   };
 
-  const resolveBaseFile = async (
+  const resolveBaseFile = (
     rel: string,
     _ctx: { fromUri?: string }
-  ): Promise<Uint8Array | null> => {
+  ): Uint8Array | null => {
     const candidates = [
       ...baseSearchDirs.map((dir) => path.resolve(dir, rel)),
       path.resolve(HREK_OUTPUT, rel),

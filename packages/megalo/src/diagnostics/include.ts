@@ -4,9 +4,9 @@ import {
   Diagnostics,
   isIncludeLocation,
   isSourceCodeLocation,
-  SourceLocationType,
   type SourceCodeLocation,
   type SourceLocation,
+  SourceLocationType,
 } from "src/diagnostics/index";
 
 const UNKNOWN_INCLUDE_SOURCE: SourceCodeLocation = {

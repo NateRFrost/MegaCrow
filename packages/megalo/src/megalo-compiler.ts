@@ -1,13 +1,13 @@
-import type { SupportedMegaloVersion } from "src/version";
-import { Parser } from "src/frontend/abstract-syntax-tree";
 import { type Compiler, getCompilerForVersion } from "src/backend/compile";
 import type { CompilerSettings } from "src/compiler-settings";
 import { MegaloCompilerContext } from "src/context";
 import { Diagnostics } from "src/diagnostics";
+import { Parser } from "src/frontend/abstract-syntax-tree";
 import { Lowerer } from "src/frontend/intermediate-representation";
 import type { ObjectLists } from "src/frontend/object-lists";
-import type { MegacrowExtensions } from "src/megacrow-extensions";
 import { Lexer } from "src/frontend/tokens";
+import type { MegacrowExtensions } from "src/megacrow-extensions";
+import type { SupportedMegaloVersion } from "src/version";
 
 export { MegaloCompilerContext } from "src/context";
 

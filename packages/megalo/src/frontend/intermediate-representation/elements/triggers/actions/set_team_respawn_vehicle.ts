@@ -1,29 +1,29 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { ObjectListType } from "src/frontend/object-lists";
-import { SymbolKind } from "src/frontend/symbol-table";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  ActionType,
   type Action,
+  ActionType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import {
-  asParameterLoweringContext,
-  type ElementLowerContext,
-} from "src/frontend/intermediate-representation/parameters/context";
 import {
   resolveObjectTypeReference,
   resolveTeamReference,
 } from "src/frontend/intermediate-representation/parameters";
-import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import {
+  asParameterLoweringContext,
+  type ElementLowerContext,
+} from "src/frontend/intermediate-representation/parameters/context";
+import { ObjectListType } from "src/frontend/object-lists";
+import { SymbolKind } from "src/frontend/symbol-table";
 
 const resolveObjectListKeywordIndex = (
   node: ASTParameterNode,
   objectType: ObjectListType,
   ctx: ElementLowerContext,
-  expected: string,
+  expected: string
 ): number => {
   const name =
     node.kind === SyntaxKind.KEYWORD
@@ -34,7 +34,7 @@ const resolveObjectListKeywordIndex = (
   if (name === undefined) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType(expected, ""),
-      node.location,
+      node.location
     );
   }
   const symbol = ctx.symbolTable
@@ -43,12 +43,12 @@ const resolveObjectListKeywordIndex = (
       (entry) =>
         entry.kind === SymbolKind.ObjectListItem &&
         entry.objectType === objectType &&
-        entry.name === name,
+        entry.name === name
     );
   if (symbol?.kind !== SymbolKind.ObjectListItem) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType(expected, name),
-      node.location,
+      node.location
     );
   }
   return symbol.index;
@@ -57,7 +57,7 @@ const resolveObjectListKeywordIndex = (
 const resolveRespawnVehicleObjectType = (
   node: ASTParameterNode,
   paramCtx: ReturnType<typeof asParameterLoweringContext>,
-  location: SourceCodeLocation,
+  _location: SourceCodeLocation
 ) => {
   if (node.kind === SyntaxKind.REFERENCE) {
     try {
@@ -70,14 +70,14 @@ const resolveRespawnVehicleObjectType = (
     node,
     ObjectListType.Objects,
     paramCtx,
-    ObjectListType.Objects,
+    ObjectListType.Objects
   );
 };
 
 export const lowerSetTeamRespawnVehicle = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   requireParamCount(parameters, 2, location);
   const paramCtx = asParameterLoweringContext(ctx);
@@ -87,7 +87,7 @@ export const lowerSetTeamRespawnVehicle = (
       objectType: resolveRespawnVehicleObjectType(
         parameters[0]!,
         paramCtx,
-        location,
+        location
       ),
       team: resolveTeamReference(parameters[1]!, paramCtx),
     },

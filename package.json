@@ -1,6 +1,7 @@
 {
   "devDependencies": {
     "@biomejs/biome": "2.4.15",
+    "husky": "^9.1.7",
     "turbo": "^2.9.6",
     "ultracite": "7.7.0"
   },
@@ -11,7 +12,8 @@
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "check": "ultracite check",
-    "fix": "ultracite fix"
+    "fix": "ultracite fix",
+    "prepare": "husky"
   },
   "workspaces": [
     "packages/*"

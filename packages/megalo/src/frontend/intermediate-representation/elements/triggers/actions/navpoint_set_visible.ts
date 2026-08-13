@@ -1,17 +1,17 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { parsePlayerFilterModifier } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  ActionType,
   type Action,
+  ActionType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { resolveObjectReference } from "src/frontend/intermediate-representation/parameters";
 import {
   asParameterLoweringContext,
   type ElementLowerContext,
 } from "src/frontend/intermediate-representation/parameters/context";
-import { resolveObjectReference } from "src/frontend/intermediate-representation/parameters";
-import { parsePlayerFilterModifier } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 
 const lowerObjectFilterAction = (
   type:
@@ -21,28 +21,28 @@ const lowerObjectFilterAction = (
     | ActionType.BoundarySetVisible,
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   if (parameters.length < 2) {
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(2, parameters.length),
-      location,
+      location
     );
   }
   const object = resolveObjectReference(
     parameters[0]!,
-    asParameterLoweringContext(ctx),
+    asParameterLoweringContext(ctx)
   );
   const { filter, nextIndex } = parsePlayerFilterModifier(
     parameters,
     1,
     ctx,
-    location,
+    location
   );
   if (nextIndex !== parameters.length) {
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(nextIndex, parameters.length),
-      location,
+      location
     );
   }
 
@@ -61,11 +61,11 @@ const lowerObjectFilterAction = (
 export const lowerNavpointSetVisible = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action =>
   lowerObjectFilterAction(
     ActionType.NavpointSetVisible,
     parameters,
     ctx,
-    location,
+    location
   );

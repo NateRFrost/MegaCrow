@@ -1,18 +1,14 @@
+import { bitstream } from "@blamnetwork/blf";
 import {
   c_game_engine_custom_variant,
   c_string_table,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { bitstream } from "@blamnetwork/blf";
 
 const { c_bitstream_writer, e_bitstream_byte_order } = bitstream;
-import { decodeMglo } from "src/decode-mglo";
-import { BUILT_IN_LOCATION, type Diagnostics } from "src/diagnostics";
-import type { IR } from "src/frontend/intermediate-representation";
-import type { StringTable } from "src/frontend/intermediate-representation/game/string_table";
-import { STRING_TABLE_LANGUAGES } from "src/frontend/language-configuration/omni/strings";
-import { Compiler } from "src/backend/compile/compiler";
-import { CompilerError } from "src/diagnostics/error";
+
+import { compileActions } from "src/backend/compile/107-mcc/actions";
 import { CAPABILITES_107_MCC } from "src/backend/compile/107-mcc/capabilities";
+import { compileConditions } from "src/backend/compile/107-mcc/conditions";
 import {
   applyPlayerTraitOptionOverrides,
   applyUserDefinedOptionOverrides,
@@ -26,12 +22,20 @@ import { compileMapPermissions } from "src/backend/compile/107-mcc/map_permissio
 import { compileMetadata } from "src/backend/compile/107-mcc/metadata";
 import { compilePlayerRatings } from "src/backend/compile/107-mcc/player_rating";
 import { compileTeams } from "src/backend/compile/107-mcc/teams";
-import { compileConditions } from "src/backend/compile/107-mcc/conditions";
-import { compileActions } from "src/backend/compile/107-mcc/actions";
 import { compileTriggers } from "src/backend/compile/107-mcc/triggers";
 import { compileVariableMetadata } from "src/backend/compile/107-mcc/variableMetadata";
-import { assertCompatibleIR, CompilerCapabilities } from "src/backend/compile/diagnostics/assertCompatibleIR";
-import { MEGALO_VERSIONS, SupportedMegaloVersion } from "src/version";
+import { Compiler } from "src/backend/compile/compiler";
+import {
+  assertCompatibleIR,
+  type CompilerCapabilities,
+} from "src/backend/compile/diagnostics/assertCompatibleIR";
+import { decodeMglo } from "src/decode-mglo";
+import { BUILT_IN_LOCATION, type Diagnostics } from "src/diagnostics";
+import { CompilerError } from "src/diagnostics/error";
+import type { IR } from "src/frontend/intermediate-representation";
+import type { StringTable } from "src/frontend/intermediate-representation/game/string_table";
+import { STRING_TABLE_LANGUAGES } from "src/frontend/language-configuration/omni/strings";
+import { MEGALO_VERSIONS, type SupportedMegaloVersion } from "src/version";
 
 /** Reach MCC script string table bitstream layout. */
 const SCRIPT_STRINGS = {
@@ -140,7 +144,7 @@ export class Compiler107MCC extends Compiler {
 
     const gametype = this.decodeBaseGametype(ir, diagnostics);
     const isBaseDerived = ir.baseFileBytes !== undefined;
-    
+
     // Handle base overrides
     if (isBaseDerived) {
       applyUserDefinedOptionOverrides(ir, gametype, diagnostics);

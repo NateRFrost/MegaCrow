@@ -10,8 +10,8 @@ import type {
   SelectUserDefinedOption,
   UserDefinedOptionValue,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_user_defined_options";
-import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 import { lowerConstantNumber } from "src/frontend/intermediate-representation/parameters/constantNumber";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 import { resolveScriptStringTableReference } from "src/frontend/intermediate-representation/parameters/resolveScriptStringTableReference";
 
 const lowerOptionValue = (

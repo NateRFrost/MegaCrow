@@ -1,22 +1,26 @@
+import type { Diagnostics, SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import {
   type OverrideEntryNode,
   OverrideValueKind,
 } from "src/frontend/abstract-syntax-tree/elements/game_options";
-import type { Diagnostics, SourceCodeLocation } from "src/diagnostics";
-import { diagnosticMessages } from "src/diagnostics/messages";
 import {
-  type BuiltInGameOptionName,
-  isBuiltInGameOptionName,
-} from "src/frontend/language-configuration/omni/game_options";
-import { type IR, type Located, located } from "src/frontend/intermediate-representation";
+  type IR,
+  type Located,
+  located,
+} from "src/frontend/intermediate-representation";
 import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import { TeamScoringMethod } from "src/frontend/intermediate-representation/game/game_engine_default";
 import type { BuiltInGameOptionFlags } from "src/frontend/intermediate-representation/game/parameters";
-import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 import { lowerConstantNumber } from "src/frontend/intermediate-representation/parameters/constantNumber";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 import { setField } from "src/frontend/intermediate-representation/setField";
+import {
+  type BuiltInGameOptionName,
+  isBuiltInGameOptionName,
+} from "src/frontend/language-configuration/omni/game_options";
 
 /** Maps Megalo game option names to BuiltInGameOptionFlags keys for lock/hide flags. */
 export const BUILTIN_LOCK_FLAG = new Map<

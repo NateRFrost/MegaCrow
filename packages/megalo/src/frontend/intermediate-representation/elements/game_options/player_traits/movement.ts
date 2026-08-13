@@ -1,4 +1,9 @@
 import { diagnosticMessages } from "src/diagnostics/messages";
+import {
+  resolveEnumKeyword,
+  resolveKeyword,
+  type TraitOptionArgs,
+} from "src/frontend/intermediate-representation/elements/game_options/player_traits/helpers";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   type PlayerTraits,
@@ -6,11 +11,6 @@ import {
 } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 import { lowerConstantInteger } from "src/frontend/intermediate-representation/parameters";
 import { setField } from "src/frontend/intermediate-representation/setField";
-import {
-  resolveEnumKeyword,
-  resolveKeyword,
-  type TraitOptionArgs,
-} from "src/frontend/intermediate-representation/elements/game_options/player_traits/helpers";
 
 const VEHICLE_USAGE: Record<string, VehicleUsage> = {
   unchanged: VehicleUsage.Unchanged,

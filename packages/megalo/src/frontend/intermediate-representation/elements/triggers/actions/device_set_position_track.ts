@@ -1,28 +1,28 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { ObjectListType } from "src/frontend/object-lists";
-import { SymbolKind } from "src/frontend/symbol-table";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  ActionType,
   type Action,
+  ActionType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import {
-  asParameterLoweringContext,
-  type ElementLowerContext,
-} from "src/frontend/intermediate-representation/parameters/context";
 import {
   resolveCustomVariableReference,
   resolveObjectReference,
 } from "src/frontend/intermediate-representation/parameters";
-import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import {
+  asParameterLoweringContext,
+  type ElementLowerContext,
+} from "src/frontend/intermediate-representation/parameters/context";
+import { ObjectListType } from "src/frontend/object-lists";
+import { SymbolKind } from "src/frontend/symbol-table";
 
 const resolveDeviceAnimationNameIndex = (
   node: ASTParameterNode,
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): number => {
   // MegaloEdit ReadStringIdName: identifier or quoted string from strings.txt.
   const name =
@@ -36,7 +36,7 @@ const resolveDeviceAnimationNameIndex = (
   if (name === undefined) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType("device animation", ""),
-      node.location ?? location,
+      node.location ?? location
     );
   }
 
@@ -46,7 +46,7 @@ const resolveDeviceAnimationNameIndex = (
       (entry) =>
         entry.kind === SymbolKind.ObjectListItem &&
         entry.objectType === ObjectListType.Strings &&
-        entry.name === name,
+        entry.name === name
     );
   if (listItem?.kind === SymbolKind.ObjectListItem) {
     return listItem.index + 1;
@@ -54,14 +54,14 @@ const resolveDeviceAnimationNameIndex = (
 
   throw new LowerError(
     diagnosticMessages.expectedParameterType("device animation", name),
-    node.location ?? location,
+    node.location ?? location
   );
 };
 
 export const lowerDeviceSetPositionTrack = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   requireParamCount(parameters, 3, location);
   const paramCtx = asParameterLoweringContext(ctx);
@@ -72,11 +72,11 @@ export const lowerDeviceSetPositionTrack = (
       animationNameIndex: resolveDeviceAnimationNameIndex(
         parameters[1]!,
         ctx,
-        location,
+        location
       ),
       interpolationTime: resolveCustomVariableReference(
         parameters[2]!,
-        paramCtx,
+        paramCtx
       ),
     },
   };

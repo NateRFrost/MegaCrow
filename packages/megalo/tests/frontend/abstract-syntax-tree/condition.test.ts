@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { MegaloCompilerContext } from "../../../src/context";
+import { BUILT_IN_LOCATION, Diagnostics } from "../../../src/diagnostics";
 import { ParserContext } from "../../../src/frontend/abstract-syntax-tree/context";
 import { parseCondition } from "../../../src/frontend/abstract-syntax-tree/elements/trigger/condition";
 import { SyntaxKind } from "../../../src/frontend/abstract-syntax-tree/kinds";
-import { BUILT_IN_LOCATION, Diagnostics } from "../../../src/diagnostics";
 import {
   SymbolBinder,
   VariableScope,
@@ -10,7 +11,6 @@ import {
 } from "../../../src/frontend/symbol-table";
 import { Lexer, TokenKind } from "../../../src/frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../src/version";
-import { MegaloCompilerContext } from "../../../src/context";
 
 const parseConditionLine = (source: string) => {
   const diagnostics = new Diagnostics();
@@ -196,10 +196,9 @@ describe("parseCondition", () => {
 
 describe("comparison operator lexing", () => {
   it("tokenizes symbolic comparison operators", () => {
-    const tokens = new Lexer(new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"])).lex(
-      "== != <= >=",
-      new Diagnostics()
-    );
+    const tokens = new Lexer(
+      new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"])
+    ).lex("== != <= >=", new Diagnostics());
     expect(tokens.map((token) => [token.kind, token.value])).toEqual([
       [TokenKind.Operator, "=="],
       [TokenKind.Operator, "!="],

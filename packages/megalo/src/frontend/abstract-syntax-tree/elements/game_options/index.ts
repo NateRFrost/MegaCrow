@@ -1,6 +1,5 @@
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { type Token, TokenKind } from "src/frontend/tokens";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import { ElementKind } from "src/frontend/abstract-syntax-tree/elements";
@@ -8,12 +7,16 @@ import { optionParser } from "src/frontend/abstract-syntax-tree/elements/game_op
 import { overrideParser } from "src/frontend/abstract-syntax-tree/elements/game_options/override";
 import { playerTraitsParser } from "src/frontend/abstract-syntax-tree/elements/game_options/player_traits";
 import { rangedOptionParser } from "src/frontend/abstract-syntax-tree/elements/game_options/ranged_option";
-import { isEndToken, locationSpan } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+import {
+  isEndToken,
+  locationSpan,
+} from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
 import type {
   GameOptionEntryNode,
   GameOptionModifiers,
   GameOptionsElementNode,
 } from "src/frontend/abstract-syntax-tree/elements/game_options/types";
+import { type Token, TokenKind } from "src/frontend/tokens";
 
 export type {
   ASTStringLiteralOrReference,
@@ -33,7 +36,10 @@ export type {
   UserDefinedOptionValueNode,
 } from "src/frontend/abstract-syntax-tree/elements/game_options/types";
 
-export { GameOptionEntryKind, OverrideValueKind } from "src/frontend/abstract-syntax-tree/elements/game_options/types";
+export {
+  GameOptionEntryKind,
+  OverrideValueKind,
+} from "src/frontend/abstract-syntax-tree/elements/game_options/types";
 
 export const gameOptionsParser = (
   ctx: ParserContext,

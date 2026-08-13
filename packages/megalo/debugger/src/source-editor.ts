@@ -23,7 +23,6 @@ const severityToMarker = (
       return monaco.MarkerSeverity.Warning;
     case DiagnosticSeverity.Info:
       return monaco.MarkerSeverity.Info;
-    case DiagnosticSeverity.Error:
     default:
       return monaco.MarkerSeverity.Error;
   }
@@ -87,15 +86,15 @@ const diagnosticToMarker = (
   };
 };
 
-export type SourceEditor = {
+export interface SourceEditor {
+  dispose: () => void;
   getValue: () => string;
-  setDiagnostics: (diagnostics: Diagnostic[]) => void;
-  revealDiagnostic: (diagnostic: Diagnostic) => void;
+  layout: () => void;
   onDidChangeContent: (listener: () => void) => monaco.IDisposable;
   onDidInteract: (listener: () => void) => void;
-  layout: () => void;
-  dispose: () => void;
-};
+  revealDiagnostic: (diagnostic: Diagnostic) => void;
+  setDiagnostics: (diagnostics: Diagnostic[]) => void;
+}
 
 export const createSourceEditor = (
   container: HTMLElement,

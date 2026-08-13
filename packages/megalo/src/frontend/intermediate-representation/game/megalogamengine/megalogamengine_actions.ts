@@ -1,5 +1,4 @@
-import type { LoadoutPaletteType } from "src/frontend/intermediate-representation/game/megalogamengine/LoadoutPaletteType";
-import type { StringTableReference } from "src/frontend/intermediate-representation/game/string_table";
+import type { LoadoutPaletteType } from "src/frontend/intermediate-representation/game/megalogamengine/loadoutPaletteType";
 import type { HUDMeterInputType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_hud_widgets";
 import type {
   CustomTimerReference,
@@ -12,6 +11,7 @@ import type {
 import type { MegaloSound } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_sounds";
 import type { DynamicString } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_text";
 import type { VariantVariable } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variant_variable";
+import type { StringTableReference } from "src/frontend/intermediate-representation/game/string_table";
 
 export enum ActionType {
   SetScore = 0,
@@ -122,10 +122,10 @@ export enum ActionType {
   HideObject = 105,
 }
 
-type ActionParameters<T extends ActionType, P> = {
-  type: T;
+interface ActionParameters<T extends ActionType, P> {
   parameters: P;
-};
+  type: T;
+}
 
 export enum TeamOrPlayerTargetKind {
   Team = 0,
@@ -154,45 +154,45 @@ export enum MathOperation {
   Abs = 12,
 }
 
-export type SetScoreParameters = {
-  target: TeamOrPlayerTarget;
+export interface SetScoreParameters {
   operation: MathOperation;
+  target: TeamOrPlayerTarget;
   variable: CustomVariableReference;
-};
+}
 
-export type ObjectOffset = {
+export interface ObjectOffset {
   x: number;
   y: number;
   z: number;
-};
+}
 
-export type CreateObjectParameters = {
-  objectType: ObjectTypeReference;
-  place_at_object: ObjectReference;
-  object_reference_out?: ObjectReference;
-  labelIndex?: StringTableReference; // not 100% sure about this
-  offset?: ObjectOffset;
-  variantNameIndex?: number; // object_lists/stringids.txt ?
-  neverGarbageCollect?: boolean;
-  suppressEffect?: boolean;
+export interface CreateObjectParameters {
   absoluteOrientation?: boolean;
-};
+  labelIndex?: StringTableReference; // not 100% sure about this
+  neverGarbageCollect?: boolean;
+  object_reference_out?: ObjectReference;
+  objectType: ObjectTypeReference;
+  offset?: ObjectOffset;
+  place_at_object: ObjectReference;
+  suppressEffect?: boolean;
+  variantNameIndex?: number; // object_lists/stringids.txt ?
+}
 
-export type DeleteObjectParameters = {
+export interface DeleteObjectParameters {
   object: ObjectReference;
-};
+}
 
-export type NavpointSetVisibleParameters = {
+export interface NavpointSetVisibleParameters {
   navpoint: ObjectReference;
   playerFilterModifier: PlayerFilterModifier;
-};
+}
 
-export type NavpointSetIconParameters = {
-  navpoint: ObjectReference;
+export interface NavpointSetIconParameters {
   icon: number;
+  navpoint: ObjectReference;
   /** Present when icon is `num` (11). */
   number?: CustomVariableReference;
-};
+}
 
 export enum NavpointPriority {
   Low = 0,
@@ -201,27 +201,27 @@ export enum NavpointPriority {
   Blink = 3,
 }
 
-export type NavpointSetPriorityParameters = {
+export interface NavpointSetPriorityParameters {
   navpoint: ObjectReference;
   priority: NavpointPriority;
-};
+}
 
-export type NavpointSetTimerParameters = {
+export interface NavpointSetTimerParameters {
   navpoint: ObjectReference;
   timerIndex: number;
-};
+}
 
-export type NavpointSetVisibleRangeParameters = {
-  navpoint: ObjectReference;
-  minFeet: CustomVariableReference;
+export interface NavpointSetVisibleRangeParameters {
   maxFeet: CustomVariableReference;
-};
+  minFeet: CustomVariableReference;
+  navpoint: ObjectReference;
+}
 
-export type SetParameters = {
+export interface SetParameters {
   left: VariantVariable;
   operation: MathOperation;
   right: VariantVariable;
-};
+}
 
 export enum BoundaryShape {
   None = 0,
@@ -230,30 +230,30 @@ export enum BoundaryShape {
   Box = 3,
 }
 
-type NoneBoundaryParameters = {
+interface NoneBoundaryParameters {
   shape: BoundaryShape.None;
-};
+}
 
-type SphereBoundaryParameters = {
-  shape: BoundaryShape.Sphere;
+interface SphereBoundaryParameters {
   radius: CustomVariableReference;
-};
+  shape: BoundaryShape.Sphere;
+}
 
-type BoxBoundaryParameters = {
-  shape: BoundaryShape.Box;
-  width: CustomVariableReference;
+interface BoxBoundaryParameters {
   depth: CustomVariableReference;
   /** MegaloEdit script order: … neg_height pos_height */
   negHeight: CustomVariableReference;
   posHeight: CustomVariableReference;
-};
+  shape: BoundaryShape.Box;
+  width: CustomVariableReference;
+}
 
-type CylinderBoundaryParameters = {
-  shape: BoundaryShape.Cylinder;
-  radius: CustomVariableReference;
+interface CylinderBoundaryParameters {
   negHeight: CustomVariableReference;
   posHeight: CustomVariableReference;
-};
+  radius: CustomVariableReference;
+  shape: BoundaryShape.Cylinder;
+}
 
 export type SetBoundaryParameters = {
   object: ObjectReference;
@@ -264,12 +264,12 @@ export type SetBoundaryParameters = {
   | CylinderBoundaryParameters
 );
 
-export type ApplyPlayerTraitsParameters = {
+export interface ApplyPlayerTraitsParameters {
   player: PlayerReference;
   traitIndex: number;
-};
+}
 
-export type FireteamFilter = {
+export interface FireteamFilter {
   fireteam1: boolean;
   fireteam2: boolean;
   fireteam3: boolean;
@@ -278,12 +278,12 @@ export type FireteamFilter = {
   fireteam6: boolean;
   fireteam7: boolean;
   fireteam8: boolean;
-};
+}
 
-export type SetFireteamRespawnFilterParameters = {
-  object: ObjectReference;
+export interface SetFireteamRespawnFilterParameters {
   fireteamFilter: FireteamFilter;
-};
+  object: ObjectReference;
+}
 
 export enum PlayerFilterType {
   NoOne = 0,
@@ -304,17 +304,17 @@ export type PlayerFilterModifier =
       visible: CustomVariableReference;
     };
 
-export type SetProgressBarParameters = {
+export interface SetProgressBarParameters {
   object: ObjectReference;
   playerFilterModifier: PlayerFilterModifier;
   timerIndex: number;
-};
+}
 
-export type HudPostMessageParameters = {
-  target: TeamOrPlayerTarget;
+export interface HudPostMessageParameters {
   soundIndex: MegaloSound;
   string: DynamicString;
-};
+  target: TeamOrPlayerTarget;
+}
 
 export enum GameEngineTimerRate {
   Zero = 0,
@@ -346,46 +346,46 @@ export enum GameEngineTimerRate {
   Positive_1000x = 26,
 }
 
-export type TimerSetRateParameters = {
-  timer: CustomTimerReference;
+export interface TimerSetRateParameters {
   rate: GameEngineTimerRate;
-};
+  timer: CustomTimerReference;
+}
 
-export type ForEachParameters = {
+export interface ForEachParameters {
   triggerIndex: number;
-};
+}
 
-export type ObjectDestroyParameters = {
-  object: ObjectReference;
+export interface ObjectDestroyParameters {
   noStatistics?: boolean;
-};
+  object: ObjectReference;
+}
 
-export type ObjectAttachParameters = {
-  child: ObjectReference;
-  parent: ObjectReference;
-  offset: ObjectOffset;
+export interface ObjectAttachParameters {
   absoluteOrientation?: boolean;
-};
+  child: ObjectReference;
+  offset: ObjectOffset;
+  parent: ObjectReference;
+}
 
-export type PlayerAdjustMoneyParameters = {
-  player: PlayerReference;
-  operation: MathOperation;
+export interface PlayerAdjustMoneyParameters {
   amount: CustomVariableReference;
-};
+  operation: MathOperation;
+  player: PlayerReference;
+}
 
-export type PlayerPurchaseMode = {
-  aliveWeapons: boolean;
+export interface PlayerPurchaseMode {
   aliveEquipment: boolean;
   aliveVehicles: boolean;
-  deadWeapons: boolean;
+  aliveWeapons: boolean;
   deadEquipment: boolean;
-};
+  deadWeapons: boolean;
+}
 
-export type PlayerEnablePurchasesParameters = {
+export interface PlayerEnablePurchasesParameters {
+  enabled: CustomVariableReference;
   player: PlayerReference;
   selectedModes: PlayerPurchaseMode;
-  enabled: CustomVariableReference;
-};
+}
 
 export enum WeaponPickupPriority {
   Normal = 0,
@@ -393,129 +393,129 @@ export enum WeaponPickupPriority {
   Automatic = 2,
 }
 
-export type WeaponSetPickupPriorityParameters = {
-  weapon: ObjectReference;
+export interface WeaponSetPickupPriorityParameters {
   priority: WeaponPickupPriority;
-};
+  weapon: ObjectReference;
+}
 
-export type HUDWidgetSetTextParameters = {
-  widgetIndex: number;
+export interface HUDWidgetSetTextParameters {
   string: DynamicString;
-};
+  widgetIndex: number;
+}
 
-type HUDMeterInputNumber = {
+interface HUDMeterInputNumber {
+  max: CustomVariableReference;
   meterType: HUDMeterInputType.Number;
   value: CustomVariableReference;
-  max: CustomVariableReference;
-};
+}
 
-type HUDMeterInputTimer = {
+interface HUDMeterInputTimer {
   meterType: HUDMeterInputType.Timer;
   timer: CustomTimerReference;
-};
+}
 
-type HUDMeterInputNone = {
+interface HUDMeterInputNone {
   meterType: HUDMeterInputType.None;
-};
+}
 
 export type HUDMeterInput =
   | HUDMeterInputNumber
   | HUDMeterInputTimer
   | HUDMeterInputNone;
 
-export type HUDWidgetSetMeterParameters = {
-  widgetIndex: number;
+export interface HUDWidgetSetMeterParameters {
   meterInput: HUDMeterInput;
-};
-
-export type HUDWidgetSetIconParameters = {
   widgetIndex: number;
+}
+
+export interface HUDWidgetSetIconParameters {
   iconIndex: number; // object_lists/hud_widget_icons.txt
-};
-
-export type HUDWidgetSetVisibilityParameters = {
   widgetIndex: number;
+}
+
+export interface HUDWidgetSetVisibilityParameters {
   player: PlayerReference;
   visible: boolean;
-};
+  widgetIndex: number;
+}
 
-export type PlaySoundParameters = {
-  soundIndex: MegaloSound;
+export interface PlaySoundParameters {
   immediate: boolean;
+  soundIndex: MegaloSound;
   target: TeamOrPlayerTarget;
-};
+}
 
-export type VitalityAdjustmentParameters = {
+export interface VitalityAdjustmentParameters {
+  amount: CustomVariableReference;
   object: ObjectReference;
   operation: MathOperation;
-  amount: CustomVariableReference;
-};
+}
 
-export type PlayerSetRequisitionPaletteParameters = {
+export interface PlayerSetRequisitionPaletteParameters {
   player: PlayerReference;
   requisitionPaletteIndex: number;
-};
+}
 
 export enum GrenadeType {
   Frag = 0,
   Plasma = 1,
 }
 
-export type AdjustGrenadesParameters = {
-  player: PlayerReference;
+export interface AdjustGrenadesParameters {
+  amount: CustomVariableReference;
   grenadeType: GrenadeType;
   operation: MathOperation;
-  amount: CustomVariableReference;
-};
+  player: PlayerReference;
+}
 
-export type SubmitIncidentParameters = {
-  statIndex: number;
+export interface SubmitIncidentParameters {
   cause: TeamOrPlayerTarget;
   effect: TeamOrPlayerTarget;
-};
-
-export type SubmitIncidentWithCustomValueParameters = {
   statIndex: number;
+}
+
+export interface SubmitIncidentWithCustomValueParameters {
   cause: TeamOrPlayerTarget;
-  effect: TeamOrPlayerTarget;
   customValue: CustomVariableReference;
-};
+  effect: TeamOrPlayerTarget;
+  statIndex: number;
+}
 
-export type SetLoadoutPaletteParameters = {
-  target: TeamOrPlayerTarget;
+export interface SetLoadoutPaletteParameters {
   loadoutPaletteIndex: LoadoutPaletteType;
-};
+  target: TeamOrPlayerTarget;
+}
 
-export type PlayerGetWeaponParameters = {
+export interface PlayerGetWeaponParameters {
   player: PlayerReference;
   primary: boolean;
   weapon: ObjectReference;
-};
+}
 
-export type CreateTunnelParameters = {
+export interface CreateTunnelParameters {
   from: ObjectReference;
-  to: ObjectReference;
+  objectReferenceOut: ObjectReference;
   objectType: ObjectTypeReference;
   radious: CustomVariableReference;
-  objectReferenceOut: ObjectReference;
-};
+  to: ObjectReference;
+}
 
-export type PlayerSetCoopSpawningParameters = {
-  player: PlayerReference;
+export interface PlayerSetCoopSpawningParameters {
   enabled: boolean;
-};
+  player: PlayerReference;
+}
 
-export type ObjectSetOrientationParameters = {
+export interface ObjectSetOrientationParameters {
+  absoluteOrientation?: boolean;
   object: ObjectReference;
   source: ObjectReference;
-  absoluteOrientation?: boolean;
-};
+}
 
-export type ObjectFaceObjectParameters = {
+export interface ObjectFaceObjectParameters {
   object: ObjectReference;
-  target: ObjectReference;
   offset?: ObjectOffset;
-};
+  target: ObjectReference;
+}
 
 export enum BipedGiveWeaponMode {
   Primary = 0,
@@ -523,39 +523,39 @@ export enum BipedGiveWeaponMode {
   Force = 2,
 }
 
-export type BipedGiveWeaponParameters = {
+export interface BipedGiveWeaponParameters {
   biped: ObjectReference;
-  weapon: ObjectTypeReference;
   mode: BipedGiveWeaponMode;
-};
+  weapon: ObjectTypeReference;
+}
 
-export type BipedDropWeaponParameters = {
+export interface BipedDropWeaponParameters {
   biped: ObjectReference;
-  primary: boolean;
   deleteOnDrop: boolean;
-};
+  primary: boolean;
+}
 
-export type GetRandomObjectParameters = {
+export interface GetRandomObjectParameters {
   filterIndex: number;
   ignoreObject: ObjectReference;
   objectOut: ObjectReference;
-};
+}
 
-export type BoundarySetPlayerColorParameters = {
+export interface BoundarySetPlayerColorParameters {
   object: ObjectReference;
   playerIndex: number;
-};
+}
 
-export type BeginParameters = {
-  firstConditionIndex: number;
+export interface BeginParameters {
+  actionCount: number;
   conditionCount: number;
   firstActionIndex: number;
-  actionCount: number;
-};
+  firstConditionIndex: number;
+}
 
-export type HsFunctionCallParameters = {
+export interface HsFunctionCallParameters {
   functionNameIndex: number; // object_lists/stringids.txt
-};
+}
 
 export enum ScriptableGameButtons {
   Jump = 0,
@@ -574,321 +574,321 @@ export enum ScriptableGameButtons {
   VehicleTrick = 13,
 }
 
-export type GetButtonTimeParameters = {
-  player: PlayerReference;
+export interface GetButtonTimeParameters {
   button: ScriptableGameButtons;
+  player: PlayerReference;
   timeOut: CustomVariableReference;
-};
+}
 
-export type TeamSetVehicleSpawningParameters = {
+export interface TeamSetVehicleSpawningParameters {
+  enabled: boolean;
   team: TeamReference;
-  enabled: boolean;
-};
+}
 
-export type PlayerSetVehicleSpawningParameters = {
+export interface PlayerSetVehicleSpawningParameters {
+  enabled: boolean;
   player: PlayerReference;
-  enabled: boolean;
-};
+}
 
-export type SetPlayerRespawnVehicleParameters = {
+export interface SetPlayerRespawnVehicleParameters {
   objectType: ObjectTypeReference;
   player: PlayerReference;
-};
+}
 
-export type SetTeamRespawnVehicleParameters = {
+export interface SetTeamRespawnVehicleParameters {
   objectType: ObjectTypeReference;
   team: TeamReference;
-};
+}
 
-export type HideObjectParameters = {
+export interface HideObjectParameters {
   object: ObjectReference;
   shouldHide: boolean;
-};
+}
 
-export type PrintVariableParameters = {
+export interface PrintVariableParameters {
   string: DynamicString;
-};
+}
 
-export type GetPlayerHoldingObjectParameters = {
+export interface GetPlayerHoldingObjectParameters {
   object: ObjectReference;
   playerOut: PlayerReference;
-};
+}
 
 export type EndRoundParameters = never;
 
-export type BoundarySetVisibleParameters = {
+export interface BoundarySetVisibleParameters {
   object: ObjectReference;
   playerFilterModifier: PlayerFilterModifier;
-};
+}
 
-export type ObjectSetInvincibilityParameters = {
-  object: ObjectReference;
+export interface ObjectSetInvincibilityParameters {
   invincible: CustomVariableReference;
-};
+  object: ObjectReference;
+}
 
-export type RandomParameters = {
+export interface RandomParameters {
   range: CustomVariableReference;
   valueOut: CustomVariableReference;
-};
+}
 
-export type ObjectGetOrientationParameters = {
+export interface ObjectGetOrientationParameters {
   object: ObjectReference;
   orientationOut: CustomVariableReference;
-};
+}
 
-export type ObjectGetVelocityParameters = {
+export interface ObjectGetVelocityParameters {
   object: ObjectReference;
   velocityOut: CustomVariableReference;
-};
+}
 
-export type PlayerDeathGetKillingPlayerParameters = {
+export interface PlayerDeathGetKillingPlayerParameters {
   deadPlayer: PlayerReference;
   killingPlayerOut: PlayerReference;
-};
+}
 
-export type PlayerDeathGetDamageTypeParameters = {
-  deadPlayer: PlayerReference;
+export interface PlayerDeathGetDamageTypeParameters {
   damageTypeOut: CustomVariableReference;
-};
+  deadPlayer: PlayerReference;
+}
 
-export type PlayerDeathGetSpecialTypeParameters = {
+export interface PlayerDeathGetSpecialTypeParameters {
   deadPlayer: PlayerReference;
   specialTypeOut: CustomVariableReference;
-};
+}
 
-export type DebuggingEnableTracingParameters = {
+export interface DebuggingEnableTracingParameters {
   tracingEnabled: boolean;
-};
+}
 
-export type ObjectDetachParameters = {
+export interface ObjectDetachParameters {
   object: ObjectReference;
-};
+}
 
-export type PlayerGetPlaceParameters = {
+export interface PlayerGetPlaceParameters {
+  placeOut: CustomVariableReference;
   player: PlayerReference;
-  placeOut: CustomVariableReference;
-};
+}
 
-export type TeamGetPlaceParameters = {
+export interface TeamGetPlaceParameters {
+  placeOut: CustomVariableReference;
   team: TeamReference;
-  placeOut: CustomVariableReference;
-};
+}
 
-export type PlayerGetKillingSpreeCountParameters = {
+export interface PlayerGetKillingSpreeCountParameters {
   player: PlayerReference;
   spreeCountOut: CustomVariableReference;
-};
+}
 
-export type PlayerGetVehicleParameters = {
+export interface PlayerGetVehicleParameters {
   player: PlayerReference;
   vehicleOut: ObjectReference;
-};
+}
 
-export type PlayerSetVehicleParameters = {
+export interface PlayerSetVehicleParameters {
   player: PlayerReference;
   vehicle: ObjectReference;
-};
+}
 
-export type PlayerSetUnitParameters = {
+export interface PlayerSetUnitParameters {
   player: PlayerReference;
   unit: ObjectReference;
-};
+}
 
-export type TimerResetParameters = {
+export interface TimerResetParameters {
   timer: CustomTimerReference;
-};
+}
 
-export type ObjectBounceParameters = {
+export interface ObjectBounceParameters {
   object: ObjectReference;
-};
+}
 
-export type HUDWidgetSetValueParameters = {
-  widgetIndex: number;
+export interface HUDWidgetSetValueParameters {
   value: DynamicString;
-};
+  widgetIndex: number;
+}
 
-export type ObjectSetScaleParameters = {
+export interface ObjectSetScaleParameters {
   object: ObjectReference;
   scale: CustomVariableReference;
-};
+}
 
-export type NavpointSetTextParameters = {
+export interface NavpointSetTextParameters {
   object: ObjectReference;
   string: DynamicString;
-};
+}
 
-export type ObjectGetShieldParameters = {
+export interface ObjectGetShieldParameters {
   object: ObjectReference;
   variable: CustomVariableReference;
-};
+}
 
-export type ObjectGetHealthParameters = {
+export interface ObjectGetHealthParameters {
   object: ObjectReference;
   variable: CustomVariableReference;
-};
+}
 
-export type PlayerSetObjectiveParameters = {
-  player: PlayerReference;
+export interface PlayerSetObjectiveParameters {
   objective: DynamicString;
-};
-
-export type PlayerSetObjectiveAllegianceParameters = {
   player: PlayerReference;
+}
+
+export interface PlayerSetObjectiveAllegianceParameters {
   allegiance: DynamicString;
-};
-
-export type PlayerSetObjectiveAllegianceIconParameters = {
   player: PlayerReference;
+}
+
+export interface PlayerSetObjectiveAllegianceIconParameters {
   iconIndex: number; // object_lists/hud_widget_icons.txt
-};
+  player: PlayerReference;
+}
 
-export type TeamSetCoopSpawningParameters = {
-  team: TeamReference;
+export interface TeamSetCoopSpawningParameters {
   coopSpawningEnabled: boolean;
-};
-
-export type TeamSetPrimaryRespawnObjectParameters = {
   team: TeamReference;
-  respawnObject: ObjectReference;
-};
+}
 
-export type PlayerSetPrimaryRespawnObjectParameters = {
+export interface TeamSetPrimaryRespawnObjectParameters {
+  respawnObject: ObjectReference;
+  team: TeamReference;
+}
+
+export interface PlayerSetPrimaryRespawnObjectParameters {
   player: PlayerReference;
   respawnObject: ObjectReference;
-};
+}
 
-export type PlayerGetFireteamIndexParameters = {
-  player: PlayerReference;
+export interface PlayerGetFireteamIndexParameters {
   fireteamIndexOut: CustomVariableReference;
-};
-
-export type PlayerSetFireteamIndexParameters = {
   player: PlayerReference;
+}
+
+export interface PlayerSetFireteamIndexParameters {
   fireteamIndex: CustomVariableReference;
-};
+  player: PlayerReference;
+}
 
-export type ObjectAdjustShieldParameters = {
+export interface ObjectAdjustShieldParameters {
+  amount: CustomVariableReference;
   object: ObjectReference;
   operation: MathOperation;
-  amount: CustomVariableReference;
-};
+}
 
-export type ObjectAdjustHealthParameters = {
+export interface ObjectAdjustHealthParameters {
+  amount: CustomVariableReference;
   object: ObjectReference;
   operation: MathOperation;
-  amount: CustomVariableReference;
-};
+}
 
-export type ObjectAdjustMaximumShieldParameters = {
+export interface ObjectAdjustMaximumShieldParameters {
+  amount: CustomVariableReference;
   object: ObjectReference;
   operation: MathOperation;
-  amount: CustomVariableReference;
-};
+}
 
-export type ObjectAdjustMaximumHealthParameters = {
+export interface ObjectAdjustMaximumHealthParameters {
+  amount: CustomVariableReference;
   object: ObjectReference;
   operation: MathOperation;
-  amount: CustomVariableReference;
-};
+}
 
-export type ObjectGetDistanceParameters = {
+export interface ObjectGetDistanceParameters {
+  distanceOut: CustomVariableReference;
   from: ObjectReference;
   to: ObjectReference;
-  distanceOut: CustomVariableReference;
-};
+}
 
-export type DeviceSetPowerParameters = {
+export interface DeviceSetPowerParameters {
   object: ObjectReference;
   power: CustomVariableReference;
-};
+}
 
-export type DeviceGetPowerParameters = {
+export interface DeviceGetPowerParameters {
   object: ObjectReference;
   powerOut: CustomVariableReference;
-};
+}
 
-export type DeviceSetPositionParameters = {
+export interface DeviceSetPositionParameters {
   object: ObjectReference;
   position: CustomVariableReference;
-};
+}
 
-export type DeviceGetPositionParameters = {
+export interface DeviceGetPositionParameters {
   object: ObjectReference;
   positionOut: CustomVariableReference;
-};
+}
 
-export type DeviceSetPositionTrackParameters = {
-  object: ObjectReference;
+export interface DeviceSetPositionTrackParameters {
   animationNameIndex: number; // object_lists/stringids.txt ?
   interpolationTime: CustomVariableReference;
-};
-
-export type DeviceAnimatePositionParameters = {
   object: ObjectReference;
-  animationTargetFraction: CustomVariableReference;
-  animationDurationSeconds: CustomVariableReference;
-  accelerationSeconds: CustomVariableReference;
-  decelerationSeconds: CustomVariableReference;
-};
+}
 
-export type DeviceSetPositionImmediateParameters = {
+export interface DeviceAnimatePositionParameters {
+  accelerationSeconds: CustomVariableReference;
+  animationDurationSeconds: CustomVariableReference;
+  animationTargetFraction: CustomVariableReference;
+  decelerationSeconds: CustomVariableReference;
+  object: ObjectReference;
+}
+
+export interface DeviceSetPositionImmediateParameters {
   object: ObjectReference;
   position: CustomVariableReference;
-};
+}
 
-export type SavedFilmInsertMarkerParameters = {
-  offsetSeconds: CustomVariableReference;
+export interface SavedFilmInsertMarkerParameters {
   label: DynamicString;
-};
+  offsetSeconds: CustomVariableReference;
+}
 
-export type RespawnZoneEnableParameters = {
-  respawnZone: ObjectReference;
+export interface RespawnZoneEnableParameters {
   enabled: CustomVariableReference;
-};
+  respawnZone: ObjectReference;
+}
 
-export type PlayerGetEquipmentParameters = {
-  player: PlayerReference;
+export interface PlayerGetEquipmentParameters {
   equipmentOut: ObjectReference;
-};
-
-export type ObjectSetNeverGarbageParameters = {
-  object: ObjectReference;
-  neverGarbage: CustomVariableReference;
-};
-
-export type PlayerGetTargetObjectParameters = {
   player: PlayerReference;
+}
+
+export interface ObjectSetNeverGarbageParameters {
+  neverGarbage: CustomVariableReference;
+  object: ObjectReference;
+}
+
+export interface PlayerGetTargetObjectParameters {
   objectOut: ObjectReference;
-};
+  player: PlayerReference;
+}
 
-export type DebugForcePlayerViewCountParameters = {
+export interface DebugForcePlayerViewCountParameters {
   viewCount: CustomVariableReference;
-};
+}
 
-export type PlayerPickUpWeaponParameters = {
+export interface PlayerPickUpWeaponParameters {
   player: PlayerReference;
   weapon: ObjectReference;
-};
+}
 
-export type SetScenarioInterpolatorStateParameters = {
-  interpolatorIndex: CustomVariableReference;
+export interface SetScenarioInterpolatorStateParameters {
   active: CustomVariableReference;
-};
+  interpolatorIndex: CustomVariableReference;
+}
 
-export type GameGriefRecordCustomPenaltyParameters = {
+export interface GameGriefRecordCustomPenaltyParameters {
   player: PlayerReference;
   variable: CustomVariableReference;
-};
+}
 
-export type SetPickupFilterParameters = {
+export interface SetPickupFilterParameters {
   object: ObjectReference;
   playerFilterModifier: PlayerFilterModifier;
-};
+}
 
-export type SetRespawnFilterParameters = {
+export interface SetRespawnFilterParameters {
   object: ObjectReference;
   playerFilterModifier: PlayerFilterModifier;
-};
+}
 
 export type BreakIntoDebuggerParameters = never;
 

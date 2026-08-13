@@ -11,8 +11,41 @@
   },
   "linter": {
     "rules": {
+      "complexity": {
+        // Compiler/parser control flow is inherently dense.
+        "noExcessiveCognitiveComplexity": "off",
+        "noVoid": "off"
+      },
+      "performance": {
+        // Intentional package entry/barrel layout.
+        "noBarrelFile": "off",
+        "useTopLevelRegex": "off"
+      },
       "style": {
-        "useNumericSeparators": "off"
+        "useNumericSeparators": "off",
+        // Parsers and IR lowering rely on definite assignment / assertions.
+        "noNonNullAssertion": "off",
+        // Match existing Blam/engine-facing naming (e_*, snake_case, camelCase).
+        "useFilenamingConvention": {
+          "level": "error",
+          "options": {
+            "filenameCases": ["kebab-case", "snake_case", "camelCase"],
+            "requireAscii": true,
+            "strictCase": false
+          }
+        },
+        // Existing class style; not worth a mass rewrite.
+        "useConsistentMemberAccessibility": "off",
+        "noParameterProperties": "off",
+        "noNestedTernary": "off",
+        "useDefaultSwitchClause": "off",
+        // Wire enums mirror engine definitions.
+        "noEnum": "off",
+        "noExportedImports": "off"
+      },
+      "suspicious": {
+        // Bit packing / MGLO encoding.
+        "noBitwiseOperators": "off"
       }
     }
   },
@@ -24,6 +57,22 @@
       },
       "formatter": {
         "enabled": false
+      }
+    },
+    {
+      "includes": ["packages/megalo/debugger/**"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noNamespaceImport": "off"
+          },
+          "style": {
+            "noDescendingSpecificity": "off"
+          },
+          "suspicious": {
+            "noAlert": "off"
+          }
+        }
       }
     }
   ]

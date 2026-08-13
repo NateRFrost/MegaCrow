@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { MegaloCompilerContext } from "../../../src/context";
+import { Diagnostics } from "../../../src/diagnostics";
 import { Parser } from "../../../src/frontend/abstract-syntax-tree";
 import { ElementKind } from "../../../src/frontend/abstract-syntax-tree/elements";
-import { Diagnostics } from "../../../src/diagnostics";
 import { Lexer } from "../../../src/frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../src/version";
-import { MegaloCompilerContext } from "../../../src/context";
 
 const parse = (source: string) => {
   const diagnostics = new Diagnostics();
@@ -79,8 +79,8 @@ include "foo.megalo"
       lines: [" ************", " * STRINGS  *", " ************"],
       describesLine: { start: { line: 4, column: 1 } },
     });
-    expect(ast.comments[0]!.location.start.line).toBe(1);
-    expect(ast.comments[0]!.location.end.line).toBe(3);
+    expect(ast.comments[0]?.location.start.line).toBe(1);
+    expect(ast.comments[0]?.location.end.line).toBe(3);
   });
 
   it("does not group leading comments separated by a blank line", () => {

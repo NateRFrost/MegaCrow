@@ -1,14 +1,13 @@
 import type { SourceLocation } from "src/diagnostics";
-import { SourceLocationType } from "src/diagnostics";
 
 /**
  * Sidecar source locations for IR leaves.
  * IR fields hold plain values; locations live here for diagnostics.
  */
-export type FieldLocations = {
-  record(owner: object, key: string, location: SourceLocation): void;
+export interface FieldLocations {
   get(owner: object, key: string): SourceLocation | undefined;
-};
+  record(owner: object, key: string, location: SourceLocation): void;
+}
 
 export const createFieldLocations = (): FieldLocations => {
   const table = new WeakMap<object, Map<string, SourceLocation>>();

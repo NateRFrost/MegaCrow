@@ -2,8 +2,7 @@ import type { IR } from "src/frontend/intermediate-representation";
 
 export function applyMetadata(ir: IR) {
   if (ir.gameVariant.localizedName) {
-    const name =
-      ir.gameVariant.localizedName.toArray()[0]?.english ?? "";
+    const name = ir.gameVariant.localizedName.toArray()[0]?.english ?? "";
     const location = ir.locations.get(ir.gameVariant, "localizedName");
     ir.gameVariant.baseVariant.metadata.name = name;
     if (location !== undefined) {
@@ -17,10 +16,7 @@ export function applyMetadata(ir: IR) {
   if (ir.gameVariant.localizedDescription) {
     const description =
       ir.gameVariant.localizedDescription.toArray()[0]?.english ?? "";
-    const location = ir.locations.get(
-      ir.gameVariant,
-      "localizedDescription"
-    );
+    const location = ir.locations.get(ir.gameVariant, "localizedDescription");
     ir.gameVariant.baseVariant.metadata.description = description;
     if (location !== undefined) {
       ir.locations.record(

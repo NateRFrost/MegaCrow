@@ -1,25 +1,28 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { SymbolKind } from "src/frontend/symbol-table";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import {
+  requireKeyword,
+  requireParamCount,
+} from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  ActionType,
   type Action,
+  ActionType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { resolvePlayerReference } from "src/frontend/intermediate-representation/parameters";
 import {
   asParameterLoweringContext,
   type ElementLowerContext,
 } from "src/frontend/intermediate-representation/parameters/context";
-import { resolvePlayerReference } from "src/frontend/intermediate-representation/parameters";
 import { parseIndexSuffix } from "src/frontend/intermediate-representation/parameters/explicit";
-import { requireKeyword, requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import { SymbolKind } from "src/frontend/symbol-table";
 
 const resolveRequisitionPaletteIndex = (
   node: ASTParameterNode,
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): number => {
   if (node.kind === SyntaxKind.REFERENCE) {
     const symbol = ctx.symbolTable.getSymbol(node.symbolId);
@@ -28,11 +31,11 @@ const resolveRequisitionPaletteIndex = (
         .toArray()
         .filter(
           (
-            entry,
+            entry
           ): entry is Extract<
             typeof entry,
             { kind: SymbolKind.RequisitionPalette }
-          > => entry.kind === SymbolKind.RequisitionPalette,
+          > => entry.kind === SymbolKind.RequisitionPalette
         );
       const index = palettes.findIndex((entry) => entry.id === symbol.id);
       if (index >= 0) {
@@ -54,14 +57,14 @@ const resolveRequisitionPaletteIndex = (
   }
   throw new LowerError(
     diagnosticMessages.expectedParameterType("requisition palette", name),
-    node.location,
+    node.location
   );
 };
 
 export const lowerPlayerSetRequisitionPalette = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   requireParamCount(parameters, 2, location);
   return {
@@ -69,12 +72,12 @@ export const lowerPlayerSetRequisitionPalette = (
     parameters: {
       player: resolvePlayerReference(
         parameters[0]!,
-        asParameterLoweringContext(ctx),
+        asParameterLoweringContext(ctx)
       ),
       requisitionPaletteIndex: resolveRequisitionPaletteIndex(
         parameters[1]!,
         ctx,
-        location,
+        location
       ),
     },
   };

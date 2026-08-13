@@ -1,9 +1,8 @@
 import type { c_player_traits } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import type { PlayerTraits } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 import {
   encodeActiveCamoSetting,
-  encodeBooleanTrait,
   encodeBodyMultiplierPercentage,
+  encodeBooleanTrait,
   encodeDamageModifierPercentage,
   encodeDamageResistancePercentage,
   encodeEquipmentUsageSetting,
@@ -20,6 +19,7 @@ import {
   encodeVehicleUsageSetting,
   encodeWaypointSetting,
 } from "src/backend/compile/107-mcc/enums";
+import type { PlayerTraits } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 
 /**
  * Encode a lowered {@link PlayerTraits} block into a BLF {@link c_player_traits}.

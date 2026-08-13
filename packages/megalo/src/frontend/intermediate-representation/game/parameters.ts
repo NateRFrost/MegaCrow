@@ -1,4 +1,3 @@
-
 export type BuiltInGameOptionFlags = Partial<{
   gameMiscScoreToWinRound: boolean;
   gameMiscTeams: boolean;

@@ -1,3 +1,8 @@
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { ExplicitObject } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
+import { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
+import { ExplicitTeam } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
 import {
   type ObjectReference,
   ObjectReferenceType,
@@ -9,11 +14,6 @@ import {
   type VariantVariable,
   VariableType as VariantVariableType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variant_variable";
-import { ExplicitObject } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
-import { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
-import { ExplicitTeam } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 
 /** Bare `none` typed as the partner operand's variant kind (proto `noneVariant`). */
 export const noneVariantVariable = (
@@ -45,7 +45,7 @@ export const noneVariantVariable = (
         },
       };
     default:
-      return undefined;
+      return;
   }
 };
 

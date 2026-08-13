@@ -1,9 +1,9 @@
-import { VariableScope, VariableType } from "src/frontend/symbol-table";
 import {
   type Limits,
   type VariableLimits,
   VersionConfiguration,
 } from "src/backend/version-configuration/version_configuration";
+import { VariableScope, VariableType } from "src/frontend/symbol-table";
 
 export class VersionConfiguration107MCC extends VersionConfiguration {
   private static readonly VARIABLE_LIMITS: VariableLimits = {

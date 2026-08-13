@@ -2,37 +2,33 @@ import type { SourceLocation } from "src/diagnostics";
 import type { PlayerTraits } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 import type { StringTableReference } from "src/frontend/intermediate-representation/game/string_table";
 
-export type UserDefinedOptionValue = {
-  value: number;
-  name?: StringTableReference;
+export interface UserDefinedOptionValue {
   description?: StringTableReference;
-};
-
-export type UserDefinedOptionOverride = {
-  target:
-    | { kind: "name"; value: string }
-    | { kind: "index"; value: number };
+  name?: StringTableReference;
   value: number;
-  locked?: boolean;
+}
+
+export interface UserDefinedOptionOverride {
   hidden?: boolean;
   location: SourceLocation;
-};
+  locked?: boolean;
+  target: { kind: "name"; value: string } | { kind: "index"; value: number };
+  value: number;
+}
 
-export type PlayerTraitOptionOverride = {
-  target:
-    | { kind: "name"; value: string }
-    | { kind: "index"; value: number };
-  traits: PlayerTraits;
+export interface PlayerTraitOptionOverride {
   location: SourceLocation;
-};
+  target: { kind: "name"; value: string } | { kind: "index"; value: number };
+  traits: PlayerTraits;
+}
 
-type UserDefinedOptionBase = {
-  name?: StringTableReference;
+interface UserDefinedOptionBase {
   description?: StringTableReference;
+  hidden?: boolean;
   // on compiled gametypes, hide and lock are stored separately from options.
   locked?: boolean;
-  hidden?: boolean;
-};
+  name?: StringTableReference;
+}
 
 export type RangedUserDefinedOption = UserDefinedOptionBase & {
   defaultValue: UserDefinedOptionValue;

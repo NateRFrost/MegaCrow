@@ -1,12 +1,13 @@
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { isPlayerTraitsOverrideOption } from "src/frontend/language-configuration/omni/game_options";
-import { SymbolKind } from "src/frontend/symbol-table";
-import { type Token, TokenKind } from "src/frontend/tokens";
 import { isAstErrorNode, SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import { parseNumericInitialValue } from "src/frontend/abstract-syntax-tree/elements/constants";
 import { parsePlayerTraitOptions } from "src/frontend/abstract-syntax-tree/elements/game_options/player_traits";
-import { isEndToken, locationSpan, parseIdentifier } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+import {
+  isEndToken,
+  locationSpan,
+  parseIdentifier,
+} from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
 import {
   GameOptionEntryKind,
   type GameOptionModifiers,
@@ -15,6 +16,9 @@ import {
   type OverrideSimpleValueNode,
   OverrideValueKind,
 } from "src/frontend/abstract-syntax-tree/elements/game_options/types";
+import { isPlayerTraitsOverrideOption } from "src/frontend/language-configuration/omni/game_options";
+import { SymbolKind } from "src/frontend/symbol-table";
+import { type Token, TokenKind } from "src/frontend/tokens";
 
 const parseOverrideName = (
   ctx: ParserContext,

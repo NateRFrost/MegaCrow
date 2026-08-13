@@ -1,25 +1,28 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import {
+  requireKeyword,
+  requireParamCount,
+} from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  ActionType,
   type Action,
+  ActionType,
   type PlayerPurchaseMode,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import {
-  asParameterLoweringContext,
-  type ElementLowerContext,
-} from "src/frontend/intermediate-representation/parameters/context";
 import {
   resolveCustomVariableReference,
   resolvePlayerReference,
 } from "src/frontend/intermediate-representation/parameters";
-import { requireKeyword, requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import {
+  asParameterLoweringContext,
+  type ElementLowerContext,
+} from "src/frontend/intermediate-representation/parameters/context";
 
 const parsePurchaseSelectedModes = (
   node: ASTParameterNode,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): PlayerPurchaseMode => {
   const state = requireKeyword(node, location).toLowerCase();
   const modes: PlayerPurchaseMode = {
@@ -49,7 +52,7 @@ const parsePurchaseSelectedModes = (
     default:
       throw new LowerError(
         diagnosticMessages.expectedParameterType("purchase state", state),
-        node.location,
+        node.location
       );
   }
   return modes;
@@ -58,7 +61,7 @@ const parsePurchaseSelectedModes = (
 export const lowerPlayerEnablePurchases = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   requireParamCount(parameters, 3, location);
   const paramCtx = asParameterLoweringContext(ctx);

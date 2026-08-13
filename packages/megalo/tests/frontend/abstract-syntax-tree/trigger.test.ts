@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { MegaloCompilerContext } from "../../../src/context";
+import { BUILT_IN_LOCATION, Diagnostics } from "../../../src/diagnostics";
 import { Parser, SyntaxKind } from "../../../src/frontend/abstract-syntax-tree";
 import { ParserContext } from "../../../src/frontend/abstract-syntax-tree/context";
 import { ElementKind } from "../../../src/frontend/abstract-syntax-tree/elements";
 import { triggerParser } from "../../../src/frontend/abstract-syntax-tree/elements/trigger";
-import { BUILT_IN_LOCATION, Diagnostics } from "../../../src/diagnostics";
 import {
   SymbolBinder,
   VariableScope,
@@ -11,7 +12,6 @@ import {
 } from "../../../src/frontend/symbol-table";
 import { Lexer } from "../../../src/frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../src/version";
-import { MegaloCompilerContext } from "../../../src/context";
 
 const setupContext = (source: string) => {
   const diagnostics = new Diagnostics();
@@ -368,7 +368,7 @@ describe("trigger element integration", () => {
   it("parses trigger through the top-level parser", () => {
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new MegaloCompilerContext(version);
+    const frontend = new MegaloCompilerContext(version);
     const source = `string_table english
 \ttest_string "hello"
 end

@@ -1,4 +1,3 @@
-import type { StringTableReference } from "src/frontend/intermediate-representation/game/string_table";
 import type {
   CustomTimerReference,
   CustomVariableReference,
@@ -6,6 +5,7 @@ import type {
   PlayerReference,
   TeamReference,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
+import type { StringTableReference } from "src/frontend/intermediate-representation/game/string_table";
 
 export enum ReplaceableTokenType {
   Player = 0,
@@ -15,30 +15,30 @@ export enum ReplaceableTokenType {
   CustomTimer = 4,
 }
 
-type PlayerReplaceableToken = {
-  type: ReplaceableTokenType.Player;
+interface PlayerReplaceableToken {
   player: PlayerReference;
-};
+  type: ReplaceableTokenType.Player;
+}
 
-type TeamReplaceableToken = {
-  type: ReplaceableTokenType.Team;
+interface TeamReplaceableToken {
   team: TeamReference;
-};
+  type: ReplaceableTokenType.Team;
+}
 
-type ObjectReplaceableToken = {
-  type: ReplaceableTokenType.Object;
+interface ObjectReplaceableToken {
   object: ObjectReference;
-};
+  type: ReplaceableTokenType.Object;
+}
 
-type CustomVariableReplaceableToken = {
-  type: ReplaceableTokenType.CustomVariable;
+interface CustomVariableReplaceableToken {
   customVariable: CustomVariableReference;
-};
+  type: ReplaceableTokenType.CustomVariable;
+}
 
-type CustomTimerReplaceableToken = {
-  type: ReplaceableTokenType.CustomTimer;
+interface CustomTimerReplaceableToken {
   customTimer: CustomTimerReference;
-};
+  type: ReplaceableTokenType.CustomTimer;
+}
 
 export type ReplaceableToken =
   | PlayerReplaceableToken
@@ -47,7 +47,7 @@ export type ReplaceableToken =
   | CustomVariableReplaceableToken
   | CustomTimerReplaceableToken;
 
-export type DynamicString = {
+export interface DynamicString {
   stringIndex: StringTableReference;
   tokens: ReplaceableToken[];
-};
+}

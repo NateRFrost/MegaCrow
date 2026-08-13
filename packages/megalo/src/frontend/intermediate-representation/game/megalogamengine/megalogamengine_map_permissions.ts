@@ -1,5 +1,4 @@
-
-export type MegaloGameEngineMapPermissions = {
-  exceptMapIds: number[];
+export interface MegaloGameEngineMapPermissions {
   allowByDefault: boolean;
-};
+  exceptMapIds: number[];
+}

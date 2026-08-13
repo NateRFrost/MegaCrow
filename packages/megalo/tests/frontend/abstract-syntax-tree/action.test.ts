@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { MegaloCompilerContext } from "../../../src/context";
+import { BUILT_IN_LOCATION, Diagnostics } from "../../../src/diagnostics";
 import { ParserContext } from "../../../src/frontend/abstract-syntax-tree/context";
 import { ActionParserRepository } from "../../../src/frontend/abstract-syntax-tree/elements/trigger/action";
 import { SyntaxKind } from "../../../src/frontend/abstract-syntax-tree/kinds";
-import { BUILT_IN_LOCATION, Diagnostics } from "../../../src/diagnostics";
 import {
   SymbolBinder,
   VariableScope,
@@ -10,7 +11,6 @@ import {
 } from "../../../src/frontend/symbol-table";
 import { Lexer } from "../../../src/frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../src/version";
-import { MegaloCompilerContext } from "../../../src/context";
 
 const parseActionParameters = (source: string, actionName: string) => {
   const diagnostics = new Diagnostics();
@@ -58,9 +58,12 @@ const parseActionParameters = (source: string, actionName: string) => {
 
   const parser = ctx.actionParserRepository.getParser(actionName);
   expect(parser).toBeDefined();
+  if (!parser) {
+    throw new Error(`missing action parser: ${actionName}`);
+  }
 
-  const anchor = tokens[0]!.location;
-  const parameters = parser!(ctx, anchor);
+  const anchor = tokens[0]?.location ?? BUILT_IN_LOCATION;
+  const parameters = parser(ctx, anchor);
   return { parameters, diagnostics };
 };
 
@@ -149,7 +152,7 @@ describe("ActionParserRepository", () => {
   it("parses set_loadout_palette with a loadout palette reference", () => {
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new MegaloCompilerContext(version);
+    const frontend = new MegaloCompilerContext(version);
     const tokens = new Lexer(frontend).lex(
       "player current_player slayer_loadouts_t1",
       diagnostics
@@ -169,7 +172,11 @@ const frontend = new MegaloCompilerContext(version);
     );
 
     const parser = ctx.actionParserRepository.getParser("set_loadout_palette");
-    const parameters = parser!(ctx, tokens[0]!.location);
+    expect(parser).toBeDefined();
+    if (!parser) {
+      throw new Error("missing set_loadout_palette parser");
+    }
+    const parameters = parser(ctx, tokens[0]?.location ?? BUILT_IN_LOCATION);
 
     expect(diagnostics.hasErrors()).toBe(false);
     expect(parameters[2]).toMatchObject({
@@ -181,7 +188,7 @@ const frontend = new MegaloCompilerContext(version);
   it("parses player_set_requisition_palette with a requisition palette reference", () => {
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new MegaloCompilerContext(version);
+    const frontend = new MegaloCompilerContext(version);
     const tokens = new Lexer(frontend).lex(
       "current_player covy_palette_gold",
       diagnostics
@@ -203,7 +210,11 @@ const frontend = new MegaloCompilerContext(version);
     const parser = ctx.actionParserRepository.getParser(
       "player_set_requisition_palette"
     );
-    const parameters = parser!(ctx, tokens[0]!.location);
+    expect(parser).toBeDefined();
+    if (!parser) {
+      throw new Error("missing player_set_requisition_palette parser");
+    }
+    const parameters = parser(ctx, tokens[0]?.location ?? BUILT_IN_LOCATION);
 
     expect(diagnostics.hasErrors()).toBe(false);
     expect(parameters[1]).toMatchObject({
@@ -228,7 +239,7 @@ const frontend = new MegaloCompilerContext(version);
   it("parses player_set_objective with a dynamic string literal and number replacement", () => {
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new MegaloCompilerContext(version);
+    const frontend = new MegaloCompilerContext(version);
     const tokens = new Lexer(frontend).lex(
       'current_player "+%n" score_to_win_round',
       diagnostics
@@ -249,7 +260,11 @@ const frontend = new MegaloCompilerContext(version);
     });
 
     const parser = ctx.actionParserRepository.getParser("player_set_objective");
-    const parameters = parser!(ctx, tokens[0]!.location);
+    expect(parser).toBeDefined();
+    if (!parser) {
+      throw new Error("missing player_set_objective parser");
+    }
+    const parameters = parser(ctx, tokens[0]?.location ?? BUILT_IN_LOCATION);
 
     expect(diagnostics.hasErrors()).toBe(false);
     expect(parameters).toHaveLength(2);
@@ -269,7 +284,7 @@ const frontend = new MegaloCompilerContext(version);
   it("parses player_set_objective_allegiance with dynamic-string replacements (2 args)", () => {
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new MegaloCompilerContext(version);
+    const frontend = new MegaloCompilerContext(version);
     const tokens = new Lexer(frontend).lex(
       'current_player "+%n" score_to_win_round',
       diagnostics
@@ -292,7 +307,11 @@ const frontend = new MegaloCompilerContext(version);
     const parser = ctx.actionParserRepository.getParser(
       "player_set_objective_allegiance"
     );
-    const parameters = parser!(ctx, tokens[0]!.location);
+    expect(parser).toBeDefined();
+    if (!parser) {
+      throw new Error("missing player_set_objective_allegiance parser");
+    }
+    const parameters = parser(ctx, tokens[0]?.location ?? BUILT_IN_LOCATION);
 
     expect(diagnostics.hasErrors()).toBe(false);
     expect(parameters).toHaveLength(2);
@@ -330,7 +349,11 @@ const frontend = new MegaloCompilerContext(version);
     const parser = ctx.actionParserRepository.getParser(
       "player_set_objective_allegiance_icon"
     );
-    const parameters = parser!(ctx, tokens[0]!.location);
+    expect(parser).toBeDefined();
+    if (!parser) {
+      throw new Error("missing player_set_objective_allegiance_icon parser");
+    }
+    const parameters = parser(ctx, tokens[0]?.location ?? BUILT_IN_LOCATION);
 
     expect(diagnostics.hasErrors()).toBe(false);
     expect(parameters).toHaveLength(2);
@@ -350,12 +373,14 @@ const frontend = new MegaloCompilerContext(version);
 
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new MegaloCompilerContext(version);
+    const frontend = new MegaloCompilerContext(version);
     const tokens = new Lexer(frontend).lex("unused", diagnostics);
-    const ctx = new ParserContext(tokens, frontend,
+    const ctx = new ParserContext(
+      tokens,
+      frontend,
       diagnostics,
       new SymbolBinder(frontend, diagnostics)
     );
-    expect(parser!(ctx, tokens[0]!.location)).toEqual([]);
+    expect(parser?.(ctx, tokens[0]?.location)).toEqual([]);
   });
 });

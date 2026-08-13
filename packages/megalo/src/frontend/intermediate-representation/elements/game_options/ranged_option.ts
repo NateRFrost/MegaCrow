@@ -1,8 +1,8 @@
+import { diagnosticMessages } from "src/diagnostics/messages";
 import type {
   UserDefinedOptionNode,
   UserDefinedOptionValueNode,
 } from "src/frontend/abstract-syntax-tree/elements/game_options";
-import { diagnosticMessages } from "src/diagnostics/messages";
 import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
 import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
 import { LowerError } from "src/frontend/intermediate-representation/error";
@@ -10,8 +10,8 @@ import type {
   RangedUserDefinedOption,
   UserDefinedOptionValue,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_user_defined_options";
-import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 import { lowerConstantNumber } from "src/frontend/intermediate-representation/parameters/constantNumber";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 import { resolveScriptStringTableReference } from "src/frontend/intermediate-representation/parameters/resolveScriptStringTableReference";
 
 const lowerRangedOptionValue = (

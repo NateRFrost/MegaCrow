@@ -1,4 +1,3 @@
-import { Parser } from "../../src/frontend/abstract-syntax-tree/index";
 import { getCompilerForVersion } from "../../src/backend/compile";
 import { MegaloCompilerContext } from "../../src/context";
 import {
@@ -7,8 +6,8 @@ import {
   Diagnostics,
 } from "../../src/diagnostics";
 import { CompilerError } from "../../src/diagnostics/error";
+import { Parser } from "../../src/frontend/abstract-syntax-tree/index";
 import { Lowerer } from "../../src/frontend/intermediate-representation";
-import { setLocale } from "../../src/localization";
 import {
   SymbolKind,
   type SymbolTable,
@@ -26,6 +25,7 @@ import {
   type SymbolTableVariableEntry,
 } from "../../src/frontend/symbol-table";
 import { Lexer, type Token, TokenKind } from "../../src/frontend/tokens/index";
+import { setLocale } from "../../src/localization";
 import { MEGALO_VERSIONS } from "../../src/version";
 import type {
   AnalyzeRequest,
@@ -42,7 +42,10 @@ const parser = new Parser(frontend);
 const lowerer = new Lowerer(frontend);
 const compiler = getCompilerForVersion(frontend.megaloVersion);
 
-const debugLog = (event: string, details: Record<string, unknown> = {}): void => {
+const debugLog = (
+  event: string,
+  details: Record<string, unknown> = {}
+): void => {
   console.log(`[megalo-worker] ${event}`, {
     at: performance.now().toFixed(1),
     ...details,
@@ -242,7 +245,13 @@ const analyze = (request: AnalyzeRequest): AnalyzeResponse => {
   });
 
   const dryRunStart = performance.now();
-  if (!diagnostics.hasErrors()) {
+  if (diagnostics.hasErrors()) {
+    debugLog("dry-run-skipped", {
+      generation: id,
+      reason: "diagnostics.hasErrors",
+      errors: diagnostics.getErrors().length,
+    });
+  } else {
     try {
       compiler.dryRun(ir, diagnostics);
       debugLog("dry-run-complete", {
@@ -268,12 +277,6 @@ const analyze = (request: AnalyzeRequest): AnalyzeResponse => {
         error: error instanceof Error ? error.message : String(error),
       });
     }
-  } else {
-    debugLog("dry-run-skipped", {
-      generation: id,
-      reason: "diagnostics.hasErrors",
-      errors: diagnostics.getErrors().length,
-    });
   }
 
   const serializationStart = performance.now();

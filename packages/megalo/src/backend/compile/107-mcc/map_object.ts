@@ -3,11 +3,11 @@ import {
   c_object_filter,
   c_object_type_reference,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
+import { encodeObjectTeamFilter } from "src/backend/compile/107-mcc/enums/e_object_team_filter";
 import { BUILT_IN_LOCATION, type Diagnostics } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
 import type { IR } from "src/frontend/intermediate-representation";
 import type { ObjectFilter } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_map_objects";
-import { encodeObjectTeamFilter } from "src/backend/compile/107-mcc/enums/e_object_team_filter";
 
 const MAX_OBJECT_FILTERS = 16;
 const MIN_USER_DATA = -0x8000;

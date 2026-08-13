@@ -1,15 +1,15 @@
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
 import {
   type OverrideEntryNode,
   OverrideValueKind,
 } from "src/frontend/abstract-syntax-tree/elements/game_options";
-import { SourceCodeLocation } from "src/diagnostics";
-import { diagnosticMessages } from "src/diagnostics/messages";
 import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   LOADOUT_PALETTE_TYPE_BY_NAME,
   LoadoutPaletteType,
-} from "src/frontend/intermediate-representation/game/megalogamengine/LoadoutPaletteType";
+} from "src/frontend/intermediate-representation/game/megalogamengine/loadoutPaletteType";
 import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 import { setField } from "src/frontend/intermediate-representation/setField";
 
@@ -54,7 +54,10 @@ export const lowerLoadoutPaletteOverride = (
   const loweredPalette = ctx.loadoutPalettesByName.get(palette.value);
   if (loweredPalette === undefined) {
     throw new LowerError(
-      diagnosticMessages.expectedParameterType("loadout palette", palette.value),
+      diagnosticMessages.expectedParameterType(
+        "loadout palette",
+        palette.value
+      ),
       palette.location
     );
   }

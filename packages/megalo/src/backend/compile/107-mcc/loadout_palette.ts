@@ -1,10 +1,10 @@
-import {
-  type c_game_engine_custom_variant,
-  type c_loadout_traits,
+import type {
+  c_game_engine_custom_variant,
+  c_loadout_traits,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
+import { encodeGrenadeCountSetting } from "src/backend/compile/107-mcc/enums";
 import type { IR } from "src/frontend/intermediate-representation";
 import type { LoadoutTraits } from "src/frontend/intermediate-representation/game/game_engine_default";
-import { encodeGrenadeCountSetting } from "src/backend/compile/107-mcc/enums";
 
 const compileLoadout = (
   target: c_loadout_traits,

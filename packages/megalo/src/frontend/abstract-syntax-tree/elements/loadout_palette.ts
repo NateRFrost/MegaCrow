@@ -1,18 +1,25 @@
-import type { MegaloVersion } from "src/version";
 import type { MegaloCompilerContext } from "src/context";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { type Token, TokenKind } from "src/frontend/tokens";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
-import { type ASTErrorNode, isAstErrorNode, SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import {
+  type ASTElementBase,
+  ElementKind,
+} from "src/frontend/abstract-syntax-tree/elements";
+import { locationSpan } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+import {
+  type ASTErrorNode,
+  isAstErrorNode,
+  SyntaxKind,
+} from "src/frontend/abstract-syntax-tree/kinds";
 import {
   type ASTParameterNode,
   parameterParserBuilder as buildParameterParser,
   type ParameterParser,
   ParameterType,
 } from "src/frontend/abstract-syntax-tree/parameters";
-import { type ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
-import { locationSpan } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+import { type Token, TokenKind } from "src/frontend/tokens";
+import type { MegaloVersion } from "src/version";
 
 export type LoadoutPaletteElementNode =
   ASTElementBase<ElementKind.LOADOUT_PALETTE> & {

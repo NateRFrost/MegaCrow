@@ -1,15 +1,15 @@
 import type { ObjectListType } from "src/frontend/object-lists";
 
-export type SourcePosition = {
-  /** Offset within the owning file’s text (IDE / IncludeLocation.source). */
-  localOffset: number;
+export interface SourcePosition {
   /** Offset in the unfurled program (temp packing / total order). */
   absoluteOffset: number;
+  column: number;
   // Megalo does not support multi-line tokens, so tokens start and end on the same line.
   // However, SourcePosition is not just used for single token locations.
   line: number;
-  column: number;
-};
+  /** Offset within the owning file’s text (IDE / IncludeLocation.source). */
+  localOffset: number;
+}
 
 export const BUILT_IN_POSITION: SourcePosition = {
   localOffset: -1,
@@ -29,34 +29,33 @@ export const BUILT_IN_LOCATION: BuiltInLocation = {
   type: SourceLocationType.BUILT_IN,
 };
 
-export type SourceCodeLocation = {
-  type: SourceLocationType.SOURCE_CODE;
-  start: SourcePosition;
+export interface SourceCodeLocation {
   end: SourcePosition;
-};
+  start: SourcePosition;
+  type: SourceLocationType.SOURCE_CODE;
+}
 
 // Location of a diagnostic that originated inside an included file.
 // Hosts should surface these on `declaration` in the parent document;
 // `source` is the span within `file`.
-export type IncludeLocation = {
-  type: SourceLocationType.INCLUDE;
-  file: string;
+export interface IncludeLocation {
   // the "include foo.txt" line
   declaration: SourceCodeLocation;
+  file: string;
   // the location within the foo.txt included file
   source: SourceCodeLocation;
-};
+  type: SourceLocationType.INCLUDE;
+}
 
-export type BuiltInLocation = {
+export interface BuiltInLocation {
   type: SourceLocationType.BUILT_IN;
-};
+}
 
-
-export type ObjectListLocation = {
-  type: SourceLocationType.OBJECT_LIST;
+export interface ObjectListLocation {
   objectType: ObjectListType;
   source: SourcePosition;
-};
+  type: SourceLocationType.OBJECT_LIST;
+}
 
 export type SourceLocation =
   | SourceCodeLocation
@@ -64,16 +63,22 @@ export type SourceLocation =
   | BuiltInLocation
   | ObjectListLocation;
 
-export const isBuiltInLocation = (location: SourceLocation): location is BuiltInLocation =>
-  location.type === SourceLocationType.BUILT_IN;
+export const isBuiltInLocation = (
+  location: SourceLocation
+): location is BuiltInLocation => location.type === SourceLocationType.BUILT_IN;
 
-export const isObjectListLocation = (location: SourceLocation): location is ObjectListLocation =>
+export const isObjectListLocation = (
+  location: SourceLocation
+): location is ObjectListLocation =>
   location.type === SourceLocationType.OBJECT_LIST;
 
-export const isIncludeLocation = (location: SourceLocation): location is IncludeLocation =>
-  location.type === SourceLocationType.INCLUDE;
+export const isIncludeLocation = (
+  location: SourceLocation
+): location is IncludeLocation => location.type === SourceLocationType.INCLUDE;
 
-export const isSourceCodeLocation = (location: SourceLocation): location is SourceCodeLocation =>
+export const isSourceCodeLocation = (
+  location: SourceLocation
+): location is SourceCodeLocation =>
   location.type === SourceLocationType.SOURCE_CODE;
 
 export enum DiagnosticSeverity {
@@ -82,15 +87,15 @@ export enum DiagnosticSeverity {
   Info = 2,
 }
 
-export type Diagnostic = {
+export interface Diagnostic {
+  location: SourceLocation;
   message: string;
   severity: DiagnosticSeverity;
-  location: SourceLocation;
-};
+}
 
 export class Diagnostics {
-  private warnings: Diagnostic[] = [];
-  private errors: Diagnostic[] = [];
+  private readonly warnings: Diagnostic[] = [];
+  private readonly errors: Diagnostic[] = [];
 
   public addWarning(message: string, location: SourceLocation): void {
     this.warnings.push({

@@ -1,6 +1,6 @@
-import { formatAlternatives, translate } from "src/localization";
-import { TokenKind } from "src/frontend/tokens";
 import type { SourceLocation } from "src/diagnostics/index";
+import { TokenKind } from "src/frontend/tokens";
+import { formatAlternatives, translate } from "src/localization";
 
 const expectedOneOf = (alternatives: readonly string[], got: string): string =>
   translate("expected_one_of", {
@@ -9,7 +9,7 @@ const expectedOneOf = (alternatives: readonly string[], got: string): string =>
   });
 
 export const diagnosticMessages = {
-  unusedValue(location: SourceLocation): string {
+  unusedValue(_location: SourceLocation): string {
     return translate("unused_value");
   },
 

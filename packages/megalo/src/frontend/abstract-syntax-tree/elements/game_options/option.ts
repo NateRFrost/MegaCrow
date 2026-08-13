@@ -1,14 +1,11 @@
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { VariableType } from "src/frontend/symbol-table";
-import { type Token, TokenKind } from "src/frontend/tokens";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
-import {
-  parseStringLiteralOrReference,
-  stringLiteralOrReferenceLocation,
-} from "src/frontend/abstract-syntax-tree/parameters/string_literal_or_reference";
 import { parseIntegerInitialValue } from "src/frontend/abstract-syntax-tree/elements/constants";
-import { isEndToken, locationSpan } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+import {
+  isEndToken,
+  locationSpan,
+} from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
 import {
   GameOptionEntryKind,
   type GameOptionModifiers,
@@ -16,6 +13,12 @@ import {
   type UserDefinedOptionOverrideNode,
   type UserDefinedOptionValueNode,
 } from "src/frontend/abstract-syntax-tree/elements/game_options/types";
+import {
+  parseStringLiteralOrReference,
+  stringLiteralOrReferenceLocation,
+} from "src/frontend/abstract-syntax-tree/parameters/string_literal_or_reference";
+import { VariableType } from "src/frontend/symbol-table";
+import { type Token, TokenKind } from "src/frontend/tokens";
 
 const parseUserDefinedOptionValue = (
   ctx: ParserContext,

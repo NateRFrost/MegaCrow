@@ -1,27 +1,27 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { SymbolKind } from "src/frontend/symbol-table";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { lowerDynamicString } from "src/frontend/intermediate-representation/elements/triggers/dynamicString";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  ActionType,
   type Action,
+  ActionType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import { type ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
-import { lowerDynamicString } from "src/frontend/intermediate-representation/elements/triggers/dynamicString";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
+import { SymbolKind } from "src/frontend/symbol-table";
 
 const resolveDeclaredSymbolIndex = (
   node: ASTParameterNode,
   ctx: ElementLowerContext,
   kind: SymbolKind.HudWidget | SymbolKind.LoadoutPalette,
   expected: string,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): number => {
   if (node.kind !== SyntaxKind.REFERENCE) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType(expected, ""),
-      node.location ?? location,
+      node.location ?? location
     );
   }
 
@@ -29,7 +29,7 @@ const resolveDeclaredSymbolIndex = (
   if (symbol?.kind !== kind) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType(expected, ""),
-      node.location,
+      node.location
     );
   }
 
@@ -40,7 +40,7 @@ const resolveDeclaredSymbolIndex = (
   if (index < 0) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType(expected, symbol.name),
-      node.location,
+      node.location
     );
   }
   return index;
@@ -49,25 +49,25 @@ const resolveDeclaredSymbolIndex = (
 const resolveHudWidgetIndex = (
   node: ASTParameterNode,
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): number =>
   resolveDeclaredSymbolIndex(
     node,
     ctx,
     SymbolKind.HudWidget,
     "HUD widget",
-    location,
+    location
   );
 
 export const lowerHudWidgetSetValue = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   if (parameters.length !== 2) {
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(2, parameters.length),
-      location,
+      location
     );
   }
 

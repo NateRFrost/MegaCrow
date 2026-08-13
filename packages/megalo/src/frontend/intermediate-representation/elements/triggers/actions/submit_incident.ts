@@ -1,21 +1,21 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { ObjectListType } from "src/frontend/object-lists";
-import { SymbolKind } from "src/frontend/symbol-table";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { parseTeamOrPlayerTarget } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  ActionType,
   type Action,
+  ActionType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import { type ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
-import { parseTeamOrPlayerTarget } from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
+import { ObjectListType } from "src/frontend/object-lists";
+import { SymbolKind } from "src/frontend/symbol-table";
 
 export const resolveIncidentIndex = (
   node: ASTParameterNode,
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): number => {
   if (node.kind === SyntaxKind.REFERENCE) {
     const symbol = ctx.symbolTable.getSymbol(node.symbolId);
@@ -36,19 +36,19 @@ export const resolveIncidentIndex = (
 
   throw new LowerError(
     diagnosticMessages.expectedParameterType("incident", name ?? ""),
-    node.location ?? location,
+    node.location ?? location
   );
 };
 
 export const lowerSubmitIncident = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   if (parameters.length < 3) {
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(3, parameters.length),
-      location,
+      location
     );
   }
 
@@ -57,18 +57,18 @@ export const lowerSubmitIncident = (
     parameters,
     1,
     ctx,
-    location,
+    location
   );
   const { target: effect, nextIndex } = parseTeamOrPlayerTarget(
     parameters,
     effectStart,
     ctx,
-    location,
+    location
   );
   if (nextIndex !== parameters.length) {
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(nextIndex, parameters.length),
-      location,
+      location
     );
   }
 

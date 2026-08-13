@@ -1,30 +1,30 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { parsePlayerFilterModifier } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  ActionType,
   type Action,
+  ActionType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import {
-  asParameterLoweringContext,
-  type ElementLowerContext,
-} from "src/frontend/intermediate-representation/parameters/context";
+import { CustomTimerType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import {
   resolveCustomTimerReference,
   resolveObjectReference,
 } from "src/frontend/intermediate-representation/parameters";
-import { CustomTimerType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
-import { parsePlayerFilterModifier } from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import {
+  asParameterLoweringContext,
+  type ElementLowerContext,
+} from "src/frontend/intermediate-representation/parameters/context";
 
 const timerIndexFromParameter = (
   node: ASTParameterNode,
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): number => {
   const timer = resolveCustomTimerReference(
     node,
-    asParameterLoweringContext(ctx),
+    asParameterLoweringContext(ctx)
   );
   if (
     timer.type === CustomTimerType.Global ||
@@ -36,30 +36,30 @@ const timerIndexFromParameter = (
   }
   throw new LowerError(
     diagnosticMessages.expectedParameterType("timer", ""),
-    node.location ?? location,
+    node.location ?? location
   );
 };
 
 export const lowerSetProgressBar = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   if (parameters.length < 2) {
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(2, parameters.length),
-      location,
+      location
     );
   }
   const object = resolveObjectReference(
     parameters[0]!,
-    asParameterLoweringContext(ctx),
+    asParameterLoweringContext(ctx)
   );
   const { filter, nextIndex } = parsePlayerFilterModifier(
     parameters,
     1,
     ctx,
-    location,
+    location
   );
   const timerNode = parameters[nextIndex];
   // MegaloEdit: when filter is `no_one`, timer is omitted and the byte stays 0
@@ -77,9 +77,9 @@ export const lowerSetProgressBar = (
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(
         nextIndex + 1,
-        parameters.length,
+        parameters.length
       ),
-      location,
+      location
     );
   }
   return {

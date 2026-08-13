@@ -50,83 +50,83 @@ export enum CustomVariableType {
   TemporaryNumber = 44,
 }
 
-type ConstantCustomVariableReference = {
-  type: CustomVariableType.Constant;
+interface ConstantCustomVariableReference {
   immediateValue: number;
-};
+  type: CustomVariableType.Constant;
+}
 
-type PlayerNumberCustomVariableReference = {
-  type: CustomVariableType.PlayerNumber;
+interface PlayerNumberCustomVariableReference {
   player: ExplicitPlayer;
+  type: CustomVariableType.PlayerNumber;
   variableIndex: number;
-};
+}
 
-type ObjectNumberCustomVariableReference = {
-  type: CustomVariableType.ObjectNumber;
+interface ObjectNumberCustomVariableReference {
   object: ExplicitObject;
+  type: CustomVariableType.ObjectNumber;
   variableIndex: number;
-};
+}
 
-type TeamNumberCustomVariableReference = {
-  type: CustomVariableType.TeamNumber;
+interface TeamNumberCustomVariableReference {
   team: ExplicitTeam;
+  type: CustomVariableType.TeamNumber;
   variableIndex: number;
-};
+}
 
-type GlobalNumberCustomVariableReference = {
+interface GlobalNumberCustomVariableReference {
   type: CustomVariableType.GlobalNumber;
   variableIndex: number;
-};
+}
 
-type TemporaryNumberCustomVariableReference = {
+interface TemporaryNumberCustomVariableReference {
   type: CustomVariableType.TemporaryNumber;
   variableIndex: number;
-};
+}
 
-type OptionCustomVariableReference = {
-  type: CustomVariableType.Option;
+interface OptionCustomVariableReference {
   optionIndex: number;
-};
+  type: CustomVariableType.Option;
+}
 
-type SpawnObjectCustomVariableReference = {
-  type: CustomVariableType.SpawnObject;
+interface SpawnObjectCustomVariableReference {
   object: ExplicitObject;
-};
+  type: CustomVariableType.SpawnObject;
+}
 
-type TeamScoreCustomVariableReference = {
+interface TeamScoreCustomVariableReference {
+  team: ExplicitTeam;
   type: CustomVariableType.TeamScore;
-  team: ExplicitTeam;
-};
+}
 
-type PlayerScoreCustomVariableReference = {
+interface PlayerScoreCustomVariableReference {
+  player: ExplicitPlayer;
   type: CustomVariableType.PlayerScore;
-  player: ExplicitPlayer;
-};
+}
 
-type PlayerMoneyCustomVariableReference = {
+interface PlayerMoneyCustomVariableReference {
+  player: ExplicitPlayer;
   type: CustomVariableType.PlayerMoney;
-  player: ExplicitPlayer;
-};
+}
 
-type PlayerRatingCustomVariableReference = {
+interface PlayerRatingCustomVariableReference {
+  player: ExplicitPlayer;
   type: CustomVariableType.PlayerRating;
-  player: ExplicitPlayer;
-};
+}
 
-type PlayerStatCustomVariableReference = {
+interface PlayerStatCustomVariableReference {
+  player: ExplicitPlayer;
+  statisticIndex: number;
   type: CustomVariableType.PlayerStat;
-  player: ExplicitPlayer;
-  statisticIndex: number;
-};
+}
 
-type TeamStatCustomVariableReference = {
-  type: CustomVariableType.TeamStat;
-  team: ExplicitTeam;
+interface TeamStatCustomVariableReference {
   statisticIndex: number;
-};
+  team: ExplicitTeam;
+  type: CustomVariableType.TeamStat;
+}
 
 /** Built-in globals and game options that are identified only by their type. */
-export type TypeOnlyCustomVariableReference = {
+export interface TypeOnlyCustomVariableReference {
   type:
     | CustomVariableType.RoundIndex
     | CustomVariableType.SymmetricGametype
@@ -159,7 +159,7 @@ export type TypeOnlyCustomVariableReference = {
     | CustomVariableType.BluePowerupDuration
     | CustomVariableType.YellowPowerupDuration
     | CustomVariableType.ObjectDeathDamageType;
-};
+}
 
 export type CustomVariableReference =
   | ConstantCustomVariableReference
@@ -185,28 +185,28 @@ export enum PlayerReferenceType {
   TeamPlayer = 3,
 }
 
-type GlobalPlayerReference = {
+interface GlobalPlayerReference {
+  player: ExplicitPlayer;
   type: PlayerReferenceType.GlobalPlayer;
-  player: ExplicitPlayer;
-};
+}
 
-type PlayerPlayerReference = {
+interface PlayerPlayerReference {
+  player: ExplicitPlayer;
   type: PlayerReferenceType.PlayerPlayer;
-  player: ExplicitPlayer;
   variableIndex: number;
-};
+}
 
-type ObjectPlayerReference = {
-  type: PlayerReferenceType.ObjectPlayer;
+interface ObjectPlayerReference {
   object: ExplicitObject;
+  type: PlayerReferenceType.ObjectPlayer;
   variableIndex: number;
-};
+}
 
-type TeamPlayerReference = {
-  type: PlayerReferenceType.TeamPlayer;
+interface TeamPlayerReference {
   team: ExplicitTeam;
+  type: PlayerReferenceType.TeamPlayer;
   variableIndex: number;
-};
+}
 
 export type PlayerReference =
   | GlobalPlayerReference
@@ -225,51 +225,51 @@ export enum ObjectReferenceType {
   TeamPlayerBiped = 7,
 }
 
-type GlobalObjectReference = {
+interface GlobalObjectReference {
+  object: ExplicitObject;
   type: ObjectReferenceType.GlobalObject;
-  object: ExplicitObject;
-};
+}
 
-type PlayerObjectReference = {
+interface PlayerObjectReference {
+  player: ExplicitPlayer;
   type: ObjectReferenceType.PlayerObject;
-  player: ExplicitPlayer;
   variableIndex: number;
-};
+}
 
-type ObjectObjectReference = {
+interface ObjectObjectReference {
+  object: ExplicitObject;
   type: ObjectReferenceType.ObjectObject;
-  object: ExplicitObject;
   variableIndex: number;
-};
+}
 
-type TeamObjectReference = {
+interface TeamObjectReference {
+  team: ExplicitTeam;
   type: ObjectReferenceType.TeamObject;
-  team: ExplicitTeam;
   variableIndex: number;
-};
+}
 
-type PlayerBipedReference = {
+interface PlayerBipedReference {
+  player: ExplicitPlayer;
   type: ObjectReferenceType.PlayerBiped;
-  player: ExplicitPlayer;
-};
+}
 
-type PlayerPlayerBipedReference = {
+interface PlayerPlayerBipedReference {
+  player: ExplicitPlayer;
   type: ObjectReferenceType.PlayerPlayerBiped;
-  player: ExplicitPlayer;
   variableIndex: number;
-};
+}
 
-type ObjectPlayerBipedReference = {
-  type: ObjectReferenceType.ObjectPlayerBiped;
+interface ObjectPlayerBipedReference {
   object: ExplicitObject;
+  type: ObjectReferenceType.ObjectPlayerBiped;
   variableIndex: number;
-};
+}
 
-type TeamPlayerBipedReference = {
-  type: ObjectReferenceType.TeamPlayerBiped;
+interface TeamPlayerBipedReference {
   team: ExplicitTeam;
+  type: ObjectReferenceType.TeamPlayerBiped;
   variableIndex: number;
-};
+}
 
 export type ObjectReference =
   | GlobalObjectReference
@@ -290,40 +290,40 @@ export enum TeamReferenceType {
   ObjectOwnerTeam = 5,
 }
 
-type GlobalTeamReference = {
+interface GlobalTeamReference {
+  team: ExplicitTeam;
   type: TeamReferenceType.GlobalTeam;
-  team: ExplicitTeam;
-};
+}
 
-type PlayerTeamReference = {
+interface PlayerTeamReference {
+  player: ExplicitPlayer;
   type: TeamReferenceType.PlayerTeam;
-  player: ExplicitPlayer;
   variableIndex: number;
-};
+}
 
-type ObjectTeamReference = {
+interface ObjectTeamReference {
+  object: ExplicitObject;
   type: TeamReferenceType.ObjectTeam;
-  object: ExplicitObject;
   variableIndex: number;
-};
+}
 
-type TeamTeamReference = {
-  type: TeamReferenceType.TeamTeam;
+interface TeamTeamReference {
   team: ExplicitTeam;
+  type: TeamReferenceType.TeamTeam;
   variableIndex: number;
-};
+}
 
-type PlayerOwnerTeamReference = {
-  type: TeamReferenceType.PlayerOwnerTeam;
+interface PlayerOwnerTeamReference {
   player: ExplicitPlayer;
+  type: TeamReferenceType.PlayerOwnerTeam;
   variableIndex: number;
-};
+}
 
-type ObjectOwnerTeamReference = {
-  type: TeamReferenceType.ObjectOwnerTeam;
+interface ObjectOwnerTeamReference {
   object: ExplicitObject;
+  type: TeamReferenceType.ObjectOwnerTeam;
   variableIndex: number;
-};
+}
 
 export type TeamReference =
   | GlobalTeamReference
@@ -343,43 +343,43 @@ export enum CustomTimerType {
   GracePeriod = 6,
 }
 
-type GlobalCustomTimerReference = {
+interface GlobalCustomTimerReference {
   type: CustomTimerType.Global;
   variableIndex: number;
-};
+}
 
-type PlayerCustomTimerReference = {
-  type: CustomTimerType.Player;
+interface PlayerCustomTimerReference {
   player: ExplicitPlayer;
+  type: CustomTimerType.Player;
   variableIndex: number;
-};
+}
 
-type TeamCustomTimerReference = {
-  type: CustomTimerType.Team;
+interface TeamCustomTimerReference {
   team: ExplicitTeam;
+  type: CustomTimerType.Team;
   variableIndex: number;
-};
+}
 
-type ObjectCustomTimerReference = {
-  type: CustomTimerType.Object;
+interface ObjectCustomTimerReference {
   object: ExplicitObject;
+  type: CustomTimerType.Object;
   variableIndex: number;
-};
+}
 
-type RoundCustomTimerReference = {
+interface RoundCustomTimerReference {
   type: CustomTimerType.Round;
   variableIndex: number;
-};
+}
 
-type SuddenDeathCustomTimerReference = {
+interface SuddenDeathCustomTimerReference {
   type: CustomTimerType.SuddenDeath;
   variableIndex: number;
-};
+}
 
-type GracePeriodCustomTimerReference = {
+interface GracePeriodCustomTimerReference {
   type: CustomTimerType.GracePeriod;
   variableIndex: number;
-};
+}
 
 export type CustomTimerReference =
   | GlobalCustomTimerReference

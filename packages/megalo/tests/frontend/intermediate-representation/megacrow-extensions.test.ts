@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { Parser } from "../../../src/frontend/abstract-syntax-tree";
 import { MegaloCompilerContext } from "../../../src/context";
 import { Diagnostics } from "../../../src/diagnostics";
+import { Parser } from "../../../src/frontend/abstract-syntax-tree";
 import { Lowerer } from "../../../src/frontend/intermediate-representation";
 import { ActionType } from "../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import type { MegacrowExtensions } from "../../../src/megacrow-extensions";
 import { Lexer } from "../../../src/frontend/tokens";
+import type { MegacrowExtensions } from "../../../src/megacrow-extensions";
 import { MEGALO_VERSIONS } from "../../../src/version";
 
 const lowerScript = (
@@ -109,7 +109,9 @@ end
 `);
     expect(diagnostics.hasErrors()).toBe(true);
     expect(
-      diagnostics.getErrors().some((e) => e.message.includes("icon index out of range"))
+      diagnostics
+        .getErrors()
+        .some((e) => e.message.includes("icon index out of range"))
     ).toBe(true);
   });
 });

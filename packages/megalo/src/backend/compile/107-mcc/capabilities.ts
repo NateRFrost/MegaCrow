@@ -1,6 +1,6 @@
-import {
-  type CompilerCapabilities,
-  type ToCapabilities,
+import type {
+  CompilerCapabilities,
+  ToCapabilities,
 } from "src/backend/compile/diagnostics/assertCompatibleIR";
 import type { PlayerTraits } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 
@@ -184,7 +184,6 @@ export const CAPABILITES_107_MCC = {
         magnumDamage: true,
         magnumFireDelay: true,
       },
-    }
-  }
- } as const satisfies CompilerCapabilities;
-
+    },
+  },
+} as const satisfies CompilerCapabilities;

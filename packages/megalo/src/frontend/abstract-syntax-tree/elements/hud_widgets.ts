@@ -1,26 +1,32 @@
 import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { type Token, TokenKind } from "src/frontend/tokens";
-import { type ASTErrorNode, SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import {
+  type ASTErrorNode,
+  SyntaxKind,
+} from "src/frontend/abstract-syntax-tree";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
-import { type ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
+import {
+  type ASTElementBase,
+  ElementKind,
+} from "src/frontend/abstract-syntax-tree/elements";
 import { locationSpan } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+import { type Token, TokenKind } from "src/frontend/tokens";
 
-type HudWidgetEntryNodeName = {
-  value: string;
+interface HudWidgetEntryNodeName {
   location: SourceCodeLocation;
-};
-
-type HudWidgetEntryNodePosition = {
   value: string;
-  location: SourceCodeLocation;
-};
+}
 
-export type HudWidgetEntryNode = {
+interface HudWidgetEntryNodePosition {
+  location: SourceCodeLocation;
+  value: string;
+}
+
+export interface HudWidgetEntryNode {
+  location: SourceCodeLocation;
   name: HudWidgetEntryNodeName | ASTErrorNode;
   position: HudWidgetEntryNodePosition | ASTErrorNode;
-  location: SourceCodeLocation;
-};
+}
 
 export type HudWidgetsElementNode = ASTElementBase<ElementKind.HUD_WIDGETS> & {
   entries: HudWidgetEntryNode[];

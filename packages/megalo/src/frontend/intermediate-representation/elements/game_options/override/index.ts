@@ -1,12 +1,10 @@
+import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import {
   type OverrideEntryNode,
   OverrideValueKind,
 } from "src/frontend/abstract-syntax-tree/elements/game_options";
-import { diagnosticMessages } from "src/diagnostics/messages";
 import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
-import { LowerError } from "src/frontend/intermediate-representation/error";
-import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 import { applyBuiltinLockHide } from "src/frontend/intermediate-representation/elements/game_options/override/helpers";
 import { lowerLoadoutPaletteOverride } from "src/frontend/intermediate-representation/elements/game_options/override/loadoutPalette";
 import { tryLowerMapOverride } from "src/frontend/intermediate-representation/elements/game_options/override/map";
@@ -15,6 +13,8 @@ import { lowerPlayerTraitsOverride } from "src/frontend/intermediate-representat
 import { tryLowerRespawnOverride } from "src/frontend/intermediate-representation/elements/game_options/override/respawn";
 import { tryLowerSocialOverride } from "src/frontend/intermediate-representation/elements/game_options/override/social";
 import { tryLowerTu1Override } from "src/frontend/intermediate-representation/elements/game_options/override/tu1";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 
 /**
  * @link https://blam-network.github.io/megalo/language/elements/game-options#override

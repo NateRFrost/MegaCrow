@@ -10,11 +10,11 @@ import {
   e_vampirism_percentage_setting,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
 
-type EnumeratedRealOption<T> = {
+interface EnumeratedRealOption<T> {
+  setting: T;
   /** Script / IR numeric value (percent or meters). */
   value: number;
-  setting: T;
-};
+}
 
 const nearestEnumeratedReal = <T>(
   options: readonly EnumeratedRealOption<T>[],
@@ -48,8 +48,14 @@ const DAMAGE_RESISTANCE: readonly EnumeratedRealOption<e_damage_resistance_perce
     { value: 200, setting: e_damage_resistance_percentage_setting.percent_200 },
     { value: 300, setting: e_damage_resistance_percentage_setting.percent_300 },
     { value: 500, setting: e_damage_resistance_percentage_setting.percent_500 },
-    { value: 1000, setting: e_damage_resistance_percentage_setting.percent_1000 },
-    { value: 2000, setting: e_damage_resistance_percentage_setting.percent_2000 },
+    {
+      value: 1000,
+      setting: e_damage_resistance_percentage_setting.percent_1000,
+    },
+    {
+      value: 2000,
+      setting: e_damage_resistance_percentage_setting.percent_2000,
+    },
   ];
 
 /** Reach `s_damage_modifier_option_metadata` (skips unchanged `-1`). */

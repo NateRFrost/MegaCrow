@@ -1,11 +1,14 @@
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { SymbolKind } from "src/frontend/symbol-table";
-import { type Located, located } from "src/frontend/intermediate-representation";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import {
+  type Located,
+  located,
+} from "src/frontend/intermediate-representation";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
+import { SymbolKind } from "src/frontend/symbol-table";
 
 /**
  * MegaloEdit `ReadConstantInteger` / `ParseConstantInteger`:
@@ -23,7 +26,7 @@ export const tryLowerConstantInteger = (
       return located(symbol.value, node.location);
     }
   }
-  return undefined;
+  return;
 };
 
 export const lowerConstantInteger = (

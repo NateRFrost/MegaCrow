@@ -1,7 +1,4 @@
-import {
-  type ObjectLists,
-  ObjectListType,
-} from "src/frontend/object-lists";
+import { type ObjectLists, ObjectListType } from "src/frontend/object-lists";
 import equipment from "src/object-lists/haloreach_mcc/default/equipment";
 import grenades from "src/object-lists/haloreach_mcc/default/grenades";
 import hudWidgetIcons from "src/object-lists/haloreach_mcc/default/hud_widget_icons";

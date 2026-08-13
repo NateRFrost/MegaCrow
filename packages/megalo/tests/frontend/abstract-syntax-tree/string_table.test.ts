@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { MegaloCompilerContext } from "../../../src/context";
+import { Diagnostics } from "../../../src/diagnostics";
 import { Parser, SyntaxKind } from "../../../src/frontend/abstract-syntax-tree";
 import { ElementKind } from "../../../src/frontend/abstract-syntax-tree/elements";
-import { Diagnostics } from "../../../src/diagnostics";
 import {
   SymbolKind,
   type SymbolTableEntry,
@@ -9,7 +10,6 @@ import {
 } from "../../../src/frontend/symbol-table";
 import { Lexer } from "../../../src/frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../src/version";
-import { MegaloCompilerContext } from "../../../src/context";
 
 const parse = (source: string) => {
   const diagnostics = new Diagnostics();
@@ -141,7 +141,7 @@ end
     const symbols = stringSymbols(symbolTable);
     expect(symbols).toHaveLength(1);
     expect(symbols[0]?.name).toBe("msg_welcome");
-    expect(Object.keys(symbols[0]!.languageDeclarations)).toEqual([
+    expect(Object.keys(symbols[0]?.languageDeclarations)).toEqual([
       "english",
       "french",
     ]);

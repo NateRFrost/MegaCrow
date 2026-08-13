@@ -1,27 +1,27 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  ActionType,
   type Action,
+  ActionType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import { CustomTimerType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
-import {
-  asParameterLoweringContext,
-  type ElementLowerContext,
-} from "src/frontend/intermediate-representation/parameters/context";
 import {
   resolveCustomTimerReference,
   resolveObjectReference,
 } from "src/frontend/intermediate-representation/parameters";
-import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import {
+  asParameterLoweringContext,
+  type ElementLowerContext,
+} from "src/frontend/intermediate-representation/parameters/context";
 
 const timerIndexFromParameter = (
   node: ASTParameterNode,
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): number => {
   if (
     (node.kind === SyntaxKind.KEYWORD || node.kind === SyntaxKind.REFERENCE) &&
@@ -31,7 +31,7 @@ const timerIndexFromParameter = (
   }
   const timer = resolveCustomTimerReference(
     node,
-    asParameterLoweringContext(ctx),
+    asParameterLoweringContext(ctx)
   );
   if (
     timer.type === CustomTimerType.Global ||
@@ -43,14 +43,14 @@ const timerIndexFromParameter = (
   }
   throw new LowerError(
     diagnosticMessages.expectedParameterType("timer", ""),
-    node.location ?? location,
+    node.location ?? location
   );
 };
 
 export const lowerNavpointSetTimer = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   requireParamCount(parameters, 2, location);
   return {
@@ -58,7 +58,7 @@ export const lowerNavpointSetTimer = (
     parameters: {
       navpoint: resolveObjectReference(
         parameters[0]!,
-        asParameterLoweringContext(ctx),
+        asParameterLoweringContext(ctx)
       ),
       timerIndex: timerIndexFromParameter(parameters[1]!, ctx, location),
     },

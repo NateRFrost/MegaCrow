@@ -19,7 +19,7 @@ export enum ExplicitTeam {
   Global7 = 17,
   CurrentTeam = 18,
   LocalTeam = 19,
-  TargetTeam = 20, // Megalo Headache #2 
+  TargetTeam = 20, // Megalo Headache #2
   Temporary0 = 21,
   Temporary1 = 22,
   Temporary2 = 23,

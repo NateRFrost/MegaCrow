@@ -23,13 +23,13 @@ import {
   createFsResolvers,
   diffJson,
   ensureArtifactDirs,
+  HREK_MEGALO,
   isHrekAvailable,
+  type JsonDiff,
   readParityCompileList,
   readTextFile,
   summarizeDiffBuckets,
   toPlainJson,
-  type JsonDiff,
-  HREK_MEGALO,
 } from "./helpers";
 
 const FORCE = process.env.HREK_COMPARE === "1";
@@ -43,18 +43,18 @@ type ScriptStatus =
   | "diff"
   | "source_missing";
 
-type ScriptReport = {
-  script: string;
-  status: ScriptStatus;
-  megacrowOk: boolean;
-  megaloeditOk: boolean;
-  megacrowErrors: string[];
-  megaloeditLog: string;
+interface ScriptReport {
   decodeError?: string;
   diffCount: number;
   diffs: JsonDiff[];
   fieldBuckets: Record<string, number>;
-};
+  megacrowErrors: string[];
+  megacrowOk: boolean;
+  megaloeditLog: string;
+  megaloeditOk: boolean;
+  script: string;
+  status: ScriptStatus;
+}
 
 const formatProtoSummary = (reports: ScriptReport[]): string => {
   const lines: string[] = [];
@@ -230,7 +230,7 @@ describe.runIf(run)("HREK script_compile_list MegaCrow vs MegaloEdit", () => {
               error instanceof Error ? error.message : String(error);
             decodeFailures.push(`${script}: ${decodeError}`);
           }
-        } else if (!crowOk || !editResult.ok) {
+        } else if (!(crowOk && editResult.ok)) {
           status = "compile_error";
         }
 
@@ -262,7 +262,8 @@ describe.runIf(run)("HREK script_compile_list MegaCrow vs MegaloEdit", () => {
             megacrowOkCount: allReports.filter((r) => r.megacrowOk).length,
             megaloeditOkCount: allReports.filter((r) => r.megaloeditOk).length,
             comparedCount: allReports.filter(
-              (r) => r.megacrowOk && r.megaloeditOk && r.status !== "decode_error"
+              (r) =>
+                r.megacrowOk && r.megaloeditOk && r.status !== "decode_error"
             ).length,
             okCount: allReports.filter((r) => r.status === "ok").length,
             decodeErrorCount: allReports.filter(

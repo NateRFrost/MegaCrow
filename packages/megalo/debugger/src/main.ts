@@ -6,13 +6,13 @@ import {
   type SourceLocation,
   SourceLocationType,
 } from "../../src/diagnostics";
+import type { ObjectLists } from "../../src/frontend/object-lists";
 import {
   getLocale,
   SUPPORTED_LOCALES,
   type SupportedLocale,
   setLocale,
 } from "../../src/localization";
-import type { ObjectLists } from "../../src/frontend/object-lists";
 import type {
   AnalyzeRequest,
   AnalyzeResponse,
@@ -33,7 +33,10 @@ const DOM_DEBOUNCE_MS = 400;
 const SOURCE_SETTLE_MS = 250;
 const MAX_DISPLAYED_DIAGNOSTICS = 200;
 
-const debugLog = (event: string, details: Record<string, unknown> = {}): void => {
+const debugLog = (
+  event: string,
+  details: Record<string, unknown> = {}
+): void => {
   console.log(`[megalo-debugger] ${event}`, {
     at: performance.now().toFixed(1),
     ...details,
@@ -357,7 +360,7 @@ const scheduleIdleChain = (steps: Array<() => void>, timeout: number): void => {
     }
 
     scheduleIdle(() => {
-      steps[index]!();
+      steps[index]?.();
       runStep(index + 1);
     }, timeout);
   };
@@ -404,12 +407,12 @@ let sourceEditorActive = false;
 let domFlushPending = false;
 const updateStartedAt = new Map<number, number>();
 
-type UpdateOptions = {
+interface UpdateOptions {
   /** Re-translate diagnostics without re-rendering tokens/AST panes. */
   diagnosticsOnly?: boolean;
   /** Skip debounce for initial load and locale changes. */
   immediate?: boolean;
-};
+}
 
 let pendingOptions: UpdateOptions = {};
 let pendingSourceChanged = false;
@@ -505,7 +508,12 @@ const flushDom = (): void => {
       }
 
       const signature = diagnosticsSignature(result.diagnostics);
-      if (cachedDiagnosticsSignature !== signature) {
+      if (cachedDiagnosticsSignature === signature) {
+        debugLog("diagnostics-skipped-same-signature", {
+          generation: result.id,
+          count: result.diagnostics.length,
+        });
+      } else {
         debugLog("diagnostics-applying", {
           generation: result.id,
           count: result.diagnostics.length,
@@ -519,11 +527,6 @@ const flushDom = (): void => {
         sourceEditor.setDiagnostics(result.diagnostics);
         cachedDiagnosticsSignature = signature;
         debugLog("diagnostics-applied", {
-          generation: result.id,
-          count: result.diagnostics.length,
-        });
-      } else {
-        debugLog("diagnostics-skipped-same-signature", {
           generation: result.id,
           count: result.diagnostics.length,
         });

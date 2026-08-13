@@ -1,8 +1,8 @@
-import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
-import type { HudWidgetsElementNode } from "src/frontend/abstract-syntax-tree/elements/hud_widgets";
 import { diagnosticMessages } from "src/diagnostics/messages";
+import type { HudWidgetsElementNode } from "src/frontend/abstract-syntax-tree/elements/hud_widgets";
 import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
 import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
+import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import { HudWidgetPosition } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_hud_widgets";
 

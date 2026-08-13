@@ -1,24 +1,50 @@
-import type { MegaloVersion } from "src/version";
 import type { MegaloCompilerContext } from "src/context";
 import type { SourceCodeLocation } from "src/diagnostics";
-import type { Token } from "src/frontend/tokens";
 import type { ASTNode, SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
+import {
+  type ConstantsElementNode,
+  constantsParser,
+} from "src/frontend/abstract-syntax-tree/elements/constants";
+import {
+  type GameOptionsElementNode,
+  gameOptionsParser,
+} from "src/frontend/abstract-syntax-tree/elements/game_options";
+import type { Token } from "src/frontend/tokens";
+import type { MegaloVersion } from "src/version";
 
-import { type ConstantsElementNode, constantsParser } from "src/frontend/abstract-syntax-tree/elements/constants";
-import { type GameOptionsElementNode, gameOptionsParser } from "src/frontend/abstract-syntax-tree/elements/game_options";
-
-export { GameOptionEntryKind, OverrideValueKind } from "src/frontend/abstract-syntax-tree/elements/game_options";
+export type { BaseElementNode } from "src/frontend/abstract-syntax-tree/elements/base";
+export {
+  GameOptionEntryKind,
+  OverrideValueKind,
+} from "src/frontend/abstract-syntax-tree/elements/game_options";
 export type { IncludeElementNode } from "src/frontend/abstract-syntax-tree/elements/include";
 export type { LocalizedIncludeElementNode } from "src/frontend/abstract-syntax-tree/elements/localized_include";
-export type { BaseElementNode } from "src/frontend/abstract-syntax-tree/elements/base";
 
-import { type BaseElementNode, baseParser } from "src/frontend/abstract-syntax-tree/elements/base";
-import { type EngineDataElementNode, engineDataParser } from "src/frontend/abstract-syntax-tree/elements/engine_data";
-import { type GameStatsElementNode, gameStatsParser } from "src/frontend/abstract-syntax-tree/elements/game_stats";
-import { type HudWidgetsElementNode, hudWidgetsParser } from "src/frontend/abstract-syntax-tree/elements/hud_widgets";
-import { type IncludeElementNode, includeParser } from "src/frontend/abstract-syntax-tree/elements/include";
-import { type LoadoutElementNode, loadoutParser } from "src/frontend/abstract-syntax-tree/elements/loadout";
+import {
+  type BaseElementNode,
+  baseParser,
+} from "src/frontend/abstract-syntax-tree/elements/base";
+import {
+  type EngineDataElementNode,
+  engineDataParser,
+} from "src/frontend/abstract-syntax-tree/elements/engine_data";
+import {
+  type GameStatsElementNode,
+  gameStatsParser,
+} from "src/frontend/abstract-syntax-tree/elements/game_stats";
+import {
+  type HudWidgetsElementNode,
+  hudWidgetsParser,
+} from "src/frontend/abstract-syntax-tree/elements/hud_widgets";
+import {
+  type IncludeElementNode,
+  includeParser,
+} from "src/frontend/abstract-syntax-tree/elements/include";
+import {
+  type LoadoutElementNode,
+  loadoutParser,
+} from "src/frontend/abstract-syntax-tree/elements/loadout";
 import {
   type LoadoutPaletteElementNode,
   loadoutPaletteParser,
@@ -27,7 +53,10 @@ import {
   type LocalizedIncludeElementNode,
   localizedIncludeParser,
 } from "src/frontend/abstract-syntax-tree/elements/localized_include";
-import { type MapObjectElementNode, mapObjectParser } from "src/frontend/abstract-syntax-tree/elements/map_object";
+import {
+  type MapObjectElementNode,
+  mapObjectParser,
+} from "src/frontend/abstract-syntax-tree/elements/map_object";
 import {
   type MapPermissionsElementNode,
   mapPermissionsParser,
@@ -40,10 +69,22 @@ import {
   type RequisitionPaletteElementNode,
   requisitionPaletteParser,
 } from "src/frontend/abstract-syntax-tree/elements/requisition_palette";
-import { type StringTableElementNode, stringTableParser } from "src/frontend/abstract-syntax-tree/elements/string_table";
-import { type TeamsElementNode, teamsParser } from "src/frontend/abstract-syntax-tree/elements/teams";
-import { type TriggerElementNode, triggerParser } from "src/frontend/abstract-syntax-tree/elements/trigger";
-import { type VariablesElementNode, variablesParser } from "src/frontend/abstract-syntax-tree/elements/variables";
+import {
+  type StringTableElementNode,
+  stringTableParser,
+} from "src/frontend/abstract-syntax-tree/elements/string_table";
+import {
+  type TeamsElementNode,
+  teamsParser,
+} from "src/frontend/abstract-syntax-tree/elements/teams";
+import {
+  type TriggerElementNode,
+  triggerParser,
+} from "src/frontend/abstract-syntax-tree/elements/trigger";
+import {
+  type VariablesElementNode,
+  variablesParser,
+} from "src/frontend/abstract-syntax-tree/elements/variables";
 
 // REGISTERING NEW ELEMENTS:
 // - Add an ElementKind enum value.
@@ -80,7 +121,7 @@ export type ASTElementBase<K extends ElementKind> =
     keywordLocation: SourceCodeLocation;
   };
 // only used here to enforce ASTElementNode discrim union members implement ASTElementBase
-type ASTElementNodeWithBase<T extends ASTElementBase<any>> = T;
+type ASTElementNodeWithBase<T extends ASTElementBase<ElementKind>> = T;
 
 export type ASTElementNode = ASTElementNodeWithBase<
   | BaseElementNode
@@ -119,7 +160,7 @@ export class ElementParserRepository {
     this.parsers.set(name, parser);
   }
 
-  private registerParsers(megaloVersion: MegaloVersion) {
+  private registerParsers(_megaloVersion: MegaloVersion) {
     this.registerParser("base", baseParser);
     this.registerParser("include", includeParser);
     this.registerParser("localized_include", localizedIncludeParser);

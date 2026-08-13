@@ -14,30 +14,30 @@ export enum VariableType {
   CustomTimer = 4,
 }
 
-type PlayerVariable = {
-  type: VariableType.Player;
+interface PlayerVariable {
   player: PlayerReference;
-};
+  type: VariableType.Player;
+}
 
-type ObjectVariable = {
-  type: VariableType.Object;
+interface ObjectVariable {
   object: ObjectReference;
-};
+  type: VariableType.Object;
+}
 
-type TeamVariable = {
-  type: VariableType.Team;
+interface TeamVariable {
   team: TeamReference;
-};
+  type: VariableType.Team;
+}
 
-type CustomTimerVariable = {
-  type: VariableType.CustomTimer;
+interface CustomTimerVariable {
   customTimer: CustomTimerReference;
-};
+  type: VariableType.CustomTimer;
+}
 
-type CustomVariableVariable = {
-  type: VariableType.CustomVariable;
+interface CustomVariableVariable {
   customVariable: CustomVariableReference;
-};
+  type: VariableType.CustomVariable;
+}
 
 export type VariantVariable =
   | PlayerVariable

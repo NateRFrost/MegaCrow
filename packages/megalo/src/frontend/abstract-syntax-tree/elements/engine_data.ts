@@ -1,26 +1,32 @@
-import type { SourceCodeLocation } from "src/diagnostics";
-import type { MegaloVersion } from "src/version";
 import type { MegaloCompilerContext } from "src/context";
+import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import {
-  ENGINE_CATEGORY_STRING_PREFIX,
-  type EngineDataPropertyKey,
-} from "src/frontend/language-configuration/omni/engine_data";
-import { type Token, TokenKind } from "src/frontend/tokens";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
-import { isAstErrorNode, SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import {
+  type ASTElementBase,
+  ElementKind,
+} from "src/frontend/abstract-syntax-tree/elements";
+import {
+  isEndToken,
+  locationSpan,
+  parseIdentifier,
+} from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+import {
+  isAstErrorNode,
+  SyntaxKind,
+} from "src/frontend/abstract-syntax-tree/kinds";
 import {
   type ASTParameterNode,
   parameterParserBuilder as buildParameterParser,
   type ParameterParser,
   ParameterType,
 } from "src/frontend/abstract-syntax-tree/parameters";
-import { type ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
 import {
-  isEndToken,
-  locationSpan,
-  parseIdentifier,
-} from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+  ENGINE_CATEGORY_STRING_PREFIX,
+  type EngineDataPropertyKey,
+} from "src/frontend/language-configuration/omni/engine_data";
+import { type Token, TokenKind } from "src/frontend/tokens";
+import type { MegaloVersion } from "src/version";
 
 /**
  * `category vip` resolves the string symbol `engine_category_vip`, not `vip`.
@@ -74,10 +80,10 @@ const parseEngineCategoryParameter: ParameterParser = (
   ];
 };
 
-export type EngineDataPropertyNode = {
+export interface EngineDataPropertyNode {
   identifier: EngineDataPropertyKey;
   parameters: ASTParameterNode[];
-};
+}
 
 export type EngineDataElementNode = ASTElementBase<ElementKind.ENGINE_DATA> & {
   properties: EngineDataPropertyNode[];
@@ -93,15 +99,11 @@ export class EngineDataParserRepository {
   private registerParsers(_megaloVersion: MegaloVersion) {
     this.registerParser(
       "name",
-      buildParameterParser([
-        [ParameterType.QuotedString, ParameterType.String],
-      ])
+      buildParameterParser([[ParameterType.QuotedString, ParameterType.String]])
     );
     this.registerParser(
       "description",
-      buildParameterParser([
-        [ParameterType.QuotedString, ParameterType.String],
-      ])
+      buildParameterParser([[ParameterType.QuotedString, ParameterType.String]])
     );
     this.registerParser("icon", buildParameterParser([ParameterType.Integer]));
     this.registerParser("category", parseEngineCategoryParameter);

@@ -1,12 +1,15 @@
-import { getLabel, type SupportedMegaloVersion } from "src/version";
+import type { Compiler } from "src/backend/compile/compiler";
 import {
   BUILT_IN_LOCATION,
   type Diagnostics,
   type SourceLocation,
 } from "src/diagnostics";
-import type { FieldLocations, IR } from "src/frontend/intermediate-representation";
+import type {
+  FieldLocations,
+  IR,
+} from "src/frontend/intermediate-representation";
 import { translate } from "src/localization";
-import { Compiler } from "src/backend/compile/compiler";
+import { getLabel, type SupportedMegaloVersion } from "src/version";
 
 type Primitive = string | number | boolean | bigint;
 
@@ -17,7 +20,9 @@ export type ToCapabilities<T> = [T] extends [readonly (infer E)[]]
     ? boolean
     : [T] extends [object]
       ?
-          | { readonly [K in keyof Required<T>]: ToCapabilities<Required<T>[K]> }
+          | {
+              readonly [K in keyof Required<T>]: ToCapabilities<Required<T>[K]>;
+            }
           | boolean
       : boolean;
 
@@ -25,14 +30,14 @@ type GameVariantCapabilities = ToCapabilities<
   Omit<IR["gameVariant"], "gameEngine">
 >;
 
-export type IRCapabilities = {
+export interface IRCapabilities {
   // CustomGameEngineDefinition is not part of IR capabilities as its handled elsewhere.
   readonly gameVariant: GameVariantCapabilities;
-};
+}
 
-export type CompilerCapabilities = {
+export interface CompilerCapabilities {
   readonly ir: IRCapabilities;
-};
+}
 
 const unsupportedMessage = (
   fieldPath: string,

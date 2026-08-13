@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { ExplicitObject } from "../../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
+import { ExplicitPlayer } from "../../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
+import { ExplicitTeam } from "../../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
 import {
   parseExplicitObject,
   parseExplicitPlayer,
@@ -8,9 +11,6 @@ import {
   tryParseExplicitObject,
   tryParseExplicitPlayer,
 } from "../../../../src/frontend/intermediate-representation/parameters/explicit";
-import { ExplicitObject } from "../../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
-import { ExplicitPlayer } from "../../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
-import { ExplicitTeam } from "../../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
 
 describe("explicit name parsers", () => {
   it("parses explicit players", () => {

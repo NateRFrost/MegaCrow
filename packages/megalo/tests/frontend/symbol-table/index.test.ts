@@ -1,28 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { ParserSymbolContext } from "../../../src/frontend/abstract-syntax-tree/symbol-context";
+import { MegaloCompilerContext } from "../../../src/context";
 import {
-  Diagnostics,
   BUILT_IN_LOCATION,
+  Diagnostics,
   type SourceCodeLocation,
   SourceLocationType,
 } from "../../../src/diagnostics";
+import { ParserSymbolContext } from "../../../src/frontend/abstract-syntax-tree/symbol-context";
+import {
+  buildVariableSlotMap,
+  findVariableBySlot,
+} from "../../../src/frontend/intermediate-representation/preprocessing/symbols";
 import { TEAM_DESIGNATORS } from "../../../src/frontend/language-configuration/omni/teams";
 import {
+  isBuiltInVariable,
   SymbolBinder,
   SymbolKind,
   type SymbolTableStringEntry,
   type SymbolTableVariableEntry,
   VariableScope,
   VariableType,
-  isBuiltInVariable,
 } from "../../../src/frontend/symbol-table";
-import {
-  buildVariableSlotMap,
-  findVariableBySlot,
-} from "../../../src/frontend/intermediate-representation/preprocessing/symbols";
 import { ParserScopeKind } from "../../../src/frontend/symbol-table/scope";
 import { MEGALO_VERSIONS } from "../../../src/version";
-import { MegaloCompilerContext } from "../../../src/context";
 
 const version = MEGALO_VERSIONS["107-mcc"];
 const frontend = new MegaloCompilerContext(version);
@@ -258,10 +258,12 @@ describe("SymbolBinder", () => {
         1
       )?.name
     ).toBe("b");
-    expect(table.variablesOf(VariableScope.Global, VariableType.Number)).toHaveLength(2);
     expect(
-      isBuiltInVariable(table.findVariableByName("current_player")!)
-    ).toBe(true);
+      table.variablesOf(VariableScope.Global, VariableType.Number)
+    ).toHaveLength(2);
+    expect(isBuiltInVariable(table.findVariableByName("current_player")!)).toBe(
+      true
+    );
   });
 
   it("registers built-in timers in the global scope", () => {
@@ -330,7 +332,9 @@ describe("SymbolBinder", () => {
 
   it("registers target_team when the MegaCrow extension is enabled", () => {
     const diagnostics = new Diagnostics();
-    const extFrontend = new MegaloCompilerContext(version, { targetTeam: true });
+    const extFrontend = new MegaloCompilerContext(version, {
+      targetTeam: true,
+    });
     const binder = new SymbolBinder(extFrontend, diagnostics);
     const parser = new ParserSymbolContext(extFrontend, diagnostics, binder);
 
@@ -380,9 +384,14 @@ describe("SymbolBinder", () => {
 
     expect(parser.lookupSymbol("current_team")).toBeUndefined();
 
-    parser.pushScope({ kind: ParserScopeKind.Trigger, trigger: { kind: "team" } });
+    parser.pushScope({
+      kind: ParserScopeKind.Trigger,
+      trigger: { kind: "team" },
+    });
     expect(parser.lookupSymbol("current_team")).toBeDefined();
-    expect(parser.getSymbolEntry(parser.lookupSymbol("current_team")!)).toMatchObject({
+    expect(
+      parser.getSymbolEntry(parser.lookupSymbol("current_team")!)
+    ).toMatchObject({
       kind: SymbolKind.Variable,
       type: VariableType.Team,
       name: "current_team",

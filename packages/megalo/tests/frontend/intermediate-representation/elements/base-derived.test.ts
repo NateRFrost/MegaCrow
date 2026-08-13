@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
-import objectLists from "../../../../src/object-lists/haloreach_mcc/default";
-import { Parser } from "../../../../src/frontend/abstract-syntax-tree";
+import { MegaloCompilerContext } from "../../../../src/context";
 import { Diagnostics } from "../../../../src/diagnostics";
+import { Parser } from "../../../../src/frontend/abstract-syntax-tree";
 import { Lowerer } from "../../../../src/frontend/intermediate-representation";
 import { Lexer } from "../../../../src/frontend/tokens";
-
+import objectLists from "../../../../src/object-lists/haloreach_mcc/default";
 import { MEGALO_VERSIONS } from "../../../../src/version";
-import { MegaloCompilerContext } from "../../../../src/context";
 
 const lower = (source: string) => {
   const version = MEGALO_VERSIONS["107-mcc"];
@@ -14,11 +13,7 @@ const lower = (source: string) => {
   const diagnostics = new Diagnostics();
   const tokens = new Lexer(frontend).lex(source, diagnostics);
   const ast = new Parser(frontend).parse(tokens, diagnostics, objectLists);
-  const ir = new Lowerer(frontend).lower(
-    ast,
-    diagnostics,
-    { objectLists }
-  );
+  const ir = new Lowerer(frontend).lower(ast, diagnostics, { objectLists });
   return { ir, diagnostics };
 };
 

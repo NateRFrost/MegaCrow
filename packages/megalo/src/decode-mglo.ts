@@ -7,21 +7,21 @@ const { c_bitstream_reader, e_bitstream_byte_order } = bitstream;
 
 // TODO: Revisit this whole thing
 
-export type MgloGametypeVersion = {
+export interface MgloGametypeVersion {
   encodingVersion: number;
   id: string;
   label: string;
-};
+}
 
-type DecodableGametype = {
+interface DecodableGametype {
   decode(reader: unknown): void;
-  m_encoding_version: number;
   m_build_number: number;
-};
+  m_encoding_version: number;
+}
 
-type CustomVariantFactory = {
+interface CustomVariantFactory {
   new (): DecodableGametype;
-};
+}
 
 const GAMETYPE_BY_ENCODING: Record<
   number,
@@ -44,11 +44,11 @@ const GAMETYPE_BY_ENCODING: Record<
   },
 };
 
-export type DecodedMglo = {
-  version: MgloGametypeVersion;
+export interface DecodedMglo {
   buildNumber: number;
   gametype: DecodableGametype;
-};
+  version: MgloGametypeVersion;
+}
 
 /** Peek the signed 32-bit encoding version at the start of an `.mglo` bitstream. */
 export function readMgloEncodingVersion(bytes: Uint8Array): number {

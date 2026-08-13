@@ -4,8 +4,8 @@ import { Compiler } from "../../../../src/backend/compile/compiler";
 import { assertCompatibleIR } from "../../../../src/backend/compile/diagnostics/assertCompatibleIR";
 import {
   Diagnostics,
-  SourceLocationType,
   type SourceCodeLocation,
+  SourceLocationType,
 } from "../../../../src/diagnostics";
 import {
   createFieldLocations,
@@ -17,7 +17,9 @@ import { getLabel, MEGALO_VERSIONS } from "../../../../src/version";
 
 /** Minimal compiler stub — avoids pulling @blamnetwork/blf into this test. */
 class TestCompiler extends Compiler {
-  dryRun(): void {}
+  dryRun(): void {
+    // no-op stub
+  }
   writeMegaloFile(): Uint8Array {
     return new Uint8Array();
   }
@@ -31,11 +33,7 @@ class TestCompiler extends Compiler {
 
 const compiler = new TestCompiler();
 
-const loc = (
-  offset: number,
-  line = 1,
-  column = 1
-): SourceCodeLocation => ({
+const loc = (offset: number, line = 1, column = 1): SourceCodeLocation => ({
   type: SourceLocationType.SOURCE_CODE,
   start: {
     localOffset: offset,
@@ -62,7 +60,9 @@ const emptyVariableMetadata = () => ({
 const buildMinimalIr = (): IR => {
   const locations = createFieldLocations();
   const scriptStrings = new StringTable();
-  const baseNameStringIndex = scriptStrings.addEntry({ english: "Custom Game" });
+  const baseNameStringIndex = scriptStrings.addEntry({
+    english: "Custom Game",
+  });
 
   return {
     baseOverrides: {
@@ -209,6 +209,4 @@ describe("107-mcc field capabilities", () => {
     );
     expect(diagnostics.getErrors()[0]?.location).toEqual(sprintLoc);
   });
-
 });
-

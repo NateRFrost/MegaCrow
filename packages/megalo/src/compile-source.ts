@@ -1,4 +1,5 @@
 import { getCompilerForVersion } from "src/backend/compile";
+import type { CompilerSettings } from "src/compiler-settings";
 import { MegaloCompilerContext } from "src/context";
 import {
   BUILT_IN_LOCATION,
@@ -6,48 +7,47 @@ import {
   Diagnostics,
 } from "src/diagnostics";
 import { CompilerError } from "src/diagnostics/error";
-import { Lowerer } from "src/frontend/intermediate-representation";
-import type { IR } from "src/frontend/intermediate-representation";
-import type { ObjectLists } from "src/frontend/object-lists";
-import { Lexer } from "src/frontend/tokens";
 import {
   Parser,
   type ResolveIncludeFn,
 } from "src/frontend/abstract-syntax-tree";
+import type { IR } from "src/frontend/intermediate-representation";
+import { Lowerer } from "src/frontend/intermediate-representation";
+import type { ObjectLists } from "src/frontend/object-lists";
+import { Lexer } from "src/frontend/tokens";
 import { loadObjectListsForVersion } from "src/load-object-lists";
-import type { CompilerSettings } from "src/compiler-settings";
 import type { MegacrowExtensions } from "src/megacrow-extensions";
 import type { SupportedMegaloVersion } from "src/version";
 
 export type ResolveBaseFileFn = (
   path: string,
   ctx: { fromUri?: string }
-) => Promise<Uint8Array | null>;
+) => Uint8Array | null | Promise<Uint8Array | null>;
 
-export type CompileSourceOptions = {
-  version: SupportedMegaloVersion;
+export interface CompileSourceOptions {
+  /** MegaloEdit-parity compiler knobs. */
+  compilerSettings?: Partial<CompilerSettings>;
+  /** URI of the source document (for relative path resolution). */
+  fromUri?: string;
+  /** MegaCrow-only language extensions (defaults keep MegaloEdit parity). */
+  megacrowExtensions?: Partial<MegacrowExtensions>;
   /**
    * Object lists used for name resolution. When omitted, bundled defaults for
    * the compile version are loaded.
    */
   objectLists?: ObjectLists;
-  /** Host-owned include file resolver (Tauri / OPFS / tests). */
-  resolveInclude?: ResolveIncludeFn;
   /** Host-owned base `.mglo` resolver. */
   resolveBaseFile?: ResolveBaseFileFn;
-  /** URI of the source document (for relative path resolution). */
-  fromUri?: string;
-  /** MegaCrow-only language extensions (defaults keep MegaloEdit parity). */
-  megacrowExtensions?: Partial<MegacrowExtensions>;
-  /** MegaloEdit-parity compiler knobs. */
-  compilerSettings?: Partial<CompilerSettings>;
-};
+  /** Host-owned include file resolver (Tauri / OPFS / tests). */
+  resolveInclude?: ResolveIncludeFn;
+  version: SupportedMegaloVersion;
+}
 
-export type CompileSourceResult = {
-  diagnostics: Diagnostic[];
+export interface CompileSourceResult {
   /** Present when compilation succeeded with no errors. */
   bytes?: Uint8Array;
-};
+  diagnostics: Diagnostic[];
+}
 
 const resolveAndAttachBase = async (
   ir: IR,

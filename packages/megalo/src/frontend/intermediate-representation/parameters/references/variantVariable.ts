@@ -3,7 +3,6 @@ import {
   type VariantVariable,
   VariableType as VariantVariableType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variant_variable";
-import { VariableScope, VariableType } from "src/frontend/symbol-table";
 import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
 import { resolveGameOptionCustomVariableType } from "src/frontend/intermediate-representation/parameters/gameOptionTypes";
 import { resolveCustomTimerReference } from "src/frontend/intermediate-representation/parameters/references/customTimer";
@@ -18,15 +17,23 @@ import {
   splitParameterMember,
   temporaryReferenceKind,
 } from "src/frontend/intermediate-representation/parameters/references/helpers";
-import { encodeNoObjectReference, resolveObjectReference } from "src/frontend/intermediate-representation/parameters/references/object";
+import {
+  encodeNoObjectReference,
+  resolveObjectReference,
+} from "src/frontend/intermediate-representation/parameters/references/object";
 import { resolvePlayerReference } from "src/frontend/intermediate-representation/parameters/references/player";
 import { resolveTeamReference } from "src/frontend/intermediate-representation/parameters/references/team";
+import { VariableScope, VariableType } from "src/frontend/symbol-table";
 
 const memberSubjectScope = (
   ctx: ParameterLoweringContext,
   base: string,
   member: string
-): VariableScope.Player | VariableScope.Team | VariableScope.Object | undefined => {
+):
+  | VariableScope.Player
+  | VariableScope.Team
+  | VariableScope.Object
+  | undefined => {
   if (isPlayerReferenceBase(ctx, base)) {
     return VariableScope.Player;
   }
@@ -36,7 +43,7 @@ const memberSubjectScope = (
   if (isObjectReferenceBase(ctx, base, member)) {
     return VariableScope.Object;
   }
-  return undefined;
+  return;
 };
 
 const tryScopedNonNumberMember = (
@@ -47,7 +54,7 @@ const tryScopedNonNumberMember = (
 ): VariantVariable | undefined => {
   const scope = memberSubjectScope(ctx, base, member);
   if (scope === undefined) {
-    return undefined;
+    return;
   }
 
   if (
@@ -107,7 +114,7 @@ const tryScopedNonNumberMember = (
       team: resolveTeamReference(node, ctx),
     };
   }
-  return undefined;
+  return;
 };
 
 export const resolveVariantVariable = (
@@ -127,7 +134,8 @@ export const resolveVariantVariable = (
 
     if (
       name.includes("timer") &&
-      resolveGameOptionCustomVariableType(name, ctx.inPregameTrigger) === undefined
+      resolveGameOptionCustomVariableType(name, ctx.inPregameTrigger) ===
+        undefined
     ) {
       return {
         type: VariantVariableType.CustomTimer,

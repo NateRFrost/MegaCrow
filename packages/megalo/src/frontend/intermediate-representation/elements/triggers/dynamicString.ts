@@ -4,18 +4,18 @@ import type { ASTDynamicStringNode } from "src/frontend/abstract-syntax-tree/par
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import type { DynamicString } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_text";
 import {
-  ReplaceableTokenType,
   type ReplaceableToken,
+  ReplaceableTokenType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_text";
 import { VariableType as VariantVariableType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variant_variable";
-import {
-  asParameterLoweringContext,
-  type ElementLowerContext,
-} from "src/frontend/intermediate-representation/parameters/context";
 import {
   resolveScriptStringTableReference,
   resolveVariantVariable,
 } from "src/frontend/intermediate-representation/parameters";
+import {
+  asParameterLoweringContext,
+  type ElementLowerContext,
+} from "src/frontend/intermediate-representation/parameters/context";
 
 const lowerReplacement = (
   node: ASTParameterNode,
@@ -58,7 +58,7 @@ const lowerReplacement = (
   }
 
   throw new LowerError(
-    `Unsupported dynamic-string replacement.`,
+    "Unsupported dynamic-string replacement.",
     node.location
   );
 };

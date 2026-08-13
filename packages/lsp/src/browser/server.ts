@@ -1,21 +1,21 @@
+import { MEGALO_VERSIONS } from "@megacrow/megalo";
 import {
   BrowserMessageReader,
   BrowserMessageWriter,
   createConnection,
-  TextDocumentSyncKind,
   type DidChangeTextDocumentParams,
   type InitializeParams,
   type InitializeResult,
+  TextDocumentSyncKind,
 } from "vscode-languageserver/browser";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { MEGALO_VERSIONS } from "@megacrow/megalo";
 import {
   analyzeAndCompile,
   analyzeOnly,
+  type CompileResolvers,
   MEGACROW_COMPILE_METHOD,
   MEGACROW_RESOLVE_BASE_FILE_METHOD,
   MEGACROW_RESOLVE_INCLUDE_METHOD,
-  type CompileResolvers,
   type MegacrowCompileParams,
   type MegacrowCompileResult,
   type MegacrowResolveBaseFileParams,
@@ -82,15 +82,17 @@ const publishFor = async (uri: string, text: string): Promise<void> => {
   connection.sendDiagnostics({ uri, diagnostics });
 };
 
-connection.onInitialize((_params: InitializeParams): InitializeResult => ({
-  capabilities: {
-    textDocumentSync: TextDocumentSyncKind.Full,
-  },
-  serverInfo: {
-    name: "megacrow-lsp",
-    version: "0.1.0",
-  },
-}));
+connection.onInitialize(
+  (_params: InitializeParams): InitializeResult => ({
+    capabilities: {
+      textDocumentSync: TextDocumentSyncKind.Full,
+    },
+    serverInfo: {
+      name: "megacrow-lsp",
+      version: "0.1.0",
+    },
+  })
+);
 
 connection.onDidOpenTextDocument((params) => {
   const { uri, languageId, version, text } = params.textDocument;
@@ -102,8 +104,8 @@ connection.onDidOpenTextDocument((params) => {
 connection.onDidChangeTextDocument((params: DidChangeTextDocumentParams) => {
   const uri = params.textDocument.uri;
   const existing = documents.get(uri);
-  const change = params.contentChanges[params.contentChanges.length - 1];
-  if (!change || !("text" in change) || typeof change.text !== "string") {
+  const change = params.contentChanges.at(-1);
+  if (!(change && "text" in change) || typeof change.text !== "string") {
     return;
   }
   const version = params.textDocument.version;

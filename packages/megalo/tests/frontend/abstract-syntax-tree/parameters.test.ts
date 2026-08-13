@@ -1,15 +1,16 @@
 import { describe, expect, it } from "vitest";
+import { MegaloCompilerContext } from "../../../src/context";
+import { BUILT_IN_LOCATION, Diagnostics } from "../../../src/diagnostics";
 import { ParserContext } from "../../../src/frontend/abstract-syntax-tree/context";
 import { SyntaxKind } from "../../../src/frontend/abstract-syntax-tree/kinds";
+import type { ParameterParser } from "../../../src/frontend/abstract-syntax-tree/parameters";
 import {
+  grenadeCountParser,
   KeywordParameter,
   OptionalParameter,
   ParameterType,
-  grenadeCountParser,
   parameterParserBuilder,
 } from "../../../src/frontend/abstract-syntax-tree/parameters";
-import type { ParameterParser } from "../../../src/frontend/abstract-syntax-tree/parameters";
-import { BUILT_IN_LOCATION, Diagnostics } from "../../../src/diagnostics";
 import {
   SymbolBinder,
   VariableScope,
@@ -17,7 +18,6 @@ import {
 } from "../../../src/frontend/symbol-table";
 import { Lexer } from "../../../src/frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../src/version";
-import { MegaloCompilerContext } from "../../../src/context";
 
 const parseParameters = (source: string, parser: ParameterParser) => {
   const diagnostics = new Diagnostics();
@@ -44,7 +44,7 @@ const parseParameters = (source: string, parser: ParameterParser) => {
     declaration: BUILT_IN_LOCATION,
     value: 42,
   });
-  ctx.symbolParser.addHudWidgetToScope("health_meter", tokens[0]!.location);
+  ctx.symbolParser.addHudWidgetToScope("health_meter", tokens[0]?.location);
   ctx.symbolParser.addVariableToScope({
     name: "spawn_point",
     type: VariableType.Object,
@@ -82,7 +82,7 @@ const parseParameters = (source: string, parser: ParameterParser) => {
     scope: VariableScope.Global,
   });
 
-  const anchor = tokens[0]!.location;
+  const anchor = tokens[0]?.location;
   const parameters = parser(ctx, anchor);
   return { parameters, diagnostics };
 };
@@ -142,7 +142,7 @@ describe("parameterParserBuilder", () => {
     const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
     const parameters = parameterParserBuilder([ParameterType.Team])(
       ctx,
-      tokens[0]!.location
+      tokens[0]?.location
     );
 
     expect(diagnostics.hasErrors()).toBe(false);
@@ -251,7 +251,7 @@ describe("parameterParserBuilder", () => {
 
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new MegaloCompilerContext(version);
+    const frontend = new MegaloCompilerContext(version);
     const tokens = new Lexer(frontend).lex(
       "player current_player vip",
       diagnostics
@@ -265,7 +265,7 @@ const frontend = new MegaloCompilerContext(version);
       scope: VariableScope.Global,
     });
 
-    const parameters = parser(ctx, tokens[0]!.location);
+    const parameters = parser(ctx, tokens[0]?.location);
 
     expect(diagnostics.hasErrors()).toBe(false);
     expect(parameters).toHaveLength(3);
@@ -353,14 +353,16 @@ const frontend = new MegaloCompilerContext(version);
     const parser = parameterParserBuilder();
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new MegaloCompilerContext(version);
+    const frontend = new MegaloCompilerContext(version);
     const tokens = new Lexer(frontend).lex("unused", diagnostics);
-    const ctx = new ParserContext(tokens, frontend,
+    const ctx = new ParserContext(
+      tokens,
+      frontend,
       diagnostics,
       new SymbolBinder(frontend, diagnostics)
     );
 
-    expect(parser(ctx, tokens[0]!.location)).toEqual([]);
+    expect(parser(ctx, tokens[0]?.location)).toEqual([]);
     expect(diagnostics.hasErrors()).toBe(false);
   });
 
@@ -472,7 +474,7 @@ const frontend = new MegaloCompilerContext(version);
     const parser = parameterParserBuilder([ParameterType.DynamicString]);
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new MegaloCompilerContext(version);
+    const frontend = new MegaloCompilerContext(version);
     const tokens = new Lexer(frontend).lex(
       "obj_score score_to_win_round",
       diagnostics
@@ -492,7 +494,7 @@ const frontend = new MegaloCompilerContext(version);
       declaration: BUILT_IN_LOCATION,
     });
 
-    const parameters = parser(ctx, tokens[0]!.location);
+    const parameters = parser(ctx, tokens[0]?.location);
 
     expect(diagnostics.hasErrors()).toBe(false);
     expect(parameters[0]).toMatchObject({
@@ -548,7 +550,7 @@ const frontend = new MegaloCompilerContext(version);
     const parser = parameterParserBuilder([ParameterType.DynamicString]);
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new MegaloCompilerContext(version);
+    const frontend = new MegaloCompilerContext(version);
     const tokens = new Lexer(frontend).lex(
       "missing_string leftover",
       diagnostics
@@ -556,7 +558,7 @@ const frontend = new MegaloCompilerContext(version);
     const symbolBinder = new SymbolBinder(frontend, diagnostics);
     const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
 
-    const parameters = parser(ctx, tokens[0]!.location);
+    const parameters = parser(ctx, tokens[0]?.location);
 
     expect(diagnostics.hasErrors()).toBe(false);
     expect(parameters).toHaveLength(1);

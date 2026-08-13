@@ -1,16 +1,19 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { SourceCodeLocation } from "src/diagnostics";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import {
-  ActionType,
+  parseBooleanLiteral,
+  requireParamCount,
+} from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import {
   type Action,
+  ActionType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import { type ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
-import { parseBooleanLiteral, requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 
 export const lowerDebuggingEnableTracing = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   requireParamCount(parameters, 1, location);
   return {

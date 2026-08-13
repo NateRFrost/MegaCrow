@@ -1,6 +1,22 @@
 import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
 import {
+  type ASTErrorNode,
+  type ASTReferenceNode,
+  isAstErrorNode,
+  SyntaxKind,
+} from "src/frontend/abstract-syntax-tree";
+import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
+import {
+  type ASTElementBase,
+  ElementKind,
+} from "src/frontend/abstract-syntax-tree/elements";
+import {
+  type IntegerInitialValue,
+  parseIntegerInitialValue,
+} from "src/frontend/abstract-syntax-tree/elements/constants";
+import { locationSpan } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+import {
   isNumericVariableType,
   isVariableScopeName,
   isVariableTypeName,
@@ -10,26 +26,19 @@ import {
   variableTypeFromName,
 } from "src/frontend/language-configuration/omni/variables";
 import { type Token, TokenKind } from "src/frontend/tokens";
-import {
-  type ASTErrorNode,
-  type ASTReferenceNode,
-  isAstErrorNode,
-  SyntaxKind,
-} from "src/frontend/abstract-syntax-tree";
-import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
-import { type ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
-import {
-  type IntegerInitialValue,
-  parseIntegerInitialValue,
-} from "src/frontend/abstract-syntax-tree/elements/constants";
-import { locationSpan } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
 
-type VariableEntryNodeNetwork = { value: string; location: SourceCodeLocation };
-type VariableEntryNodeType = {
-  value: VariableTypeName;
+interface VariableEntryNodeNetwork {
   location: SourceCodeLocation;
-};
-type VariableEntryNodeName = { value: string; location: SourceCodeLocation };
+  value: string;
+}
+interface VariableEntryNodeType {
+  location: SourceCodeLocation;
+  value: VariableTypeName;
+}
+interface VariableEntryNodeName {
+  location: SourceCodeLocation;
+  value: string;
+}
 type IdentifierInitialValue = ASTReferenceNode | ASTErrorNode;
 type VariableEntryNodeInitial = IntegerInitialValue | IdentifierInitialValue;
 
@@ -93,13 +102,13 @@ const parseIdentifierInitialValue = (
   };
 };
 
-export type VariableEntryNode = {
-  network: VariableEntryNodeNetwork | ASTErrorNode;
-  type: VariableEntryNodeType | ASTErrorNode;
-  name: VariableEntryNodeName | ASTErrorNode;
+export interface VariableEntryNode {
   initial: VariableEntryNodeInitial;
   location: SourceCodeLocation;
-};
+  name: VariableEntryNodeName | ASTErrorNode;
+  network: VariableEntryNodeNetwork | ASTErrorNode;
+  type: VariableEntryNodeType | ASTErrorNode;
+}
 
 export type VariablesElementNode = ASTElementBase<ElementKind.VARIABLES> & {
   scope:

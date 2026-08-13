@@ -1,10 +1,15 @@
-import type { MegaloVersion } from "src/version";
 import type { MegaloCompilerContext } from "src/context";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { ObjectListType } from "src/frontend/object-lists";
-import { type Token, TokenKind } from "src/frontend/tokens";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
+import {
+  locationSpan,
+  parseIdentifier,
+} from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+import {
+  GameOptionEntryKind,
+  type GameOptionModifiers,
+} from "src/frontend/abstract-syntax-tree/elements/game_options/types";
 import {
   type ASTErrorNode,
   type ASTNode,
@@ -13,9 +18,9 @@ import {
 } from "src/frontend/abstract-syntax-tree/kinds";
 import {
   type ASTParameterNode,
+  parameterParserBuilder as buildParameterParser,
   KeywordParameter,
   ObjectListParameter,
-  parameterParserBuilder as buildParameterParser,
   type ParameterParser,
   ParameterType,
 } from "src/frontend/abstract-syntax-tree/parameters";
@@ -24,16 +29,14 @@ import {
   parseStringLiteralOrReference,
 } from "src/frontend/abstract-syntax-tree/parameters/string_literal_or_reference";
 import { grenadeCountParser } from "src/frontend/abstract-syntax-tree/parameters/types/grenade-count";
-import { locationSpan, parseIdentifier } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
-import {
-  GameOptionEntryKind,
-  type GameOptionModifiers,
-} from "src/frontend/abstract-syntax-tree/elements/game_options/types";
+import { ObjectListType } from "src/frontend/object-lists";
+import { type Token, TokenKind } from "src/frontend/tokens";
+import type { MegaloVersion } from "src/version";
 
-export type PlayerTraitOptionNode = {
+export interface PlayerTraitOptionNode {
   identifier: string;
   parameters: ASTParameterNode[];
-};
+}
 
 export const parsePlayerTraitOptions = (
   ctx: ParserContext,
@@ -81,25 +84,25 @@ export const parsePlayerTraitOptions = (
   };
 };
 
-export type PlayerTraitsElementNode = {
+export interface PlayerTraitsElementNode {
+  description: ASTStringLiteralOrReference;
+  displayName: ASTStringLiteralOrReference;
   kind: GameOptionEntryKind.PLAYER_TRAITS;
+  location: SourceCodeLocation;
   modifiers: GameOptionModifiers;
   name: { value: string; location: SourceCodeLocation } | ASTErrorNode;
-  displayName: ASTStringLiteralOrReference;
-  description: ASTStringLiteralOrReference;
-  location: SourceCodeLocation;
   options: PlayerTraitOptionNode[];
-};
+}
 
-export type PlayerTraitsOverrideNode = {
+export interface PlayerTraitsOverrideNode {
   kind: GameOptionEntryKind.PLAYER_TRAITS_OVERRIDE;
+  location: SourceCodeLocation;
   modifiers: GameOptionModifiers;
+  options: PlayerTraitOptionNode[];
   target:
     | { kind: "name"; value: string; location: SourceCodeLocation }
     | { kind: "index"; value: number; location: SourceCodeLocation };
-  options: PlayerTraitOptionNode[];
-  location: SourceCodeLocation;
-};
+}
 
 const parsePlayerTraitsOverride = (
   ctx: ParserContext,
@@ -165,12 +168,12 @@ export const playerTraitsParser = (
   };
 };
 
-export type ASTPlayerTraitNode = {
+export interface ASTPlayerTraitNode {
   identifier: Token;
   parameters: ASTNode<
     SyntaxKind.KEYWORD | SyntaxKind.INTEGER | SyntaxKind.REFERENCE
   >;
-};
+}
 
 export class PlayerTraitParserRepository {
   private readonly parsers = new Map<string, ParameterParser>();
@@ -179,7 +182,7 @@ export class PlayerTraitParserRepository {
     this.parsers.set(name, parser);
   }
 
-  private registerParsers(megaloVersion: MegaloVersion) {
+  private registerParsers(_megaloVersion: MegaloVersion) {
     this.registerParser(
       "damage_resistance",
       buildParameterParser([ParameterType.Keyword], [ParameterType.Integer])
@@ -254,33 +257,23 @@ export class PlayerTraitParserRepository {
     );
     this.registerParser(
       "infinite_ammo",
-      buildParameterParser(
-        [ParameterType.Integer]
-      )
+      buildParameterParser([ParameterType.Integer])
     );
     this.registerParser(
       "bottomless_clip",
-      buildParameterParser(
-        [ParameterType.Integer]
-      )
+      buildParameterParser([ParameterType.Integer])
     );
     this.registerParser(
       "weapon_pickup",
-      buildParameterParser(
-        [ParameterType.Integer]
-      )
+      buildParameterParser([ParameterType.Integer])
     );
     this.registerParser(
       "drop_equipment",
-      buildParameterParser(
-        [ParameterType.Integer]
-      )
+      buildParameterParser([ParameterType.Integer])
     );
     this.registerParser(
       "infinite_equipment",
-      buildParameterParser(
-        [ParameterType.Integer]
-      )
+      buildParameterParser([ParameterType.Integer])
     );
     this.registerParser("speed", buildParameterParser([ParameterType.Integer]));
     this.registerParser(

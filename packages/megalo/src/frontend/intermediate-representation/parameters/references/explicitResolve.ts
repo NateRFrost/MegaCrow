@@ -1,21 +1,10 @@
+import type { SourceLocation } from "src/diagnostics";
+import { BUILT_IN_LOCATION } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 import { ExplicitObject } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
 import { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
 import { ExplicitTeam } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
-import {
-  type SymbolTableVariableEntry,
-  VariableScope,
-  VariableType,
-  isBuiltInVariable,
-} from "src/frontend/symbol-table";
-import { diagnosticMessages } from "src/diagnostics/messages";
-import type { SourceLocation } from "src/diagnostics";
-import { BUILT_IN_LOCATION } from "src/diagnostics";
-import {
-  findVariableBySlot,
-  requireResolvedVariableSlot,
-  requireVariableSlot,
-} from "src/frontend/intermediate-representation/preprocessing/symbols";
-import { LowerError } from "src/frontend/intermediate-representation/error";
 import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
 import {
   enumSlotValue,
@@ -25,6 +14,17 @@ import {
   parseIndexSuffix,
   parseQualifiedTemporaryName,
 } from "src/frontend/intermediate-representation/parameters/explicit";
+import {
+  findVariableBySlot,
+  requireResolvedVariableSlot,
+  requireVariableSlot,
+} from "src/frontend/intermediate-representation/preprocessing/symbols";
+import {
+  isBuiltInVariable,
+  type SymbolTableVariableEntry,
+  VariableScope,
+  VariableType,
+} from "src/frontend/symbol-table";
 
 const normalizeExplicitTemporaryBase = (base: string): string => {
   const qualified = parseQualifiedTemporaryName(base);
@@ -40,7 +40,10 @@ const assertMegacrowTeamExtensions = (
   location: SourceLocation
 ): void => {
   // Megalo Headache #2
-  if (team === ExplicitTeam.TargetTeam && !ctx.frontend.megacrowExtensions.targetTeam) {
+  if (
+    team === ExplicitTeam.TargetTeam &&
+    !ctx.frontend.megacrowExtensions.targetTeam
+  ) {
     throw new LowerError(
       diagnosticMessages.megacrowExtensionRequired("targetTeam", "target_team"),
       location
@@ -55,7 +58,8 @@ export const resolveExplicitPlayerForBase = (
 ): ExplicitPlayer => {
   const engineBase = normalizeExplicitTemporaryBase(base);
   const slot =
-    resolvedBaseVariable?.type === VariableType.Player && !isBuiltInVariable(resolvedBaseVariable)
+    resolvedBaseVariable?.type === VariableType.Player &&
+    !isBuiltInVariable(resolvedBaseVariable)
       ? resolvedBaseVariable
       : ctx.symbolTable.findVariableByName(engineBase);
   if (slot?.type === VariableType.Player && !isBuiltInVariable(slot)) {
@@ -64,22 +68,14 @@ export const resolveExplicitPlayerForBase = (
       return enumSlotValue(ExplicitPlayer, "Global", resolved.index);
     }
     if (resolved.scope === VariableScope.Temporary) {
-      return enumSlotValue(
-        ExplicitPlayer,
-        "Temporary",
-        resolved.index
-      );
+      return enumSlotValue(ExplicitPlayer, "Temporary", resolved.index);
     }
     return enumSlotValue(ExplicitPlayer, "Temporary", resolved.index);
   }
 
   const globalPlayerIndex = parseIndexSuffix(engineBase, "global_player");
   if (globalPlayerIndex !== undefined) {
-    return enumSlotValue(
-      ExplicitPlayer,
-      "Global",
-      globalPlayerIndex
-    );
+    return enumSlotValue(ExplicitPlayer, "Global", globalPlayerIndex);
   }
 
   return parseExplicitPlayer(engineBase);
@@ -93,24 +89,17 @@ export const resolveExplicitTeamForBase = (
 ): ExplicitTeam => {
   const engineBase = normalizeExplicitTemporaryBase(base);
   const slot =
-    resolvedBaseVariable?.type === VariableType.Team && !isBuiltInVariable(resolvedBaseVariable)
+    resolvedBaseVariable?.type === VariableType.Team &&
+    !isBuiltInVariable(resolvedBaseVariable)
       ? resolvedBaseVariable
       : ctx.symbolTable.findVariableByName(engineBase);
   if (slot?.type === VariableType.Team && !isBuiltInVariable(slot)) {
     const resolved = requireResolvedVariableSlot(ctx.variableSlots, slot.id);
     if (resolved.scope === VariableScope.Global) {
-      return enumSlotValue(
-        ExplicitTeam,
-        "Global",
-        resolved.index
-      );
+      return enumSlotValue(ExplicitTeam, "Global", resolved.index);
     }
     if (resolved.scope === VariableScope.Temporary) {
-      return enumSlotValue(
-        ExplicitTeam,
-        "Temporary",
-        resolved.index
-      );
+      return enumSlotValue(ExplicitTeam, "Temporary", resolved.index);
     }
     return ExplicitTeam.CurrentTeam;
   }
@@ -152,35 +141,24 @@ export const resolveExplicitObjectForBase = (
   }
 
   const slot =
-    resolvedBaseVariable?.type === VariableType.Object && !isBuiltInVariable(resolvedBaseVariable)
+    resolvedBaseVariable?.type === VariableType.Object &&
+    !isBuiltInVariable(resolvedBaseVariable)
       ? resolvedBaseVariable
       : ctx.symbolTable.findVariableByName(base);
   if (slot?.type === VariableType.Object && !isBuiltInVariable(slot)) {
     const resolved = requireResolvedVariableSlot(ctx.variableSlots, slot.id);
     if (resolved.scope === VariableScope.Global) {
-      return enumSlotValue(
-        ExplicitObject,
-        "Global",
-        resolved.index
-      );
+      return enumSlotValue(ExplicitObject, "Global", resolved.index);
     }
     if (resolved.scope === VariableScope.Temporary) {
-      return enumSlotValue(
-        ExplicitObject,
-        "Temporary",
-        resolved.index
-      );
+      return enumSlotValue(ExplicitObject, "Temporary", resolved.index);
     }
     return ExplicitObject.Current;
   }
 
   const globalObjectIndex = parseIndexSuffix(base, "global_object");
   if (globalObjectIndex !== undefined) {
-    return enumSlotValue(
-      ExplicitObject,
-      "Global",
-      globalObjectIndex
-    );
+    return enumSlotValue(ExplicitObject, "Global", globalObjectIndex);
   }
 
   return parseExplicitObject(base);

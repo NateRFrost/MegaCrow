@@ -1,32 +1,38 @@
-import type { MegaloVersion } from "src/version";
 import type { MegaloCompilerContext } from "src/context";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { type Token, TokenKind } from "src/frontend/tokens";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
-import { isAstErrorNode, SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import {
+  type ASTElementBase,
+  ElementKind,
+} from "src/frontend/abstract-syntax-tree/elements";
+import {
+  isEndToken,
+  locationSpan,
+  parseIdentifier,
+} from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+import {
+  isAstErrorNode,
+  SyntaxKind,
+} from "src/frontend/abstract-syntax-tree/kinds";
 import {
   type ASTParameterNode,
   parameterParserBuilder as buildParameterParser,
   type ParameterParser,
   ParameterType,
 } from "src/frontend/abstract-syntax-tree/parameters";
-import { type ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
-import {
-  isEndToken,
-  locationSpan,
-  parseIdentifier,
-} from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+import { type Token, TokenKind } from "src/frontend/tokens";
+import type { MegaloVersion } from "src/version";
 
-export type TeamsPropertyNode = {
+export interface TeamsPropertyNode {
   identifier: string;
   parameters: ASTParameterNode[];
-};
+}
 
-export type TeamNode = {
-  properties: TeamsPropertyNode[];
+export interface TeamNode {
   location: SourceCodeLocation;
-};
+  properties: TeamsPropertyNode[];
+}
 
 export type TeamsElementNode = ASTElementBase<ElementKind.TEAMS> & {
   properties: TeamsPropertyNode[];

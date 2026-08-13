@@ -1,16 +1,26 @@
 import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { type Token, TokenKind } from "src/frontend/tokens";
-import { type ASTErrorNode, type ASTIntegerNode, SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import {
+  type ASTErrorNode,
+  type ASTIntegerNode,
+  SyntaxKind,
+} from "src/frontend/abstract-syntax-tree";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
+import {
+  type ASTElementBase,
+  ElementKind,
+} from "src/frontend/abstract-syntax-tree/elements";
+import {
+  isEndToken,
+  locationSpan,
+} from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
 import { isAstErrorNode } from "src/frontend/abstract-syntax-tree/kinds";
 import type { ASTKeywordParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import {
   type ASTStringLiteralOrReference,
   parseStringLiteralOrReference,
 } from "src/frontend/abstract-syntax-tree/parameters/string_literal_or_reference";
-import { type ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
-import { isEndToken, locationSpan } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+import { type Token, TokenKind } from "src/frontend/tokens";
 
 const GAME_STAT_FORMAT_KINDS = new Set([
   "number",
@@ -21,17 +31,23 @@ const GAME_STAT_FORMAT_KINDS = new Set([
 
 const GAME_STAT_GROUPING_KINDS = new Set(["none", "team"]);
 
-type GameStatEntryNodeName = { value: string; location: SourceCodeLocation };
-type GameStatEntryNodeType = { value: string; location: SourceCodeLocation };
-
-export type GameStatEntryNode = {
-  name: GameStatEntryNodeName | ASTErrorNode;
-  type: GameStatEntryNodeType | ASTErrorNode;
-  labelString: ASTStringLiteralOrReference;
-  grouping: ASTKeywordParameterNode | ASTErrorNode;
-  sort: ASTIntegerNode | ASTErrorNode;
+interface GameStatEntryNodeName {
   location: SourceCodeLocation;
-};
+  value: string;
+}
+interface GameStatEntryNodeType {
+  location: SourceCodeLocation;
+  value: string;
+}
+
+export interface GameStatEntryNode {
+  grouping: ASTKeywordParameterNode | ASTErrorNode;
+  labelString: ASTStringLiteralOrReference;
+  location: SourceCodeLocation;
+  name: GameStatEntryNodeName | ASTErrorNode;
+  sort: ASTIntegerNode | ASTErrorNode;
+  type: GameStatEntryNodeType | ASTErrorNode;
+}
 
 export type GameStatsElementNode = ASTElementBase<ElementKind.GAME_STATS> & {
   entries: GameStatEntryNode[];

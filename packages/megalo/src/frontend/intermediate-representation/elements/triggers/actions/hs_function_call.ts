@@ -1,18 +1,21 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import {
+  requireKeyword,
+  requireParamCount,
+} from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  ActionType,
   type Action,
+  ActionType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import { type ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
-import { requireKeyword, requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 
 const parseFunctionNameIndex = (
   node: ASTParameterNode,
 
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): number => {
   const name = requireKeyword(node, location);
 
@@ -25,7 +28,7 @@ const parseFunctionNameIndex = (
   throw new LowerError(
     diagnosticMessages.expectedParameterType("hs function name index", name),
 
-    node.location ?? location,
+    node.location ?? location
   );
 };
 
@@ -34,7 +37,7 @@ export const lowerHsFunctionCall = (
 
   _ctx: ElementLowerContext,
 
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   requireParamCount(parameters, 1, location);
 

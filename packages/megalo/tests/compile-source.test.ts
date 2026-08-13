@@ -2,12 +2,12 @@ import { bitstream } from "@blamnetwork/blf";
 import { c_game_engine_custom_variant as AlphaCustomVariant } from "@blamnetwork/blf/haloreach/v08516_10_02_19_1607_omaha_alpha";
 import { describe, expect, it } from "vitest";
 import { compileSource } from "../src/compile-source";
+import { MegaloCompilerContext } from "../src/context";
+import { Diagnostics, SourceLocationType } from "../src/diagnostics";
 import { Parser } from "../src/frontend/abstract-syntax-tree";
 import { ElementKind } from "../src/frontend/abstract-syntax-tree/elements";
-import { Diagnostics, SourceLocationType } from "../src/diagnostics";
 import { Lexer } from "../src/frontend/tokens";
 import { MEGALO_VERSIONS } from "../src/version";
-import { MegaloCompilerContext } from "../src/context";
 
 const { c_bitstream_writer, e_bitstream_byte_order } = bitstream;
 
@@ -55,7 +55,7 @@ end
 `,
       {
         version,
-        resolveInclude: async (path) => {
+        resolveInclude: (path) => {
           const text = files.get(path);
           return text ? { text, uri: path } : null;
         },
@@ -72,30 +72,30 @@ end
 `;
     const result = await compileSource(source, {
       version,
-      resolveInclude: async () => null,
+      resolveInclude: () => Promise.resolve(null),
     });
 
     const error = result.diagnostics.find((d) =>
       d.message.includes('Could not resolve include "missing.txt"')
     );
     expect(error).toBeDefined();
-    expect(error!.location.type).toBe(SourceLocationType.SOURCE_CODE);
-    if (error!.location.type === SourceLocationType.SOURCE_CODE) {
-      expect(error!.location.start.line).toBe(1);
+    expect(error?.location.type).toBe(SourceLocationType.SOURCE_CODE);
+    if (error?.location.type === SourceLocationType.SOURCE_CODE) {
+      expect(error?.location.start.line).toBe(1);
     }
   });
 
   it("tags nested include parse errors as IncludeLocation on the outer include", async () => {
     const files = new Map<string, string>([
       ["outer.txt", `include "inner.txt"\n`],
-      ["inner.txt", `this_is_not_a_valid_element\n`],
+      ["inner.txt", "this_is_not_a_valid_element\n"],
     ]);
 
     const source = `include "outer.txt"
 `;
     const result = await compileSource(source, {
       version,
-      resolveInclude: async (path) => {
+      resolveInclude: (path) => {
         const text = files.get(path);
         return text ? { text, uri: path } : null;
       },
@@ -139,7 +139,7 @@ include "b.txt"
 `,
       {
         version,
-        resolveInclude: async (path) => {
+        resolveInclude: (path) => {
           const text = files.get(path);
           return text ? { text, uri: path } : null;
         },
@@ -164,7 +164,7 @@ end
 `,
       {
         version,
-        resolveInclude: async () => {
+        resolveInclude: () => {
           resolveCount += 1;
           return {
             text: `constants
@@ -178,9 +178,9 @@ end
     );
 
     expect(resolveCount).toBe(1);
-    expect(
-      result.diagnostics.some((d) => d.message.includes("once"))
-    ).toBe(false);
+    expect(result.diagnostics.some((d) => d.message.includes("once"))).toBe(
+      false
+    );
   });
 });
 
@@ -271,7 +271,7 @@ end
     );
 
     const ast = await new Parser(frontend).parseAsync(tokens, diagnostics, {
-      resolveInclude: async () => ({
+      resolveInclude: () => ({
         text: `constants
 \tnumber y 2
 end

@@ -13,8 +13,5 @@ export const markCurrentValueUnused = (
   if (location === undefined || location.type === SourceLocationType.BUILT_IN) {
     return;
   }
-  diagnostics.addWarning(
-    diagnosticMessages.unusedValue(location),
-    location
-  );
+  diagnostics.addWarning(diagnosticMessages.unusedValue(location), location);
 };

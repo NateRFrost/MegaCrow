@@ -1,10 +1,10 @@
+import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { MapObjectElementNode } from "src/frontend/abstract-syntax-tree/elements/map_object";
-import { diagnosticMessages } from "src/diagnostics/messages";
-import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
 import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
 import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
 import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
+import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   type ObjectFilter,

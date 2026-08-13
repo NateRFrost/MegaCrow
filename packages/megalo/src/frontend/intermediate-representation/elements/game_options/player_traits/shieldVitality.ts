@@ -1,11 +1,20 @@
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { located } from "src/frontend/intermediate-representation";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import {
+  type Located,
+  located,
+} from "src/frontend/intermediate-representation";
+import {
+  resolveKeyword,
+  type TraitOptionArgs,
+} from "src/frontend/intermediate-representation/elements/game_options/player_traits/helpers";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import type { PlayerTraits } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
-import { lowerBooleanParam, lowerConstantInteger } from "src/frontend/intermediate-representation/parameters";
+import {
+  lowerBooleanParam,
+  lowerConstantInteger,
+} from "src/frontend/intermediate-representation/parameters";
 import { setField } from "src/frontend/intermediate-representation/setField";
-import { resolveKeyword, type TraitOptionArgs } from "src/frontend/intermediate-representation/elements/game_options/player_traits/helpers";
 
 /** Returns true if `identifier` was handled as a shield/vitality trait. */
 export const lowerShieldVitalityOption = (
@@ -24,7 +33,7 @@ export const lowerShieldVitalityOption = (
           location
         );
       }
-      let value;
+      let value: Located<"invulnerable" | number>;
       if (resolveKeyword(first) === "invulnerable") {
         value = located("invulnerable" as const, first.location);
       } else if (first.kind === SyntaxKind.INTEGER) {

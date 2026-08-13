@@ -1,20 +1,20 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { requireKeyword } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  ActionType,
   type Action,
+  ActionType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import {
-  asParameterLoweringContext,
-  type ElementLowerContext,
-} from "src/frontend/intermediate-representation/parameters/context";
 import {
   resolveCustomVariableReference,
   resolveObjectReference,
 } from "src/frontend/intermediate-representation/parameters";
-import { requireKeyword } from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import {
+  asParameterLoweringContext,
+  type ElementLowerContext,
+} from "src/frontend/intermediate-representation/parameters/context";
 
 const NAVPOINT_ICON_BY_NAME: Record<string, number> = {
   none: -1,
@@ -39,26 +39,27 @@ const NAVPOINT_ICON_BY_NAME: Record<string, number> = {
   defend: 25,
   neutralize: 26,
   // Megalo Headache #3
-  ["coop spawning"]: 27,
+  "coop spawning": 27,
 };
 
 const resolveNavpointIconIndex = (
   node: ASTParameterNode,
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): number => {
   const name = requireKeyword(node, location).toLowerCase();
   // MegaloEdit Headache #3
-  if (name === "coop spawning") {
-    if (!ctx.frontend.megacrowExtensions.coopSpawningWaypointIcon) {
-      throw new LowerError(
-        diagnosticMessages.megacrowExtensionRequired(
-          "coopSpawningWaypointIcon",
-          "coop spawning"
-        ),
-        node.location,
-      );
-    }
+  if (
+    name === "coop spawning" &&
+    !ctx.frontend.megacrowExtensions.coopSpawningWaypointIcon
+  ) {
+    throw new LowerError(
+      diagnosticMessages.megacrowExtensionRequired(
+        "coopSpawningWaypointIcon",
+        "coop spawning"
+      ),
+      node.location
+    );
   }
   const mapped = NAVPOINT_ICON_BY_NAME[name];
   if (mapped !== undefined) {
@@ -66,19 +67,19 @@ const resolveNavpointIconIndex = (
   }
   throw new LowerError(
     diagnosticMessages.expectedParameterType("navpoint icon", name),
-    node.location,
+    node.location
   );
 };
 
 export const lowerNavpointSetIcon = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ): Action => {
   if (parameters.length < 2 || parameters.length > 3) {
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(2, parameters.length),
-      location,
+      location
     );
   }
   const paramCtx = asParameterLoweringContext(ctx);
@@ -88,7 +89,7 @@ export const lowerNavpointSetIcon = (
     if (parameters.length !== 3) {
       throw new LowerError(
         diagnosticMessages.invalidParameterCount(3, parameters.length),
-        location,
+        location
       );
     }
     return {
@@ -103,7 +104,7 @@ export const lowerNavpointSetIcon = (
   if (parameters.length !== 2) {
     throw new LowerError(
       diagnosticMessages.invalidParameterCount(2, parameters.length),
-      location,
+      location
     );
   }
   return {

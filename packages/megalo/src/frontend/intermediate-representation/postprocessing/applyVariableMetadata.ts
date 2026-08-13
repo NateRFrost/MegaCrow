@@ -1,9 +1,8 @@
+import type { IR } from "src/frontend/intermediate-representation";
+import { MultiplayerTeamDesignator } from "src/frontend/intermediate-representation/game/game_engine_default";
 import {
-  MultiplayerTeamDesignator,
-} from "src/frontend/intermediate-representation/game/game_engine_default";
-import {
-  CustomVariableType,
   type CustomVariableReference,
+  CustomVariableType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import {
   MegaloVariableNetworkState,
@@ -12,11 +11,10 @@ import {
 import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 import type { ResolvedVariableSlot } from "src/frontend/intermediate-representation/preprocessing/symbols";
 import {
+  type SymbolId,
   VariableScope,
   VariableType,
-  type SymbolId,
 } from "src/frontend/symbol-table";
-import type { IR } from "src/frontend/intermediate-representation";
 
 const emptyMetadata = (): VariableMetadata => ({
   numericVariables: [],
@@ -50,10 +48,10 @@ const metadataForScope = (
   }
 };
 
-type SlotEntry = {
-  symbolId: SymbolId;
+interface SlotEntry {
   slot: ResolvedVariableSlot;
-};
+  symbolId: SymbolId;
+}
 
 /**
  * Populate gameEngine.variableMetadata from the resolved slot map and

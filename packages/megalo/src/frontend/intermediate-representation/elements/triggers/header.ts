@@ -1,18 +1,17 @@
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { TRIGGER_EXECUTION_KINDS } from "src/frontend/language-configuration/omni/triggers";
-import { SymbolKind, type SymbolTable } from "src/frontend/symbol-table";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import type { CustomGameEngineDefinition } from "src/frontend/intermediate-representation/game/game_variant";
 import {
+  type Trigger,
   TriggerExecutionMode,
   TriggerType,
-  type Trigger,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_trigger";
+import { TRIGGER_EXECUTION_KINDS } from "src/frontend/language-configuration/omni/triggers";
+import { SymbolKind, type SymbolTable } from "src/frontend/symbol-table";
 
-export type TriggerHeaderInfo = {
+export interface TriggerHeaderInfo {
   executionMode: TriggerExecutionMode;
-  triggerType: TriggerType;
   objectFilterIndex?: number;
   /** Special engine index field to update, if any. */
   specialIndexKey?: keyof Pick<
@@ -25,7 +24,8 @@ export type TriggerHeaderInfo = {
     | "localTriggerIndex"
     | "pregameTriggerIndex"
   >;
-};
+  triggerType: TriggerType;
+}
 
 const SPECIAL_TRIGGER_TYPES: Record<
   string,

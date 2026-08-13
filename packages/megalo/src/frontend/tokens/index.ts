@@ -19,11 +19,11 @@ export enum TokenKind {
   Operator = 7,
 }
 
-export type Token = {
+export interface Token {
   kind: TokenKind;
-  value: string;
   location: SourceCodeLocation;
-};
+  value: string;
+}
 
 export type Tokens = Token[];
 
@@ -98,9 +98,9 @@ const OPERATOR_LEXEMES = [
 // #endregion
 
 export class Lexer {
-  public constructor(private readonly frontend: MegaloCompilerContext) {}
+  public constructor(readonly _frontend: MegaloCompilerContext) {}
 
-  private matchOperatorLexeme = (
+  private readonly matchOperatorLexeme = (
     source: string,
     start: number
   ): string | undefined => {
@@ -121,7 +121,7 @@ export class Lexer {
     return;
   };
 
-  private classifyNumeric = (
+  private readonly classifyNumeric = (
     text: string
   ): TokenKind.Integer | TokenKind.FloatingPoint | TokenKind.None => {
     if (text.length === 0) {
@@ -162,7 +162,7 @@ export class Lexer {
    * If a backslash is followed by a character that is not one of the above,
    * the backslash is removed and the character is preserved.
    */
-  private unescapeQuotedString = (raw: string): string =>
+  private readonly unescapeQuotedString = (raw: string): string =>
     raw.replace(/\\(.)/g, (_match, ch: string) => {
       switch (ch) {
         case "n":
@@ -180,7 +180,7 @@ export class Lexer {
       }
     });
 
-  public lex = (source: string, diagnostics: Diagnostics): Tokens => {
+  public lex = (source: string, _diagnostics: Diagnostics): Tokens => {
     const tokens: Tokens = [];
     const length = source.length;
     let index = 0;

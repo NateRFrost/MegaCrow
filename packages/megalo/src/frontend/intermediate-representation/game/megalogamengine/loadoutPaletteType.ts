@@ -1,5 +1,5 @@
 /** MegaloEdit `LoadoutPaletteType` — same integers as the action wire field. */
-export const enum LoadoutPaletteType {
+export enum LoadoutPaletteType {
   none = 0,
   spartan_tier1 = 1,
   elite_tier1 = 2,

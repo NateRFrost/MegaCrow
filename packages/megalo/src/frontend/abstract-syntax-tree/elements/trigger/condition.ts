@@ -1,18 +1,17 @@
-import type { MegaloVersion } from "src/version";
 import type { MegaloCompilerContext } from "src/context";
-import {
-  type SourceCodeLocation,
-  SourceLocationType,
-} from "src/diagnostics";
+import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import {
-  DISPOSITION_KEYWORDS,
-  KILLER_TYPE_KEYWORDS,
-} from "src/frontend/language-configuration/omni/conditions";
-import { ObjectListType } from "src/frontend/object-lists";
-import { type Token, TokenKind } from "src/frontend/tokens";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
-import { type ASTNode, SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import {
+  type ASTConditionOperandNode,
+  type ConditionOperandParser,
+  isComparisonToken,
+  parseIfOperand,
+} from "src/frontend/abstract-syntax-tree/elements/trigger/operand";
+import {
+  type ASTNode,
+  SyntaxKind,
+} from "src/frontend/abstract-syntax-tree/kinds";
 import {
   KeywordParameter,
   ObjectListParameter,
@@ -22,11 +21,12 @@ import {
   parameterParserBuilder,
 } from "src/frontend/abstract-syntax-tree/parameters";
 import {
-  type ASTConditionOperandNode,
-  type ConditionOperandParser,
-  isComparisonToken,
-  parseIfOperand,
-} from "src/frontend/abstract-syntax-tree/elements/trigger/operand";
+  DISPOSITION_KEYWORDS,
+  KILLER_TYPE_KEYWORDS,
+} from "src/frontend/language-configuration/omni/conditions";
+import { ObjectListType } from "src/frontend/object-lists";
+import { type Token, TokenKind } from "src/frontend/tokens";
+import type { MegaloVersion } from "src/version";
 
 export type ConditionStatementNode = ASTNode<SyntaxKind.CONDITION> & {
   negated: boolean;
@@ -106,13 +106,15 @@ export const parseCondition = (
   }
 
   const parser = ctx.conditionParserRepository.getParser(name.value);
-  const operands = parser
-    ? parser(ctx, name.location)
-    : (ctx.diagnostics.addError(
-        diagnosticMessages.unknownCondition(name.value),
-        name.location
-      ),
-      []);
+  let operands: ReturnType<NonNullable<typeof parser>> = [];
+  if (parser) {
+    operands = parser(ctx, name.location);
+  } else {
+    ctx.diagnostics.addError(
+      diagnosticMessages.unknownCondition(name.value),
+      name.location
+    );
+  }
 
   const unionOr = consumeTrailingOr(ctx);
 

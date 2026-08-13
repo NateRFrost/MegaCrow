@@ -1,9 +1,9 @@
-import { SourceLocation } from "src/diagnostics";
+import type { SourceLocation } from "src/diagnostics";
 
 export class LowerError extends Error {
-    public readonly location: SourceLocation;
-    public constructor(message: string, location: SourceLocation) {
-        super(message);
-        this.location = location;
-    }
+  public readonly location: SourceLocation;
+  public constructor(message: string, location: SourceLocation) {
+    super(message);
+    this.location = location;
+  }
 }

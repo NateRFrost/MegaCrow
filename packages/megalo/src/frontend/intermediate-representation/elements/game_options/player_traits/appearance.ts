@@ -1,4 +1,8 @@
 import { diagnosticMessages } from "src/diagnostics/messages";
+import {
+  resolveEnumKeyword,
+  type TraitOptionArgs,
+} from "src/frontend/intermediate-representation/elements/game_options/player_traits/helpers";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   ActiveCamo,
@@ -7,7 +11,6 @@ import {
   WaypointVisibility,
 } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 import { setField } from "src/frontend/intermediate-representation/setField";
-import { resolveEnumKeyword, type TraitOptionArgs } from "src/frontend/intermediate-representation/elements/game_options/player_traits/helpers";
 
 const ACTIVE_CAMO: Record<string, ActiveCamo> = {
   off: ActiveCamo.Off,

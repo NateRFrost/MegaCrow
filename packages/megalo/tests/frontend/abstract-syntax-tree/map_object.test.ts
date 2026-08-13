@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { MegaloCompilerContext } from "../../../src/context";
+import { Diagnostics } from "../../../src/diagnostics";
 import { Parser, SyntaxKind } from "../../../src/frontend/abstract-syntax-tree";
 import { ElementKind } from "../../../src/frontend/abstract-syntax-tree/elements";
-import { Diagnostics } from "../../../src/diagnostics";
 import {
   type ObjectLists,
   ObjectListType,
@@ -12,7 +13,6 @@ import {
 } from "../../../src/frontend/symbol-table";
 import { Lexer } from "../../../src/frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../src/version";
-import { MegaloCompilerContext } from "../../../src/context";
 
 const parse = (source: string, objectLists: ObjectLists = {}) => {
   const diagnostics = new Diagnostics();
@@ -52,10 +52,9 @@ end
     expect(ast.failed).toBe(false);
     expect(ast.elements).toHaveLength(3);
 
-    expect(objectFilterSymbols(symbolTable).map((entry) => entry.name)).toEqual([
-      "slayer_stuff",
-      "health_packs",
-    ]);
+    expect(objectFilterSymbols(symbolTable).map((entry) => entry.name)).toEqual(
+      ["slayer_stuff", "health_packs"]
+    );
 
     const slayer = ast.elements[1]!;
     expect(slayer.elementKind).toBe(ElementKind.MAP_OBJECT);

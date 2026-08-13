@@ -1,17 +1,16 @@
 import { describe, expect, it } from "vitest";
+import { MegaloCompilerContext } from "../../../src/context";
 import { Diagnostics } from "../../../src/diagnostics";
 import { Lexer, TokenKind } from "../../../src/frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../src/version";
-import { MegaloCompilerContext } from "../../../src/context";
 
 describe("unescapeQuotedString", () => {
   const quotedValue = (source: string): string => {
-    const token = new Lexer(new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"])).lex(
-      source,
-      new Diagnostics()
-    )[0];
+    const token = new Lexer(
+      new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"])
+    ).lex(source, new Diagnostics())[0];
     expect(token?.kind).toBe(TokenKind.QuotedString);
-    return token!.value;
+    return token?.value;
   };
 
   it("returns an empty string unchanged", () => {

@@ -1,6 +1,6 @@
 import type { StringTableLanguage } from "src/frontend/language-configuration/omni/strings";
 import { STRING_TABLE_LANGUAGES } from "src/frontend/language-configuration/omni/strings";
-import { SymbolId } from "src/frontend/symbol-table";
+import type { SymbolId } from "src/frontend/symbol-table";
 
 type AtLeastOne<T> = {
   [K in keyof T]-?: Required<Pick<T, K>> &
@@ -31,24 +31,30 @@ export const literalStringTableEntry = (text: string): StringTableEntry => {
 export class StringTable {
   private readonly table: StringTableSymbolEntry[] = [];
 
-  public addEntry(entry: StringTableEntry, symbolId?: SymbolId): StringTableReference {
-    if (!symbolId) {
+  public addEntry(
+    entry: StringTableEntry,
+    symbolId?: SymbolId
+  ): StringTableReference {
+    if (symbolId) {
+      // If a symbol string is being added and we already have it, we dont need to add it again.
+      const matchkingSymbolStringIndex: StringTableReference =
+        this.table.findIndex((e) => e.symbolId === symbolId);
+      if (matchkingSymbolStringIndex !== -1) {
+        return matchkingSymbolStringIndex;
+      }
+    } else {
       // If a string literal is being added and we already have a matching string literal, we dont need to add it again.
-      const matchingStringLiteralIndex: StringTableReference = this.table.findIndex(e => e.english === entry.english && e.symbolId == undefined);
+      const matchingStringLiteralIndex: StringTableReference =
+        this.table.findIndex(
+          (e) => e.english === entry.english && e.symbolId === undefined
+        );
       if (matchingStringLiteralIndex !== -1) {
         return matchingStringLiteralIndex;
       }
     }
-    else {
-      // If a symbol string is being added and we already have it, we dont need to add it again.
-      const matchkingSymbolStringIndex: StringTableReference = this.table.findIndex(e => e.symbolId === symbolId);
-      if (matchkingSymbolStringIndex !== -1) {
-        return matchkingSymbolStringIndex;
-      }
-    }
 
     // Add new string; return its 0-based index.
-    this.table.push({...entry, symbolId});
+    this.table.push({ ...entry, symbolId });
     return this.table.length - 1;
   }
 

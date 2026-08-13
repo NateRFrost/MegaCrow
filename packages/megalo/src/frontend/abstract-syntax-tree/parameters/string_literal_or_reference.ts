@@ -1,6 +1,5 @@
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { type Token, TokenKind } from "src/frontend/tokens";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import {
   type ASTErrorNode,
@@ -8,6 +7,7 @@ import {
   type ASTReferenceNode,
   SyntaxKind,
 } from "src/frontend/abstract-syntax-tree/kinds";
+import { type Token, TokenKind } from "src/frontend/tokens";
 
 export type ASTStringLiteralOrReference =
   | (ASTNode<SyntaxKind.QUOTED_STRING> & { value: string })

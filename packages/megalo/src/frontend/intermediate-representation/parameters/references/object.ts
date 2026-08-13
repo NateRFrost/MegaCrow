@@ -1,4 +1,5 @@
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { LowerError } from "src/frontend/intermediate-representation/error";
 import { ExplicitObject } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
 import { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
 import { ExplicitTeam } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
@@ -6,18 +7,6 @@ import {
   type ObjectReference,
   ObjectReferenceType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
-import {
-  type SymbolTableVariableEntry,
-  VariableScope,
-  VariableType,
-  isBuiltInVariable,
-} from "src/frontend/symbol-table";
-import {
-  findVariableBySlot,
-  requireResolvedVariableSlot,
-  type VariableSlotMap,
-} from "src/frontend/intermediate-representation/preprocessing/symbols";
-import { LowerError } from "src/frontend/intermediate-representation/error";
 import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
 import {
   enumSlotValue,
@@ -37,6 +26,17 @@ import {
   resolveScopedVariableMemberIndex,
   splitParameterMember,
 } from "src/frontend/intermediate-representation/parameters/references/helpers";
+import {
+  findVariableBySlot,
+  requireResolvedVariableSlot,
+  type VariableSlotMap,
+} from "src/frontend/intermediate-representation/preprocessing/symbols";
+import {
+  isBuiltInVariable,
+  type SymbolTableVariableEntry,
+  VariableScope,
+  VariableType,
+} from "src/frontend/symbol-table";
 
 export const encodeNoObjectReference = (): ObjectReference => ({
   type: ObjectReferenceType.GlobalObject,
@@ -127,7 +127,7 @@ const encodeNamedGlobalObjectReference = (
     return encodeGlobalObjectReference(globalObjectIndex);
   }
 
-  return undefined;
+  return;
 };
 
 export type ObjectReferenceSubtype = ObjectReferenceType;
@@ -201,7 +201,11 @@ const resolveObjectReferenceUnchecked = (
     baseSymbol?.type === VariableType.Object
       ? baseSymbol
       : ctx.symbolTable.findVariableByName(base);
-  if (slot?.type === VariableType.Object && !member && !isBuiltInVariable(slot)) {
+  if (
+    slot?.type === VariableType.Object &&
+    !member &&
+    !isBuiltInVariable(slot)
+  ) {
     return encodeObjectVariableReference(slot, ctx.variableSlots);
   }
 
@@ -216,7 +220,8 @@ const resolveObjectReferenceUnchecked = (
             ctx.variableSlots,
             VariableScope.Player,
             member
-          ) ?? (Number(member.replace("number_", "")) || 0),
+          ) ??
+          (Number(member.replace("number_", "")) || 0),
       };
     }
     return {

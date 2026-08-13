@@ -21,15 +21,15 @@ export enum SyntaxKind {
   GRENADE_COUNT = 15,
 }
 
-export type ASTNode<K extends SyntaxKind> = {
+export interface ASTNode<K extends SyntaxKind> {
   kind: K;
   location: SourceCodeLocation;
-};
+}
 
-export type ASTErrorNode = {
+export interface ASTErrorNode {
   kind: SyntaxKind.INVALID;
   location: SourceCodeLocation;
-};
+}
 
 export type ASTIntegerNode = ASTNode<SyntaxKind.INTEGER> & {
   value: number;

@@ -6,17 +6,6 @@ import {
   type CustomTimerReference,
   CustomTimerType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
-import {
-  type SymbolTableVariableEntry,
-  VariableScope,
-  VariableType,
-  isBuiltInVariable,
-} from "src/frontend/symbol-table";
-import {
-  findVariableBySlot,
-  requireResolvedVariableSlot,
-  type VariableSlotMap,
-} from "src/frontend/intermediate-representation/preprocessing/symbols";
 import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
 import { parseIndexSuffix } from "src/frontend/intermediate-representation/parameters/explicit";
 import {
@@ -31,6 +20,17 @@ import {
   resolveScopedVariableMemberIndex,
   splitParameterMember,
 } from "src/frontend/intermediate-representation/parameters/references/helpers";
+import {
+  findVariableBySlot,
+  requireResolvedVariableSlot,
+  type VariableSlotMap,
+} from "src/frontend/intermediate-representation/preprocessing/symbols";
+import {
+  isBuiltInVariable,
+  type SymbolTableVariableEntry,
+  VariableScope,
+  VariableType,
+} from "src/frontend/symbol-table";
 
 const encodeTimerVariable = (
   slot: SymbolTableVariableEntry,
@@ -84,7 +84,7 @@ const resolveScopedTimerMemberIndex = (
   }
   const indexMatch = /^timer_(\d+)$/.exec(member);
   if (!indexMatch) {
-    return undefined;
+    return;
   }
   const compiledNum = Number(indexMatch[1]);
   const storageIndex = compiledNum > 0 ? compiledNum - 1 : compiledNum;
@@ -110,7 +110,7 @@ const resolveScopedTimerMemberIndex = (
   ) {
     return compiledNum;
   }
-  return undefined;
+  return;
 };
 
 const encodeScopedTimerReference = (
@@ -122,7 +122,7 @@ const encodeScopedTimerReference = (
 ): CustomTimerReference | undefined => {
   const index = resolveScopedTimerMemberIndex(ctx, scope, member);
   if (index === undefined) {
-    return undefined;
+    return;
   }
   switch (scope) {
     case VariableScope.Team:
@@ -144,7 +144,7 @@ const encodeScopedTimerReference = (
         variableIndex: index,
       };
     default:
-      return undefined;
+      return;
   }
 };
 

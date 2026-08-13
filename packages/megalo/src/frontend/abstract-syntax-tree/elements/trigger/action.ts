@@ -1,14 +1,17 @@
-import type { MegaloVersion } from "src/version";
 import type { MegaloCompilerContext } from "src/context";
-import {
-  type SourceCodeLocation,
-  SourceLocationType,
-} from "src/diagnostics";
+import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { ObjectListType } from "src/frontend/object-lists";
-import { type Token, TokenKind } from "src/frontend/tokens";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
-import { type ASTNode, SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import {
+  type BeginStatementNode,
+  type ForEachStatementNode,
+  parseBegin,
+  parseForEach,
+} from "src/frontend/abstract-syntax-tree/elements/trigger/index";
+import {
+  type ASTNode,
+  SyntaxKind,
+} from "src/frontend/abstract-syntax-tree/kinds";
 import {
   type ASTParameterNode,
   parameterParserBuilder as buildParameterParser,
@@ -21,12 +24,9 @@ import {
   ParameterType,
   parseParameterValue,
 } from "src/frontend/abstract-syntax-tree/parameters";
-import {
-  type BeginStatementNode,
-  type ForEachStatementNode,
-  parseBegin,
-  parseForEach,
-} from "src/frontend/abstract-syntax-tree/elements/trigger/index";
+import { ObjectListType } from "src/frontend/object-lists";
+import { type Token, TokenKind } from "src/frontend/tokens";
+import type { MegaloVersion } from "src/version";
 
 export type ActionStatementNode = ASTNode<SyntaxKind.ACTION> & {
   name: { value: string; location: SourceCodeLocation };
@@ -97,13 +97,15 @@ export const parseAction = (
   }
 
   const parser = ctx.actionParserRepository.getParser(name.value);
-  const parameters = parser
-    ? parser(ctx, name.location)
-    : (ctx.diagnostics.addError(
-        diagnosticMessages.unknownAction(name.value),
-        name.location
-      ),
-      []);
+  let parameters: ReturnType<NonNullable<typeof parser>> = [];
+  if (parser) {
+    parameters = parser(ctx, name.location);
+  } else {
+    ctx.diagnostics.addError(
+      diagnosticMessages.unknownAction(name.value),
+      name.location
+    );
+  }
 
   const lastParameter = parameters.at(-1);
   const endLocation = lastParameter?.location ?? name.location;
@@ -265,18 +267,18 @@ const parseCreateObjectV73: ParameterParser = (ctx, anchor) => {
       ObjectListType.Objects,
       consumed.value
     );
-    if (symbolId !== undefined) {
+    if (symbolId === undefined) {
+      parameters.push({
+        kind: SyntaxKind.KEYWORD,
+        value: consumed.value,
+        location: consumed.location,
+      });
+    } else {
       ctx.symbolParser.recordReference(symbolId, consumed.location);
       parameters.push({
         kind: SyntaxKind.REFERENCE,
         identifier: consumed.value,
         symbolId,
-        location: consumed.location,
-      });
-    } else {
-      parameters.push({
-        kind: SyntaxKind.KEYWORD,
-        value: consumed.value,
         location: consumed.location,
       });
     }
@@ -326,8 +328,16 @@ const parseCreateObjectV73: ParameterParser = (ctx, anchor) => {
         break;
       case "offset":
         parameters.push(
-          parseParameterValue(ctx, keywordToken.location, ParameterType.Integer),
-          parseParameterValue(ctx, keywordToken.location, ParameterType.Integer),
+          parseParameterValue(
+            ctx,
+            keywordToken.location,
+            ParameterType.Integer
+          ),
+          parseParameterValue(
+            ctx,
+            keywordToken.location,
+            ParameterType.Integer
+          ),
           parseParameterValue(ctx, keywordToken.location, ParameterType.Integer)
         );
         break;
@@ -387,10 +397,9 @@ const playSoundSignatures: ParameterSignature[] =
     ParameterType.String,
   ]);
 
-const parseNavpointSetIcon = (
-  allowCoopSpawning: boolean
-): ParameterParser => {
-  return (ctx, anchor) => {
+const parseNavpointSetIcon =
+  (allowCoopSpawning: boolean): ParameterParser =>
+  (ctx, anchor) => {
     const object = parseParameterValue(ctx, anchor, ParameterType.Object);
     const iconFirst = ctx.peekToken();
     if (
@@ -417,7 +426,6 @@ const parseNavpointSetIcon = (
     }
     return [object, icon];
   };
-};
 
 export class ActionParserRepository {
   private readonly parsers = new Map<string, ParameterParser>();

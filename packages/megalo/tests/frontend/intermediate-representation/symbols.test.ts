@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { Parser } from "../../../src/frontend/abstract-syntax-tree";
+import { MegaloCompilerContext } from "../../../src/context";
 import {
   Diagnostics,
-  SourceLocationType,
   type SourceCodeLocation,
+  SourceLocationType,
 } from "../../../src/diagnostics";
+import { Parser } from "../../../src/frontend/abstract-syntax-tree";
 import { Lowerer } from "../../../src/frontend/intermediate-representation";
 import { MegaloVariableNetworkState } from "../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variable_metadata";
 import {
@@ -18,7 +19,6 @@ import {
 } from "../../../src/frontend/symbol-table";
 import { Lexer } from "../../../src/frontend/tokens";
 import { MEGALO_VERSIONS } from "../../../src/version";
-import { MegaloCompilerContext } from "../../../src/context";
 
 const version = MEGALO_VERSIONS["107-mcc"];
 const frontend = new MegaloCompilerContext(version);
@@ -187,7 +187,7 @@ end
     expect(slots.get(ids[0]!)?.scope).toBe(VariableScope.Temporary);
     expect(slots.get(ids[10]!)?.scope).toBe(VariableScope.Temporary);
     expect(diagnostics.hasErrors()).toBe(true);
-    expect(diagnostics.getErrors()[0]!.message).toMatch(/Too many/i);
+    expect(diagnostics.getErrors()[0]?.message).toMatch(/Too many/i);
   });
 
   it("raises tooManyVariables when overflow cannot fit in globals", () => {
@@ -199,7 +199,7 @@ end
     buildVariableSlotMap(frontend, binder.getSymbolTable(), diagnostics);
 
     expect(diagnostics.hasErrors()).toBe(true);
-    expect(diagnostics.getErrors()[0]!.message).toMatch(/Too many/i);
+    expect(diagnostics.getErrors()[0]?.message).toMatch(/Too many/i);
   });
 
   it("populates variableMetadata from variables element and skips dryRun on errors", () => {
@@ -214,8 +214,9 @@ end
     const ir = new Lowerer(frontend).lower(ast, diagnostics);
 
     expect(diagnostics.hasErrors()).toBe(false);
-    expect(ir.gameVariant.gameEngine.variableMetadata.global.numericVariables)
-      .toHaveLength(1);
+    expect(
+      ir.gameVariant.gameEngine.variableMetadata.global.numericVariables
+    ).toHaveLength(1);
     expect(
       ir.gameVariant.gameEngine.variableMetadata.global.numericVariables[0]
         ?.networkState

@@ -4,12 +4,6 @@ import {
   type PlayerReference,
   PlayerReferenceType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
-import {
-  VariableScope,
-  VariableType,
-  isBuiltInVariable,
-} from "src/frontend/symbol-table";
-import { requireResolvedVariableSlot } from "src/frontend/intermediate-representation/preprocessing/symbols";
 import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
 import {
   enumSlotValue,
@@ -29,6 +23,12 @@ import {
   splitParameterMember,
   temporaryReferenceKind,
 } from "src/frontend/intermediate-representation/parameters/references/helpers";
+import { requireResolvedVariableSlot } from "src/frontend/intermediate-representation/preprocessing/symbols";
+import {
+  isBuiltInVariable,
+  VariableScope,
+  VariableType,
+} from "src/frontend/symbol-table";
 
 const encodeGlobalPlayerReference = (index: number): PlayerReference => ({
   type: PlayerReferenceType.GlobalPlayer,
@@ -48,7 +48,11 @@ export const resolvePlayerReference = (
       ? baseSymbol
       : ctx.symbolTable.findVariableByName(base);
 
-  if (slot?.type === VariableType.Player && !member && !isBuiltInVariable(slot)) {
+  if (
+    slot?.type === VariableType.Player &&
+    !member &&
+    !isBuiltInVariable(slot)
+  ) {
     const resolved = requireResolvedVariableSlot(ctx.variableSlots, slot.id);
     if (resolved.scope === VariableScope.Global) {
       return encodeGlobalPlayerReference(resolved.index);
@@ -127,26 +131,31 @@ export const resolvePlayerReference = (
           "number"
         )
       : undefined;
-    if (!member || objectPlayerIndex !== undefined || isObjectReferenceBase(ctx, base, member)) {
-      if (
-        member === undefined ||
+    if (
+      (!member ||
+        objectPlayerIndex !== undefined ||
+        isObjectReferenceBase(ctx, base, member)) &&
+      (member === undefined ||
         objectPlayerIndex !== undefined ||
         baseSymbol?.type === VariableType.Object ||
-        ctx.symbolTable.findVariableByName(base)?.type === VariableType.Object ||
-        base === "current_object"
-      ) {
-        if (
-          base === "current_object" ||
-          baseSymbol?.type === VariableType.Object ||
-          ctx.symbolTable.findVariableByName(base)?.type === VariableType.Object
-        ) {
-          return {
-            type: PlayerReferenceType.ObjectPlayer,
-            object: resolveExplicitObjectForBase(ctx, base, baseSymbol),
-            variableIndex: objectPlayerIndex ?? 0,
-          };
-        }
-      }
+        ctx.symbolTable.findVariableByName(base)?.type ===
+          VariableType.Object ||
+        base === "current_object") &&
+      (member === undefined ||
+        objectPlayerIndex !== undefined ||
+        baseSymbol?.type === VariableType.Object ||
+        ctx.symbolTable.findVariableByName(base)?.type ===
+          VariableType.Object ||
+        base === "current_object") &&
+      (base === "current_object" ||
+        baseSymbol?.type === VariableType.Object ||
+        ctx.symbolTable.findVariableByName(base)?.type === VariableType.Object)
+    ) {
+      return {
+        type: PlayerReferenceType.ObjectPlayer,
+        object: resolveExplicitObjectForBase(ctx, base, baseSymbol),
+        variableIndex: objectPlayerIndex ?? 0,
+      };
     }
   }
 
@@ -183,7 +192,8 @@ export const resolvePlayerReference = (
           VariableType.Player,
           member,
           "number"
-        ) ?? (Number(member.replace("number_", "")) || 0),
+        ) ??
+        (Number(member.replace("number_", "")) || 0),
     };
   }
 

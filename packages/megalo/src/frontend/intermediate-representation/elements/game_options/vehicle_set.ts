@@ -1,14 +1,17 @@
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { OverrideEntryNode } from "src/frontend/abstract-syntax-tree/elements/game_options";
 import { OverrideValueKind } from "src/frontend/abstract-syntax-tree/elements/game_options";
-import type { SourceCodeLocation } from "src/diagnostics";
-import { diagnosticMessages } from "src/diagnostics/messages";
-import { ObjectListType } from "src/frontend/object-lists";
-import { SymbolKind, type SymbolTable } from "src/frontend/symbol-table";
-import { type Located, located } from "src/frontend/intermediate-representation";
+import {
+  type Located,
+  located,
+} from "src/frontend/intermediate-representation";
 import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import type { VehicleSet } from "src/frontend/intermediate-representation/game/game_engine_default";
+import { ObjectListType } from "src/frontend/object-lists";
+import { SymbolKind, type SymbolTable } from "src/frontend/symbol-table";
 
 export const lowerVehicleSet = (
   node: OverrideEntryNode["value"],

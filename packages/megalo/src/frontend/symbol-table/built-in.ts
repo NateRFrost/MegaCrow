@@ -1,12 +1,12 @@
-import type { MegaloVersion } from "src/version";
-import type { ParserSymbolContext } from "src/frontend/abstract-syntax-tree/symbol-context";
 import type { MegaloCompilerContext } from "src/context";
 import { BUILT_IN_LOCATION } from "src/diagnostics";
+import type { ParserSymbolContext } from "src/frontend/abstract-syntax-tree/symbol-context";
 import type { BuiltInGameOptionName } from "src/frontend/language-configuration/omni/game_options";
 import { VariableScope, VariableType } from "src/frontend/symbol-table";
+import type { MegaloVersion } from "src/version";
 
 export const addBuiltInConstants = (
-  megaloVersion: MegaloVersion,
+  _megaloVersion: MegaloVersion,
   symbolParser: ParserSymbolContext
 ): void => {
   const addBuiltInConstant = (name: string, value: number) => {

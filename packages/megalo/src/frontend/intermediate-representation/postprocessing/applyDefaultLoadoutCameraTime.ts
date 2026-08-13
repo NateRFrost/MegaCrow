@@ -13,7 +13,8 @@ export function applyDefaultLoadoutCameraTime(ir: IR) {
     "loadoutCamTime"
   );
   const hasAuthoredLoadoutCamTime =
-    loadoutCamLocation !== undefined && loadoutCamLocation.type !== BUILT_IN_LOCATION.type;
+    loadoutCamLocation !== undefined &&
+    loadoutCamLocation.type !== BUILT_IN_LOCATION.type;
 
   const usesSetLoadoutPalette = ir.gameVariant.gameEngine.actions.some(
     (action) => action.type === ActionType.SetLoadoutPalette

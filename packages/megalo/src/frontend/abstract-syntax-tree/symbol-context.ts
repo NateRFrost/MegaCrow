@@ -6,8 +6,9 @@ import {
   SourceLocationType,
   type SourcePosition,
 } from "src/diagnostics";
-import { diagnosticMessages } from "src/diagnostics/messages";
 import { CompilerError } from "src/diagnostics/error";
+import { diagnosticMessages } from "src/diagnostics/messages";
+import { VARIABLE_TYPE_NAMES } from "src/frontend/language-configuration/omni/variables";
 import {
   OBJECT_LIST_TYPES,
   type ObjectLists,
@@ -32,7 +33,6 @@ import {
   type ParserScope,
   ParserScopeKind,
 } from "src/frontend/symbol-table/scope";
-import { VARIABLE_TYPE_NAMES } from "src/frontend/language-configuration/omni/variables";
 
 /**
  * SymbolParser is used by the parser to refer to variables in scope.
@@ -173,7 +173,7 @@ export class ParserSymbolContext {
           ),
           entry.declaration
         );
-        this.scopeSymbolIds.at(-1)!.push(id);
+        this.scopeSymbolIds.at(-1)?.push(id);
         return id;
       }
     }
@@ -218,8 +218,7 @@ export class ParserSymbolContext {
     }
 
     // MegaloEdit Headache #1: UserDefinedOptionNames.FindIndex — first wins.
-    const declarations =
-      this.declaredUserDefinedOptions.get(entry.name) ?? [];
+    const declarations = this.declaredUserDefinedOptions.get(entry.name) ?? [];
     const id = this.symbolBinder.addGameOption({
       ...entry,
       index: this.declarationCount(this.declaredUserDefinedOptions),
@@ -517,8 +516,8 @@ export class ParserSymbolContext {
   }
 
   private registerInCurrentScope(name: string, id: SymbolId): void {
-    this.symbolScopes.at(-1)!.set(name, id);
-    this.scopeSymbolIds.at(-1)!.push(id);
+    this.symbolScopes.at(-1)?.set(name, id);
+    this.scopeSymbolIds.at(-1)?.push(id);
   }
 
   private declarationCount(map: Map<string, SymbolId[]>): number {

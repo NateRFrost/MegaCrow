@@ -1,6 +1,6 @@
+import type { CustomGameEngineDefinition } from "src/frontend/intermediate-representation/game/game_variant";
 import type { Action } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import type { Condition } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions";
-import type { CustomGameEngineDefinition } from "src/frontend/intermediate-representation/game/game_variant";
 
 /**
  * Append target for conditions/actions, matching managedmegalo's
@@ -10,16 +10,16 @@ import type { CustomGameEngineDefinition } from "src/frontend/intermediate-repre
  * {@link AppendTarget.appendActionsToRoot} / {@link AppendTarget.appendConditionsToRoot}
  * so begin bodies can land outside the enclosing trigger's contiguous slice.
  */
-export type AppendTarget = {
+export interface AppendTarget {
   appendAction(action: Action): void;
+  appendActionsToRoot(actions: readonly Action[]): void;
   appendCondition(condition: Condition): void;
+  appendConditionsToRoot(conditions: readonly Condition[]): void;
   getActionOffset(): number;
   getConditionOffset(): number;
-  appendActionsToRoot(actions: readonly Action[]): void;
-  appendConditionsToRoot(conditions: readonly Condition[]): void;
   localActionCount(): number;
   localConditionCount(): number;
-};
+}
 
 export class GameEngineAppendTarget implements AppendTarget {
   public constructor(private readonly engine: CustomGameEngineDefinition) {}
@@ -115,9 +115,9 @@ export class ScopeAppendTarget implements AppendTarget {
   }
 }
 
-export type ActionScopeWindow = {
-  firstConditionIndex: number;
+export interface ActionScopeWindow {
+  actionCount: number;
   conditionCount: number;
   firstActionIndex: number;
-  actionCount: number;
-};
+  firstConditionIndex: number;
+}

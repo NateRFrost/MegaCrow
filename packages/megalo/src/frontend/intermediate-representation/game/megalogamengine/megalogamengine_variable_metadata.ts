@@ -7,16 +7,16 @@ export enum MegaloVariableNetworkState {
   NetworkedHigh = 2,
 }
 
-export type VariableMetadata = {
+export interface VariableMetadata {
   numericVariables: {
     variable: CustomVariableReference;
     networkState: MegaloVariableNetworkState;
   }[];
-  timerVariables: CustomVariableReference[];
+  objectVariables: MegaloVariableNetworkState[];
+  playerVariables: MegaloVariableNetworkState[];
   teamVariables: {
     value: MultiplayerTeamDesignator;
     networkState: MegaloVariableNetworkState;
   }[];
-  playerVariables: MegaloVariableNetworkState[];
-  objectVariables: MegaloVariableNetworkState[];
-};
+  timerVariables: CustomVariableReference[];
+}

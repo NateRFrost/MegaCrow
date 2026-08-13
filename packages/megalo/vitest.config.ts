@@ -34,8 +34,10 @@ const packageRoots = [
   ...resolvePackageRoots("@craftycodie/cstruct"),
 ];
 
-const stripViteId = (id: string): string =>
-  id.replace(/\\/g, "/").split("?")[0]!.split("#")[0]!;
+const stripViteId = (id: string): string => {
+  const withoutQuery = id.replace(/\\/g, "/").split("?")[0] ?? id;
+  return withoutQuery.split("#")[0] ?? withoutQuery;
+};
 
 const isPackageImporter = (importer: string): boolean => {
   const importerPath = stripViteId(importer);
@@ -82,7 +84,7 @@ const directoryIndexPlugin = (): Plugin => ({
       }
       return null;
     }
-    if (!importer || !isPackageImporter(importer)) {
+    if (!(importer && isPackageImporter(importer))) {
       return null;
     }
     return resolveDirectoryIndex(

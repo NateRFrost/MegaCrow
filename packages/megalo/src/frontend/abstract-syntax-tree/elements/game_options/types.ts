@@ -1,15 +1,24 @@
 import type { SourceCodeLocation } from "src/diagnostics";
-import type { PlayerTraitsOverrideOption } from "src/frontend/language-configuration/omni/game_options";
-import type { ASTErrorNode, ASTReferenceNode } from "src/frontend/abstract-syntax-tree";
-import type { ASTKeywordParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import type { ASTStringLiteralOrReference } from "src/frontend/abstract-syntax-tree/parameters/string_literal_or_reference";
-import type { ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
-import type { IntegerInitialValue, NumericInitialValue } from "src/frontend/abstract-syntax-tree/elements/constants";
+import type {
+  ASTErrorNode,
+  ASTReferenceNode,
+} from "src/frontend/abstract-syntax-tree";
+import type {
+  ASTElementBase,
+  ElementKind,
+} from "src/frontend/abstract-syntax-tree/elements";
+import type {
+  IntegerInitialValue,
+  NumericInitialValue,
+} from "src/frontend/abstract-syntax-tree/elements/constants";
 import type {
   PlayerTraitOptionNode,
   PlayerTraitsElementNode,
   PlayerTraitsOverrideNode,
 } from "src/frontend/abstract-syntax-tree/elements/game_options/player_traits";
+import type { ASTKeywordParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import type { ASTStringLiteralOrReference } from "src/frontend/abstract-syntax-tree/parameters/string_literal_or_reference";
+import type { PlayerTraitsOverrideOption } from "src/frontend/language-configuration/omni/game_options";
 
 export type { ASTStringLiteralOrReference } from "src/frontend/abstract-syntax-tree/parameters/string_literal_or_reference";
 
@@ -29,72 +38,72 @@ export enum OverrideValueKind {
   NESTED = 2,
 }
 
-export type GameOptionModifiers = {
-  lock: boolean;
+export interface GameOptionModifiers {
   hide: boolean;
-};
+  lock: boolean;
+}
 
-export type UserDefinedOptionValueNode = {
-  value: IntegerInitialValue;
-  name?: ASTStringLiteralOrReference;
+export interface UserDefinedOptionValueNode {
   description?: ASTStringLiteralOrReference;
   location: SourceCodeLocation;
-};
+  name?: ASTStringLiteralOrReference;
+  value: IntegerInitialValue;
+}
 
-export type UserDefinedOptionNode = {
+export interface UserDefinedOptionNode {
+  defaultValue: IntegerInitialValue;
+  description: ASTStringLiteralOrReference;
+  displayName: ASTStringLiteralOrReference;
   kind: GameOptionEntryKind.OPTION | GameOptionEntryKind.RANGED_OPTION;
+  location: SourceCodeLocation;
   modifiers: GameOptionModifiers;
   name: { value: string; location: SourceCodeLocation } | ASTErrorNode;
-  displayName: ASTStringLiteralOrReference;
-  description: ASTStringLiteralOrReference;
-  defaultValue: IntegerInitialValue;
   values: UserDefinedOptionValueNode[];
-  location: SourceCodeLocation;
-};
+}
 
-export type UserDefinedOptionOverrideNode = {
+export interface UserDefinedOptionOverrideNode {
   kind: GameOptionEntryKind.OPTION_OVERRIDE;
+  location: SourceCodeLocation;
   modifiers: GameOptionModifiers;
   target:
     | { kind: "name"; value: string; location: SourceCodeLocation }
     | { kind: "index"; value: number; location: SourceCodeLocation };
   value: IntegerInitialValue;
-  location: SourceCodeLocation;
-};
+}
 
 export type { PlayerTraitsOverrideNode };
 
-export type OverrideSimpleValueNode = {
+export interface OverrideSimpleValueNode {
   kind: OverrideValueKind.SIMPLE;
   value: NumericInitialValue | ASTKeywordParameterNode;
-};
+}
 
-export type OverrideLoadoutPaletteNode = {
+export interface OverrideLoadoutPaletteNode {
   kind: OverrideValueKind.LOADOUT_PALETTE;
-  tier: { value: string; location: SourceCodeLocation } | ASTErrorNode;
   palette: { value: string; location: SourceCodeLocation } | ASTErrorNode;
-};
+  tier: { value: string; location: SourceCodeLocation } | ASTErrorNode;
+}
 
-export type OverrideNestedBodyNode = {
-  kind: OverrideValueKind.NESTED;
+export interface OverrideNestedBodyNode {
   body: {
     options: PlayerTraitOptionNode[];
     location: SourceCodeLocation;
   };
-};
+  kind: OverrideValueKind.NESTED;
+}
 
 /** `override loadout_palette <tier> <palette>` — not a GameOption symbol. */
-export type OverrideLoadoutPaletteNameNode = {
+export interface OverrideLoadoutPaletteNameNode {
   kind: "loadout_palette";
   location: SourceCodeLocation;
-};
+}
 
 /** Nested player-traits override target — not a GameOption symbol. */
-export type OverridePlayerTraitsNameNode = {
+export interface OverridePlayerTraitsNameNode {
   kind: "player_traits_override";
-  option: PlayerTraitsOverrideOption;
   location: SourceCodeLocation;
-};
+  option: PlayerTraitsOverrideOption;
+}
 
 export type OverrideNameNode =
   | ASTReferenceNode
@@ -102,8 +111,9 @@ export type OverrideNameNode =
   | OverridePlayerTraitsNameNode
   | ASTErrorNode;
 
-export type OverrideEntryNode = {
+export interface OverrideEntryNode {
   kind: GameOptionEntryKind.OVERRIDE;
+  location: SourceCodeLocation;
   modifiers: GameOptionModifiers;
   name: OverrideNameNode;
   value:
@@ -111,8 +121,7 @@ export type OverrideEntryNode = {
     | OverrideLoadoutPaletteNode
     | OverrideNestedBodyNode
     | ASTErrorNode;
-  location: SourceCodeLocation;
-};
+}
 
 export type GameOptionEntryNode =
   | OverrideEntryNode

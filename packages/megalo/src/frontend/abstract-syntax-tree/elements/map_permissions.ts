@@ -1,6 +1,5 @@
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { type Token, TokenKind } from "src/frontend/tokens";
 import {
   type ASTErrorNode,
   type ASTIntegerNode,
@@ -8,14 +7,18 @@ import {
   SyntaxKind,
 } from "src/frontend/abstract-syntax-tree";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
-import { isAstErrorNode } from "src/frontend/abstract-syntax-tree/kinds";
-import type { ASTKeywordParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { type ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
+import {
+  type ASTElementBase,
+  ElementKind,
+} from "src/frontend/abstract-syntax-tree/elements";
 import {
   isEndToken,
   locationSpan,
   parseIdentifier,
 } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+import { isAstErrorNode } from "src/frontend/abstract-syntax-tree/kinds";
+import type { ASTKeywordParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { type Token, TokenKind } from "src/frontend/tokens";
 
 export type MapPermissionsValueNode =
   | ASTIntegerNode
@@ -23,10 +26,10 @@ export type MapPermissionsValueNode =
   | ASTKeywordParameterNode
   | ASTErrorNode;
 
-export type MapPermissionsEntryNode = {
+export interface MapPermissionsEntryNode {
   key: string;
   value: MapPermissionsValueNode;
-};
+}
 
 export type MapPermissionsElementNode =
   ASTElementBase<ElementKind.MAP_PERMISSIONS> & {

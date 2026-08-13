@@ -2,11 +2,11 @@ import {
   type OverrideEntryNode,
   OverrideValueKind,
 } from "src/frontend/abstract-syntax-tree/elements/game_options";
+import { lowerPlayerTraitOptions } from "src/frontend/intermediate-representation/elements/game_options/player_traits";
 import {
   asParameterLoweringContext,
   type ElementLowerContext,
 } from "src/frontend/intermediate-representation/parameters/context";
-import { lowerPlayerTraitOptions } from "src/frontend/intermediate-representation/elements/game_options/player_traits";
 
 export const lowerPlayerTraitsOverride = (
   entry: OverrideEntryNode,

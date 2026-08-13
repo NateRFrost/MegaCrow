@@ -1,6 +1,6 @@
-import type { SupportedMegaloVersion } from "src/version";
 import { Compiler107MCC } from "src/backend/compile/107-mcc";
 import type { Compiler } from "src/backend/compile/compiler";
+import type { SupportedMegaloVersion } from "src/version";
 
 export { Compiler } from "src/backend/compile/compiler";
 

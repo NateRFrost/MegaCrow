@@ -1,8 +1,8 @@
+import { diagnosticMessages } from "src/diagnostics/messages";
 import {
   type ASTElementNode,
   ElementKind,
 } from "src/frontend/abstract-syntax-tree/elements";
-import { diagnosticMessages } from "src/diagnostics/messages";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 

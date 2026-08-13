@@ -1,26 +1,25 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import {
-  ActionType,
-  GameEngineTimerRate,
   type Action,
+  ActionType,
+  type GameEngineTimerRate,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { resolveCustomTimerReference } from "src/frontend/intermediate-representation/parameters";
+import { lowerFloatParam } from "src/frontend/intermediate-representation/parameters/common";
 import {
   asParameterLoweringContext,
   type ElementLowerContext,
 } from "src/frontend/intermediate-representation/parameters/context";
-import { resolveCustomTimerReference } from "src/frontend/intermediate-representation/parameters";
-import { lowerFloatParam } from "src/frontend/intermediate-representation/parameters/common";
-import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 
 /**
  * MegaloEdit `timer_rate_from_real_rate`
  */
 const TIMER_RATE_REALS = [
-  0,
-  0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 3, 4, 5, 10,
-  -0.1, -0.25, -0.5, -0.75, -1, -1.25, -1.5, -1.75, -2, -3, -4, -5, -10,
+  0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 3, 4, 5, 10, -0.1, -0.25,
+  -0.5, -0.75, -1, -1.25, -1.5, -1.75, -2, -3, -4, -5, -10,
 ] as const;
 
 /** Half the smallest adjacent gap in `TIMER_RATE_REALS` (0 ↔ 0.1). */

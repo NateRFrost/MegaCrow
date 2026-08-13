@@ -1,10 +1,7 @@
-import type { ActionStatementNode } from "src/frontend/abstract-syntax-tree/elements/trigger";
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { LowerError } from "src/frontend/intermediate-representation/error";
-import type { Action } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
+import type { ActionStatementNode } from "src/frontend/abstract-syntax-tree/elements/trigger";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import { lowerAdjustGrenades } from "src/frontend/intermediate-representation/elements/triggers/actions/adjust_grenades";
 import { lowerApplyPlayerTraits } from "src/frontend/intermediate-representation/elements/triggers/actions/apply_player_traits";
 import { lowerBipedDropWeapon } from "src/frontend/intermediate-representation/elements/triggers/actions/biped_drop_weapon";
@@ -109,11 +106,14 @@ import { lowerTeamSetVehicleSpawning } from "src/frontend/intermediate-represent
 import { lowerTimerReset } from "src/frontend/intermediate-representation/elements/triggers/actions/timer_reset";
 import { lowerTimerSetRate } from "src/frontend/intermediate-representation/elements/triggers/actions/timer_set_rate";
 import { lowerWeaponSetPickupPriority } from "src/frontend/intermediate-representation/elements/triggers/actions/weapon_set_pickup_priority";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import type { Action } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 
 export type ActionLowerer = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
-  location: SourceCodeLocation,
+  location: SourceCodeLocation
 ) => Action;
 
 const ACTION_LOWERERS = new Map<string, ActionLowerer>([
@@ -228,20 +228,20 @@ const ACTION_LOWERERS = new Map<string, ActionLowerer>([
 
 export const registerActionLowerer = (
   name: string,
-  lowerer: ActionLowerer,
+  lowerer: ActionLowerer
 ): void => {
   ACTION_LOWERERS.set(name, lowerer);
 };
 
 export const lowerActionStatement = (
   statement: ActionStatementNode,
-  ctx: ElementLowerContext,
+  ctx: ElementLowerContext
 ): Action => {
   const lowerer = ACTION_LOWERERS.get(statement.name.value);
   if (lowerer === undefined) {
     throw new LowerError(
       diagnosticMessages.unknownAction(statement.name.value),
-      statement.name.location,
+      statement.name.location
     );
   }
   return lowerer(statement.parameters, ctx, statement.location);

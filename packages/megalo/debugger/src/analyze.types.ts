@@ -1,45 +1,45 @@
 import type { Diagnostic } from "../../src/diagnostics";
-import type { SupportedLocale } from "../../src/localization";
 import type { ObjectLists } from "../../src/frontend/object-lists";
+import type { SupportedLocale } from "../../src/localization";
 
-export type AnalyzeRequest = {
-  type: "analyze";
+export interface AnalyzeRequest {
   id: number;
-  source: string;
   locale: SupportedLocale;
   objectLists: ObjectLists;
-};
-
-export type AnalyzeResponse = {
+  source: string;
   type: "analyze";
-  id: number;
-  tokens: unknown;
+}
+
+export interface AnalyzeResponse {
   ast: unknown;
-  symbolTable: unknown;
-  ir: unknown;
-  tokenCount: number;
-  symbolCount: number;
-  lexDuration: number;
-  parseDuration: number;
-  lowerDuration: number;
   diagnostics: Diagnostic[];
-};
-
-export type SaveGametypeRequest = {
-  type: "saveGametype";
   id: number;
-  source: string;
+  ir: unknown;
+  lexDuration: number;
+  lowerDuration: number;
+  parseDuration: number;
+  symbolCount: number;
+  symbolTable: unknown;
+  tokenCount: number;
+  tokens: unknown;
+  type: "analyze";
+}
+
+export interface SaveGametypeRequest {
+  id: number;
   locale: SupportedLocale;
   objectLists: ObjectLists;
-};
-
-export type SaveGametypeResponse = {
+  source: string;
   type: "saveGametype";
-  id: number;
+}
+
+export interface SaveGametypeResponse {
   data?: ArrayBuffer;
-  error?: string;
   diagnostics: Diagnostic[];
-};
+  error?: string;
+  id: number;
+  type: "saveGametype";
+}
 
 export type WorkerRequest = AnalyzeRequest | SaveGametypeRequest;
 export type WorkerResponse = AnalyzeResponse | SaveGametypeResponse;

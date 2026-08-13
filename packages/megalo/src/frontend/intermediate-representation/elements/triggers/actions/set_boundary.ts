@@ -1,23 +1,23 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { requireKeyword } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
+  type Action,
   ActionType,
   BoundaryShape,
-  type Action,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import { type CustomVariableReference } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
-import {
-  asParameterLoweringContext,
-  type ElementLowerContext,
-} from "src/frontend/intermediate-representation/parameters/context";
+import type { CustomVariableReference } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import {
   resolveCustomVariableReference,
   resolveObjectReference,
 } from "src/frontend/intermediate-representation/parameters";
-import { requireKeyword } from "src/frontend/intermediate-representation/elements/triggers/helpers";
+import {
+  asParameterLoweringContext,
+  type ElementLowerContext,
+} from "src/frontend/intermediate-representation/parameters/context";
 
 const parseBoundaryShape = (
   node: ASTParameterNode,
@@ -126,9 +126,7 @@ export const lowerSetBoundary = (
 
   switch (shape) {
     case BoundaryShape.Sphere: {
-      const radius =
-        byKeyword.get("radius") ??
-        positional[0];
+      const radius = byKeyword.get("radius") ?? positional[0];
       if (radius === undefined) {
         throw new LowerError(
           diagnosticMessages.expectedParameterType("radius", ""),
@@ -143,11 +141,8 @@ export const lowerSetBoundary = (
     case BoundaryShape.Box: {
       const width = byKeyword.get("width") ?? positional[0];
       const depth =
-        byKeyword.get("length") ??
-        byKeyword.get("depth") ??
-        positional[1];
-      const negHeight =
-        byKeyword.get("neg_height") ?? positional[2];
+        byKeyword.get("length") ?? byKeyword.get("depth") ?? positional[1];
+      const negHeight = byKeyword.get("neg_height") ?? positional[2];
       const posHeight =
         byKeyword.get("pos_height") ??
         byKeyword.get("height") ??
@@ -181,8 +176,7 @@ export const lowerSetBoundary = (
     }
     case BoundaryShape.Cylinder: {
       const radius = byKeyword.get("radius") ?? positional[0];
-      const negHeight =
-        byKeyword.get("neg_height") ?? positional[1];
+      const negHeight = byKeyword.get("neg_height") ?? positional[1];
       const posHeight =
         byKeyword.get("pos_height") ??
         byKeyword.get("height") ??

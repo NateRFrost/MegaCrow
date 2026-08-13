@@ -1,15 +1,15 @@
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { LowerError } from "src/frontend/intermediate-representation/error";
-import {
-  ActionType,
-  type Action,
-} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import { lowerDynamicString } from "src/frontend/intermediate-representation/elements/triggers/dynamicString";
 import { parseTeamOrPlayerTarget } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import { parseSoundIndex } from "src/frontend/intermediate-representation/elements/triggers/parse_sound";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import {
+  type Action,
+  ActionType,
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 
 export const lowerHudPostMessage = (
   parameters: ASTParameterNode[],

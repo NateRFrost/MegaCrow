@@ -1,63 +1,66 @@
+import type { MegaloCompilerContext } from "src/context";
+import type { Diagnostics, SourceLocation } from "src/diagnostics";
 import type { AST } from "src/frontend/abstract-syntax-tree";
 import { ElementKind } from "src/frontend/abstract-syntax-tree/elements";
-import type { MegaloCompilerContext } from "src/context";
-import { type Diagnostics, type SourceLocation } from "src/diagnostics";
-import type { ObjectLists } from "src/frontend/object-lists";
-import { assertAllowedInBaseDerived } from "src/frontend/intermediate-representation/diagnostics/assertAllowedInBaseDerived";
 import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
-import { ELEMENT_LOWERERS, baseLowerer } from "src/frontend/intermediate-representation/elements";
-import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters";
+import { assertAllowedInBaseDerived } from "src/frontend/intermediate-representation/diagnostics/assertAllowedInBaseDerived";
+import {
+  baseLowerer,
+  ELEMENT_LOWERERS,
+} from "src/frontend/intermediate-representation/elements";
 import type { GameEngineCustomVariant } from "src/frontend/intermediate-representation/game/game_variant";
-import { StringTable } from "src/frontend/intermediate-representation/game/string_table";
-import type { VariableMetadata } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variable_metadata";
 import type {
   PlayerTraitOptionOverride,
   UserDefinedOptionOverride,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_user_defined_options";
+import type { VariableMetadata } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variable_metadata";
+import { StringTable } from "src/frontend/intermediate-representation/game/string_table";
 import {
   createFieldLocations,
   type FieldLocations,
 } from "src/frontend/intermediate-representation/locations";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters";
 import { applyDefaultLoadoutCameraTime } from "src/frontend/intermediate-representation/postprocessing/applyDefaultLoadoutCameraTime";
 import { applyMetadata } from "src/frontend/intermediate-representation/postprocessing/applyMetadata";
 import { applyVariableMetadata } from "src/frontend/intermediate-representation/postprocessing/applyVariableMetadata";
 import { buildVariableSlotMap } from "src/frontend/intermediate-representation/preprocessing/symbols";
+import type { ObjectLists } from "src/frontend/object-lists";
 
-export type Located<T> = {
-  value: T;
+export interface Located<T> {
   location: SourceLocation;
-};
+  value: T;
+}
 
-export type IR = {
+export interface IR {
+  // Raw bytes of the base .mglo file.
+  baseFileBytes?: Uint8Array;
   // We use this more as a presence indicator for whether a file is base-derived,
   // Its possible we cant find the file, in which case baseFileBytes isnt set,
   // but the file is still base derived and we wanna know about that.
   baseFilePath?: string;
-  // Raw bytes of the base .mglo file.
-  baseFileBytes?: Uint8Array;
   // Anything applied on top of a base file that doesnt fit within the typical
   // GameEngineCustomVariant struct.
   baseOverrides: BaseOverrides;
   gameVariant: GameEngineCustomVariant;
   /** Source locations for IR leaves (diagnostics / unused-override warnings). */
   locations: FieldLocations;
-};
+}
 
-export type BaseOverrides = {
-  userDefinedOptions: UserDefinedOptionOverride[];
+export interface BaseOverrides {
   playerTraits: PlayerTraitOptionOverride[];
-};
+  userDefinedOptions: UserDefinedOptionOverride[];
+}
 
 export type { PlayerTraitOptionOverride, UserDefinedOptionOverride };
 
-export type LowerContext = {
+export interface LowerContext {
   objectLists?: ObjectLists;
-};
+}
 
-export const located = <T>(
-  value: T,
-  location: SourceLocation
-): Located<T> => ({ value, location });
+export const located = <T>(value: T, location: SourceLocation): Located<T> => ({
+  value,
+  location,
+});
 
 const emptyVariableMetadata = (): VariableMetadata => ({
   numericVariables: [],

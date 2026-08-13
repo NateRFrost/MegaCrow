@@ -1,6 +1,6 @@
 import {
-  type c_game_engine_custom_variant,
   c_condition,
+  type c_game_engine_custom_variant,
   e_disposition,
   e_numeric_comparison,
   e_player_death_killer_type_flags_none,
@@ -22,15 +22,6 @@ import {
   s_condition_team_is_active_parameters,
   s_condition_timer_expired_parameters,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import type { Diagnostics } from "src/diagnostics";
-import type { IR } from "src/frontend/intermediate-representation";
-import {
-  ConditionType,
-  Disposition,
-  NumericComparison,
-  type Condition,
-  type PlayerDeathKillerTypeFlags,
-} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions";
 import { encodeConditionType } from "src/backend/compile/107-mcc/enums/e_condition_type";
 import {
   encodeCustomTimerReference,
@@ -40,6 +31,15 @@ import {
   encodeTeamReference,
   encodeVariantVariable,
 } from "src/backend/compile/107-mcc/references";
+import type { Diagnostics } from "src/diagnostics";
+import type { IR } from "src/frontend/intermediate-representation";
+import {
+  type Condition,
+  ConditionType,
+  Disposition,
+  NumericComparison,
+  type PlayerDeathKillerTypeFlags,
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions";
 
 const encodeNumericComparison = (
   value: NumericComparison
@@ -136,7 +136,9 @@ const compileCondition = (condition: Condition): c_condition => {
       const params = new s_condition_team_disposition_parameters();
       params.m_team_1 = encodeTeamReference(condition.parameters.team1);
       params.m_team_2 = encodeTeamReference(condition.parameters.team2);
-      params.m_disposition = encodeDisposition(condition.parameters.disposition);
+      params.m_disposition = encodeDisposition(
+        condition.parameters.disposition
+      );
       target.m_team_disposition_parameters = params;
       break;
     }

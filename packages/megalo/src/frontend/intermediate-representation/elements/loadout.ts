@@ -1,10 +1,11 @@
+import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { LoadoutElementNode } from "src/frontend/abstract-syntax-tree/elements/loadout";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { diagnosticMessages } from "src/diagnostics/messages";
-import { ObjectListType } from "src/frontend/object-lists";
-import { SymbolKind } from "src/frontend/symbol-table";
-import { type Located, located } from "src/frontend/intermediate-representation";
+import {
+  type Located,
+  located,
+} from "src/frontend/intermediate-representation";
 import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
 import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
 import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
@@ -13,6 +14,8 @@ import type { LoadoutTraits } from "src/frontend/intermediate-representation/gam
 import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters";
 import { lowerGrenadeCount } from "src/frontend/intermediate-representation/parameters/grenadeCount";
 import { setField } from "src/frontend/intermediate-representation/setField";
+import { ObjectListType } from "src/frontend/object-lists";
+import { SymbolKind } from "src/frontend/symbol-table";
 
 const OBJECT_LIST_SENTINELS: Record<string, number> = {
   none: -1,

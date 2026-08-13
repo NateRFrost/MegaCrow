@@ -1,6 +1,9 @@
 import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
+import {
+  type ASTNode,
+  SyntaxKind,
+} from "src/frontend/abstract-syntax-tree/kinds";
 import { type Token, TokenKind, type Tokens } from "src/frontend/tokens";
-import { type ASTNode, SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
 
 export type ASTCommentNode = ASTNode<SyntaxKind.COMMENT> & {
   /** One entry per contiguous `;` line in this comment block. */

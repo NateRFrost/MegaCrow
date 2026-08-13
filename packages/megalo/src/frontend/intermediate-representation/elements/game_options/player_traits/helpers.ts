@@ -1,12 +1,15 @@
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { ObjectListType } from "src/frontend/object-lists";
-import { type Located, located } from "src/frontend/intermediate-representation";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import {
+  type Located,
+  located,
+} from "src/frontend/intermediate-representation";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import type { ParameterLoweringContext } from "src/frontend/intermediate-representation/parameters";
 import { resolveObjectTypeReference } from "src/frontend/intermediate-representation/parameters/references";
+import type { ObjectListType } from "src/frontend/object-lists";
 
 export const parameterLocation = (
   parameters: ASTParameterNode[],
@@ -17,7 +20,7 @@ export const resolveKeyword = (
   node: ASTParameterNode | undefined
 ): string | undefined => {
   if (node === undefined) {
-    return undefined;
+    return;
   }
   if (node.kind === SyntaxKind.KEYWORD) {
     return node.value;
@@ -25,7 +28,7 @@ export const resolveKeyword = (
   if (node.kind === SyntaxKind.REFERENCE) {
     return node.identifier;
   }
-  return undefined;
+  return;
 };
 
 export const resolveEnumKeyword = <T extends number>(
@@ -62,9 +65,9 @@ export const lowerObjectListIndex = (
   );
 };
 
-export type TraitOptionArgs = {
-  parameters: ASTParameterNode[];
-  first: ASTParameterNode | undefined;
+export interface TraitOptionArgs {
   ctx: ParameterLoweringContext;
+  first: ASTParameterNode | undefined;
   location: SourceCodeLocation;
-};
+  parameters: ASTParameterNode[];
+}

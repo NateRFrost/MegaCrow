@@ -37,16 +37,16 @@ export enum ConditionType {
   GameIsForge = 17,
 }
 
-export type ConditionIfParameters = {
+export interface ConditionIfParameters {
+  comparison: NumericComparison;
   left: VariantVariable;
   right: VariantVariable;
-  comparison: NumericComparison;
-};
+}
 
-export type ConditionObjectInAreaParameters = {
-  object: ObjectReference;
+export interface ConditionObjectInAreaParameters {
   area: ObjectReference;
-};
+  object: ObjectReference;
+}
 
 export enum PlayerDeathKillerType {
   Environment = 0,
@@ -56,18 +56,18 @@ export enum PlayerDeathKillerType {
   QuitGame = 4,
 }
 
-export type PlayerDeathKillerTypeFlags = {
-  environment: boolean;
-  suicide: boolean;
-  enemy: boolean;
+export interface PlayerDeathKillerTypeFlags {
   betrayal: boolean;
+  enemy: boolean;
+  environment: boolean;
   quit_game: boolean;
-};
+  suicide: boolean;
+}
 
-export type ConditionPlayerDiedParameters = {
-  player: PlayerReference;
+export interface ConditionPlayerDiedParameters {
   killerType: PlayerDeathKillerTypeFlags;
-};
+  player: PlayerReference;
+}
 
 export enum Disposition {
   Neutral = 0,
@@ -75,75 +75,75 @@ export enum Disposition {
   Enemy = 2,
 }
 
-export type ConditionTeamDispositionParameters = {
+export interface ConditionTeamDispositionParameters {
+  disposition: Disposition;
   team1: TeamReference;
   team2: TeamReference;
-  disposition: Disposition;
-};
+}
 
-export type ConditionTimerExpiredParameters = {
+export interface ConditionTimerExpiredParameters {
   timer: CustomTimerReference;
-};
+}
 
-export type ConditionObjectIsTypeParameters = {
+export interface ConditionObjectIsTypeParameters {
   object: ObjectReference;
   objectType: ObjectTypeReference;
-};
+}
 
-export type ConditionTeamIsActiveParameters = {
+export interface ConditionTeamIsActiveParameters {
   team: TeamReference;
-};
+}
 
-export type ConditionObjectOutOfBoundsParameters = {
+export interface ConditionObjectOutOfBoundsParameters {
   object: ObjectReference;
-};
+}
 
-export type ConditionPlayerIsFireTeamLeaderParameters = {
+export interface ConditionPlayerIsFireTeamLeaderParameters {
   player: PlayerReference;
-};
+}
 
-export type ConditionPlayerAssistedWithKillParameters = {
+export interface ConditionPlayerAssistedWithKillParameters {
   player1: PlayerReference;
   player2: PlayerReference;
-};
+}
 
-export type ConditionObjectMatchesFilterParameters = {
-  object: ObjectReference;
+export interface ConditionObjectMatchesFilterParameters {
   filterIndex: number;
-};
-
-export type ConditionPlayerIsActiveParameters = {
-  player: PlayerReference;
-};
-
-export type ConditionEquipmentIsActiveParameters = {
   object: ObjectReference;
-};
+}
 
-export type ConditionPlayerIsSpartanParameters = {
+export interface ConditionPlayerIsActiveParameters {
   player: PlayerReference;
-};
+}
 
-export type ConditionPlayerIsEliteParameters = {
-  player: PlayerReference;
-};
+export interface ConditionEquipmentIsActiveParameters {
+  object: ObjectReference;
+}
 
-export type ConditionPlayerIsEditorParameters = {
+export interface ConditionPlayerIsSpartanParameters {
   player: PlayerReference;
-};
+}
+
+export interface ConditionPlayerIsEliteParameters {
+  player: PlayerReference;
+}
+
+export interface ConditionPlayerIsEditorParameters {
+  player: PlayerReference;
+}
 
 export type ConditionGameIsForgeParameters = never;
 
-type ConditionBase = {
+interface ConditionBase {
+  executeBeforeAction: number;
   negated: boolean;
   unionGroup: number;
-  executeBeforeAction: number;
-};
+}
 
-type ConditionParameters<T extends ConditionType, P> = {
-  type: T;
+interface ConditionParameters<T extends ConditionType, P> {
   parameters: P;
-};
+  type: T;
+}
 
 export type Condition = ConditionBase &
   (

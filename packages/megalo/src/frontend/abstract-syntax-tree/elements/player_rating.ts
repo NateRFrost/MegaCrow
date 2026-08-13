@@ -1,6 +1,5 @@
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { type Token, TokenKind } from "src/frontend/tokens";
 import {
   type ASTErrorNode,
   type ASTFloatingPointNode,
@@ -9,13 +8,17 @@ import {
   SyntaxKind,
 } from "src/frontend/abstract-syntax-tree";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
-import { isAstErrorNode } from "src/frontend/abstract-syntax-tree/kinds";
-import { type ASTElementBase, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
+import {
+  type ASTElementBase,
+  ElementKind,
+} from "src/frontend/abstract-syntax-tree/elements";
 import {
   isEndToken,
   locationSpan,
   parseIdentifier,
 } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
+import { isAstErrorNode } from "src/frontend/abstract-syntax-tree/kinds";
+import { type Token, TokenKind } from "src/frontend/tokens";
 
 export type PlayerRatingValueNode =
   | ASTIntegerNode
@@ -23,10 +26,10 @@ export type PlayerRatingValueNode =
   | ASTReferenceNode
   | ASTErrorNode;
 
-export type PlayerRatingFieldNode = {
+export interface PlayerRatingFieldNode {
   key: string;
   value: PlayerRatingValueNode;
-};
+}
 
 export type PlayerRatingElementNode =
   ASTElementBase<ElementKind.PLAYER_RATING> & {

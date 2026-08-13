@@ -1,3 +1,4 @@
+import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type {
   BeginStatementNode,
@@ -7,47 +8,7 @@ import type {
 } from "src/frontend/abstract-syntax-tree/elements/trigger";
 import type { ActionStatementNode } from "src/frontend/abstract-syntax-tree/elements/trigger/action";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { diagnosticMessages } from "src/diagnostics/messages";
-import {
-  SymbolKind,
-  VariableScope,
-  VariableType,
-} from "src/frontend/symbol-table";
 import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
-import { LowerError } from "src/frontend/intermediate-representation/error";
-import {
-  ActionType,
-  MathOperation,
-  type Action,
-  type BeginParameters,
-} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import { ExplicitObject } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
-import { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
-import { ExplicitTeam } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
-import {
-  CustomVariableType,
-  ObjectReferenceType,
-  PlayerReferenceType,
-  TeamReferenceType,
-} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
-import {
-  VariableType as VariantVariableType,
-  type VariantVariable,
-} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variant_variable";
-import { enumSlotValue } from "src/frontend/intermediate-representation/parameters/explicit";
-import {
-  asParameterLoweringContext,
-  type ElementLowerContext,
-} from "src/frontend/intermediate-representation/parameters/context";
-import { resolveVariantVariable } from "src/frontend/intermediate-representation/parameters";
-import {
-  coerceVariantOperands,
-  isBareNoneOperand,
-} from "src/frontend/intermediate-representation/parameters/references/coerce";
-import {
-  requireResolvedVariableSlot,
-  type ResolvedVariableSlot,
-} from "src/frontend/intermediate-representation/preprocessing/symbols";
 import { lowerActionStatement } from "src/frontend/intermediate-representation/elements/triggers/action_registry";
 import { lowerConditionStatement } from "src/frontend/intermediate-representation/elements/triggers/conditions";
 import {
@@ -60,12 +21,51 @@ import {
   type AppendTarget,
   ScopeAppendTarget,
 } from "src/frontend/intermediate-representation/elements/triggers/scope";
+import { LowerError } from "src/frontend/intermediate-representation/error";
+import {
+  type Action,
+  ActionType,
+  type BeginParameters,
+  MathOperation,
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { ExplicitObject } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
+import { ExplicitPlayer } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
+import { ExplicitTeam } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
+import {
+  CustomVariableType,
+  ObjectReferenceType,
+  PlayerReferenceType,
+  TeamReferenceType,
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
+import {
+  type VariantVariable,
+  VariableType as VariantVariableType,
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variant_variable";
+import { resolveVariantVariable } from "src/frontend/intermediate-representation/parameters";
+import {
+  asParameterLoweringContext,
+  type ElementLowerContext,
+} from "src/frontend/intermediate-representation/parameters/context";
+import { enumSlotValue } from "src/frontend/intermediate-representation/parameters/explicit";
+import {
+  coerceVariantOperands,
+  isBareNoneOperand,
+} from "src/frontend/intermediate-representation/parameters/references/coerce";
+import {
+  type ResolvedVariableSlot,
+  requireResolvedVariableSlot,
+} from "src/frontend/intermediate-representation/preprocessing/symbols";
+import {
+  SymbolKind,
+  VariableScope,
+  VariableType,
+} from "src/frontend/symbol-table";
 
-export type ActionScopeContext = {
-  ctx: ElementLowerContext;
+export interface ActionScopeContext {
   appendTarget: AppendTarget;
+  ctx: ElementLowerContext;
   insidePregameTrigger: boolean;
-};
+}
 
 /**
  * Lower a statement list into an action scope (trigger body or begin body),
@@ -351,9 +351,9 @@ const lowerTemporary = (
 
   const symbolId = statement.name.symbolId;
   const symbol =
-    symbolId !== undefined
-      ? scopeCtx.ctx.symbolTable.getSymbol(symbolId)
-      : scopeCtx.ctx.symbolTable.findVariableByName(statement.name.value);
+    symbolId === undefined
+      ? scopeCtx.ctx.symbolTable.findVariableByName(statement.name.value)
+      : scopeCtx.ctx.symbolTable.getSymbol(symbolId);
   if (
     symbol === undefined ||
     symbol.kind !== SymbolKind.Variable ||

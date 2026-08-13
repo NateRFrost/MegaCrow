@@ -1,7 +1,7 @@
 // MegaloEdit Compiler Settings
-export type CompilerSettings = {
+export interface CompilerSettings {
   temporaryVariablesCanOverflowIntoUnusedGlobalVariables: boolean;
-};
+}
 
 export const DEFAULT_COMPILER_SETTINGS: CompilerSettings = {
   temporaryVariablesCanOverflowIntoUnusedGlobalVariables: true,

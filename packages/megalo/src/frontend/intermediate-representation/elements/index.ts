@@ -1,5 +1,7 @@
-import { type ASTElementNode, ElementKind } from "src/frontend/abstract-syntax-tree/elements";
-import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
+import {
+  type ASTElementNode,
+  ElementKind,
+} from "src/frontend/abstract-syntax-tree/elements";
 import { baseLowerer } from "src/frontend/intermediate-representation/elements/base";
 import { engineDataLowerer } from "src/frontend/intermediate-representation/elements/engine_data";
 import { gameOptionsLowerer } from "src/frontend/intermediate-representation/elements/game_options";
@@ -13,36 +15,49 @@ import { playerRatingLowerer } from "src/frontend/intermediate-representation/el
 import { teamsLowerer } from "src/frontend/intermediate-representation/elements/teams";
 import { triggersLowerer } from "src/frontend/intermediate-representation/elements/triggers";
 import { variablesLowerer } from "src/frontend/intermediate-representation/elements/variables";
+import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 
 export type ElementLowerer<T extends ASTElementNode> = (
   element: T,
   ctx: ElementLowerContext
 ) => void;
 
-export const NULL_LOWERER: ElementLowerer<any> = () => {};
+export const NULL_LOWERER: ElementLowerer<ASTElementNode> = () => {
+  // no-op lowerer for parse-time-only / discarded element kinds
+};
 
 export { baseLowerer };
 
-export const ELEMENT_LOWERERS = new Map<ElementKind, ElementLowerer<any>>();
+export const ELEMENT_LOWERERS = new Map<
+  ElementKind,
+  ElementLowerer<ASTElementNode>
+>();
+
+const registerLowerer = <T extends ASTElementNode>(
+  kind: ElementKind,
+  lowerer: ElementLowerer<T>
+): void => {
+  ELEMENT_LOWERERS.set(kind, lowerer as ElementLowerer<ASTElementNode>);
+};
 
 // string table is build out by all lowerers
-ELEMENT_LOWERERS.set(ElementKind.STRING_TABLE, NULL_LOWERER);
+registerLowerer(ElementKind.STRING_TABLE, NULL_LOWERER);
 // constants are removed at lower.
-ELEMENT_LOWERERS.set(ElementKind.CONSTANTS, NULL_LOWERER);
+registerLowerer(ElementKind.CONSTANTS, NULL_LOWERER);
 // includes are expanded at parse time; leftover nodes are ignored.
-ELEMENT_LOWERERS.set(ElementKind.INCLUDE, NULL_LOWERER);
-ELEMENT_LOWERERS.set(ElementKind.LOCALIZED_INCLUDE, NULL_LOWERER);
+registerLowerer(ElementKind.INCLUDE, NULL_LOWERER);
+registerLowerer(ElementKind.LOCALIZED_INCLUDE, NULL_LOWERER);
 
-ELEMENT_LOWERERS.set(ElementKind.BASE, baseLowerer);
-ELEMENT_LOWERERS.set(ElementKind.ENGINE_DATA, engineDataLowerer);
-ELEMENT_LOWERERS.set(ElementKind.GAME_OPTIONS, gameOptionsLowerer);
-ELEMENT_LOWERERS.set(ElementKind.GAME_STATS, gameStatsLowerer);
-ELEMENT_LOWERERS.set(ElementKind.HUD_WIDGETS, hudWidgetsLowerer);
-ELEMENT_LOWERERS.set(ElementKind.LOADOUT, loadoutLowerer);
-ELEMENT_LOWERERS.set(ElementKind.LOADOUT_PALETTE, loadoutPaletteLowerer);
-ELEMENT_LOWERERS.set(ElementKind.MAP_OBJECT, mapObjectLowerer);
-ELEMENT_LOWERERS.set(ElementKind.MAP_PERMISSIONS, mapPermissionsLowerer);
-ELEMENT_LOWERERS.set(ElementKind.PLAYER_RATING, playerRatingLowerer);
-ELEMENT_LOWERERS.set(ElementKind.TEAMS, teamsLowerer);
-ELEMENT_LOWERERS.set(ElementKind.TRIGGER, triggersLowerer);
-ELEMENT_LOWERERS.set(ElementKind.VARIABLES, variablesLowerer);
+registerLowerer(ElementKind.BASE, baseLowerer);
+registerLowerer(ElementKind.ENGINE_DATA, engineDataLowerer);
+registerLowerer(ElementKind.GAME_OPTIONS, gameOptionsLowerer);
+registerLowerer(ElementKind.GAME_STATS, gameStatsLowerer);
+registerLowerer(ElementKind.HUD_WIDGETS, hudWidgetsLowerer);
+registerLowerer(ElementKind.LOADOUT, loadoutLowerer);
+registerLowerer(ElementKind.LOADOUT_PALETTE, loadoutPaletteLowerer);
+registerLowerer(ElementKind.MAP_OBJECT, mapObjectLowerer);
+registerLowerer(ElementKind.MAP_PERMISSIONS, mapPermissionsLowerer);
+registerLowerer(ElementKind.PLAYER_RATING, playerRatingLowerer);
+registerLowerer(ElementKind.TEAMS, teamsLowerer);
+registerLowerer(ElementKind.TRIGGER, triggersLowerer);
+registerLowerer(ElementKind.VARIABLES, variablesLowerer);

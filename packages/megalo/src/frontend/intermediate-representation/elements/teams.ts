@@ -1,20 +1,19 @@
+import type { SourceCodeLocation } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type {
   TeamNode,
   TeamsElementNode,
   TeamsPropertyNode,
 } from "src/frontend/abstract-syntax-tree/elements/teams";
-import type { SourceCodeLocation } from "src/diagnostics";
-import { diagnosticMessages } from "src/diagnostics/messages";
-import { isTeamDesignator } from "src/frontend/language-configuration/omni/teams";
-import { SymbolKind } from "src/frontend/symbol-table";
 import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
 import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
+import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   DesignatorSwitchType,
   type GameEngineTeamOptionsTeam,
-  MultiplayerTeamDesignator,
+  type MultiplayerTeamDesignator,
   PlayerModelChoice,
   TeamOptionsModelOverrideType,
 } from "src/frontend/intermediate-representation/game/game_engine_default";
@@ -23,7 +22,8 @@ import type { ElementLowerContext } from "src/frontend/intermediate-representati
 import { lowerConstantNumber } from "src/frontend/intermediate-representation/parameters/constantNumber";
 import { TEAM_DESIGNATOR_INDICES } from "src/frontend/intermediate-representation/parameters/explicit";
 import { setField } from "src/frontend/intermediate-representation/setField";
-import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
+import { isTeamDesignator } from "src/frontend/language-configuration/omni/teams";
+import { SymbolKind } from "src/frontend/symbol-table";
 
 const MAX_FIRETEAM_COUNT = 16;
 
@@ -103,7 +103,7 @@ const lowerTeam = (
           team,
           "name",
           name,
-          property.parameters[0]!.location
+          property.parameters[0]?.location
         );
         break;
       }
@@ -115,7 +115,7 @@ const lowerTeam = (
               "team_designator",
               keyword
             ),
-            property.parameters[0]!.location
+            property.parameters[0]?.location
           );
         }
         setField(
@@ -124,7 +124,7 @@ const lowerTeam = (
           team,
           "designator",
           TEAM_DESIGNATOR_INDICES[keyword] as MultiplayerTeamDesignator,
-          property.parameters[0]!.location
+          property.parameters[0]?.location
         );
         break;
       }
@@ -137,7 +137,7 @@ const lowerTeam = (
               TEAM_MODEL_CHOICE_NAMES.map((name) => `'${name}'`),
               keyword
             ),
-            property.parameters[0]!.location
+            property.parameters[0]?.location
           );
         }
         setField(
@@ -146,7 +146,7 @@ const lowerTeam = (
           team,
           "model",
           model,
-          property.parameters[0]!.location
+          property.parameters[0]?.location
         );
         break;
       }
@@ -192,10 +192,7 @@ const lowerTeam = (
           );
         }
         const parameter = property.parameters[0]!;
-        assertSyntaxKind(parameter, [
-          SyntaxKind.INTEGER,
-          SyntaxKind.REFERENCE,
-        ]);
+        assertSyntaxKind(parameter, [SyntaxKind.INTEGER, SyntaxKind.REFERENCE]);
         const count = lowerConstantNumber(parameter, ctx);
         if (count.value < 0 || count.value > MAX_FIRETEAM_COUNT) {
           throw new LowerError(
@@ -224,7 +221,10 @@ const lowerTeam = (
   return team;
 };
 
-export const teamsLowerer: ElementLowerer<TeamsElementNode> = (element, ctx) => {
+export const teamsLowerer: ElementLowerer<TeamsElementNode> = (
+  element,
+  ctx
+) => {
   const teamOptions = ctx.ir.gameVariant.baseVariant.teamOptions;
 
   for (const property of element.properties) {
@@ -239,7 +239,7 @@ export const teamsLowerer: ElementLowerer<TeamsElementNode> = (element, ctx) => 
                 BLOCK_MODEL_OVERRIDE_NAMES.map((name) => `'${name}'`),
                 keyword
               ),
-              property.parameters[0]!.location
+              property.parameters[0]?.location
             );
           }
           setField(
@@ -248,7 +248,7 @@ export const teamsLowerer: ElementLowerer<TeamsElementNode> = (element, ctx) => 
             teamOptions,
             "model",
             model,
-            property.parameters[0]!.location
+            property.parameters[0]?.location
           );
           break;
         }
@@ -261,7 +261,7 @@ export const teamsLowerer: ElementLowerer<TeamsElementNode> = (element, ctx) => 
                 DESIGNATOR_SWITCH_TYPE_NAMES.map((name) => `'${name}'`),
                 keyword
               ),
-              property.parameters[0]!.location
+              property.parameters[0]?.location
             );
           }
           setField(
@@ -270,7 +270,7 @@ export const teamsLowerer: ElementLowerer<TeamsElementNode> = (element, ctx) => 
             teamOptions,
             "designatorSwitchType",
             switchType,
-            property.parameters[0]!.location
+            property.parameters[0]?.location
           );
           break;
         }

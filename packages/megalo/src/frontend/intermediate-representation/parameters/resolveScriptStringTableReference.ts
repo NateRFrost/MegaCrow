@@ -1,14 +1,14 @@
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { SymbolKind, type SymbolTable } from "src/frontend/symbol-table";
 import type { IR } from "src/frontend/intermediate-representation";
-import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
 import { assertSymbolKind } from "src/frontend/intermediate-representation/diagnostics/assertSymbolKind";
+import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
 import {
   literalStringTableEntry,
   type StringTable,
   type StringTableReference,
 } from "src/frontend/intermediate-representation/game/string_table";
+import { SymbolKind, type SymbolTable } from "src/frontend/symbol-table";
 
 /**
  * Resolve a quoted string literal or string-symbol reference and add it to the

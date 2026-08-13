@@ -1,7 +1,5 @@
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { ObjectListType } from "src/frontend/object-lists";
-import { TokenKind } from "src/frontend/tokens";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import {
   type ASTErrorNode,
@@ -21,6 +19,8 @@ import {
   parseParameterValue,
   tryParseParameterValue,
 } from "src/frontend/abstract-syntax-tree/parameters";
+import { ObjectListType } from "src/frontend/object-lists";
+import { TokenKind } from "src/frontend/tokens";
 
 export type ASTConditionOperandNode =
   | ASTIntegerNode

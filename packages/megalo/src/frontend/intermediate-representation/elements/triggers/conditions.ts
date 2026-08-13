@@ -1,3 +1,4 @@
+import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { ConditionStatementNode } from "src/frontend/abstract-syntax-tree/elements/trigger";
 import type { ASTConditionOperandNode } from "src/frontend/abstract-syntax-tree/elements/trigger/operand";
@@ -6,25 +7,14 @@ import {
   type ComparisonOperatorName,
 } from "src/frontend/abstract-syntax-tree/elements/trigger/operand";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { diagnosticMessages } from "src/diagnostics/messages";
-import {
-  DISPOSITION_KEYWORDS,
-  type DispositionKeyword,
-  type KillerTypeKeyword,
-} from "src/frontend/language-configuration/omni/conditions";
-import { SymbolKind } from "src/frontend/symbol-table";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  ConditionType,
   type Condition,
+  ConditionType,
   Disposition,
-  type PlayerDeathKillerTypeFlags,
   NumericComparison,
+  type PlayerDeathKillerTypeFlags,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions";
-import {
-  asParameterLoweringContext,
-  type ElementLowerContext,
-} from "src/frontend/intermediate-representation/parameters/context";
 import {
   resolveCustomTimerReference,
   resolveObjectReference,
@@ -34,9 +24,19 @@ import {
   resolveVariantVariable,
 } from "src/frontend/intermediate-representation/parameters";
 import {
+  asParameterLoweringContext,
+  type ElementLowerContext,
+} from "src/frontend/intermediate-representation/parameters/context";
+import {
   coerceVariantOperands,
   isBareNoneOperand,
 } from "src/frontend/intermediate-representation/parameters/references/coerce";
+import {
+  DISPOSITION_KEYWORDS,
+  type DispositionKeyword,
+  type KillerTypeKeyword,
+} from "src/frontend/language-configuration/omni/conditions";
+import { SymbolKind } from "src/frontend/symbol-table";
 
 const COMPARISON_BY_NAME: Record<ComparisonOperatorName, NumericComparison> = {
   less_than: NumericComparison.LessThan,

@@ -1,6 +1,6 @@
+import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { diagnosticMessages } from "src/diagnostics/messages";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 
 type ASTParameterNodeOfKind<K extends SyntaxKind> = Extract<
@@ -12,14 +12,9 @@ const syntaxKindName = (kind: SyntaxKind): string => {
   const name = SyntaxKind[kind];
   return typeof name === "string" ? name.toLowerCase() : String(kind);
 };
-
 function assertSyntaxKind<K extends SyntaxKind>(
   parameter: ASTParameterNode,
-  kind: K
-): asserts parameter is ASTParameterNodeOfKind<K>;
-function assertSyntaxKind<K extends SyntaxKind>(
-  parameter: ASTParameterNode,
-  kinds: readonly K[]
+  kinds: readonly K[] | K
 ): asserts parameter is ASTParameterNodeOfKind<K>;
 function assertSyntaxKind(
   parameter: ASTParameterNode,

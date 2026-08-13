@@ -1,10 +1,13 @@
-import type { SupportedMegaloVersion } from "src/version";
 import { VersionConfiguration107MCC } from "src/backend/version-configuration/107-mcc";
-import { VersionConfiguration } from "src/backend/version-configuration/version_configuration";
+import type { VersionConfiguration } from "src/backend/version-configuration/version_configuration";
+import type { SupportedMegaloVersion } from "src/version";
 
-export type { Limits, VariableLimits } from "src/backend/version-configuration/version_configuration";
-export { VersionConfiguration } from "src/backend/version-configuration/version_configuration";
 export { VersionConfiguration107MCC } from "src/backend/version-configuration/107-mcc";
+export type {
+  Limits,
+  VariableLimits,
+} from "src/backend/version-configuration/version_configuration";
+export { VersionConfiguration } from "src/backend/version-configuration/version_configuration";
 
 export const getConfigurationForVersion = ({
   version,
