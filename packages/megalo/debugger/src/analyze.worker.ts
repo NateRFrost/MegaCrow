@@ -1,14 +1,14 @@
-import { Parser } from "../../frontend/abstract-syntax-tree/index";
-import { getCompilerForVersion } from "../../frontend/compile";
-import { FrontendContext } from "../../frontend/context";
+import { Parser } from "../../src/frontend/abstract-syntax-tree/index";
+import { getCompilerForVersion } from "../../src/backend/compile";
+import { MegaloCompilerContext } from "../../src/context";
 import {
   BUILT_IN_LOCATION,
   DiagnosticSeverity,
   Diagnostics,
-} from "../../frontend/diagnostics";
-import { FrontendError } from "../../frontend/error";
-import { Lowerer } from "../../frontend/intermediate-representation";
-import { setLocale } from "../../frontend/localization";
+} from "../../src/diagnostics";
+import { CompilerError } from "../../src/frontend/error";
+import { Lowerer } from "../../src/frontend/intermediate-representation";
+import { setLocale } from "../../src/localization";
 import {
   SymbolKind,
   type SymbolTable,
@@ -24,9 +24,9 @@ import {
   type SymbolTableRequisitionPaletteEntry,
   type SymbolTableStringEntry,
   type SymbolTableVariableEntry,
-} from "../../frontend/symbol-table";
-import { Lexer, type Token, TokenKind } from "../../frontend/tokens/index";
-import { MEGALO_VERSIONS } from "../../version";
+} from "../../src/frontend/symbol-table";
+import { Lexer, type Token, TokenKind } from "../../src/frontend/tokens/index";
+import { MEGALO_VERSIONS } from "../../src/version";
 import type {
   AnalyzeRequest,
   AnalyzeResponse,
@@ -36,7 +36,7 @@ import type {
   WorkerResponse,
 } from "./analyze.types";
 
-const frontend = new FrontendContext(MEGALO_VERSIONS["107-mcc"]);
+const frontend = new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"]);
 const lexer = new Lexer(frontend);
 const parser = new Parser(frontend);
 const lowerer = new Lowerer(frontend);
@@ -254,7 +254,7 @@ const analyze = (request: AnalyzeRequest): AnalyzeResponse => {
     } catch (error) {
       // FrontendError is a critical invariant failure — let it escape to the
       // worker boundary. Other unexpected throws still surface as diagnostics.
-      if (error instanceof FrontendError) {
+      if (error instanceof CompilerError) {
         throw error;
       }
       console.error("Compile dry run failed", error);

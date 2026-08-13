@@ -4,7 +4,7 @@ export {
   resolveGametypeVersion,
   type DecodedMglo,
   type MgloGametypeVersion,
-} from "../../decode-mglo";
+} from "../../src/decode-mglo";
 
 /** Structured-clone-safe plain JSON (Maps / bigints / etc. normalized). */
 export function toPlainJson(value: unknown): unknown {

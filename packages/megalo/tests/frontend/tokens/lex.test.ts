@@ -1,26 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { Diagnostics } from "../../../frontend/diagnostics";
+import { Diagnostics } from "../../../src/diagnostics";
 import {
   Lexer,
   type Token,
   TokenKind,
   type Tokens,
-} from "../../../frontend/tokens/index";
-import { MEGALO_VERSIONS } from "../../../version";
-import { FrontendContext } from "../../../frontend/context";
+} from "../../../src/frontend/tokens/index";
+import { MEGALO_VERSIONS } from "../../../src/version";
+import { MegaloCompilerContext } from "../../../src/context";
 
 const kinds = (source: string): TokenKind[] =>
-  new Lexer(new FrontendContext(MEGALO_VERSIONS["107-mcc"]))
+  new Lexer(new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"]))
     .lex(source, new Diagnostics())
     .map((token) => token.kind);
 
 const values = (source: string): string[] =>
-  new Lexer(new FrontendContext(MEGALO_VERSIONS["107-mcc"]))
+  new Lexer(new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"]))
     .lex(source, new Diagnostics())
     .map((token) => token.value);
 
 const tokens = (source: string): Tokens =>
-  new Lexer(new FrontendContext(MEGALO_VERSIONS["107-mcc"])).lex(source, new Diagnostics());
+  new Lexer(new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"])).lex(source, new Diagnostics());
 
 const expectToken = (
   token: Token,

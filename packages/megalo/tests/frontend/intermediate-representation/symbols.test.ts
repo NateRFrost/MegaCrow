@@ -1,27 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { Parser } from "../../../frontend/abstract-syntax-tree";
+import { Parser } from "../../../src/frontend/abstract-syntax-tree";
 import {
   Diagnostics,
   SourceLocationType,
   type SourceCodeLocation,
-} from "../../../frontend/diagnostics";
-import { Lowerer } from "../../../frontend/intermediate-representation";
-import { MegaloVariableNetworkState } from "../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_variable_metadata";
+} from "../../../src/diagnostics";
+import { Lowerer } from "../../../src/frontend/intermediate-representation";
+import { MegaloVariableNetworkState } from "../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variable_metadata";
 import {
   buildVariableSlotMap,
   getVariableSlot,
-} from "../../../frontend/intermediate-representation/preprocessing/symbols";
+} from "../../../src/frontend/intermediate-representation/preprocessing/symbols";
 import {
   SymbolBinder,
   VariableScope,
   VariableType,
-} from "../../../frontend/symbol-table";
-import { Lexer } from "../../../frontend/tokens";
-import { MEGALO_VERSIONS } from "../../../version";
-import { FrontendContext } from "../../../frontend/context";
+} from "../../../src/frontend/symbol-table";
+import { Lexer } from "../../../src/frontend/tokens";
+import { MEGALO_VERSIONS } from "../../../src/version";
+import { MegaloCompilerContext } from "../../../src/context";
 
 const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new FrontendContext(version);
+const frontend = new MegaloCompilerContext(version);
 const loc = (offset: number, line = 1): SourceCodeLocation => ({
   type: SourceLocationType.SOURCE_CODE,
   start: {
@@ -172,7 +172,7 @@ end
 
   it("does not overflow temporaries when compiler setting is off", () => {
     const diagnostics = new Diagnostics();
-    const noOverflowFrontend = new FrontendContext(version, undefined, {
+    const noOverflowFrontend = new MegaloCompilerContext(version, undefined, {
       temporaryVariablesCanOverflowIntoUnusedGlobalVariables: false,
     });
     const binder = new SymbolBinder(noOverflowFrontend, diagnostics);

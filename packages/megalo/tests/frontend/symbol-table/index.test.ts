@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { ParserSymbolContext } from "../../../frontend/abstract-syntax-tree/symbol-context";
+import { ParserSymbolContext } from "../../../src/frontend/abstract-syntax-tree/symbol-context";
 import {
   Diagnostics,
   BUILT_IN_LOCATION,
   type SourceCodeLocation,
   SourceLocationType,
-} from "../../../frontend/diagnostics";
-import { TEAM_DESIGNATORS } from "../../../frontend/language-configuration/omni/teams";
+} from "../../../src/diagnostics";
+import { TEAM_DESIGNATORS } from "../../../src/frontend/language-configuration/omni/teams";
 import {
   SymbolBinder,
   SymbolKind,
@@ -15,17 +15,17 @@ import {
   VariableScope,
   VariableType,
   isBuiltInVariable,
-} from "../../../frontend/symbol-table";
+} from "../../../src/frontend/symbol-table";
 import {
   buildVariableSlotMap,
   findVariableBySlot,
-} from "../../../frontend/intermediate-representation/preprocessing/symbols";
-import { ParserScopeKind } from "../../../frontend/symbol-table/scope";
-import { MEGALO_VERSIONS } from "../../../version";
-import { FrontendContext } from "../../../frontend/context";
+} from "../../../src/frontend/intermediate-representation/preprocessing/symbols";
+import { ParserScopeKind } from "../../../src/frontend/symbol-table/scope";
+import { MEGALO_VERSIONS } from "../../../src/version";
+import { MegaloCompilerContext } from "../../../src/context";
 
 const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new FrontendContext(version);
+const frontend = new MegaloCompilerContext(version);
 
 const loc = (line: number, column = 1): SourceCodeLocation => ({
   type: SourceLocationType.SOURCE_CODE,
@@ -330,7 +330,7 @@ describe("SymbolBinder", () => {
 
   it("registers target_team when the MegaCrow extension is enabled", () => {
     const diagnostics = new Diagnostics();
-    const extFrontend = new FrontendContext(version, { targetTeam: true });
+    const extFrontend = new MegaloCompilerContext(version, { targetTeam: true });
     const binder = new SymbolBinder(extFrontend, diagnostics);
     const parser = new ParserSymbolContext(extFrontend, diagnostics, binder);
 

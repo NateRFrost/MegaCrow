@@ -7,10 +7,10 @@ import {
   TEAM_DESIGNATOR_INDICES,
   tryParseExplicitObject,
   tryParseExplicitPlayer,
-} from "../../../../frontend/intermediate-representation/parameters/explicit";
-import { ExplicitObject } from "../../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
-import { ExplicitPlayer } from "../../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
-import { ExplicitTeam } from "../../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
+} from "../../../../src/frontend/intermediate-representation/parameters/explicit";
+import { ExplicitObject } from "../../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
+import { ExplicitPlayer } from "../../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
+import { ExplicitTeam } from "../../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
 
 describe("explicit name parsers", () => {
   it("parses explicit players", () => {

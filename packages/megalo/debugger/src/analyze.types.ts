@@ -1,6 +1,6 @@
-import type { Diagnostic } from "../../frontend/diagnostics";
-import type { SupportedLocale } from "../../frontend/localization";
-import type { ObjectLists } from "../../frontend/object-lists";
+import type { Diagnostic } from "../../src/diagnostics";
+import type { SupportedLocale } from "../../src/localization";
+import type { ObjectLists } from "../../src/frontend/object-lists";
 
 export type AnalyzeRequest = {
   type: "analyze";

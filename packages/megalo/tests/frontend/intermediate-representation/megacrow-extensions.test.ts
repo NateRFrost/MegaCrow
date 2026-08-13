@@ -1,19 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { Parser } from "../../../frontend/abstract-syntax-tree";
-import { FrontendContext } from "../../../frontend/context";
-import { Diagnostics } from "../../../frontend/diagnostics";
-import { Lowerer } from "../../../frontend/intermediate-representation";
-import { ActionType } from "../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import type { MegacrowExtensions } from "../../../frontend/megacrow-extensions";
-import { Lexer } from "../../../frontend/tokens";
-import { MEGALO_VERSIONS } from "../../../version";
+import { Parser } from "../../../src/frontend/abstract-syntax-tree";
+import { MegaloCompilerContext } from "../../../src/context";
+import { Diagnostics } from "../../../src/diagnostics";
+import { Lowerer } from "../../../src/frontend/intermediate-representation";
+import { ActionType } from "../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import type { MegacrowExtensions } from "../../../src/megacrow-extensions";
+import { Lexer } from "../../../src/frontend/tokens";
+import { MEGALO_VERSIONS } from "../../../src/version";
 
 const lowerScript = (
   source: string,
   megacrowExtensions?: Partial<MegacrowExtensions>
 ) => {
   const diagnostics = new Diagnostics();
-  const frontend = new FrontendContext(
+  const frontend = new MegaloCompilerContext(
     MEGALO_VERSIONS["107-mcc"],
     megacrowExtensions
   );

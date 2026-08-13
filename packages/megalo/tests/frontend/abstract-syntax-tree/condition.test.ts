@@ -1,21 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { ParserContext } from "../../../frontend/abstract-syntax-tree/context";
-import { parseCondition } from "../../../frontend/abstract-syntax-tree/elements/trigger/condition";
-import { SyntaxKind } from "../../../frontend/abstract-syntax-tree/kinds";
-import { BUILT_IN_LOCATION, Diagnostics } from "../../../frontend/diagnostics";
+import { ParserContext } from "../../../src/frontend/abstract-syntax-tree/context";
+import { parseCondition } from "../../../src/frontend/abstract-syntax-tree/elements/trigger/condition";
+import { SyntaxKind } from "../../../src/frontend/abstract-syntax-tree/kinds";
+import { BUILT_IN_LOCATION, Diagnostics } from "../../../src/diagnostics";
 import {
   SymbolBinder,
   VariableScope,
   VariableType,
-} from "../../../frontend/symbol-table";
-import { Lexer, TokenKind } from "../../../frontend/tokens";
-import { MEGALO_VERSIONS } from "../../../version";
-import { FrontendContext } from "../../../frontend/context";
+} from "../../../src/frontend/symbol-table";
+import { Lexer, TokenKind } from "../../../src/frontend/tokens";
+import { MEGALO_VERSIONS } from "../../../src/version";
+import { MegaloCompilerContext } from "../../../src/context";
 
 const parseConditionLine = (source: string) => {
   const diagnostics = new Diagnostics();
   const version = MEGALO_VERSIONS["107-mcc"];
-  const frontend = new FrontendContext(version);
+  const frontend = new MegaloCompilerContext(version);
   const tokens = new Lexer(frontend).lex(source, diagnostics);
   const symbolBinder = new SymbolBinder(frontend, diagnostics);
   const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
@@ -196,7 +196,7 @@ describe("parseCondition", () => {
 
 describe("comparison operator lexing", () => {
   it("tokenizes symbolic comparison operators", () => {
-    const tokens = new Lexer(new FrontendContext(MEGALO_VERSIONS["107-mcc"])).lex(
+    const tokens = new Lexer(new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"])).lex(
       "== != <= >=",
       new Diagnostics()
     );

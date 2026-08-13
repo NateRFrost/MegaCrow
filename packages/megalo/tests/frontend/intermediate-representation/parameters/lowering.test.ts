@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ParserContext } from "../../../../frontend/abstract-syntax-tree/context";
+import { ParserContext } from "../../../../src/frontend/abstract-syntax-tree/context";
 import {
   KeywordParameter,
   ObjectListParameter,
@@ -7,22 +7,22 @@ import {
   ParameterType,
   parameterParserBuilder,
   type ParameterParser,
-} from "../../../../frontend/abstract-syntax-tree/parameters";
+} from "../../../../src/frontend/abstract-syntax-tree/parameters";
 import {
   BUILT_IN_LOCATION,
   Diagnostics,
   type SourceCodeLocation,
   SourceLocationType,
-} from "../../../../frontend/diagnostics";
-import { ExplicitPlayer } from "../../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
+} from "../../../../src/diagnostics";
+import { ExplicitPlayer } from "../../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
 import {
   CustomTimerType,
   CustomVariableType,
   ObjectReferenceType,
   PlayerReferenceType,
-} from "../../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
-import { Lowerer } from "../../../../frontend/intermediate-representation";
-import type { ParameterLoweringContext } from "../../../../frontend/intermediate-representation/parameters";
+} from "../../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
+import { Lowerer } from "../../../../src/frontend/intermediate-representation";
+import type { ParameterLoweringContext } from "../../../../src/frontend/intermediate-representation/parameters";
 import {
   buildParameterLowerer,
   CustomVariableKind,
@@ -35,21 +35,21 @@ import {
   OptionalParam,
   playerParam,
   stringParam,
-} from "../../../../frontend/intermediate-representation/parameters/lowering";
-import { ObjectListType } from "../../../../frontend/object-lists";
-import { buildVariableSlotMap } from "../../../../frontend/intermediate-representation/preprocessing/symbols";
+} from "../../../../src/frontend/intermediate-representation/parameters/lowering";
+import { ObjectListType } from "../../../../src/frontend/object-lists";
+import { buildVariableSlotMap } from "../../../../src/frontend/intermediate-representation/preprocessing/symbols";
 import {
   SymbolBinder,
   VariableScope,
   VariableType,
   isBuiltInVariable,
-} from "../../../../frontend/symbol-table";
-import { Lexer } from "../../../../frontend/tokens";
-import { MEGALO_VERSIONS } from "../../../../version";
-import { FrontendContext } from "../../../../frontend/context";
+} from "../../../../src/frontend/symbol-table";
+import { Lexer } from "../../../../src/frontend/tokens";
+import { MEGALO_VERSIONS } from "../../../../src/version";
+import { MegaloCompilerContext } from "../../../../src/context";
 
 const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new FrontendContext(version);
+const frontend = new MegaloCompilerContext(version);
 
 const loc = (line = 1): SourceCodeLocation => ({
   type: SourceLocationType.SOURCE_CODE,

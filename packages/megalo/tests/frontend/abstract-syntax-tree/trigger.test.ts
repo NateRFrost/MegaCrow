@@ -1,22 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { Parser, SyntaxKind } from "../../../frontend/abstract-syntax-tree";
-import { ParserContext } from "../../../frontend/abstract-syntax-tree/context";
-import { ElementKind } from "../../../frontend/abstract-syntax-tree/elements";
-import { triggerParser } from "../../../frontend/abstract-syntax-tree/elements/trigger";
-import { BUILT_IN_LOCATION, Diagnostics } from "../../../frontend/diagnostics";
+import { Parser, SyntaxKind } from "../../../src/frontend/abstract-syntax-tree";
+import { ParserContext } from "../../../src/frontend/abstract-syntax-tree/context";
+import { ElementKind } from "../../../src/frontend/abstract-syntax-tree/elements";
+import { triggerParser } from "../../../src/frontend/abstract-syntax-tree/elements/trigger";
+import { BUILT_IN_LOCATION, Diagnostics } from "../../../src/diagnostics";
 import {
   SymbolBinder,
   VariableScope,
   VariableType,
-} from "../../../frontend/symbol-table";
-import { Lexer } from "../../../frontend/tokens";
-import { MEGALO_VERSIONS } from "../../../version";
-import { FrontendContext } from "../../../frontend/context";
+} from "../../../src/frontend/symbol-table";
+import { Lexer } from "../../../src/frontend/tokens";
+import { MEGALO_VERSIONS } from "../../../src/version";
+import { MegaloCompilerContext } from "../../../src/context";
 
 const setupContext = (source: string) => {
   const diagnostics = new Diagnostics();
   const version = MEGALO_VERSIONS["107-mcc"];
-  const frontend = new FrontendContext(version);
+  const frontend = new MegaloCompilerContext(version);
   const tokens = new Lexer(frontend).lex(source, diagnostics);
   const symbolBinder = new SymbolBinder(frontend, diagnostics);
   const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
@@ -65,7 +65,7 @@ const parseTriggerSource = (
 const setupMinimalContext = (source: string) => {
   const diagnostics = new Diagnostics();
   const version = MEGALO_VERSIONS["107-mcc"];
-  const frontend = new FrontendContext(version);
+  const frontend = new MegaloCompilerContext(version);
   const tokens = new Lexer(frontend).lex(source, diagnostics);
   const symbolBinder = new SymbolBinder(frontend, diagnostics);
   const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
@@ -368,7 +368,7 @@ describe("trigger element integration", () => {
   it("parses trigger through the top-level parser", () => {
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new FrontendContext(version);
+const frontend = new MegaloCompilerContext(version);
     const source = `string_table english
 \ttest_string "hello"
 end

@@ -1,21 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { ParserContext } from "../../../frontend/abstract-syntax-tree/context";
-import { ActionParserRepository } from "../../../frontend/abstract-syntax-tree/elements/trigger/action";
-import { SyntaxKind } from "../../../frontend/abstract-syntax-tree/kinds";
-import { BUILT_IN_LOCATION, Diagnostics } from "../../../frontend/diagnostics";
+import { ParserContext } from "../../../src/frontend/abstract-syntax-tree/context";
+import { ActionParserRepository } from "../../../src/frontend/abstract-syntax-tree/elements/trigger/action";
+import { SyntaxKind } from "../../../src/frontend/abstract-syntax-tree/kinds";
+import { BUILT_IN_LOCATION, Diagnostics } from "../../../src/diagnostics";
 import {
   SymbolBinder,
   VariableScope,
   VariableType,
-} from "../../../frontend/symbol-table";
-import { Lexer } from "../../../frontend/tokens";
-import { MEGALO_VERSIONS } from "../../../version";
-import { FrontendContext } from "../../../frontend/context";
+} from "../../../src/frontend/symbol-table";
+import { Lexer } from "../../../src/frontend/tokens";
+import { MEGALO_VERSIONS } from "../../../src/version";
+import { MegaloCompilerContext } from "../../../src/context";
 
 const parseActionParameters = (source: string, actionName: string) => {
   const diagnostics = new Diagnostics();
   const version = MEGALO_VERSIONS["107-mcc"];
-  const frontend = new FrontendContext(version);
+  const frontend = new MegaloCompilerContext(version);
   const tokens = new Lexer(frontend).lex(source, diagnostics);
   const symbolBinder = new SymbolBinder(frontend, diagnostics);
   const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
@@ -149,7 +149,7 @@ describe("ActionParserRepository", () => {
   it("parses set_loadout_palette with a loadout palette reference", () => {
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new FrontendContext(version);
+const frontend = new MegaloCompilerContext(version);
     const tokens = new Lexer(frontend).lex(
       "player current_player slayer_loadouts_t1",
       diagnostics
@@ -181,7 +181,7 @@ const frontend = new FrontendContext(version);
   it("parses player_set_requisition_palette with a requisition palette reference", () => {
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new FrontendContext(version);
+const frontend = new MegaloCompilerContext(version);
     const tokens = new Lexer(frontend).lex(
       "current_player covy_palette_gold",
       diagnostics
@@ -228,7 +228,7 @@ const frontend = new FrontendContext(version);
   it("parses player_set_objective with a dynamic string literal and number replacement", () => {
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new FrontendContext(version);
+const frontend = new MegaloCompilerContext(version);
     const tokens = new Lexer(frontend).lex(
       'current_player "+%n" score_to_win_round',
       diagnostics
@@ -269,7 +269,7 @@ const frontend = new FrontendContext(version);
   it("parses player_set_objective_allegiance with dynamic-string replacements (2 args)", () => {
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new FrontendContext(version);
+const frontend = new MegaloCompilerContext(version);
     const tokens = new Lexer(frontend).lex(
       'current_player "+%n" score_to_win_round',
       diagnostics
@@ -307,7 +307,7 @@ const frontend = new FrontendContext(version);
 
   it("parses player_set_objective_allegiance_icon as player + constant integer", () => {
     const diagnostics = new Diagnostics();
-    const frontend = new FrontendContext(MEGALO_VERSIONS["107-mcc"]);
+    const frontend = new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"]);
     const tokens = new Lexer(frontend).lex(
       "current_player k_engine_icon_elite",
       diagnostics
@@ -343,14 +343,14 @@ const frontend = new FrontendContext(version);
 
   it("registers empty actions", () => {
     const repository = new ActionParserRepository(
-      new FrontendContext(MEGALO_VERSIONS["107-mcc"])
+      new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"])
     );
     const parser = repository.getParser("begin");
     expect(parser).toBeDefined();
 
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new FrontendContext(version);
+const frontend = new MegaloCompilerContext(version);
     const tokens = new Lexer(frontend).lex("unused", diagnostics);
     const ctx = new ParserContext(tokens, frontend,
       diagnostics,

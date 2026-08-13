@@ -10,5 +10,8 @@
     "strict": true,
     "resolveJsonModule": true
   },
-  "include": ["frontend", "tests"]
+  "include": [
+    "src",
+    "tests"
+  ]
 }

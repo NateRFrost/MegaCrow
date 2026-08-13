@@ -1,20 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { Parser, SyntaxKind } from "../../../frontend/abstract-syntax-tree";
-import { ParserContext } from "../../../frontend/abstract-syntax-tree/context";
-import { ElementKind } from "../../../frontend/abstract-syntax-tree/elements";
+import { Parser, SyntaxKind } from "../../../src/frontend/abstract-syntax-tree";
+import { ParserContext } from "../../../src/frontend/abstract-syntax-tree/context";
+import { ElementKind } from "../../../src/frontend/abstract-syntax-tree/elements";
 import {
   ObjectListParameter,
   parameterParserBuilder,
-} from "../../../frontend/abstract-syntax-tree/parameters";
-import { Diagnostics, SourceLocationType } from "../../../frontend/diagnostics";
-import { ObjectListType } from "../../../frontend/object-lists";
-import { SymbolBinder, SymbolKind } from "../../../frontend/symbol-table";
-import { Lexer } from "../../../frontend/tokens";
-import { MEGALO_VERSIONS } from "../../../version";
-import { FrontendContext } from "../../../frontend/context";
+} from "../../../src/frontend/abstract-syntax-tree/parameters";
+import { Diagnostics, SourceLocationType } from "../../../src/diagnostics";
+import { ObjectListType } from "../../../src/frontend/object-lists";
+import { SymbolBinder, SymbolKind } from "../../../src/frontend/symbol-table";
+import { Lexer } from "../../../src/frontend/tokens";
+import { MEGALO_VERSIONS } from "../../../src/version";
+import { MegaloCompilerContext } from "../../../src/context";
 
 const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new FrontendContext(version);
+const frontend = new MegaloCompilerContext(version);
 
 describe("object list parameters", () => {
   it("resolves object list entries to REFERENCE symbols with ObjectListLocation", () => {

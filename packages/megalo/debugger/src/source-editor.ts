@@ -5,7 +5,7 @@ import {
   type Diagnostic,
   DiagnosticSeverity,
   SourceLocationType,
-} from "../../frontend/diagnostics";
+} from "../../src/diagnostics";
 
 self.MonacoEnvironment = {
   getWorker() {

@@ -1,28 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { ParserContext } from "../../../frontend/abstract-syntax-tree/context";
-import { SyntaxKind } from "../../../frontend/abstract-syntax-tree/kinds";
+import { ParserContext } from "../../../src/frontend/abstract-syntax-tree/context";
+import { SyntaxKind } from "../../../src/frontend/abstract-syntax-tree/kinds";
 import {
   KeywordParameter,
   OptionalParameter,
   ParameterType,
   grenadeCountParser,
   parameterParserBuilder,
-} from "../../../frontend/abstract-syntax-tree/parameters";
-import type { ParameterParser } from "../../../frontend/abstract-syntax-tree/parameters";
-import { BUILT_IN_LOCATION, Diagnostics } from "../../../frontend/diagnostics";
+} from "../../../src/frontend/abstract-syntax-tree/parameters";
+import type { ParameterParser } from "../../../src/frontend/abstract-syntax-tree/parameters";
+import { BUILT_IN_LOCATION, Diagnostics } from "../../../src/diagnostics";
 import {
   SymbolBinder,
   VariableScope,
   VariableType,
-} from "../../../frontend/symbol-table";
-import { Lexer } from "../../../frontend/tokens";
-import { MEGALO_VERSIONS } from "../../../version";
-import { FrontendContext } from "../../../frontend/context";
+} from "../../../src/frontend/symbol-table";
+import { Lexer } from "../../../src/frontend/tokens";
+import { MEGALO_VERSIONS } from "../../../src/version";
+import { MegaloCompilerContext } from "../../../src/context";
 
 const parseParameters = (source: string, parser: ParameterParser) => {
   const diagnostics = new Diagnostics();
   const version = MEGALO_VERSIONS["107-mcc"];
-  const frontend = new FrontendContext(version);
+  const frontend = new MegaloCompilerContext(version);
   const tokens = new Lexer(frontend).lex(source, diagnostics);
   const symbolBinder = new SymbolBinder(frontend, diagnostics);
   const ctx = new ParserContext(tokens, frontend, diagnostics, symbolBinder);
@@ -134,7 +134,7 @@ describe("parameterParserBuilder", () => {
 
   it("parses target_team when the MegaCrow extension is enabled", () => {
     const diagnostics = new Diagnostics();
-    const frontend = new FrontendContext(MEGALO_VERSIONS["107-mcc"], {
+    const frontend = new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"], {
       targetTeam: true,
     });
     const tokens = new Lexer(frontend).lex("target_team", diagnostics);
@@ -251,7 +251,7 @@ describe("parameterParserBuilder", () => {
 
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new FrontendContext(version);
+const frontend = new MegaloCompilerContext(version);
     const tokens = new Lexer(frontend).lex(
       "player current_player vip",
       diagnostics
@@ -353,7 +353,7 @@ const frontend = new FrontendContext(version);
     const parser = parameterParserBuilder();
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new FrontendContext(version);
+const frontend = new MegaloCompilerContext(version);
     const tokens = new Lexer(frontend).lex("unused", diagnostics);
     const ctx = new ParserContext(tokens, frontend,
       diagnostics,
@@ -472,7 +472,7 @@ const frontend = new FrontendContext(version);
     const parser = parameterParserBuilder([ParameterType.DynamicString]);
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new FrontendContext(version);
+const frontend = new MegaloCompilerContext(version);
     const tokens = new Lexer(frontend).lex(
       "obj_score score_to_win_round",
       diagnostics
@@ -548,7 +548,7 @@ const frontend = new FrontendContext(version);
     const parser = parameterParserBuilder([ParameterType.DynamicString]);
     const diagnostics = new Diagnostics();
     const version = MEGALO_VERSIONS["107-mcc"];
-const frontend = new FrontendContext(version);
+const frontend = new MegaloCompilerContext(version);
     const tokens = new Lexer(frontend).lex(
       "missing_string leftover",
       diagnostics

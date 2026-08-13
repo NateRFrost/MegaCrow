@@ -1,6 +1,6 @@
-import type { ObjectLists } from "../../frontend/object-lists";
-import { loadObjectListsForVersion } from "../../load-object-lists";
-import { MEGALO_VERSIONS } from "../../version";
+import type { ObjectLists } from "../../src/frontend/object-lists";
+import { loadObjectListsForVersion } from "../../src/load-object-lists";
+import { MEGALO_VERSIONS } from "../../src/version";
 
 /** @deprecated Prefer `loadObjectListsForVersion` from `@megacrow/megalo`. */
 export const loadObjectLists = (versionId: string): ObjectLists => {

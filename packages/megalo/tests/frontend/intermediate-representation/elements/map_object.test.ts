@@ -1,17 +1,18 @@
 import { describe, expect, it } from "vitest";
-import objectLists from "../../../../object-lists/haloreach_mcc/default";
-import { Parser } from "../../../../frontend/abstract-syntax-tree";
-import { Diagnostics } from "../../../../frontend/diagnostics";
-import { Lowerer } from "../../../../frontend/intermediate-representation";
-import { ObjectTeamFilter } from "../../../../frontend/intermediate-representation/game/megalogamengine/megalogamengine_map_objects";
-import { ObjectListType } from "../../../../frontend/object-lists";
-import { Lexer } from "../../../../frontend/tokens";
-import { MEGALO_VERSIONS } from "../../../../version";
-import { FrontendContext } from "../../../../frontend/context";
+import objectLists from "../../../../src/object-lists/haloreach_mcc/default";
+import { Parser } from "../../../../src/frontend/abstract-syntax-tree";
+import { Diagnostics } from "../../../../src/diagnostics";
+import { Lowerer } from "../../../../src/frontend/intermediate-representation";
+import { ObjectTeamFilter } from "../../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_map_objects";
+import { ObjectListType } from "../../../../src/frontend/object-lists";
+import { Lexer } from "../../../../src/frontend/tokens";
+
+import { MEGALO_VERSIONS } from "../../../../src/version";
+import { MegaloCompilerContext } from "../../../../src/context";
 
 const lower = (source: string) => {
   const version = MEGALO_VERSIONS["107-mcc"];
-  const frontend = new FrontendContext(version);
+  const frontend = new MegaloCompilerContext(version);
   const diagnostics = new Diagnostics();
   const tokens = new Lexer(frontend).lex(source, diagnostics);
   const ast = new Parser(frontend).parse(tokens, diagnostics, objectLists);

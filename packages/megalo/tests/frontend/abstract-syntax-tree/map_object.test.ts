@@ -1,23 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { Parser, SyntaxKind } from "../../../frontend/abstract-syntax-tree";
-import { ElementKind } from "../../../frontend/abstract-syntax-tree/elements";
-import { Diagnostics } from "../../../frontend/diagnostics";
+import { Parser, SyntaxKind } from "../../../src/frontend/abstract-syntax-tree";
+import { ElementKind } from "../../../src/frontend/abstract-syntax-tree/elements";
+import { Diagnostics } from "../../../src/diagnostics";
 import {
   type ObjectLists,
   ObjectListType,
-} from "../../../frontend/object-lists";
+} from "../../../src/frontend/object-lists";
 import {
   SymbolKind,
   type SymbolTableObjectFilterEntry,
-} from "../../../frontend/symbol-table";
-import { Lexer } from "../../../frontend/tokens";
-import { MEGALO_VERSIONS } from "../../../version";
-import { FrontendContext } from "../../../frontend/context";
+} from "../../../src/frontend/symbol-table";
+import { Lexer } from "../../../src/frontend/tokens";
+import { MEGALO_VERSIONS } from "../../../src/version";
+import { MegaloCompilerContext } from "../../../src/context";
 
 const parse = (source: string, objectLists: ObjectLists = {}) => {
   const diagnostics = new Diagnostics();
   const version = MEGALO_VERSIONS["107-mcc"];
-  const frontend = new FrontendContext(version);
+  const frontend = new MegaloCompilerContext(version);
   const tokens = new Lexer(frontend).lex(source, diagnostics);
   const ast = new Parser(frontend).parse(tokens, diagnostics, objectLists);
   return { ast, symbolTable: ast.symbolTable.toArray(), diagnostics };
