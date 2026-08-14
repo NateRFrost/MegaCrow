@@ -51,6 +51,13 @@ export class StringTable {
       if (matchingStringLiteralIndex !== -1) {
         return matchingStringLiteralIndex;
       }
+      // MegaloEdit: bare `""` reuses the first empty pool entry rather than allocating again.
+      if (entry.english === "") {
+        const emptyIndex = this.table.findIndex((e) => e.english === "");
+        if (emptyIndex !== -1) {
+          return emptyIndex;
+        }
+      }
     }
 
     // Add new string; return its 0-based index.

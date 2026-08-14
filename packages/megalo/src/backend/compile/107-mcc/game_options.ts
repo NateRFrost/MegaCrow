@@ -8,7 +8,8 @@ import {
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
 import { encodeTeamScoringMethod } from "src/backend/compile/107-mcc/enums/e_team_scoring_method";
 import { encodePlayerTraits } from "src/backend/compile/107-mcc/player_traits";
-import type { Diagnostics } from "src/diagnostics";
+import { type Diagnostics, UNKNOWN_LOCATION } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
 import type {
   IR,
   PlayerTraitOptionOverride,
@@ -74,8 +75,8 @@ const applyParameterFlags = (
 ): void => {
   for (const snakeKey of k_game_variant_parameter_flags) {
     const value = flags[parameterFlagToIrKey(snakeKey)];
-    if (value === true) {
-      target[snakeKey] = true;
+    if (value !== undefined) {
+      target[snakeKey] = value;
     }
   }
 };
@@ -347,7 +348,8 @@ export const applyPlayerTraitOptionOverrides = (
 /** Compile the base + custom variant game options from the IR into the gametype. */
 export const compileGameOptions = (
   ir: IR,
-  gameVariant: c_game_engine_custom_variant
+  gameVariant: c_game_engine_custom_variant,
+  diagnostics: Diagnostics
 ): void => {
   const { gameVariant: irVariant } = ir;
   const base = gameVariant.m_base_variant;
@@ -383,7 +385,23 @@ export const compileGameOptions = (
       miscellaneousOptions.roundTimeLimitMinutes;
   }
   if (miscellaneousOptions.roundCount !== undefined) {
-    misc.m_round_limit = miscellaneousOptions.roundCount;
+    const roundCount = miscellaneousOptions.roundCount;
+    if (roundCount >= 0 && roundCount <= 31) {
+      misc.m_round_limit = roundCount;
+    } else {
+      const location =
+        ir.locations.get(miscellaneousOptions, "roundCount") ??
+        UNKNOWN_LOCATION;
+      diagnostics.addWarning(
+        diagnosticMessages.valueOutOfRangeIgnored(
+          "round_count",
+          roundCount,
+          0,
+          31
+        ),
+        location
+      );
+    }
   }
   if (miscellaneousOptions.earlyVictoryWinCount !== undefined) {
     misc.m_early_victory_win_count = miscellaneousOptions.earlyVictoryWinCount;

@@ -15,6 +15,7 @@ import {
 import {
   type ASTParameterNode,
   parameterParserBuilder as buildParameterParser,
+  getParameterParserSignatures,
   KeywordParameter,
   ObjectListParameter,
   OptionalParameter,
@@ -171,6 +172,13 @@ const PURCHASE_STATE_KEYWORDS = [
   KeywordParameter("alive"),
   KeywordParameter("dead"),
   KeywordParameter("both"),
+] as const;
+
+const PURCHASE_CATEGORY_KEYWORDS = [
+  KeywordParameter("weapons"),
+  KeywordParameter("equipment"),
+  KeywordParameter("vehicles"),
+  KeywordParameter("all"),
 ] as const;
 
 const NAVPOINT_PRIORITY_KEYWORDS = [
@@ -679,6 +687,7 @@ export class ActionParserRepository {
       buildParameterParser([
         ParameterType.Player,
         PURCHASE_STATE_KEYWORDS,
+        PURCHASE_CATEGORY_KEYWORDS,
         BOOLEAN,
       ])
     );
@@ -1148,5 +1157,11 @@ export class ActionParserRepository {
 
   public getParser(name: string): ParameterParser | undefined {
     return this.parsers.get(name);
+  }
+
+  public getSignatures(
+    name: string
+  ): readonly ParameterSignature[] | undefined {
+    return getParameterParserSignatures(this.parsers.get(name));
   }
 }

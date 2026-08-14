@@ -20,18 +20,20 @@ import {
   type ElementLowerContext,
 } from "src/frontend/intermediate-representation/parameters/context";
 
-const parsePurchaseSelectedModes = (
+const emptyPurchaseModes = (): PlayerPurchaseMode => ({
+  aliveWeapons: false,
+  aliveEquipment: false,
+  aliveVehicles: false,
+  deadWeapons: false,
+  deadEquipment: false,
+});
+
+const parsePurchaseLifeState = (
   node: ASTParameterNode,
   location: SourceCodeLocation
 ): PlayerPurchaseMode => {
   const state = requireKeyword(node, location).toLowerCase();
-  const modes: PlayerPurchaseMode = {
-    aliveWeapons: false,
-    aliveEquipment: false,
-    aliveVehicles: false,
-    deadWeapons: false,
-    deadEquipment: false,
-  };
+  const modes = emptyPurchaseModes();
   switch (state) {
     case "alive":
       modes.aliveWeapons = true;
@@ -58,19 +60,76 @@ const parsePurchaseSelectedModes = (
   return modes;
 };
 
+/** AND life-state flags with a category mask (MegaloEdit `read_enable_purchase_mode`). */
+const applyPurchaseCategory = (
+  modes: PlayerPurchaseMode,
+  node: ASTParameterNode,
+  location: SourceCodeLocation
+): PlayerPurchaseMode => {
+  const category = requireKeyword(node, location).toLowerCase();
+  switch (category) {
+    case "all":
+      return modes;
+    case "weapons":
+      return {
+        ...emptyPurchaseModes(),
+        aliveWeapons: modes.aliveWeapons,
+        deadWeapons: modes.deadWeapons,
+      };
+    case "equipment":
+      return {
+        ...emptyPurchaseModes(),
+        aliveEquipment: modes.aliveEquipment,
+        deadEquipment: modes.deadEquipment,
+      };
+    case "vehicles":
+      return {
+        ...emptyPurchaseModes(),
+        aliveVehicles: modes.aliveVehicles,
+      };
+    default:
+      throw new LowerError(
+        diagnosticMessages.expectedParameterType("purchase category", category),
+        node.location
+      );
+  }
+};
+
 export const lowerPlayerEnablePurchases = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
   location: SourceCodeLocation
 ): Action => {
-  requireParamCount(parameters, 3, location);
+  requireParamCount(parameters, 4, location);
   const paramCtx = asParameterLoweringContext(ctx);
+  const selectedModes = applyPurchaseCategory(
+    parsePurchaseLifeState(parameters[1]!, location),
+    parameters[2]!,
+    location
+  );
+  if (
+    !(
+      selectedModes.aliveWeapons ||
+      selectedModes.aliveEquipment ||
+      selectedModes.aliveVehicles ||
+      selectedModes.deadWeapons ||
+      selectedModes.deadEquipment
+    )
+  ) {
+    throw new LowerError(
+      diagnosticMessages.expectedParameterType(
+        "purchase mode",
+        "non-empty category for life state"
+      ),
+      parameters[2]!.location
+    );
+  }
   return {
     type: ActionType.PlayerEnablePurchases,
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),
-      selectedModes: parsePurchaseSelectedModes(parameters[1]!, location),
-      enabled: resolveCustomVariableReference(parameters[2]!, paramCtx),
+      selectedModes,
+      enabled: resolveCustomVariableReference(parameters[3]!, paramCtx),
     },
   };
 };

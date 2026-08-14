@@ -1,14 +1,16 @@
 /**
- * Compiles every entry in HREK `script_compile_list.txt` with MegaCrow and
- * MegaloEdit.exe, then BLF-decodes both `.mglo` files and diffs their JSON.
+ * Compiles every `.txt` gametype in the HREK megalo root (not nested folders)
+ * with MegaCrow and MegaloEdit.exe, then BLF-decodes both `.mglo` files and
+ * diffs their JSON.
  *
- * Requires a local HREK install. Skip with absence of MegaloEdit / list file,
+ * Requires a local HREK install. Skip when MegaloEdit / megalo dir are absent,
  * or force with `HREK_COMPARE=1`.
  *
  * Artifacts: packages/megalo/test-artifacts/hrek-compare/
  *
  * Parity rules (megalo-proto-compile style):
  * - Skip `slayer_bro` (source missing)
+ * - Skip scripts MegaloEdit cannot compile (no baseline to compare)
  * - Ignore `m_base_variant.m_metadata`
  * - Decode errors are recorded; they do not abort the corpus loop
  */
@@ -26,7 +28,7 @@ import {
   HREK_MEGALO,
   isHrekAvailable,
   type JsonDiff,
-  readParityCompileList,
+  listRootGametypeScripts,
   readTextFile,
   summarizeDiffBuckets,
   toPlainJson,
@@ -41,7 +43,8 @@ type ScriptStatus =
   | "compile_error"
   | "decode_error"
   | "diff"
-  | "source_missing";
+  | "source_missing"
+  | "skipped_megaloedit";
 
 interface ScriptReport {
   decodeError?: string;
@@ -63,6 +66,7 @@ const formatProtoSummary = (reports: ScriptReport[]): string => {
   let decodeErrors = 0;
   let diffs = 0;
   let compileErrors = 0;
+  let skippedMegaloedit = 0;
 
   for (const r of reports) {
     if (r.status === "ok") {
@@ -86,13 +90,16 @@ const formatProtoSummary = (reports: ScriptReport[]): string => {
       lines.push(
         `ERR ${r.script}: ${r.megacrowErrors.slice(0, 2).join("; ") || "compile failed"}`
       );
+    } else if (r.status === "skipped_megaloedit") {
+      skippedMegaloedit++;
+      lines.push(`SKIP ${r.script}: MegaloEdit failed`);
     } else {
       lines.push(`MISS ${r.script}`);
     }
   }
 
   const header = [
-    `Parity summary: ok=${ok} diff=${diffs} decode_error=${decodeErrors} compile_error=${compileErrors} total=${reports.length}`,
+    `Parity summary: ok=${ok} diff=${diffs} decode_error=${decodeErrors} compile_error=${compileErrors} skipped_megaloedit=${skippedMegaloedit} total=${reports.length}`,
     "",
     "Failures by top-level field (diff-path count across scripts):",
     ...[...fieldTotals.entries()]
@@ -105,16 +112,16 @@ const formatProtoSummary = (reports: ScriptReport[]): string => {
   return [...header, ...lines].join("\n");
 };
 
-describe.runIf(run)("HREK script_compile_list MegaCrow vs MegaloEdit", () => {
+describe.runIf(run)("HREK root gametype MegaCrow vs MegaloEdit", () => {
   it(
-    "compiles every listed gametype and reports BLF JSON field diffs",
+    "compiles every root-folder gametype and reports BLF JSON field diffs",
     async () => {
-      expect(available, "HREK MegaloEdit + script_compile_list required").toBe(
+      expect(available, "HREK MegaloEdit + megalo directory required").toBe(
         true
       );
 
       const { megacrow, megaloedit, reports } = ensureArtifactDirs();
-      const scripts = readParityCompileList();
+      const scripts = listRootGametypeScripts();
       expect(scripts.length).toBeGreaterThan(0);
 
       // Prefer MegaloEdit bases from this run (HREK maps/megalo can be stale/empty
@@ -153,9 +160,22 @@ describe.runIf(run)("HREK script_compile_list MegaCrow vs MegaloEdit", () => {
         // MegaloEdit first so bases it writes can optionally seed MegaCrow.
         const editResult = compileWithMegaloEdit(script, megaloedit);
         if (!editResult.ok) {
-          compileFailures.push(
-            `${script}: MegaloEdit failed (exit ${editResult.exitCode})`
-          );
+          // No MegaloEdit baseline → not a MegaCrow parity failure.
+          allReports.push({
+            script,
+            status: "skipped_megaloedit",
+            megacrowOk: false,
+            megaloeditOk: false,
+            megacrowErrors: [],
+            megaloeditLog: [editResult.stdout, editResult.stderr]
+              .filter(Boolean)
+              .join("\n")
+              .slice(0, 2000),
+            diffCount: 0,
+            diffs: [],
+            fieldBuckets: {},
+          });
+          continue;
         }
 
         const crowResult = await compileSource(source, {
@@ -183,7 +203,7 @@ describe.runIf(run)("HREK script_compile_list MegaCrow vs MegaloEdit", () => {
         let decodeError: string | undefined;
         let status: ScriptStatus = "ok";
 
-        if (crowOk && editResult.ok && crowResult.bytes) {
+        if (crowOk && crowResult.bytes) {
           try {
             const crowDecoded = decodeMglo(crowResult.bytes);
             const editBytes = new Uint8Array(
@@ -230,7 +250,7 @@ describe.runIf(run)("HREK script_compile_list MegaCrow vs MegaloEdit", () => {
               error instanceof Error ? error.message : String(error);
             decodeFailures.push(`${script}: ${decodeError}`);
           }
-        } else if (!(crowOk && editResult.ok)) {
+        } else {
           status = "compile_error";
         }
 
@@ -259,6 +279,9 @@ describe.runIf(run)("HREK script_compile_list MegaCrow vs MegaloEdit", () => {
         JSON.stringify(
           {
             scriptCount: scripts.length,
+            skippedMegaloeditCount: allReports.filter(
+              (r) => r.status === "skipped_megaloedit"
+            ).length,
             megacrowOkCount: allReports.filter((r) => r.megacrowOk).length,
             megaloeditOkCount: allReports.filter((r) => r.megaloeditOk).length,
             comparedCount: allReports.filter(

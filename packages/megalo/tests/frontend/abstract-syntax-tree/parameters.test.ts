@@ -81,6 +81,12 @@ const parseParameters = (source: string, parser: ParameterParser) => {
     declaration: BUILT_IN_LOCATION,
     scope: VariableScope.Global,
   });
+  ctx.symbolParser.addVariableToScope({
+    name: "number_0",
+    type: VariableType.Number,
+    declaration: BUILT_IN_LOCATION,
+    scope: VariableScope.Player,
+  });
 
   const anchor = tokens[0]?.location;
   const parameters = parser(ctx, anchor);
@@ -203,6 +209,31 @@ describe("parameterParserBuilder", () => {
       value: 50,
     });
     expect(numbers.parameters[2]).toMatchObject({
+      kind: SyntaxKind.REFERENCE,
+      identifier: "meter_value",
+    });
+  });
+
+  it("disambiguates hud_widget_set_meter when the value is a number member ref", () => {
+    const parser = parameterParserBuilder(
+      [ParameterType.HudWidget, KeywordParameter("off")],
+      [ParameterType.HudWidget, ParameterType.Timer],
+      [ParameterType.HudWidget, ParameterType.Integer, ParameterType.Integer]
+    );
+
+    const { parameters, diagnostics } = parseParameters(
+      "health_meter local_player.number_0 meter_value",
+      parser
+    );
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(parameters).toHaveLength(3);
+    expect(parameters[1]).toMatchObject({
+      kind: SyntaxKind.MEMBER_REFERENCE,
+      root: "local_player",
+      member: { value: "number_0" },
+    });
+    expect(parameters[2]).toMatchObject({
       kind: SyntaxKind.REFERENCE,
       identifier: "meter_value",
     });

@@ -123,6 +123,20 @@ export type ParameterParser = (
   anchor: SourceCodeLocation
 ) => ASTParameterNode[];
 
+/** Parsers from `parameterParserBuilder` expose their signatures for IDE features. */
+export type ParameterParserWithSignatures = ParameterParser & {
+  signatures?: readonly ParameterSignature[];
+};
+
+export const getParameterParserSignatures = (
+  parser: ParameterParser | undefined
+): readonly ParameterSignature[] | undefined => {
+  if (parser === undefined) {
+    return;
+  }
+  return (parser as ParameterParserWithSignatures).signatures;
+};
+
 const isKeywordParameter = (spec: ParameterSpec): spec is KeywordParameter =>
   typeof spec === "object" && "kind" in spec && spec.kind === "keyword";
 
@@ -159,7 +173,7 @@ const makeReferenceNode = (
   };
 };
 
-const matchesParameterType = (
+export const matchesParameterType = (
   entry: SymbolTableEntry,
   type: ParameterType
 ): boolean => {
@@ -383,6 +397,21 @@ const parseVariableParameter = (
   }
 
   if (ctx.peekToken(1)?.kind === TokenKind.MemberVariableSeparator) {
+    // check if we have a member with the right type.
+    const memberPeek = ctx.peekToken(2);
+    if (memberPeek?.kind === TokenKind.Identifier) {
+      const memberSymbolId = ctx.symbolParser.lookupSymbol(memberPeek.value);
+      if (memberSymbolId !== undefined) {
+        const memberEntry = ctx.symbolParser.getSymbolEntry(memberSymbolId);
+        if (
+          memberEntry !== undefined &&
+          !matchesParameterType(memberEntry, type)
+        ) {
+          // Typed signature miss (e.g. number member vs Timer) — try next overload.
+          return;
+        }
+      }
+    }
     const rootToken = ctx.getToken();
     return parseMemberReference(ctx, rootToken);
   }
@@ -757,7 +786,10 @@ export const parameterParserBuilder = (
     return () => [];
   }
 
-  return (ctx: ParserContext, anchor: SourceCodeLocation) => {
+  const parser: ParameterParserWithSignatures = (
+    ctx: ParserContext,
+    anchor: SourceCodeLocation
+  ) => {
     const parseAnchor = anchor;
 
     for (const signature of signatures) {
@@ -799,4 +831,6 @@ export const parameterParserBuilder = (
 
     return parseSignature(ctx, bestSignature, parseAnchor);
   };
+  parser.signatures = signatures;
+  return parser;
 };

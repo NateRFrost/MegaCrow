@@ -2,6 +2,7 @@ import { bitstream } from "@blamnetwork/blf";
 import {
   c_game_engine_custom_variant,
   c_string_table,
+  e_game_engine_category,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
 
 const { c_bitstream_writer, e_bitstream_byte_order } = bitstream;
@@ -99,6 +100,8 @@ export class Compiler107MCC extends Compiler {
     const gametype = new c_game_engine_custom_variant();
     gametype.initialize();
     gametype.m_build_number = -1;
+    gametype.m_engine_icon = -1;
+    gametype.m_engine_category = e_game_engine_category.none;
     return gametype;
   }
 
@@ -204,7 +207,7 @@ export class Compiler107MCC extends Compiler {
       gametype.m_base_variant.m_built_in = true;
     }
 
-    compileGameOptions(ir, gametype);
+    compileGameOptions(ir, gametype, diagnostics);
     compileTeams(ir, gametype, diagnostics);
     compileLoadoutPalettes(ir, gametype);
     compilePlayerRatings(ir, gametype);

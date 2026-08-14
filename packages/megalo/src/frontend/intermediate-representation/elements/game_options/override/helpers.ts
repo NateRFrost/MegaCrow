@@ -138,6 +138,16 @@ export const applyBuiltinLockHide = (
       true,
       location
     );
+  } else {
+    // `override` without `lock` clears a base-inherited lock.
+    setField(
+      ir.locations,
+      diagnostics,
+      ir.gameVariant.baseVariantParametersLocked,
+      flag,
+      false,
+      location
+    );
   }
   if (modifiers.hide) {
     setField(

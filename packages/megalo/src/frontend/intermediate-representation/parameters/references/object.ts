@@ -211,6 +211,21 @@ const resolveObjectReferenceUnchecked = (
 
   if (isPlayerReferenceBase(ctx, base)) {
     if (member) {
+      const playerMemberIndex = resolveScopedVariableMemberIndex(
+        ctx.symbolTable,
+        ctx.variableSlots,
+        VariableScope.Player,
+        VariableType.Player,
+        member,
+        "number"
+      );
+      if (playerMemberIndex !== undefined) {
+        return {
+          type: ObjectReferenceType.PlayerPlayerBiped,
+          player: resolveExplicitPlayerForBase(ctx, base, baseSymbol),
+          variableIndex: playerMemberIndex,
+        };
+      }
       return {
         type: ObjectReferenceType.PlayerObject,
         player: resolveExplicitPlayerForBase(ctx, base, baseSymbol),
@@ -231,6 +246,23 @@ const resolveObjectReferenceUnchecked = (
   }
 
   if (isTeamReferenceBase(ctx, base, member)) {
+    const teamPlayerIndex = member
+      ? resolveScopedVariableMemberIndex(
+          ctx.symbolTable,
+          ctx.variableSlots,
+          VariableScope.Team,
+          VariableType.Player,
+          member,
+          "number"
+        )
+      : undefined;
+    if (teamPlayerIndex !== undefined) {
+      return {
+        type: ObjectReferenceType.TeamPlayerBiped,
+        team: resolveExplicitTeamForBase(ctx, base, baseSymbol, location),
+        variableIndex: teamPlayerIndex,
+      };
+    }
     const teamObjectIndex = member
       ? resolveScopedObjectMemberIndex(
           ctx.symbolTable,
@@ -247,6 +279,21 @@ const resolveObjectReferenceUnchecked = (
   }
 
   if (member) {
+    const objectPlayerIndex = resolveScopedVariableMemberIndex(
+      ctx.symbolTable,
+      ctx.variableSlots,
+      VariableScope.Object,
+      VariableType.Player,
+      member,
+      "number"
+    );
+    if (objectPlayerIndex !== undefined) {
+      return {
+        type: ObjectReferenceType.ObjectPlayerBiped,
+        object: resolveExplicitObjectForBase(ctx, base, baseSymbol),
+        variableIndex: objectPlayerIndex,
+      };
+    }
     const objectNumberIndex = resolveScopedVariableMemberIndex(
       ctx.symbolTable,
       ctx.variableSlots,

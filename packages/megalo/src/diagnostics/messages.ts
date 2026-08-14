@@ -229,6 +229,20 @@ export const diagnosticMessages = {
     });
   },
 
+  valueOutOfRangeIgnored(
+    name: string,
+    value: number,
+    min: number,
+    max: number
+  ): string {
+    return translate("value_out_of_range_ignored", {
+      name,
+      value: String(value),
+      min: String(min),
+      max: String(max),
+    });
+  },
+
   expectedLoadoutPaletteItemOrEnd(got: string): string {
     return translate("expected_parameter_type", {
       expected: "item or end",

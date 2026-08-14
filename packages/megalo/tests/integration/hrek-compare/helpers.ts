@@ -20,18 +20,15 @@ export const HREK_OUTPUT = path.join(HREK_ROOT, "maps", "megalo");
 
 export const MEGALOEDIT_EXE = path.join(HREK_ROOT, "MegaloEdit.exe");
 
-export const SCRIPT_COMPILE_LIST = path.join(
-  HREK_MEGALO,
-  "script_compile_list.txt"
-);
-
 export const ARTIFACTS_ROOT = path.resolve(
   here,
   "../../../test-artifacts/hrek-compare"
 );
 
 export const isHrekAvailable = (): boolean =>
-  fs.existsSync(SCRIPT_COMPILE_LIST) && fs.existsSync(MEGALOEDIT_EXE);
+  fs.existsSync(HREK_MEGALO) &&
+  fs.statSync(HREK_MEGALO).isDirectory() &&
+  fs.existsSync(MEGALOEDIT_EXE);
 
 /** Read a text file, honoring UTF-16 LE BOM (common in HREK Megalo sources). */
 export const readTextFile = (filePath: string): string => {
@@ -54,16 +51,21 @@ export const readTextFile = (filePath: string): string => {
 /** Scripts intentionally excluded from MegaloEdit parity (missing/broken sources). */
 export const SKIP_SCRIPTS = new Set(["slayer_bro.txt"]);
 
-/** Non-empty lines from script_compile_list.txt (order preserved). */
-export const readCompileList = (): string[] =>
-  readTextFile(SCRIPT_COMPILE_LIST)
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0 && !line.startsWith("#"));
-
-/** Compile-list entries that participate in MegaloEdit parity. */
-export const readParityCompileList = (): string[] =>
-  readCompileList().filter((script) => !SKIP_SCRIPTS.has(script));
+/**
+ * Every `.txt` gametype in the HREK megalo root (not nested folders like
+ * `includes/` / `broken/`). Sorted for stable reports.
+ */
+export const listRootGametypeScripts = (): string[] =>
+  fs
+    .readdirSync(HREK_MEGALO, { withFileTypes: true })
+    .filter(
+      (entry) =>
+        entry.isFile() &&
+        entry.name.toLowerCase().endsWith(".txt") &&
+        !SKIP_SCRIPTS.has(entry.name)
+    )
+    .map((entry) => entry.name)
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
 
 export const ensureArtifactDirs = (): {
   megacrow: string;
