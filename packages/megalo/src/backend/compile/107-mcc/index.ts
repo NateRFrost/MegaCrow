@@ -30,7 +30,7 @@ import {
   type CompilerCapabilities,
 } from "src/backend/compile/diagnostics/assertCompatibleIR";
 import { decodeMglo } from "src/decode-mglo";
-import { BUILT_IN_LOCATION, type Diagnostics } from "src/diagnostics";
+import { type Diagnostics, UNKNOWN_LOCATION } from "src/diagnostics";
 import { CompilerError } from "src/diagnostics/error";
 import type { IR } from "src/frontend/intermediate-representation";
 import type { StringTable } from "src/frontend/intermediate-representation/game/string_table";
@@ -110,7 +110,7 @@ export class Compiler107MCC extends Compiler {
       return this.makeDefaultGametype();
     }
 
-    const location = ir.locations.get(ir, "baseFilePath") ?? BUILT_IN_LOCATION;
+    const location = ir.locations.get(ir, "baseFilePath") ?? UNKNOWN_LOCATION;
     const version = this.getMegaloVersion();
 
     try {
@@ -232,7 +232,7 @@ export class Compiler107MCC extends Compiler {
     if (diagnostics.hasErrors()) {
       throw new CompilerError(
         "Cannot write megalo file while diagnostics have errors",
-        BUILT_IN_LOCATION
+        UNKNOWN_LOCATION
       );
     }
     const bitstreamWriter = c_bitstream_writer.new(

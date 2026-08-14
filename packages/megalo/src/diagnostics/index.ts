@@ -23,10 +23,15 @@ export enum SourceLocationType {
   INCLUDE = 1,
   BUILT_IN = 2,
   OBJECT_LIST = 3,
+  UNKNOWN = 4,
 }
 
 export const BUILT_IN_LOCATION: BuiltInLocation = {
   type: SourceLocationType.BUILT_IN,
+};
+
+export const UNKNOWN_LOCATION: UnknownLocation = {
+  type: SourceLocationType.UNKNOWN,
 };
 
 export interface SourceCodeLocation {
@@ -57,11 +62,16 @@ export interface ObjectListLocation {
   type: SourceLocationType.OBJECT_LIST;
 }
 
+export interface UnknownLocation {
+  type: SourceLocationType.UNKNOWN;
+}
+
 export type SourceLocation =
   | SourceCodeLocation
   | IncludeLocation
   | BuiltInLocation
-  | ObjectListLocation;
+  | ObjectListLocation
+  | UnknownLocation;
 
 export const isBuiltInLocation = (
   location: SourceLocation
@@ -80,6 +90,10 @@ export const isSourceCodeLocation = (
   location: SourceLocation
 ): location is SourceCodeLocation =>
   location.type === SourceLocationType.SOURCE_CODE;
+
+export const isUnknownLocation = (
+  location: SourceLocation
+): location is UnknownLocation => location.type === SourceLocationType.UNKNOWN;
 
 export enum DiagnosticSeverity {
   Error = 0,

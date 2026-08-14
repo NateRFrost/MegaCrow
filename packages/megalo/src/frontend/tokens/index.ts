@@ -273,13 +273,6 @@ export class Lexer {
           }
           index++;
         }
-        if (
-          index < length &&
-          source.charCodeAt(index) === CharCode.CarriageReturn &&
-          source.charCodeAt(index + 1) === CharCode.LineFeed
-        ) {
-          index++;
-        }
         tokenEnd = index;
         push(TokenKind.Comment, source.slice(commentStart, index));
         advanceSpan(tokenStart, index);

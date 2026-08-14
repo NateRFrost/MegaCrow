@@ -1,5 +1,6 @@
 {
-  "unused_value": "Unused value at {{location}}",
+  "unused_value": "Unused: this value is overridden later.",
+  "unused_value_overridden_at": "Unused: this value is overridden at {{location}}.",
   "unrecognized_element": "Unrecognized element '{{value}}'.",
   "expected_token_kind": "Expected token of type {{expected}}, got one of type {{kind}}: {{token}}",
   "expected_end_before_eof": "Expected 'end' before end of file",
@@ -37,6 +38,7 @@
   "locking_hiding_player_traits_not_supported": "Locking/hiding of player_traits is not supported",
   "megacrow_extension_required": "'{{sourceName}}' requires MegaCrow extension '{{extension}}' (not supported by MegaloEdit)",
   "timer_rate_snapped": "Timer rate {{got}} is not a supported rate; using {{used}}",
+  "team_color_overrides_do_not_apply_in_mcc_menus": "team color overrides do not apply in the MCC menus, your chosen color will only be visible in-game",
   "version_label_107_mcc": "Halo: Reach - The Master Chief Collection",
   "version_label_107": "Halo: Reach - Title Update 1",
   "version_label_106": "Halo: Reach - Release",

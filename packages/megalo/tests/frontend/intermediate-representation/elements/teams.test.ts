@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MegaloCompilerContext } from "../../../../src/context";
-import { Diagnostics } from "../../../../src/diagnostics";
+import { Diagnostics, SourceLocationType } from "../../../../src/diagnostics";
 import { Parser } from "../../../../src/frontend/abstract-syntax-tree";
 import { Lowerer } from "../../../../src/frontend/intermediate-representation";
 import {
@@ -47,6 +47,22 @@ end
     const { ir, diagnostics } = lower(source);
 
     expect(diagnostics.getErrors()).toEqual([]);
+    expect(diagnostics.getWarnings()).toHaveLength(1);
+    const colorWarning = diagnostics.getWarnings()[0]!;
+    expect(colorWarning.message).toContain(
+      "team color overrides do not apply in the MCC menus"
+    );
+    expect(colorWarning.location.type).toBe(SourceLocationType.SOURCE_CODE);
+    if (colorWarning.location.type === SourceLocationType.SOURCE_CODE) {
+      // Spans the full `255 0 0` RGB triple, not just the R component.
+      expect(colorWarning.location.start.column).toBeLessThan(
+        colorWarning.location.end.column
+      );
+      expect(
+        colorWarning.location.end.localOffset -
+          colorWarning.location.start.localOffset
+      ).toBe("255 0 0".length);
+    }
     const teamOptions = ir.gameVariant.baseVariant.teamOptions;
     expect(teamOptions.model).toBe(TeamOptionsModelOverrideType.ByDesignator);
     expect(teamOptions.designatorSwitchType).toBe(DesignatorSwitchType.Rotate);
@@ -96,6 +112,7 @@ end
     const { ir, diagnostics } = lower(source);
 
     expect(diagnostics.getErrors()).toEqual([]);
+    expect(diagnostics.getWarnings()).toEqual([]);
     expect(ir.gameVariant.baseVariant.teamOptions.teams).toHaveLength(9);
   });
 });

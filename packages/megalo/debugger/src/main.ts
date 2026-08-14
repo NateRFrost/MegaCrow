@@ -239,9 +239,13 @@ const sourceSpan = (
 const formatDiagnosticLocation = (diagnostic: Diagnostic): string => {
   const span = sourceSpan(diagnostic.location);
   if (span === undefined) {
-    return diagnostic.location.type === SourceLocationType.BUILT_IN
-      ? "built-in"
-      : "—";
+    if (diagnostic.location.type === SourceLocationType.BUILT_IN) {
+      return "built-in";
+    }
+    if (diagnostic.location.type === SourceLocationType.UNKNOWN) {
+      return "unknown";
+    }
+    return "—";
   }
   return `${span.line}:${span.column}`;
 };

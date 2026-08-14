@@ -289,6 +289,27 @@ end
     ).toHaveLength(2);
   });
 
+  it("does not warn when the same name is used in different variable scopes", () => {
+    const source = `variables team
+\tnetworked number foo 0
+end
+variables global
+\tnetworked number foo 0
+end
+variables player
+\tnetworked number foo 0
+end
+`;
+
+    const { symbolTable, diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(diagnostics.getWarnings()).toHaveLength(0);
+    expect(
+      variableSymbols(symbolTable).filter((entry) => entry.name === "foo")
+    ).toHaveLength(3);
+  });
+
   it("does not warn when a duplicate global number shadows (last wins)", () => {
     const source = `variables global
 \tlocal number counter 0

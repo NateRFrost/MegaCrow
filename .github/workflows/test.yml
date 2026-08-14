@@ -27,6 +27,9 @@ jobs:
       - name: Install
         run: npm install --workspace=@megacrow/megalo --include-workspace-root
 
+      - name: Lint
+        run: npm run check
+
       - name: Test
         run: npm test --workspace=@megacrow/megalo
 

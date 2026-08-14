@@ -49,6 +49,79 @@ end
     });
   });
 
+  it("does not mark distinct loadout_palette tier overrides as unused", () => {
+    const source = `loadout scout
+\tname loadout_name_scout
+end
+loadout_palette unsc_bronze
+\titem scout
+end
+loadout_palette unsc_silver
+\titem scout
+end
+loadout_palette unsc_gold
+\titem scout
+end
+loadout_palette covy_bronze
+\titem scout
+end
+loadout_palette covy_silver
+\titem scout
+end
+loadout_palette covy_gold
+\titem scout
+end
+game_options
+\toverride loadout_palette spartan_tier1 unsc_bronze
+\toverride loadout_palette spartan_tier2 unsc_silver
+\toverride loadout_palette spartan_tier3 unsc_gold
+\toverride loadout_palette elite_tier1 covy_bronze
+\toverride loadout_palette elite_tier2 covy_silver
+\toverride loadout_palette elite_tier3 covy_gold
+end
+`;
+    const { ir, diagnostics } = lower(source);
+
+    expect(diagnostics.getErrors()).toEqual([]);
+    expect(
+      diagnostics
+        .getWarnings()
+        .filter((warning) => warning.message.toLowerCase().includes("unused"))
+    ).toEqual([]);
+    const palettes = ir.gameVariant.baseVariant.loadoutTraits.loadoutPalettes;
+    expect(palettes?.[0]).toBeDefined();
+    expect(palettes?.[1]).toBeDefined();
+    expect(palettes?.[2]).toBeDefined();
+    expect(palettes?.[3]).toBeDefined();
+    expect(palettes?.[4]).toBeDefined();
+    expect(palettes?.[5]).toBeDefined();
+  });
+
+  it("warns when the same loadout_palette tier is overridden twice", () => {
+    const source = `loadout scout
+\tname loadout_name_scout
+end
+loadout_palette first_palette
+\titem scout
+end
+loadout_palette second_palette
+\titem scout
+end
+game_options
+\toverride loadout_palette spartan_tier1 first_palette
+\toverride loadout_palette spartan_tier1 second_palette
+end
+`;
+    const { diagnostics } = lower(source);
+
+    expect(diagnostics.getErrors()).toEqual([]);
+    expect(
+      diagnostics
+        .getWarnings()
+        .some((warning) => warning.message.toLowerCase().includes("unused"))
+    ).toBe(true);
+  });
+
   it("errors when a palette override appears before its declarations", () => {
     const source = `game_options
 \toverride loadout_palette spartan_tier1 custom_palette

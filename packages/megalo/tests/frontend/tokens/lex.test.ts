@@ -112,7 +112,23 @@ describe("lex", () => {
   });
 
   it("tokenizes comments before CRLF", () => {
-    expect(values("; note\r\ntrigger")).toEqual([" note\r", "trigger"]);
+    const result = tokens("; note\r\ntrigger");
+    expect(values("; note\r\ntrigger")).toEqual([" note", "trigger"]);
+    expectToken(result[0]!, TokenKind.Comment, " note", {
+      start: {
+        localOffset: 0,
+        absoluteOffset: 0,
+        line: 1,
+        column: 1,
+      },
+      end: {
+        // Exclusive end at `\r` — span does not include the carriage return.
+        localOffset: 6,
+        absoluteOffset: 6,
+        line: 1,
+        column: 7,
+      },
+    });
   });
 
   it("emits None for unclosed quoted strings", () => {

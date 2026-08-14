@@ -5,6 +5,7 @@ import {
   OverrideValueKind,
 } from "src/frontend/abstract-syntax-tree/elements/game_options";
 import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
+import { markCurrentValueUnused } from "src/frontend/intermediate-representation/diagnostics/markCurrentValueUnused";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   LOADOUT_PALETTE_TYPE_BY_NAME,
@@ -64,21 +65,41 @@ export const lowerLoadoutPaletteOverride = (
 
   const loadoutTraits = ctx.ir.gameVariant.baseVariant.loadoutTraits;
   loadoutTraits.loadoutPalettes ??= [];
+
+  const previousPalette = loadoutTraits.loadoutPalettes[slotIndex];
+  if (previousPalette !== undefined) {
+    markCurrentValueUnused(
+      ctx.ir.locations.get(loadoutTraits.loadoutPalettes, String(slotIndex)),
+      ctx.diagnostics,
+      entry.location
+    );
+  }
+
   loadoutTraits.loadoutPalettes[slotIndex] = loweredPalette;
-  setField(
-    ctx.ir.locations,
-    ctx.diagnostics,
-    loadoutTraits,
-    "spartanLoadoutsEnabled",
-    true,
+  ctx.ir.locations.record(
+    loadoutTraits.loadoutPalettes,
+    String(slotIndex),
     entry.location
   );
-  setField(
-    ctx.ir.locations,
-    ctx.diagnostics,
-    loadoutTraits,
-    "eliteLoadoutsEnabled",
-    true,
-    entry.location
-  );
+
+  if (loadoutTraits.spartanLoadoutsEnabled !== true) {
+    setField(
+      ctx.ir.locations,
+      ctx.diagnostics,
+      loadoutTraits,
+      "spartanLoadoutsEnabled",
+      true,
+      entry.location
+    );
+  }
+  if (loadoutTraits.eliteLoadoutsEnabled !== true) {
+    setField(
+      ctx.ir.locations,
+      ctx.diagnostics,
+      loadoutTraits,
+      "eliteLoadoutsEnabled",
+      true,
+      entry.location
+    );
+  }
 };

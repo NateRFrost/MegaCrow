@@ -15,7 +15,7 @@ export const setField = <T extends object, K extends keyof T & string>(
   location: SourceLocation
 ): void => {
   if (owner[key] !== undefined) {
-    markCurrentValueUnused(locations.get(owner, key), diagnostics);
+    markCurrentValueUnused(locations.get(owner, key), diagnostics, location);
   }
   owner[key] = value;
   locations.record(owner, key, location);

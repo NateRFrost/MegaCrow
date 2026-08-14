@@ -164,8 +164,8 @@ export class ParserSymbolContext {
     // MegaloEdit Headache #1: FindIndex (first wins) for global timers and all
     // member-scope vars; FindLastIndex (last wins) for other globals / temps.
     if (this.variableNameUsesFindIndex(entry.scope, entry.type)) {
-      const existing = this.symbolScopes.at(-1)?.get(entry.name);
-      if (existing !== undefined) {
+      const existingId = this.findFindIndexNameConflict(entry, id);
+      if (existingId !== undefined) {
         this.diagnostics.addWarning(
           diagnosticMessages.duplicateDeclarationNameIgnored(
             VARIABLE_TYPE_NAMES[entry.type],
@@ -194,6 +194,47 @@ export class ParserSymbolContext {
     }
     // player / team / object member variables
     return true;
+  }
+
+  /**
+   * Returns true if two variables share the same name
+   * and cant be resolved separately (as different types or with different scopes)
+   */
+  private sameFindIndexNameList(
+    left: { scope: VariableScope; type: VariableType },
+    right: { scope: VariableScope; type: VariableType }
+  ): boolean {
+    if (left.scope !== right.scope) {
+      return false;
+    }
+    if (left.scope === VariableScope.Global) {
+      return (
+        left.type === VariableType.Timer && right.type === VariableType.Timer
+      );
+    }
+    return left.scope !== VariableScope.Temporary;
+  }
+
+  // Returns the symbol id of a variable with the same name if it exists
+  private findFindIndexNameConflict(
+    entry: Parameters<SymbolBinder["addVariable"]>[0],
+    selfId: SymbolId
+  ): SymbolId | undefined {
+    for (const symbol of this.symbolBinder.getSymbolTable().toArray()) {
+      if (symbol.id === selfId) {
+        continue;
+      }
+      if (symbol.kind !== SymbolKind.Variable) {
+        continue;
+      }
+      if (symbol.name !== entry.name) {
+        continue;
+      }
+      if (this.sameFindIndexNameList(symbol, entry)) {
+        return symbol.id;
+      }
+    }
+    return;
   }
 
   public addGameOptionToScope(
@@ -481,7 +522,8 @@ export class ParserSymbolContext {
 
   /**
    * Pop the current (non-global) scope and mark its symbols as ending at `endPosition`.
-   * Built-in declarations keep an open range.
+   * Includes trigger-scoped builtins (`current_player`, etc.); globals stay open because
+   * the global scope is never popped.
    */
   public popScope(endPosition?: SourcePosition): void {
     if (this.symbolScopes.length <= 1) {
@@ -508,7 +550,7 @@ export class ParserSymbolContext {
     if (endPosition !== undefined) {
       for (const id of ids) {
         const entry = this.symbolBinder.getSymbolEntry(id);
-        if (entry !== undefined && entry.range.start.localOffset !== -1) {
+        if (entry !== undefined) {
           this.symbolBinder.setScopeEnd(id, endPosition);
         }
       }

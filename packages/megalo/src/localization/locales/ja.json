@@ -1,5 +1,6 @@
 {
-  "unused_value": "{{location}} に未使用の値があります",
+  "unused_value": "未使用: この値は後で上書きされています。",
+  "unused_value_overridden_at": "未使用: この値は {{location}} で上書きされています。",
   "unrecognized_element": "認識できない要素 '{{value}}'。",
   "expected_token_kind": "{{expected}} 型のトークンが必要ですが、{{kind}} 型のトークン {{token}} が見つかりました",
   "expected_end_before_eof": "ファイル末尾の前に 'end' が必要です",
@@ -37,6 +38,7 @@
   "locking_hiding_player_traits_not_supported": "player_traits の lock/hide はサポートされていません",
   "megacrow_extension_required": "'{{sourceName}}' には MegaCrow 拡張 '{{extension}}' が必要です（MegaloEdit では未対応）",
   "timer_rate_snapped": "タイマーレート {{got}} はサポートされていません。{{used}} を使用します",
+  "team_color_overrides_do_not_apply_in_mcc_menus": "チームカラーの上書きは MCC メニューには反映されません。選択した色はゲーム内でのみ表示されます",
   "version_label_107_mcc": "Halo: Reach - Master Chief Collection",
   "version_label_107": "Halo: Reach - タイトルアップデート1",
   "version_label_106": "Halo: Reach - 製品版",

@@ -323,13 +323,15 @@ export const triggerParser = (
           diagnosticMessages.expectedEndBeforeEof(),
           elementToken.location
         );
+        const lastStatement = statements.at(-1);
+        const endLocation = lastStatement?.location ?? name.location;
         return {
           kind: SyntaxKind.ELEMENT,
           elementKind: ElementKind.TRIGGER,
           keywordLocation: elementToken.location,
           name,
           statements,
-          location: locationSpan(elementToken.location, name.location),
+          location: locationSpan(elementToken.location, endLocation),
         };
       }
 

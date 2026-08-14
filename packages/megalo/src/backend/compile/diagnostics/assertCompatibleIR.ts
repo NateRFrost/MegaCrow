@@ -1,8 +1,8 @@
 import type { Compiler } from "src/backend/compile/compiler";
 import {
-  BUILT_IN_LOCATION,
   type Diagnostics,
   type SourceLocation,
+  UNKNOWN_LOCATION,
 } from "src/diagnostics";
 import type {
   FieldLocations,
@@ -52,7 +52,7 @@ const locationOf = (
   locations: FieldLocations,
   owner: object,
   key: string
-): SourceLocation => locations.get(owner, key) ?? BUILT_IN_LOCATION;
+): SourceLocation => locations.get(owner, key) ?? UNKNOWN_LOCATION;
 
 /**
  * Walk an IR value against a {@link ToCapabilities} map, emitting errors for
@@ -81,7 +81,7 @@ export function checkIRCapabilities<T>(
         unsupportedMessage(path, megaloVersion),
         owner !== undefined && key !== undefined
           ? locationOf(locations, owner, key)
-          : BUILT_IN_LOCATION
+          : UNKNOWN_LOCATION
       );
     }
     return;

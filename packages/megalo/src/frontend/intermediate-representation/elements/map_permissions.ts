@@ -17,13 +17,19 @@ export const mapPermissionsLowerer: ElementLowerer<
   // Each map_permissions block replaces the previous one.
   markCurrentValueUnused(
     ctx.ir.locations.get(ctx.ir.gameVariant, "mapPermissions"),
-    ctx.diagnostics
+    ctx.diagnostics,
+    element.location
   );
   const permissions = {
     exceptMapIds: [] as number[],
     allowByDefault: true,
   };
   ctx.ir.gameVariant.mapPermissions = permissions;
+  ctx.ir.locations.record(
+    ctx.ir.gameVariant,
+    "mapPermissions",
+    element.location
+  );
 
   for (const entry of element.entries) {
     dxAssertionScope(ctx.diagnostics, () => {

@@ -1,6 +1,7 @@
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import { locationSpan } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
 import type {
   TeamNode,
   TeamsElementNode,
@@ -177,7 +178,7 @@ const lowerTeam = (
           team,
           "teamColor",
           { r: r.value, g: g.value, b: b.value },
-          r.location
+          locationSpan(rNode.location, bNode.location)
         );
         break;
       }

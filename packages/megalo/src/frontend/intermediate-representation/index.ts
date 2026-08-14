@@ -23,6 +23,7 @@ import type { ElementLowerContext } from "src/frontend/intermediate-representati
 import { applyDefaultLoadoutCameraTime } from "src/frontend/intermediate-representation/postprocessing/applyDefaultLoadoutCameraTime";
 import { applyMetadata } from "src/frontend/intermediate-representation/postprocessing/applyMetadata";
 import { applyVariableMetadata } from "src/frontend/intermediate-representation/postprocessing/applyVariableMetadata";
+import { assertMccTeamColorOverrides } from "src/frontend/intermediate-representation/postprocessing/assertMccTeamColorOverrides";
 import { buildVariableSlotMap } from "src/frontend/intermediate-representation/preprocessing/symbols";
 import type { ObjectLists } from "src/frontend/object-lists";
 
@@ -134,6 +135,7 @@ export class Lowerer {
     applyDefaultLoadoutCameraTime(ir);
     applyMetadata(ir);
     applyVariableMetadata(ir, ctx);
+    assertMccTeamColorOverrides(ir, ctx);
   }
 
   private buildDefaultIR(): IR {

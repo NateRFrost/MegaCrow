@@ -1,4 +1,5 @@
 import type { SourceLocation } from "src/diagnostics/index";
+import { SourceLocationType } from "src/diagnostics/index";
 import { TokenKind } from "src/frontend/tokens";
 import { formatAlternatives, translate } from "src/localization";
 
@@ -8,9 +9,24 @@ const expectedOneOf = (alternatives: readonly string[], got: string): string =>
     got,
   });
 
+const formatLocationRef = (location: SourceLocation): string | undefined => {
+  if (location.type === SourceLocationType.SOURCE_CODE) {
+    return `${location.start.line}:${location.start.column}`;
+  }
+  if (location.type === SourceLocationType.INCLUDE) {
+    const { start } = location.declaration;
+    return `${start.line}:${start.column}`;
+  }
+  return;
+};
+
 export const diagnosticMessages = {
-  unusedValue(_location: SourceLocation): string {
-    return translate("unused_value");
+  unusedValue(overriddenAt: SourceLocation): string {
+    const location = formatLocationRef(overriddenAt);
+    if (location === undefined) {
+      return translate("unused_value");
+    }
+    return translate("unused_value_overridden_at", { location });
   },
 
   invalidParameterCount(expected: number, got: number): string {
@@ -255,5 +271,9 @@ export const diagnosticMessages = {
 
   timerRateSnapped(got: string, used: string): string {
     return translate("timer_rate_snapped", { got, used });
+  },
+
+  teamColorOverridesDoNotApplyInMccMenus(): string {
+    return translate("team_color_overrides_do_not_apply_in_mcc_menus");
   },
 };
