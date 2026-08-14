@@ -1,0 +1,568 @@
+{
+  "generatedFrom": "C:\\Users\\codie\\Projects\\megalo\\docs",
+  "generatedAt": "2026-08-14T01:00:22.581Z",
+  "actions": {
+    "adjust_grenades": {
+      "kind": "action",
+      "description": "Modifies a player's grenade count by type using a math operation.",
+      "slug": "adjust-grenades"
+    },
+    "apply_player_traits": {
+      "kind": "action",
+      "description": "Applies a named `player_traits` block to a player.",
+      "slug": "apply-player-traits"
+    },
+    "begin": {
+      "kind": "action",
+      "description": "Marks the start of a nested sub-trigger block. While `begin` is technically an action, the language treats it more like an element. See the begin element page for more information.",
+      "slug": "begin"
+    },
+    "biped_drop_weapon": {
+      "kind": "action",
+      "description": "Drops a weapon from a biped/player.",
+      "slug": "biped-drop-weapon"
+    },
+    "biped_give_weapon": {
+      "kind": "action",
+      "description": "Gives a weapon to a biped/player.",
+      "slug": "biped-give-weapon"
+    },
+    "boundary_set_player_color": {
+      "kind": "action",
+      "description": "Sets boundary tint color for a player.",
+      "slug": "boundary-set-player-color"
+    },
+    "boundary_set_visible": {
+      "kind": "action",
+      "description": "Shows or hides a boundary volume.",
+      "slug": "boundary-set-visible"
+    },
+    "break_into_debugger": {
+      "kind": "action",
+      "description": "Breaks into the script debugger when tracing is enabled.",
+      "slug": "break-into-debugger"
+    },
+    "create_object": {
+      "kind": "action",
+      "description": "Spawns an object of the given type at a reference object, with optional filter, flags, and offset.",
+      "slug": "create-object"
+    },
+    "create_tunnel": {
+      "kind": "action",
+      "description": "Places an object between two entities and gives that object a **cylinder** shape. The radius comes from the radius operand; if that value is **0**, the engine uses **5** instead. If both endpoints are the same object, the tunnel is placed **exactly** on that reference—there is no collision check, unlike create_object. The spawned object also faces straight up.",
+      "slug": "create-tunnel"
+    },
+    "debug_force_player_view_count": {
+      "kind": "action",
+      "description": "Debug action to force player view count.",
+      "slug": "debug-force-player-view-count"
+    },
+    "debugging_enable_tracing": {
+      "kind": "action",
+      "description": "Enables or disables script tracing in the debugger.",
+      "slug": "debugging-enable-tracing"
+    },
+    "delete_object": {
+      "kind": "action",
+      "description": "Removes an object reference from the map.",
+      "slug": "delete-object"
+    },
+    "device_animate_position": {
+      "kind": "action",
+      "description": "Animates a device between positions over time.",
+      "slug": "device-animate-position"
+    },
+    "device_get_position": {
+      "kind": "action",
+      "description": "Reads device position into an out-variable.",
+      "slug": "device-get-position"
+    },
+    "device_get_power": {
+      "kind": "action",
+      "description": "Reads device power into an out-variable.",
+      "slug": "device-get-power"
+    },
+    "device_set_position_immediate": {
+      "kind": "action",
+      "description": "Snaps a device to a position without animation.",
+      "slug": "device-set-position-immediate"
+    },
+    "device_set_position_track": {
+      "kind": "action",
+      "description": "Assigns an animation track name to a device.",
+      "slug": "device-set-position-track"
+    },
+    "device_set_position": {
+      "kind": "action",
+      "description": "Sets a device's animation position (0–100).",
+      "slug": "device-set-position"
+    },
+    "device_set_power": {
+      "kind": "action",
+      "description": "Sets device power state.",
+      "slug": "device-set-power"
+    },
+    "end_round": {
+      "kind": "action",
+      "description": "Ends the current round immediately.",
+      "slug": "end-round"
+    },
+    "for_each": {
+      "kind": "action",
+      "description": "Iterates over players, teams, or objects and runs nested trigger logic.",
+      "slug": "for-each"
+    },
+    "game_grief_record_custom_penalty": {
+      "kind": "action",
+      "description": "Records a custom grief report penalty value.",
+      "slug": "game-grief-record-custom-penalty"
+    },
+    "get_button_time": {
+      "kind": "action",
+      "description": "Reads how long a scriptable button was held into a custom variable, in milliseconds (Reach MCC only).",
+      "slug": "get-button-time"
+    },
+    "get_player_holding_object": {
+      "kind": "action",
+      "description": "Writes the player holding an object into an out-variable.",
+      "slug": "get-player-holding-object"
+    },
+    "get_random_object": {
+      "kind": "action",
+      "description": "Selects a random object matching criteria and writes it to an out-variable.",
+      "slug": "get-random-object"
+    },
+    "give_weapon": {
+      "kind": "action",
+      "description": "Megalo action `give_weapon`.",
+      "slug": "give-weapon"
+    },
+    "hide_object": {
+      "kind": "action",
+      "description": "Hides or shows an object for players (Reach MCC only).",
+      "slug": "hide-object"
+    },
+    "hs_function_call": {
+      "kind": "action",
+      "description": "Calls a HaloScript function by index (Reach MCC only).",
+      "slug": "hs-function-call"
+    },
+    "hud_post_message": {
+      "kind": "action",
+      "description": "Posts a HUD message to a team or player target. The sound operand selects an e_megalo_sound token or `none`. The message is a dynamic string.",
+      "slug": "hud-post-message"
+    },
+    "hud_widget_set_icon": {
+      "kind": "action",
+      "description": "Sets the icon on a HUD widget.",
+      "slug": "hud-widget-set-icon"
+    },
+    "hud_widget_set_meter": {
+      "kind": "action",
+      "description": "Configures meter parameters on a HUD widget.",
+      "slug": "hud-widget-set-meter"
+    },
+    "hud_widget_set_text": {
+      "kind": "action",
+      "description": "Updates text on a named HUD widget using a dynamic string.",
+      "slug": "hud-widget-set-text"
+    },
+    "hud_widget_set_value": {
+      "kind": "action",
+      "description": "Updates a numeric value displayed on a HUD widget using a dynamic string.",
+      "slug": "hud-widget-set-value"
+    },
+    "hud_widget_set_visibility": {
+      "kind": "action",
+      "description": "Shows or hides a HUD widget for a player reference.",
+      "slug": "hud-widget-set-visibility"
+    },
+    "navpoint_set_icon": {
+      "kind": "action",
+      "description": "Sets the navpoint icon displayed above an object. The ME name table ends with `coop spawning` (space). MegaloEdit cannot parse it (Megalo Headache #3); enable MegaCrow’s `coopSpawning` extension to accept the two-token form.",
+      "slug": "navpoint-set-icon"
+    },
+    "navpoint_set_priority": {
+      "kind": "action",
+      "description": "Sets navpoint draw priority (`high`, `normal`, `low`, `blink`).",
+      "slug": "navpoint-set-priority"
+    },
+    "navpoint_set_text": {
+      "kind": "action",
+      "description": "Sets navpoint label text from a dynamic string.",
+      "slug": "navpoint-set-text"
+    },
+    "navpoint_set_timer": {
+      "kind": "action",
+      "description": "Links a navpoint to a timer for countdown display.",
+      "slug": "navpoint-set-timer"
+    },
+    "navpoint_set_visible_range": {
+      "kind": "action",
+      "description": "Sets the distance at which a navpoint becomes visible.",
+      "slug": "navpoint-set-visible-range"
+    },
+    "navpoint_set_visible": {
+      "kind": "action",
+      "description": "Controls navpoint visibility for a target audience (everyone, team, player, etc.).",
+      "slug": "navpoint-set-visible"
+    },
+    "object_adjust_health": {
+      "kind": "action",
+      "description": "Modifies an object's current health with a math operation.",
+      "slug": "object-adjust-health"
+    },
+    "object_adjust_maximum_health": {
+      "kind": "action",
+      "description": "Modifies an object's maximum health with a math operation.",
+      "slug": "object-adjust-maximum-health"
+    },
+    "object_adjust_maximum_shield": {
+      "kind": "action",
+      "description": "Modifies an object's maximum shields with a math operation.",
+      "slug": "object-adjust-maximum-shield"
+    },
+    "object_adjust_shield": {
+      "kind": "action",
+      "description": "Modifies an object's current shields with a math operation.",
+      "slug": "object-adjust-shield"
+    },
+    "object_attach": {
+      "kind": "action",
+      "description": "Attaches one object to another with offset and constraint parameters.",
+      "slug": "object-attach"
+    },
+    "object_bounce": {
+      "kind": "action",
+      "description": "Applies an upward impulse to an object.",
+      "slug": "object-bounce"
+    },
+    "object_destroy": {
+      "kind": "action",
+      "description": "Destroys an object immediately (distinct from `delete_object` in engine handling).",
+      "slug": "object-destroy"
+    },
+    "object_detach": {
+      "kind": "action",
+      "description": "Detaches a child object from its parent.",
+      "slug": "object-detach"
+    },
+    "object_face_object": {
+      "kind": "action",
+      "description": "Rotates an object to face another object.",
+      "slug": "object-face-object"
+    },
+    "object_get_distance": {
+      "kind": "action",
+      "description": "Writes the distance between two objects into an out-variable.",
+      "slug": "object-get-distance"
+    },
+    "object_get_health": {
+      "kind": "action",
+      "description": "Reads an object's current health into an out-variable.",
+      "slug": "object-get-health"
+    },
+    "object_get_orientation": {
+      "kind": "action",
+      "description": "Reads an object's orientation into an out-variable.",
+      "slug": "object-get-orientation"
+    },
+    "object_get_shield": {
+      "kind": "action",
+      "description": "Reads an object's current shields into an out-variable.",
+      "slug": "object-get-shield"
+    },
+    "object_get_velocity": {
+      "kind": "action",
+      "description": "Reads an object's velocity into an out-variable.",
+      "slug": "object-get-velocity"
+    },
+    "object_set_invincibility": {
+      "kind": "action",
+      "description": "Sets whether an object can take damage.",
+      "slug": "object-set-invincibility"
+    },
+    "object_set_minimap_icon": {
+      "kind": "action",
+      "description": "Megalo action `object_set_minimap_icon`. Minimap actions can be compiled for Alpha Halo: Reach builds, but no known Halo: Reach builds have a functioning Minimap menu rendering these functions useless.",
+      "slug": "object-set-minimap-icon"
+    },
+    "object_set_minimap_priority": {
+      "kind": "action",
+      "description": "Megalo action `object_set_minimap_priority`. Minimap actions can be compiled for Alpha Halo: Reach builds, but no known Halo: Reach builds have a functioning Minimap menu rendering these functions useless.",
+      "slug": "object-set-minimap-priority"
+    },
+    "object_set_minimap_visibility": {
+      "kind": "action",
+      "description": "Megalo action `object_set_minimap_visibility`. Minimap actions can be compiled for Alpha Halo: Reach builds, but no known Halo: Reach builds have a functioning Minimap menu rendering these functions useless.",
+      "slug": "object-set-minimap-visibility"
+    },
+    "object_set_never_garbage": {
+      "kind": "action",
+      "description": "Prevents the engine from garbage-collecting an object.",
+      "slug": "object-set-never-garbage"
+    },
+    "object_set_orientation": {
+      "kind": "action",
+      "description": "Sets an object's facing/orientation explicitly.",
+      "slug": "object-set-orientation"
+    },
+    "object_set_scale": {
+      "kind": "action",
+      "description": "Scales an object by a multiplier.",
+      "slug": "object-set-scale"
+    },
+    "play_sound": {
+      "kind": "action",
+      "description": "Plays a sound for a team or player target. Sound tokens are listed in Sounds.",
+      "slug": "play-sound"
+    },
+    "player_adjust_money": {
+      "kind": "action",
+      "description": "Modifies a player's requisition money with a math operation. `player_adjust_money` is part of the Requisition System that was scrapped before Halo: Reach's release. While much of the requisition functionality remains in the game to this day, the requisition menu is long gone, rendering this action effectively useless outside of early pre-release builds.",
+      "slug": "player-adjust-money"
+    },
+    "player_death_get_damage_type": {
+      "kind": "action",
+      "description": "Writes the damage type from a death event into an out-variable.",
+      "slug": "player-death-get-damage-type"
+    },
+    "player_death_get_killing_player": {
+      "kind": "action",
+      "description": "Writes the killing player from a death event into an out-variable.",
+      "slug": "player-death-get-killing-player"
+    },
+    "player_death_get_special_type": {
+      "kind": "action",
+      "description": "Writes the special death type (melee, headshot, etc.) into an out-variable.",
+      "slug": "player-death-get-special-type"
+    },
+    "player_enable_purchases": {
+      "kind": "action",
+      "description": "Enables or disables requisition purchases by category and alive/dead state. `player_enable_purchases` is part of the Requisition System that was scrapped before Halo: Reach's release. While much of the requisition functionality remains in the game to this day, the requisition menu is long gone, rendering this action effectively useless outside of early pre-release builds.",
+      "slug": "player-enable-purchases"
+    },
+    "player_get_equipment": {
+      "kind": "action",
+      "description": "Reads a player's equipment into an out-variable.",
+      "slug": "player-get-equipment"
+    },
+    "player_get_fireteam_index": {
+      "kind": "action",
+      "description": "Reads or writes a player's fireteam index.",
+      "slug": "player-get-fireteam-index"
+    },
+    "player_get_killing_spree_count": {
+      "kind": "action",
+      "description": "Reads a player's killstreak count into an out-variable.",
+      "slug": "player-get-killing-spree-count"
+    },
+    "player_get_place": {
+      "kind": "action",
+      "description": "Writes a player's scoreboard rank into an out-variable.",
+      "slug": "player-get-place"
+    },
+    "player_get_target_object": {
+      "kind": "action",
+      "description": "Reads a player's current target object into an out-variable.",
+      "slug": "player-get-target-object"
+    },
+    "player_get_vehicle": {
+      "kind": "action",
+      "description": "Writes the vehicle a player occupies into an out-variable.",
+      "slug": "player-get-vehicle"
+    },
+    "player_get_weapon": {
+      "kind": "action",
+      "description": "Reads a player's current weapon into an out-variable.",
+      "slug": "player-get-weapon"
+    },
+    "player_pick_up_weapon": {
+      "kind": "action",
+      "description": "Forces a player to pick up a weapon object.",
+      "slug": "player-pick-up-weapon"
+    },
+    "player_set_coop_spawning": {
+      "kind": "action",
+      "description": "Enables or disables cooperative spawning for a player.",
+      "slug": "player-set-coop-spawning"
+    },
+    "player_set_fireteam_index": {
+      "kind": "action",
+      "description": "Assigns a player to a fireteam index.",
+      "slug": "player-set-fireteam-index"
+    },
+    "player_set_fireteam_tier": {
+      "kind": "action",
+      "description": "Megalo action `player_set_fireteam_tier`.",
+      "slug": "player-set-fireteam-tier"
+    },
+    "player_set_objective_allegiance_icon": {
+      "kind": "action",
+      "description": "Sets the objective allegiance icon for a player. The icon is a constant integer (literal or number constant such as `k_engine_icon_elite`), in range `0`–`127`, or `-1` for none.",
+      "slug": "player-set-objective-allegiance-icon"
+    },
+    "player_set_objective_allegiance": {
+      "kind": "action",
+      "description": "Sets objective allegiance text (friendly/enemy/neutral styling) using a dynamic string.",
+      "slug": "player-set-objective-allegiance"
+    },
+    "player_set_objective": {
+      "kind": "action",
+      "description": "Sets objective text shown to a player using a dynamic string.",
+      "slug": "player-set-objective"
+    },
+    "player_set_primary_respawn_object": {
+      "kind": "action",
+      "description": "Sets a player's primary respawn object.",
+      "slug": "player-set-primary-respawn-object"
+    },
+    "player_set_requisition_palette": {
+      "kind": "action",
+      "description": "Assigns a requisition palette to a player. `player_set_requisition_palette` is part of the Requisition System that was scrapped before Halo: Reach's release. While much of the requisition functionality remains in the game to this day, the requisition menu is long gone, rendering this action effectively useless outside of early pre-release builds.",
+      "slug": "player-set-requisition-palette"
+    },
+    "player_set_unit": {
+      "kind": "action",
+      "description": "Megalo action `player_set_unit` with operands: player, object.",
+      "slug": "player-set-unit"
+    },
+    "player_set_vehicle_spawning": {
+      "kind": "action",
+      "description": "Enables or disables vehicle spawning for a player (Reach MCC only).",
+      "slug": "player-set-vehicle-spawning"
+    },
+    "player_set_vehicle": {
+      "kind": "action",
+      "description": "Forces a player into a vehicle reference.",
+      "slug": "player-set-vehicle"
+    },
+    "print_variable": {
+      "kind": "action",
+      "description": "Prints a dynamic string to the debug log.",
+      "slug": "print-variable"
+    },
+    "random": {
+      "kind": "action",
+      "description": "Writes a random integer into an out-variable between the configured minimum and maximum. The minimum is **inclusive**; the maximum is **exclusive** (for example, `action random 0 5 x` yields 0–4).",
+      "slug": "random"
+    },
+    "respawn_zone_enable": {
+      "kind": "action",
+      "description": "Enables or disables a respawn zone object.",
+      "slug": "respawn-zone-enable"
+    },
+    "saved_film_insert_marker": {
+      "kind": "action",
+      "description": "Inserts a marker into a saved film recording. The label operand is a dynamic string.",
+      "slug": "saved-film-insert-marker"
+    },
+    "set_boundary": {
+      "kind": "action",
+      "description": "Configures boundary shape parameters on an object.",
+      "slug": "set-boundary"
+    },
+    "set_fireteam_respawn_filter": {
+      "kind": "action",
+      "description": "Restricts fireteam respawn permissions on an object.",
+      "slug": "set-fireteam-respawn-filter"
+    },
+    "set_loadout_palette": {
+      "kind": "action",
+      "description": "Assigns a loadout palette tier to a player or team. By default, the `loadout_selection_time` game option is set to zero. Using `set_loadout_palette` will set `loadout_selection_time`to 10 if: - You are not using the `base` element - ie. your script doesnt use `base \"../file.mglo\"` - You haven't set `loadout_selection_time` in your `game_options`.",
+      "slug": "set-loadout-palette"
+    },
+    "set_loadout": {
+      "kind": "action",
+      "description": "Megalo action `set_loadout`.",
+      "slug": "set-loadout"
+    },
+    "set_pickup_filter": {
+      "kind": "action",
+      "description": "Restricts who can pick up an object (`all`, `allies`, `enemies`, `no_one`).",
+      "slug": "set-pickup-filter"
+    },
+    "set_player_respawn_vehicle": {
+      "kind": "action",
+      "description": "Sets the respawn vehicle type for a player (Reach MCC only).",
+      "slug": "set-player-respawn-vehicle"
+    },
+    "set_progress_bar": {
+      "kind": "action",
+      "description": "Configures an object's progress bar display.",
+      "slug": "set-progress-bar"
+    },
+    "set_respawn_filter": {
+      "kind": "action",
+      "description": "Restricts who can respawn at an object.",
+      "slug": "set-respawn-filter"
+    },
+    "set_scenario_interpolator_state": {
+      "kind": "action",
+      "description": "Sets a scenario interpolator state index.",
+      "slug": "set-scenario-interpolator-state"
+    },
+    "set_score": {
+      "kind": "action",
+      "description": "Modifies a player or team score using a math operation, a numeric value or variable reference, and a team or player target.",
+      "slug": "set-score"
+    },
+    "set_team_respawn_vehicle": {
+      "kind": "action",
+      "description": "Sets the respawn vehicle type for a team (Reach MCC only).",
+      "slug": "set-team-respawn-vehicle"
+    },
+    "set": {
+      "kind": "action",
+      "description": "Modifies a variable using a math operation (`set_to`, `add`, `subtract`, `multiply`, `divide`, `modulo`, or `=`). The target can be a custom variable, member variable, or built-in global.",
+      "slug": "set"
+    },
+    "submit_incident_with_custom_value": {
+      "kind": "action",
+      "description": "Fires a game incident and passes a custom numeric value.",
+      "slug": "submit-incident-with-custom-value"
+    },
+    "submit_incident": {
+      "kind": "action",
+      "description": "Fires a game incident with team or player target context for cause and effect (from `incidents.txt`).",
+      "slug": "submit-incident"
+    },
+    "team_get_place": {
+      "kind": "action",
+      "description": "Writes a team's scoreboard rank into an out-variable.",
+      "slug": "team-get-place"
+    },
+    "team_set_coop_spawning": {
+      "kind": "action",
+      "description": "Enables or disables cooperative spawning for a team.",
+      "slug": "team-set-coop-spawning"
+    },
+    "team_set_primary_respawn_object": {
+      "kind": "action",
+      "description": "Sets a team's primary respawn object.",
+      "slug": "team-set-primary-respawn-object"
+    },
+    "team_set_vehicle_spawning": {
+      "kind": "action",
+      "description": "Enables or disables vehicle spawning for a team (Reach MCC only).",
+      "slug": "team-set-vehicle-spawning"
+    },
+    "timer_reset": {
+      "kind": "action",
+      "description": "Resets a timer to its initial value.",
+      "slug": "timer-reset"
+    },
+    "timer_set_rate": {
+      "kind": "action",
+      "description": "Sets a timer's tick rate. `0` pauses, `-1` counts down, `1` is normal speed.",
+      "slug": "timer-set-rate"
+    },
+    "weapon_set_pickup_priority": {
+      "kind": "action",
+      "description": "Sets weapon pickup priority for an object.",
+      "slug": "weapon-set-pickup-priority"
+    }
+  },
+  "elements": {},
+  "conditions": {}
+}
