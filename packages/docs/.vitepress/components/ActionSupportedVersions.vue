@@ -1,16 +1,10 @@
 <script setup lang="ts">
+import { useRoute } from "vitepress";
 import { computed } from "vue";
-import { useRoute, withBase } from "vitepress";
-import GameLabel from "./GameLabel.vue";
 import languageActions from "../language-actions.json";
 import languageVersions from "../language-versions.json";
 
-type VersionId =
-  | "omaha-alpha"
-  | "omaha-delta"
-  | "release"
-  | "tu1"
-  | "mcc";
+type VersionId = "omaha-alpha" | "omaha-delta" | "release" | "tu1" | "mcc";
 
 const VERSION_ORDER: VersionId[] = [
   "omaha-alpha",
@@ -37,7 +31,7 @@ const actionName = computed(() => {
 
 const supportedBuilds = computed(() => {
   const entry = languageActions.actions.find(
-    (action) => action.name === actionName.value,
+    (action) => action.name === actionName.value
   );
   return new Set(entry?.builds ?? []);
 });
@@ -51,7 +45,7 @@ const rows = computed(() =>
       docLink: version?.docLink ?? "",
       supported: supportedBuilds.value.has(id),
     };
-  }),
+  })
 );
 </script>
 

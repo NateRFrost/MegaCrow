@@ -1,12 +1,9 @@
 import {
   classifySourceTokens,
-  MegaloSyntaxItemType,
+  type MegaloSyntaxItemType,
   type SourceTokenSpan,
 } from "../../src/highlight";
-import {
-  MEGALO_DEFAULT_CLASS,
-  MEGALO_TOKEN_CLASS,
-} from "./megalo-edit-colors";
+import { MEGALO_DEFAULT_CLASS, MEGALO_TOKEN_CLASS } from "./megalo-edit-colors";
 
 function escapeHtml(text: string): string {
   return text
@@ -39,7 +36,9 @@ function spansForLine(
   spans: SourceTokenSpan[]
 ): SourceTokenSpan[] {
   return spans
-    .filter((span) => span.offset < lineEnd && span.offset + span.length > lineStart)
+    .filter(
+      (span) => span.offset < lineEnd && span.offset + span.length > lineStart
+    )
     .map((span) => ({
       ...span,
       offset: Math.max(span.offset, lineStart),

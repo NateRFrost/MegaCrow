@@ -28,7 +28,7 @@ var MEGALO_MATH_OP_SYMBOLS = [
   "^",
   "~",
   "<<",
-  ">>"
+  ">>",
 ];
 var MEGALO_OPERATOR_LEXEMES = [
   "==",
@@ -48,7 +48,7 @@ var MEGALO_OPERATOR_LEXEMES = [
   "&",
   "|",
   "^",
-  "~"
+  "~",
 ];
 var MATH_OP_SPLIT_TOKENS = [
   ...MEGALO_MATH_OP_SYMBOLS,
@@ -64,7 +64,7 @@ var MATH_OP_SPLIT_TOKENS = [
   "not",
   "lshift",
   "rshift",
-  "abs"
+  "abs",
 ];
 
 // src/string_format.ts
@@ -154,7 +154,7 @@ var MEGALO_KEYWORDS = /* @__PURE__ */ new Set([
   "true",
   "string_table",
   "variables",
-  "temporary"
+  "temporary",
 ]);
 
 // src/lexer.ts
@@ -183,8 +183,8 @@ function lex(source) {
         line: tokenLine,
         column: tokenColumn,
         offset: start,
-        length: end - start
-      }
+        length: end - start,
+      },
     });
     const next = advanceLineColumn(source, start, end, line, column);
     line = next.line;
@@ -217,7 +217,14 @@ function lex(source) {
       while (i < source.length && source[i] !== "\n" && source[i] !== "\r") {
         i++;
       }
-      push("Comment" /* Comment */, source.slice(start, i), start, i, tokenLine, tokenColumn);
+      push(
+        "Comment" /* Comment */,
+        source.slice(start, i),
+        start,
+        i,
+        tokenLine,
+        tokenColumn
+      );
       continue;
     }
     if (ch === '"') {
@@ -228,10 +235,12 @@ function lex(source) {
         i++;
       }
       if (source[i] !== '"') {
-        throw new MegaloError(
-          `Unterminated string at line ${tokenLine}`,
-          { line: tokenLine, column: tokenColumn, offset: start, length: i - start }
-        );
+        throw new MegaloError(`Unterminated string at line ${tokenLine}`, {
+          line: tokenLine,
+          column: tokenColumn,
+          offset: start,
+          length: i - start,
+        });
       }
       i++;
       push(
@@ -244,7 +253,12 @@ function lex(source) {
       );
       continue;
     }
-    if ((ch === "-" || ch === "+") && i + 1 < source.length && source[i + 1] >= "0" && source[i + 1] <= "9") {
+    if (
+      (ch === "-" || ch === "+") &&
+      i + 1 < source.length &&
+      source[i + 1] >= "0" &&
+      source[i + 1] <= "9"
+    ) {
       let text = ch;
       i++;
       while (i < source.length && /[0-9.]/.test(source[i])) {
@@ -265,7 +279,14 @@ function lex(source) {
     }
     if (ch === ".") {
       i++;
-      push("Identifier" /* Identifier */, ".", start, i, tokenLine, tokenColumn);
+      push(
+        "Identifier" /* Identifier */,
+        ".",
+        start,
+        i,
+        tokenLine,
+        tokenColumn
+      );
       continue;
     }
     const operator = lexOperator(source, i);
@@ -287,19 +308,23 @@ function lex(source) {
         text += source[i];
         i++;
       }
-      const kind = MEGALO_KEYWORDS.has(text) ? "Keyword" /* Keyword */ : "Identifier" /* Identifier */;
+      const kind = MEGALO_KEYWORDS.has(text)
+        ? "Keyword" /* Keyword */
+        : "Identifier" /* Identifier */;
       push(kind, text, start, i, tokenLine, tokenColumn);
       continue;
     }
-    throw new MegaloError(
-      `Unexpected character '${ch}' at line ${tokenLine}`,
-      { line: tokenLine, column: tokenColumn, offset: start, length: 1 }
-    );
+    throw new MegaloError(`Unexpected character '${ch}' at line ${tokenLine}`, {
+      line: tokenLine,
+      column: tokenColumn,
+      offset: start,
+      length: 1,
+    });
   }
   tokens.push({
     kind: "EOF" /* EOF */,
     text: "",
-    loc: { line, column, offset: source.length, length: 0 }
+    loc: { line, column, offset: source.length, length: 0 },
   });
   return tokens;
 }
@@ -350,21 +375,22 @@ var MEGALO_BUILTIN_GLOBALS = [
   "red_powerup_duration",
   "blue_powerup_duration",
   "yellow_powerup_duration",
-  "object_death_damage_type"
+  "object_death_damage_type",
 ].sort();
 var MEGALO_HIGHLIGHT_RESERVED_KEYWORDS = [
   ...[...MEGALO_KEYWORDS].filter(
-    (word) => ![
-      "if",
-      "number",
-      "timer",
-      "object",
-      "player",
-      "team",
-      "networked",
-      "local",
-      "none"
-    ].includes(word)
+    (word) =>
+      ![
+        "if",
+        "number",
+        "timer",
+        "object",
+        "player",
+        "team",
+        "networked",
+        "local",
+        "none",
+      ].includes(word)
   ),
   "hide",
   "lock",
@@ -373,21 +399,15 @@ var MEGALO_HIGHLIGHT_RESERVED_KEYWORDS = [
   "model",
   "by_designator",
   "text",
-  "proximity_warning"
+  "proximity_warning",
 ].sort();
-var MEGALO_VARIABLE_TYPES = [
-  "number",
-  "timer",
-  "object",
-  "player",
-  "team"
-];
+var MEGALO_VARIABLE_TYPES = ["number", "timer", "object", "player", "team"];
 var MEGALO_MAP_OBJECT_FILTER_PROPERTIES = [
   "type",
   "label",
   "min",
   "team",
-  "user_data"
+  "user_data",
 ];
 var MEGALO_BUILTIN_OVERRIDE_OPTIONS = [
   "teams_enabled",
@@ -398,7 +418,7 @@ var MEGALO_BUILTIN_OVERRIDE_OPTIONS = [
   "early_victory_win_count",
   "vehicle_set",
   "loadout_selection_time",
-  "loadout_palette"
+  "loadout_palette",
 ].sort();
 
 // docs/.vitepress/megalo-highlight-vocabulary.json
@@ -509,7 +529,7 @@ var megalo_highlight_vocabulary_default = {
     "team_set_vehicle_spawning",
     "timer_reset",
     "timer_set_rate",
-    "weapon_set_pickup_priority"
+    "weapon_set_pickup_priority",
   ],
   conditions: [
     "equipment_is_active",
@@ -528,7 +548,7 @@ var megalo_highlight_vocabulary_default = {
     "player_is_spartan",
     "team_disposition",
     "team_is_active",
-    "timer_expired"
+    "timer_expired",
   ],
   mathOps: [
     "+",
@@ -555,7 +575,7 @@ var megalo_highlight_vocabulary_default = {
     "not",
     "lshift",
     "rshift",
-    "abs"
+    "abs",
   ],
   comparisonOps: [
     "==",
@@ -569,7 +589,7 @@ var megalo_highlight_vocabulary_default = {
     "less_than",
     "greater_than",
     "less_than_or_equal_to",
-    "greater_than_or_equal_to"
+    "greater_than_or_equal_to",
   ],
   triggerKinds: [
     "general",
@@ -581,7 +601,7 @@ var megalo_highlight_vocabulary_default = {
     "host_migration",
     "object_death",
     "local",
-    "pregame"
+    "pregame",
   ],
   elementKeywords: [
     "action",
@@ -628,8 +648,8 @@ var megalo_highlight_vocabulary_default = {
     "timer",
     "trigger",
     "true",
-    "variables"
-  ]
+    "variables",
+  ],
 };
 
 // docs/.vitepress/stubs/vocabulary-stub.ts
@@ -638,7 +658,8 @@ var MEGALO_CONDITIONS = megalo_highlight_vocabulary_default.conditions;
 var MEGALO_MATH_OPS = megalo_highlight_vocabulary_default.mathOps;
 var MEGALO_COMPARISON_OPS = megalo_highlight_vocabulary_default.comparisonOps;
 var MEGALO_TRIGGER_KINDS = megalo_highlight_vocabulary_default.triggerKinds;
-var MEGALO_ELEMENT_KEYWORDS = megalo_highlight_vocabulary_default.elementKeywords;
+var MEGALO_ELEMENT_KEYWORDS =
+  megalo_highlight_vocabulary_default.elementKeywords;
 
 // src/highlight.ts
 var ACTION_SET = new Set(MEGALO_ACTIONS.map((name) => name.toLowerCase()));
@@ -669,7 +690,7 @@ var ENGINE_DATA_FIELDS = /* @__PURE__ */ new Set([
   "name",
   "description",
   "icon",
-  "category"
+  "category",
 ]);
 function lower(text) {
   return text.toLowerCase();
@@ -684,7 +705,7 @@ function pushSpan(spans, token, length, type) {
     line: token.loc.line,
     column: token.loc.column,
     lineChar: 0,
-    type
+    type,
   });
 }
 function buildLineStarts(source) {
@@ -710,7 +731,11 @@ function buildLineContentEnds(source) {
   const ends = [];
   for (const start of starts) {
     let end = start;
-    while (end < source.length && source[end] !== "\n" && source[end] !== "\r") {
+    while (
+      end < source.length &&
+      source[end] !== "\n" &&
+      source[end] !== "\r"
+    ) {
       end++;
     }
     ends.push(end);
@@ -771,7 +796,10 @@ function tokenSourceLength(source, token, nextOffset, lineContentEnds) {
     return Math.min(cappedNext - token.loc.offset, lineEnd - token.loc.offset);
   }
   let end = cappedNext;
-  while (end > token.loc.offset && (source[end - 1] === " " || source[end - 1] === "	")) {
+  while (
+    end > token.loc.offset &&
+    (source[end - 1] === " " || source[end - 1] === "	")
+  ) {
     end--;
   }
   return end - token.loc.offset;
@@ -797,24 +825,40 @@ function tokenSpans(source, tokens) {
 }
 function isEndLine(line) {
   const first = line.find(
-    (entry) => entry.token.kind !== "Comment" /* Comment */ && entry.token.kind !== "Newline" /* Newline */
+    (entry) =>
+      entry.token.kind !== "Comment" /* Comment */ &&
+      entry.token.kind !== "Newline" /* Newline */
   );
-  return first?.token.kind === "Keyword" /* Keyword */ && lower(first.token.text) === "end";
+  return (
+    first?.token.kind === "Keyword" /* Keyword */ &&
+    lower(first.token.text) === "end"
+  );
 }
 function firstMeaningful(line) {
   return line.find(
-    (entry) => entry.token.kind !== "Comment" /* Comment */ && entry.token.kind !== "Newline" /* Newline */
+    (entry) =>
+      entry.token.kind !== "Comment" /* Comment */ &&
+      entry.token.kind !== "Newline" /* Newline */
   );
 }
 function isTriggerHeader(line) {
   const first = firstMeaningful(line);
-  return first?.token.kind === "Keyword" /* Keyword */ && lower(first.token.text) === "trigger";
+  return (
+    first?.token.kind === "Keyword" /* Keyword */ &&
+    lower(first.token.text) === "trigger"
+  );
 }
 function isNestedTriggerActionLine(line) {
   const meaningful = line.filter(
-    (entry) => entry.token.kind !== "Comment" /* Comment */ && entry.token.kind !== "Newline" /* Newline */
+    (entry) =>
+      entry.token.kind !== "Comment" /* Comment */ &&
+      entry.token.kind !== "Newline" /* Newline */
   );
-  return meaningful.length >= 2 && lower(meaningful[0].token.text) === "action" && lower(meaningful[1].token.text) === "trigger";
+  return (
+    meaningful.length >= 2 &&
+    lower(meaningful[0].token.text) === "action" &&
+    lower(meaningful[1].token.text) === "trigger"
+  );
 }
 function classifyTriggerHeader(line, stack, spans) {
   for (const entry of line) {
@@ -827,7 +871,11 @@ function classifyTriggerHeader(line, stack, spans) {
       continue;
     }
     const word = lower(token.text);
-    if (word === "trigger" || KEYWORD_SET.has(word) || TRIGGER_KIND_SET.has(word)) {
+    if (
+      word === "trigger" ||
+      KEYWORD_SET.has(word) ||
+      TRIGGER_KIND_SET.has(word)
+    ) {
       pushSpan(spans, token, length, 2 /* Keyword */);
       continue;
     }
@@ -905,7 +953,10 @@ function classifyTriggerLine(line, stack, spans, constantNames) {
       continue;
     }
     const word = lower(token.text);
-    if (token.kind === "Keyword" /* Keyword */ || token.kind === "Identifier" /* Identifier */) {
+    if (
+      token.kind === "Keyword" /* Keyword */ ||
+      token.kind === "Identifier" /* Identifier */
+    ) {
       if (word === "temporary") {
         pushSpan(spans, token, length, 2 /* Keyword */);
         sawTemporary = true;
@@ -916,7 +967,11 @@ function classifyTriggerLine(line, stack, spans, constantNames) {
         opcodeAssigned = false;
         continue;
       }
-      if (sawTemporary && !temporaryTypeAssigned && VARIABLE_TYPE_SET.has(word)) {
+      if (
+        sawTemporary &&
+        !temporaryTypeAssigned &&
+        VARIABLE_TYPE_SET.has(word)
+      ) {
         pushSpan(spans, token, length, 14 /* VariableType */);
         temporaryTypeAssigned = true;
         continue;
@@ -954,7 +1009,12 @@ function classifyTriggerLine(line, stack, spans, constantNames) {
         opcodeAssigned = true;
         continue;
       }
-      if (!opcodeAssigned && (sawAction && ACTION_SET.has(word) || sawCondition && CONDITION_SET.has(word) || sawIf && CONDITION_SET.has(word))) {
+      if (
+        !opcodeAssigned &&
+        ((sawAction && ACTION_SET.has(word)) ||
+          (sawCondition && CONDITION_SET.has(word)) ||
+          (sawIf && CONDITION_SET.has(word)))
+      ) {
         pushSpan(
           spans,
           token,
@@ -964,7 +1024,11 @@ function classifyTriggerLine(line, stack, spans, constantNames) {
         opcodeAssigned = true;
         continue;
       }
-      if (BUILTIN_GLOBAL_SET.has(word) || KEYWORD_SET.has(word) || TRIGGER_KIND_SET.has(word)) {
+      if (
+        BUILTIN_GLOBAL_SET.has(word) ||
+        KEYWORD_SET.has(word) ||
+        TRIGGER_KIND_SET.has(word)
+      ) {
         pushSpan(spans, token, length, 2 /* Keyword */);
         continue;
       }
@@ -994,7 +1058,10 @@ function classifyGameOptionsLine(line, stack, spans) {
   if (firstWord === "option" || firstWord === "ranged_option") {
     pushSpan(spans, first.token, first.length, 2 /* Keyword */);
     const name = line.find(
-      (entry, index) => index > 0 && entry.token.kind === "Identifier" /* Identifier */ && entry !== first
+      (entry, index) =>
+        index > 0 &&
+        entry.token.kind === "Identifier" /* Identifier */ &&
+        entry !== first
     );
     if (name) {
       pushSpan(spans, name.token, name.length, 12 /* GameOption */);
@@ -1009,10 +1076,16 @@ function classifyGameOptionsLine(line, stack, spans) {
         continue;
       }
       const { token, length } = entry;
-      if (token.kind === "Comment" /* Comment */ || token.kind === "Newline" /* Newline */) {
+      if (
+        token.kind === "Comment" /* Comment */ ||
+        token.kind === "Newline" /* Newline */
+      ) {
         continue;
       }
-      if (token.kind === "Identifier" /* Identifier */ || token.kind === "Keyword" /* Keyword */) {
+      if (
+        token.kind === "Identifier" /* Identifier */ ||
+        token.kind === "Keyword" /* Keyword */
+      ) {
         pushSpan(spans, token, length, 12 /* GameOption */);
         break;
       }
@@ -1035,7 +1108,10 @@ function classifyGameOptionsLine(line, stack, spans) {
         pushSpan(spans, token, length, 2 /* Keyword */);
         continue;
       }
-      if (token.kind === "Identifier" /* Identifier */ || token.kind === "Keyword" /* Keyword */) {
+      if (
+        token.kind === "Identifier" /* Identifier */ ||
+        token.kind === "Keyword" /* Keyword */
+      ) {
         if (OVERRIDE_SET.has(word)) {
           pushSpan(spans, token, length, 17 /* OverrideOption */);
         } else {
@@ -1172,7 +1248,10 @@ function classifyConstantsLine(line, spans) {
       pushSpan(spans, token, length, 2 /* Keyword */);
       continue;
     }
-    if (token.kind === "Identifier" /* Identifier */ || token.kind === "Keyword" /* Keyword */) {
+    if (
+      token.kind === "Identifier" /* Identifier */ ||
+      token.kind === "Keyword" /* Keyword */
+    ) {
       pushSpan(spans, token, length, 15 /* NumericConstant */);
     }
   }
@@ -1193,7 +1272,10 @@ function classifyVariablesLine(line, spans) {
       pushSpan(spans, token, length, 6 /* Number */);
       continue;
     }
-    if (!networkStateAssigned && (word === "local" || word === "networked" || word === "networked_high")) {
+    if (
+      !networkStateAssigned &&
+      (word === "local" || word === "networked" || word === "networked_high")
+    ) {
       pushSpan(spans, token, length, 2 /* Keyword */);
       networkStateAssigned = true;
       continue;
@@ -1314,7 +1396,13 @@ function classifyGenericLine(line, spans) {
     pushSpan(spans, token, length, 16 /* Identifier */);
   }
 }
-function classifyLine(line, stack, spans, playerTraitsFirstLine, constantNames) {
+function classifyLine(
+  line,
+  stack,
+  spans,
+  playerTraitsFirstLine,
+  constantNames
+) {
   if (line.length === 0) {
     return playerTraitsFirstLine;
   }
@@ -1339,7 +1427,10 @@ function classifyLine(line, stack, spans, playerTraitsFirstLine, constantNames) 
   if (element === "root") {
     classifyRootHeader(line, stack, spans);
     for (const entry of line) {
-      if (entry.token.kind === "Comment" /* Comment */ && entry !== firstMeaningful(line)) {
+      if (
+        entry.token.kind === "Comment" /* Comment */ &&
+        entry !== firstMeaningful(line)
+      ) {
         pushSpan(spans, entry.token, entry.length, 1 /* Comment */);
       }
     }
@@ -1434,13 +1525,17 @@ var MEGALO_TOKEN_CLASS = {
   [15 /* NumericConstant */]: "megalo-constant",
   [12 /* GameOption */]: "megalo-option",
   [17 /* OverrideOption */]: "megalo-override",
-  [18 /* MapObjectProperty */]: "megalo-property"
+  [18 /* MapObjectProperty */]: "megalo-property",
 };
 var MEGALO_DEFAULT_CLASS = "megalo-text";
 
 // docs/.vitepress/megalo-code-html.ts
 function escapeHtml(text) {
-  return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }
 function lineBreakOffsets(source) {
   const breaks = [0];
@@ -1459,11 +1554,18 @@ function lineBreakOffsets(source) {
   return breaks;
 }
 function spansForLine(lineStart, lineEnd, spans) {
-  return spans.filter((span) => span.offset < lineEnd && span.offset + span.length > lineStart).map((span) => ({
-    ...span,
-    offset: Math.max(span.offset, lineStart),
-    length: Math.min(span.offset + span.length, lineEnd) - Math.max(span.offset, lineStart)
-  })).filter((span) => span.length > 0);
+  return spans
+    .filter(
+      (span) => span.offset < lineEnd && span.offset + span.length > lineStart
+    )
+    .map((span) => ({
+      ...span,
+      offset: Math.max(span.offset, lineStart),
+      length:
+        Math.min(span.offset + span.length, lineEnd) -
+        Math.max(span.offset, lineStart),
+    }))
+    .filter((span) => span.length > 0);
 }
 function spanClass(type) {
   return MEGALO_TOKEN_CLASS[type] ?? MEGALO_DEFAULT_CLASS;
@@ -1472,7 +1574,9 @@ function renderLine(source, lineStart, lineEnd, spans) {
   const lineSpans = spansForLine(lineStart, lineEnd, spans);
   if (lineSpans.length === 0) {
     const text = source.slice(lineStart, lineEnd);
-    return text.length === 0 ? "<wbr>" : `<span class="${MEGALO_DEFAULT_CLASS}">${escapeHtml(text)}</span>`;
+    return text.length === 0
+      ? "<wbr>"
+      : `<span class="${MEGALO_DEFAULT_CLASS}">${escapeHtml(text)}</span>`;
   }
   let cursor = lineStart;
   let html = "";
@@ -1496,13 +1600,13 @@ function megaloCodeToHtml(source) {
   const lines = [];
   for (let i = 0; i < lineStarts.length; i++) {
     const lineStart = lineStarts[i];
-    const lineEnd = i + 1 < lineStarts.length ? lineStarts[i + 1] - 1 : normalized.length;
+    const lineEnd =
+      i + 1 < lineStarts.length ? lineStarts[i + 1] - 1 : normalized.length;
     lines.push(
       `<span class="line">${renderLine(normalized, lineStart, lineEnd, spans)}</span>`
     );
   }
   return `<pre class="megalo-edit vp-code" tabindex="0"><code>${lines.join("\n")}</code></pre>`;
 }
-export {
-  megaloCodeToHtml
-};
+
+export { megaloCodeToHtml };

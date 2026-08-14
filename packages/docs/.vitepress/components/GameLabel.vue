@@ -13,7 +13,7 @@ const props = withDefaults(
   }>(),
   {
     iconOnly: false,
-  },
+  }
 );
 
 const base = import.meta.env.BASE_URL;

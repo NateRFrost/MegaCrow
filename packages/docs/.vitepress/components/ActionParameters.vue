@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { useRoute, withBase } from "vitepress";
+import { computed } from "vue";
 import grammarData from "../action-context-grammar.json";
 
 type GrammarPart = {

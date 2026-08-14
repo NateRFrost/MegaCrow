@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { withBase } from "vitepress";
-import GameLabel from "./GameLabel.vue";
-import gameOptionsVersions from "../language-game-options-versions.json";
-import playerTraitsVersions from "../language-player-traits-versions.json";
 import builtInVariablesVersions from "../language-built-in-variables-versions.json";
 import conditionTypesVersions from "../language-condition-types-versions.json";
+import gameOptionsVersions from "../language-game-options-versions.json";
+import playerTraitsVersions from "../language-player-traits-versions.json";
 import soundsVersions from "../language-sounds-versions.json";
 
 type GameKey = "reach" | "halo4" | "h2a";
@@ -19,7 +17,12 @@ type EnumVersionEntry = Record<GameKey, AvailabilityValue> & {
 
 const props = defineProps<{
   /** Enum table data source. */
-  enum: "sounds" | "game-options" | "player-traits" | "built-in-variables" | "condition-types";
+  enum:
+    | "sounds"
+    | "game-options"
+    | "player-traits"
+    | "built-in-variables"
+    | "condition-types";
 }>();
 
 const GAME_COLUMNS: { key: GameKey }[] = [
@@ -43,11 +46,11 @@ const showTypeColumn = computed(
     props.enum === "game-options" ||
     props.enum === "player-traits" ||
     props.enum === "built-in-variables" ||
-    props.enum === "condition-types",
+    props.enum === "condition-types"
 );
 
 const typeColumnLabel = computed(() =>
-  props.enum === "condition-types" ? "Arguments" : "Type",
+  props.enum === "condition-types" ? "Arguments" : "Type"
 );
 
 const TYPE_LINKS: Record<string, string> = {
@@ -57,11 +60,14 @@ const TYPE_LINKS: Record<string, string> = {
   grenade_count: "/language/enums/player-traits/grenade-count",
   vehicle_usage_setting: "/language/enums/player-traits/vehicle-usage-setting",
   sprint_setting: "/language/enums/player-traits/sprinting",
-  equipment_usage_setting: "/language/enums/player-traits/equipment-usage-setting",
+  equipment_usage_setting:
+    "/language/enums/player-traits/equipment-usage-setting",
   active_camo_setting: "/language/enums/player-traits/active-camo-setting",
   waypoint_setting: "/language/enums/player-traits/waypoint-setting",
-  forced_change_color_setting: "/language/enums/player-traits/forced-change-color-setting",
-  motion_tracker_setting: "/language/enums/player-traits/motion-tracker-setting",
+  forced_change_color_setting:
+    "/language/enums/player-traits/forced-change-color-setting",
+  motion_tracker_setting:
+    "/language/enums/player-traits/motion-tracker-setting",
   team: "/language/references#team-designators",
   team_scoring_method: "/language/enums/game-options/team-scoring-method",
   weapon_set: "/language/enums/game-options/weapon-set",
@@ -69,13 +75,19 @@ const TYPE_LINKS: Record<string, string> = {
 };
 
 function typeLink(type: string | undefined): string | undefined {
-  if (!type) return undefined;
+  if (!type) {
+    return;
+  }
   return TYPE_LINKS[type];
 }
 
 function cellClass(value: AvailabilityValue): "yes" | "no" | "partial" {
-  if (value === "Yes") return "yes";
-  if (value === "No") return "no";
+  if (value === "Yes") {
+    return "yes";
+  }
+  if (value === "No") {
+    return "no";
+  }
   return "partial";
 }
 </script>

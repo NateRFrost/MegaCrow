@@ -6,9 +6,7 @@
       "halo4": "Yes",
       "h2a": "Yes",
       "type": "percentage",
-      "typeKeywords": [
-        "invulnerable"
-      ]
+      "typeKeywords": ["invulnerable"]
     },
     {
       "name": "body_recharge",
@@ -65,9 +63,7 @@
       "halo4": "Yes",
       "h2a": "Yes",
       "type": "percentage",
-      "typeKeywords": [
-        "fatality"
-      ]
+      "typeKeywords": ["fatality"]
     },
     {
       "name": "melee_damage_modifier",
@@ -75,9 +71,7 @@
       "halo4": "Yes",
       "h2a": "Yes",
       "type": "percentage",
-      "typeKeywords": [
-        "fatality"
-      ]
+      "typeKeywords": ["fatality"]
     },
     {
       "name": "initial_primary_weapon",

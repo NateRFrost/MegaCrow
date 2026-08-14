@@ -10,7 +10,7 @@ const props = withDefaults(
   }>(),
   {
     type: "note",
-  },
+  }
 );
 
 const base = import.meta.env.BASE_URL;

@@ -11,11 +11,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(__dirname, "..");
-const outFile = path.join(
-  packageRoot,
-  ".vitepress",
-  "hover-descriptions.json"
-);
+const outFile = path.join(packageRoot, ".vitepress", "hover-descriptions.json");
 const docsRoot = process.env.MEGALO_DOCS ?? packageRoot;
 
 const stripMarkdownLinks = (text) =>
@@ -26,7 +22,7 @@ const extractDescription = (markdown) => {
     /##\s+Description\s*\r?\n([\s\S]*?)(?=\r?\n##\s|\r?\n<ActionParameters|\r?\n$)/i
   );
   if (!match) {
-    return undefined;
+    return;
   }
   const body = match[1]
     .replace(/<[^>]+>/g, "")
@@ -36,7 +32,7 @@ const extractDescription = (markdown) => {
     .join(" ")
     .trim();
   if (!body) {
-    return undefined;
+    return;
   }
   return stripMarkdownLinks(body);
 };

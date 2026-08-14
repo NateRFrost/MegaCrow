@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import GameLabel from "./GameLabel.vue";
-
 withDefaults(
   defineProps<{
     /** Game title shown beside the icon. */
@@ -11,7 +9,7 @@ withDefaults(
   {
     name: "Halo: Reach",
     iconOnly: false,
-  },
+  }
 );
 </script>
 

@@ -39,8 +39,12 @@ const props = withDefaults(
 const slots = useSlots();
 
 const gameRows = computed(() => {
-  const rows: { key: GameKey; name: string; icon: string; status: AvailabilityStatus }[] =
-    [];
+  const rows: {
+    key: GameKey;
+    name: string;
+    icon: string;
+    status: AvailabilityStatus;
+  }[] = [];
 
   if (props.reach !== undefined) {
     rows.push({

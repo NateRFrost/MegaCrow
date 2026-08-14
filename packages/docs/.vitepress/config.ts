@@ -1,11 +1,14 @@
-import { defineConfig } from "vitepress";
-import type { DefaultTheme } from "vitepress/theme";
-import type MarkdownIt from "markdown-it";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import languageVersions from "./language-versions.json";
+import type MarkdownIt from "markdown-it";
+import { defineConfig } from "vitepress";
+import type { DefaultTheme } from "vitepress/theme";
 import languageActions from "./language-actions.json";
-import { createSearchRenderHook, localSearchOptions } from "./search-enrichment";
+import languageVersions from "./language-versions.json";
+import {
+  createSearchRenderHook,
+  localSearchOptions,
+} from "./search-enrichment";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 const highlightBundleUrl = pathToFileURL(
@@ -37,7 +40,10 @@ function elementsSidebar(): DefaultTheme.SidebarItem[] {
       text: "game_options",
       link: "/language/elements/game-options",
       items: [
-        { text: "player_traits", link: "/language/elements/game-options/player-traits" },
+        {
+          text: "player_traits",
+          link: "/language/elements/game-options/player-traits",
+        },
       ],
     },
     { text: "constants", link: "/language/elements/constants" },
@@ -60,7 +66,10 @@ function elementsSidebar(): DefaultTheme.SidebarItem[] {
         { text: "begin", link: "/language/elements/begin" },
       ],
     },
-    { text: "requisition_palette", link: "/language/elements/requisition-palette" },
+    {
+      text: "requisition_palette",
+      link: "/language/elements/requisition-palette",
+    },
     { text: "hud_widgets", link: "/language/elements/hud-widgets" },
     { text: "map_object", link: "/language/elements/map-object" },
     { text: "game_stats", link: "/language/elements/game-stats" },
@@ -77,29 +86,59 @@ function actionsSidebar(): DefaultTheme.SidebarItem[] {
 function enumsSidebar(): DefaultTheme.SidebarItem[] {
   return [
     { text: "Math operations", link: "/language/enums/math-operations" },
-    { text: "Team or player target", link: "/language/enums/team-or-player-target" },
+    {
+      text: "Team or player target",
+      link: "/language/enums/team-or-player-target",
+    },
     { text: "Dynamic strings", link: "/language/enums/dynamic-strings" },
     {
       text: "Game options",
       link: "/language/enums/game-options",
       items: [
-        { text: "Team Scoring Method", link: "/language/enums/game-options/team-scoring-method" },
+        {
+          text: "Team Scoring Method",
+          link: "/language/enums/game-options/team-scoring-method",
+        },
         { text: "Weapon Set", link: "/language/enums/game-options/weapon-set" },
-        { text: "Vehicle Set", link: "/language/enums/game-options/vehicle-set" },
+        {
+          text: "Vehicle Set",
+          link: "/language/enums/game-options/vehicle-set",
+        },
       ],
     },
     {
       text: "Player traits",
       link: "/language/enums/player-traits",
       items: [
-        { text: "Grenade Count", link: "/language/enums/player-traits/grenade-count" },
-        { text: "Vehicle Usage Setting", link: "/language/enums/player-traits/vehicle-usage-setting" },
+        {
+          text: "Grenade Count",
+          link: "/language/enums/player-traits/grenade-count",
+        },
+        {
+          text: "Vehicle Usage Setting",
+          link: "/language/enums/player-traits/vehicle-usage-setting",
+        },
         { text: "Sprinting", link: "/language/enums/player-traits/sprinting" },
-        { text: "Equipment Usage Setting", link: "/language/enums/player-traits/equipment-usage-setting" },
-        { text: "Active Camo Setting", link: "/language/enums/player-traits/active-camo-setting" },
-        { text: "Waypoint Setting", link: "/language/enums/player-traits/waypoint-setting" },
-        { text: "Forced Change Color Setting", link: "/language/enums/player-traits/forced-change-color-setting" },
-        { text: "Motion Tracker Setting", link: "/language/enums/player-traits/motion-tracker-setting" },
+        {
+          text: "Equipment Usage Setting",
+          link: "/language/enums/player-traits/equipment-usage-setting",
+        },
+        {
+          text: "Active Camo Setting",
+          link: "/language/enums/player-traits/active-camo-setting",
+        },
+        {
+          text: "Waypoint Setting",
+          link: "/language/enums/player-traits/waypoint-setting",
+        },
+        {
+          text: "Forced Change Color Setting",
+          link: "/language/enums/player-traits/forced-change-color-setting",
+        },
+        {
+          text: "Motion Tracker Setting",
+          link: "/language/enums/player-traits/motion-tracker-setting",
+        },
       ],
     },
     { text: "Built-in variables", link: "/language/enums/built-in-variables" },
@@ -159,8 +198,7 @@ export default defineConfig(async () => {
 
   return {
     title: "MegaCrow Docs",
-    description:
-      "Documentation for the Megalo language and the MegaCrow IDE.",
+    description: "Documentation for the Megalo language and the MegaCrow IDE.",
     base: "/megalo/",
     cleanUrls: true,
     appearance: "force-dark",
@@ -168,7 +206,11 @@ export default defineConfig(async () => {
       ["link", { rel: "preconnect", href: "https://fonts.googleapis.com" }],
       [
         "link",
-        { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" },
+        {
+          rel: "preconnect",
+          href: "https://fonts.gstatic.com",
+          crossorigin: "",
+        },
       ],
       [
         "link",

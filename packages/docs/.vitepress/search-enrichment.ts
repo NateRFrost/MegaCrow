@@ -2,10 +2,10 @@ import type MarkdownIt from "markdown-it";
 import type { MarkdownEnv } from "vitepress";
 import actionGrammar from "./action-context-grammar.json";
 import languageActions from "./language-actions.json";
-import languageGameOptionsVersions from "./language-game-options-versions.json";
-import languagePlayerTraitsVersions from "./language-player-traits-versions.json";
 import languageBuiltInVariablesVersions from "./language-built-in-variables-versions.json";
 import languageConditionTypesVersions from "./language-condition-types-versions.json";
+import languageGameOptionsVersions from "./language-game-options-versions.json";
+import languagePlayerTraitsVersions from "./language-player-traits-versions.json";
 import languageSoundsVersions from "./language-sounds-versions.json";
 import languageVersions from "./language-versions.json";
 
@@ -13,13 +13,13 @@ type ActionEntry = (typeof languageActions.actions)[number];
 type GrammarEntry = { grammar: string; empty: boolean };
 
 const actionsByName = new Map<string, ActionEntry>(
-  languageActions.actions.map((action) => [action.name, action]),
+  languageActions.actions.map((action) => [action.name, action])
 );
 
 const grammarByAction = actionGrammar.actions as Record<string, GrammarEntry>;
 
 const buildLabels = new Map(
-  languageVersions.versions.map((version) => [version.id, version.label]),
+  languageVersions.versions.map((version) => [version.id, version.label])
 );
 
 const enumTables: Record<string, { entries: Array<Record<string, unknown>> }> =
@@ -52,8 +52,13 @@ function grammarSearchTerms(grammar: string): string {
   const alternatives = [...grammar.matchAll(/\{([^}]+)\}/g)].flatMap((match) =>
     match[1]!
       .split("|")
-      .map((part) => part.trim().replace(/\s+\(.+\)$/, "").replace(/\s+.*/, ""))
-      .filter(Boolean),
+      .map((part) =>
+        part
+          .trim()
+          .replace(/\s+\(.+\)$/, "")
+          .replace(/\s+.*/, "")
+      )
+      .filter(Boolean)
   );
 
   return [...tags, ...alternatives].join(" ");
@@ -81,8 +86,8 @@ function buildActionSearchMetadata(slug: string): string | undefined {
   const action = actionsByName.get(actionName);
   const grammar = grammarByAction[actionName];
 
-  if (!action && !grammar) {
-    return undefined;
+  if (!(action || grammar)) {
+    return;
   }
 
   const lines: string[] = [];
@@ -112,12 +117,12 @@ function buildActionSearchMetadata(slug: string): string | undefined {
 function buildEnumSearchMetadata(src: string): string | undefined {
   const match = src.match(/<EnumVersionTable enum="([^"]+)" \/>/);
   if (!match) {
-    return undefined;
+    return;
   }
 
   const table = enumTables[match[1]!];
   if (!table) {
-    return undefined;
+    return;
   }
 
   return table.entries.map((entry) => formatEnumEntry(entry)).join("\n");
@@ -172,7 +177,7 @@ export const localSearchOptions = {
         const terms: string[] = [];
 
         for (const match of text.matchAll(
-          /[a-z0-9]+(?:[_-][a-z0-9]+)+|[a-z0-9]+/gi,
+          /[a-z0-9]+(?:[_-][a-z0-9]+)+|[a-z0-9]+/gi
         )) {
           const token = match[0].toLowerCase();
           terms.push(token);
