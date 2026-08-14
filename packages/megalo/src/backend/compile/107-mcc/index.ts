@@ -25,7 +25,7 @@ import { compilePlayerRatings } from "src/backend/compile/107-mcc/player_rating"
 import { compileTeams } from "src/backend/compile/107-mcc/teams";
 import { compileTriggers } from "src/backend/compile/107-mcc/triggers";
 import { compileVariableMetadata } from "src/backend/compile/107-mcc/variableMetadata";
-import { Compiler } from "src/backend/compile/compiler";
+import { CompiledMegaloMetadata, Compiler, EngineIcon } from "src/backend/compile/compiler";
 import {
   assertCompatibleIR,
   type CompilerCapabilities,
@@ -35,7 +35,10 @@ import { type Diagnostics, UNKNOWN_LOCATION } from "src/diagnostics";
 import { CompilerError } from "src/diagnostics/error";
 import type { IR } from "src/frontend/intermediate-representation";
 import type { StringTable } from "src/frontend/intermediate-representation/game/string_table";
-import { STRING_TABLE_LANGUAGES } from "src/frontend/language-configuration/omni/strings";
+import {
+  STRING_TABLE_LANGUAGES,
+  type StringTableLanguage,
+} from "src/frontend/language-configuration/omni/strings";
 import { MEGALO_VERSIONS, type SupportedMegaloVersion } from "src/version";
 
 /** Reach MCC script string table bitstream layout. */
@@ -226,11 +229,120 @@ export class Compiler107MCC extends Compiler {
     return gametype;
   }
 
-  public dryRun(ir: IR, diagnostics: Diagnostics): void {
-    this.compile(ir, diagnostics);
+  private mapEngineIcon = (icon: number): EngineIcon | undefined => {
+    switch (icon) {
+      case 0:
+        return EngineIcon.CaptureTheFlag;
+      case 1:
+        return EngineIcon.Slayer;
+      case 2:
+        return EngineIcon.Oddball;
+      case 3:
+        return EngineIcon.KingOfTheHill;
+      case 4:
+        return EngineIcon.Juggernaut;
+      case 5:
+        return EngineIcon.Territories;
+      case 6:
+        return EngineIcon.Assault;
+      case 7:
+        return EngineIcon.Infection;
+      case 8:
+        return EngineIcon.VIP;
+      case 9:
+        return EngineIcon.Invasion;
+      case 10:
+        return EngineIcon.InvasionSlayer;
+      case 11:
+        return EngineIcon.Stockpile;
+      case 12:
+        return EngineIcon.ActionSack;
+      case 13:
+        return EngineIcon.Race;
+      case 14:
+        return EngineIcon.RocketRace;
+      case 15:
+        return EngineIcon.Grifball;
+      case 16:
+        return EngineIcon.Soccer;
+      case 17:
+        return EngineIcon.Headhunter;
+      case 18:
+        return EngineIcon.Crosshair;
+      case 19:
+        return EngineIcon.Wheel;
+      case 20:
+        return EngineIcon.Swirl;
+      case 21:
+        return EngineIcon.Bunker;
+      case 22:
+        return EngineIcon.Healthpack;
+      case 23:
+        return EngineIcon.Towershield;
+      case 24:
+        return EngineIcon.Return;
+      case 25:
+        return EngineIcon.PreGameWarmUp;
+      case 26:
+        return EngineIcon.Cartographer;
+      case 27:
+        return EngineIcon.Eightball;
+      case 28:
+        return EngineIcon.Spartan;
+      case 29:
+        return EngineIcon.Elite;
+      case 30:
+        return EngineIcon.Attack;
+      default:
+        return undefined
+    }
   }
 
-  public writeMegaloFile(ir: IR, diagnostics: Diagnostics): Uint8Array {
+  private mapLocalizedString(
+    table: c_string_table,
+    stringIndex: number
+  ): Record<StringTableLanguage, string> | undefined {
+    if (stringIndex < 0) {
+      return undefined;
+    }
+
+    const entry = {} as Record<StringTableLanguage, string>;
+    let hasAny = false;
+    for (let languageIndex = 0; languageIndex < STRING_TABLE_LANGUAGES.length; languageIndex++) {
+      const language = STRING_TABLE_LANGUAGES[languageIndex]!;
+      const value = table.strings[languageIndex]?.[stringIndex] ?? "";
+      entry[language] = value;
+      if (value) {
+        hasAny = true;
+      }
+    }
+    return hasAny ? entry : undefined;
+  }
+
+  private getGametypeMetadata(
+    gametype: c_game_engine_custom_variant
+  ): CompiledMegaloMetadata {
+    const localizedName = this.mapLocalizedString(gametype.m_localized_name, 0);
+    const name =
+      localizedName ??
+      this.mapLocalizedString(
+        gametype.m_script_strings,
+        gametype.m_base_name_string_index - 1
+      );
+
+    return {
+      name,
+      description: this.mapLocalizedString(gametype.m_localized_description, 0),
+      engineIcon: this.mapEngineIcon(gametype.m_engine_icon),
+    };
+  }
+
+  public dryRun(ir: IR, diagnostics: Diagnostics): { metadata: CompiledMegaloMetadata } {
+    const gametype = this.compile(ir, diagnostics);
+    return { metadata: this.getGametypeMetadata(gametype) };
+  }
+
+  public writeMegaloFile(ir: IR, diagnostics: Diagnostics): { data: Uint8Array, metadata: CompiledMegaloMetadata } {
     const gametype = this.compile(ir, diagnostics);
     if (diagnostics.hasErrors()) {
       throw new CompilerError(
@@ -245,7 +357,10 @@ export class Compiler107MCC extends Compiler {
     bitstreamWriter.begin_writing();
     gametype.encode(bitstreamWriter);
     bitstreamWriter.finish_writing();
-    return bitstreamWriter.get_data();
+    return {
+      data: bitstreamWriter.get_data(),
+      metadata: this.getGametypeMetadata(gametype),
+    };
   }
 
   public getCapabilities(): CompilerCapabilities {
