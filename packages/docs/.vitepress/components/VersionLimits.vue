@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRoute } from "vitepress";
+import { useRoute, withBase } from "vitepress";
 import { computed } from "vue";
 
 type VersionKey = "mcc" | "tu1" | "release" | "omaha-delta" | "omaha-alpha";

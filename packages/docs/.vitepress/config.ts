@@ -15,7 +15,14 @@ const highlightBundleUrl = pathToFileURL(
   path.join(configDir, "megalo-highlight.bundle.mjs")
 ).href;
 
-const REACH_GAME_ICON = "/megalo/images/icons/game-reach.png";
+function normalizeDocsBase(value: string | undefined): string {
+  const raw = (value ?? "/megalo/").trim() || "/megalo/";
+  const withLeading = raw.startsWith("/") ? raw : `/${raw}`;
+  return withLeading.endsWith("/") ? withLeading : `${withLeading}/`;
+}
+
+const docsBase = normalizeDocsBase(process.env.DOCS_BASE);
+const REACH_GAME_ICON = `${docsBase}images/icons/game-reach.png`;
 
 function versionSidebarLabel(label: string) {
   return `<span class="version-sidebar-label"><img class="version-reach-icon" src="${REACH_GAME_ICON}" alt="" aria-hidden="true" /><span>${label}</span></span>`;
@@ -199,7 +206,7 @@ export default defineConfig(async () => {
   return {
     title: "MegaCrow Docs",
     description: "Documentation for the Megalo language and the MegaCrow IDE.",
-    base: "/megalo/",
+    base: docsBase,
     cleanUrls: true,
     appearance: "force-dark",
     head: [

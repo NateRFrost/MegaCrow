@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { withBase } from "vitepress";
 import { computed } from "vue";
 import builtInVariablesVersions from "../language-built-in-variables-versions.json";
 import conditionTypesVersions from "../language-condition-types-versions.json";

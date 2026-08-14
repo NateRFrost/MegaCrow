@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRoute } from "vitepress";
+import { useRoute, withBase } from "vitepress";
 import { computed } from "vue";
 import languageActions from "../language-actions.json";
 import languageVersions from "../language-versions.json";

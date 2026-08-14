@@ -7,7 +7,7 @@
   -webkit-font-smoothing: none;
   -moz-osx-font-smoothing: unset;
   font-smooth: never;
-  src: url("/megalo/fonts/fixedsys-excelsior.woff2") format("woff2");
+  src: url("../../public/fonts/fixedsys-excelsior.woff2") format("woff2");
 }
 
 /* Conduit ITC — uses locally installed font when available (e.g. Halo tooling) */
