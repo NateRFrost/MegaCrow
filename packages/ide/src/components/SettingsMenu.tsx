@@ -128,8 +128,8 @@ export function SettingsMenu({ settings, onChange }: Props) {
                 <span className="settings-toggle-text">
                   <span className="settings-toggle-label">MCC hot reload</span>
                   <span className="settings-toggle-hint">
-                    Write compiled .mglo to the MCC HotReload folder and apply
-                    Reach test patches when MCC is running
+                    Write compiled .mglo to the MCC HotReload folder when
+                    compiling
                   </span>
                 </span>
               </label>

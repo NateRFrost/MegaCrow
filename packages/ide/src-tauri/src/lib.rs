@@ -6,7 +6,6 @@ mod cli;
 mod clipboard_files;
 mod discord_rpc;
 mod mcc_install;
-mod mcc_patches;
 mod settings;
 mod steam;
 mod workspace_discover;
@@ -50,21 +49,8 @@ fn write_mcc_hot_reload_mglo(data: Vec<u8>) -> Result<String, String> {
   }
   fs::write(&path, data).map_err(|error| error.to_string())?;
 
-  // Best-effort Reach convenience patches (instant end / no fade) when MCC is running.
-  let patch_note = match mcc_patches::apply_hot_reload_patches() {
-    Ok(0) => "MCC patches skipped (game not running or Reach not loaded)".to_string(),
-    Ok(count) => format!("applied {count} MCC patches"),
-    Err(error) => {
-      log::warn!("MCC hot-reload patches: {error}");
-      format!("MCC patches failed: {error}")
-    }
-  };
-
   let resolved = fs::canonicalize(&path).unwrap_or(path);
-  Ok(format!(
-    "{} ({patch_note})",
-    resolved.to_string_lossy()
-  ))
+  Ok(resolved.to_string_lossy().into_owned())
 }
 
 fn mcc_hot_reload_mglo_path() -> PathBuf {
