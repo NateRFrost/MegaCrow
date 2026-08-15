@@ -198,6 +198,128 @@ export function initMegaloWorkerContext(
   });
 }
 
+/**
+ * Source-only compile via LSP requestArtifacts (one lex/parse shared with highlighting).
+ * Overlapping calls coalesce: only the newest source runs; older waiters get a
+ * discarded stub (App ignores via compile run id). No cancellation token needed.
+ */
+interface SourceOnlyCompileJob {
+  reject: (reason: unknown) => void;
+  resolve: (value: SourceAnalysis) => void;
+  source: string;
+}
+
+let sourceOnlyPending: SourceOnlyCompileJob | null = null;
+let sourceOnlyBusy = false;
+
+const supersededSourceAnalysis = (): SourceAnalysis => ({
+  compileState: "parsing",
+  errorCount: 0,
+  message: "Compiling…",
+  byteIdentical: null,
+  byteDiffCount: null,
+  compiledByteLength: null,
+  mgloBytes: null,
+  compileTiming: null,
+  diagnostics: [],
+});
+
+async function runSourceOnlyCompileOnce(
+  source: string
+): Promise<SourceAnalysis> {
+  const { lspRequestArtifacts } = await import("./lspClient");
+  const started = performance.now();
+  const result = await lspRequestArtifacts(source, [
+    "semanticTokens",
+    "diagnostics",
+    "mglo",
+  ]);
+  if (result.error === "superseded") {
+    return supersededSourceAnalysis();
+  }
+  const totalMs = performance.now() - started;
+  const timing = { parseMs: 0, compileMs: totalMs, totalMs };
+  const diagnostics = result.diagnostics.map((d) => ({
+    line: d.range.start.line + 1,
+    column: d.range.start.character + 1,
+    endColumn: d.range.end.character + 1,
+    message: d.message,
+    severity: d.severity === 1 ? ("error" as const) : ("warning" as const),
+  }));
+  const errorCount = diagnostics.filter((d) => d.severity === "error").length;
+  if (!(result.ok && result.bytes) || errorCount > 0) {
+    return {
+      compileState: "error",
+      errorCount: Math.max(errorCount, 1),
+      message: result.error ?? diagnostics[0]?.message ?? "Compilation failed",
+      byteIdentical: null,
+      byteDiffCount: null,
+      compiledByteLength: null,
+      mgloBytes: null,
+      compileTiming: timing,
+      diagnostics,
+    };
+  }
+  return {
+    compileState: diagnostics.some((d) => d.severity === "warning")
+      ? "warn"
+      : "ok",
+    errorCount: 0,
+    message: formatMegaloCompileTiming(timing) || "Compiled",
+    byteIdentical: null,
+    byteDiffCount: null,
+    compiledByteLength: result.bytes.length,
+    mgloBytes: result.bytes,
+    compiledMetadata: result.metadata ?? null,
+    compileTiming: timing,
+    diagnostics,
+  };
+}
+
+export function requestSourceOnlyCompileViaLsp(
+  source: string
+): Promise<SourceAnalysis> {
+  return new Promise((resolve, reject) => {
+    if (sourceOnlyPending) {
+      sourceOnlyPending.resolve(supersededSourceAnalysis());
+    }
+    sourceOnlyPending = { source, resolve, reject };
+    void drainSourceOnlyCompile();
+  });
+}
+
+async function drainSourceOnlyCompile(): Promise<void> {
+  if (sourceOnlyBusy) {
+    return;
+  }
+  sourceOnlyBusy = true;
+  try {
+    while (sourceOnlyPending) {
+      const job = sourceOnlyPending;
+      sourceOnlyPending = null;
+      try {
+        const analysis = await runSourceOnlyCompileOnce(job.source);
+        if (sourceOnlyPending) {
+          job.resolve(supersededSourceAnalysis());
+        } else {
+          job.resolve(analysis);
+        }
+      } catch (error) {
+        if (sourceOnlyPending) {
+          job.resolve(supersededSourceAnalysis());
+        } else {
+          job.reject(error);
+        }
+      }
+    }
+  } finally {
+    sourceOnlyBusy = false;
+    if (sourceOnlyPending) {
+      void drainSourceOnlyCompile();
+    }
+  }
+}
+
 export function requestDecompileInWorker(
   bytes: Uint8Array,
   options: { fileName: string; editorVersion: string },

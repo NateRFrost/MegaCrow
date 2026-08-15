@@ -54,6 +54,7 @@ import {
   bootstrapMegacrowSettings,
   createWorkspaceId,
   defaultMegacrowSettings,
+  isPathInWorkspaceInput,
   type MegacrowSettings,
   mergeAppSettings,
   persistMegacrowSettings,
@@ -75,6 +76,7 @@ import {
   requestCompileDownloadInWorker,
   requestDecompileInWorker,
   requestParseInWorker,
+  requestSourceOnlyCompileViaLsp,
   subscribeMegaloWorker,
   syncMegaloCompilerSettings,
   syncMegaloWorkspace,
@@ -439,6 +441,34 @@ export function App() {
     compileParsingRef.current = false;
   }, []);
 
+  const rememberLastOpenFile = useCallback(
+    (absoluteFilePath: string | null) => {
+      if (!(megacrowSettings && activeWorkspace)) {
+        return;
+      }
+      const pathToStore =
+        absoluteFilePath &&
+        isPathInWorkspaceInput(absoluteFilePath, activeWorkspace.inputPath)
+          ? absoluteFilePath
+          : null;
+      const current = megacrowSettings.workspaces.find(
+        (workspace) => workspace.id === activeWorkspace.id
+      );
+      if ((current?.lastOpenFilePath ?? null) === pathToStore) {
+        return;
+      }
+      void commitSettings({
+        ...megacrowSettings,
+        workspaces: megacrowSettings.workspaces.map((workspace) =>
+          workspace.id === activeWorkspace.id
+            ? { ...workspace, lastOpenFilePath: pathToStore }
+            : workspace
+        ),
+      });
+    },
+    [activeWorkspace, commitSettings, megacrowSettings]
+  );
+
   const clearWorkspace = useCallback(() => {
     loadRunRef.current += 1;
     sourceLoadInProgressRef.current = false;
@@ -531,6 +561,14 @@ export function App() {
                 name: draft.name,
                 inputPath: draft.inputPath,
                 outputPath: draft.outputPath,
+                lastOpenFilePath:
+                  workspace.lastOpenFilePath &&
+                  isPathInWorkspaceInput(
+                    workspace.lastOpenFilePath,
+                    draft.inputPath
+                  )
+                    ? workspace.lastOpenFilePath
+                    : null,
               }
             : workspace
         );
@@ -550,12 +588,13 @@ export function App() {
         });
         return;
       }
-      const stored = {
+      const stored: StoredWorkspace = {
         id: createWorkspaceId(),
         name: draft.name,
-        megaloVersion: "107-mcc" as const,
+        megaloVersion: "107-mcc",
         inputPath: draft.inputPath,
         outputPath: draft.outputPath,
+        lastOpenFilePath: null,
       };
       const next: MegacrowSettings = {
         ...base,
@@ -581,10 +620,11 @@ export function App() {
         fileName !== null &&
         fileName.localeCompare(name, undefined, { sensitivity: "accent" }) === 0
       ) {
+        rememberLastOpenFile(null);
         clearWorkspace();
       }
     },
-    [clearWorkspace, fileName]
+    [clearWorkspace, fileName, rememberLastOpenFile]
   );
 
   const handleFileRenamed = useCallback(
@@ -601,14 +641,16 @@ export function App() {
       ) {
         setFileName(newName);
         setIncludeRoot({ absoluteFilePath });
+        rememberLastOpenFile(absoluteFilePath);
       }
     },
-    [fileName]
+    [fileName, rememberLastOpenFile]
   );
 
   const loadGametype = useCallback(
     (bytes: Uint8Array, name: string) => {
       const runId = ++loadRunRef.current;
+      rememberLastOpenFile(null);
       recordFileNavOpen(gametypeNavEntry(bytes, name));
       setLoadError(null);
       setCompileState("decompiling");
@@ -665,7 +707,7 @@ export function App() {
         }
       });
     },
-    [applyDocument, recordFileNavOpen]
+    [applyDocument, rememberLastOpenFile, recordFileNavOpen]
   );
 
   const loadMegaloSource = useCallback(
@@ -675,6 +717,7 @@ export function App() {
         includeRootArg?.absoluteFilePath ?? name
       );
 
+      rememberLastOpenFile(includeRootArg?.absoluteFilePath ?? null);
       recordFileNavOpen(sourceNavEntry(text, name, includeRootArg));
       applyDocument(text);
       setBaselineSource(text);
@@ -762,8 +805,75 @@ export function App() {
         sourceLoadInProgressRef.current = false;
       })();
     },
-    [applyDocument, recordFileNavOpen, resolveCompileContext]
+    [
+      applyDocument,
+      rememberLastOpenFile,
+      recordFileNavOpen,
+      resolveCompileContext,
+    ]
   );
+
+  const restoredForWorkspaceIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!(workspacesReady && megacrowSettings && activeWorkspace)) {
+      return;
+    }
+    if (restoredForWorkspaceIdRef.current === activeWorkspace.id) {
+      return;
+    }
+    restoredForWorkspaceIdRef.current = activeWorkspace.id;
+
+    const stored = megacrowSettings.workspaces.find(
+      (workspace) => workspace.id === activeWorkspace.id
+    );
+    const absoluteFilePath = stored?.lastOpenFilePath ?? null;
+    if (
+      !(
+        absoluteFilePath &&
+        isPathInWorkspaceInput(absoluteFilePath, activeWorkspace.inputPath)
+      )
+    ) {
+      if (absoluteFilePath) {
+        rememberLastOpenFile(null);
+      }
+      return;
+    }
+
+    const fileProvider = createPlatformFileProvider(activeWorkspace);
+    if (!fileProvider) {
+      return;
+    }
+    void (async () => {
+      const text = await fileProvider.readText(absoluteFilePath);
+      if (text === null) {
+        rememberLastOpenFile(null);
+        return;
+      }
+      if (restoredForWorkspaceIdRef.current !== activeWorkspace.id) {
+        return;
+      }
+      const fileForward = absoluteFilePath.replace(/\\/g, "/");
+      const rootForward = activeWorkspace.inputPath
+        .replace(/\\/g, "/")
+        .replace(/\/+$/, "");
+      const relative = fileForward
+        .toLowerCase()
+        .startsWith(`${rootForward.toLowerCase()}/`)
+        ? fileForward.slice(rootForward.length + 1)
+        : null;
+      const slash = fileForward.lastIndexOf("/");
+      const displayName =
+        relative ??
+        (slash >= 0 ? fileForward.slice(slash + 1) : absoluteFilePath);
+      loadMegaloSource(text, displayName, { absoluteFilePath });
+    })();
+  }, [
+    activeWorkspace,
+    loadMegaloSource,
+    megacrowSettings,
+    rememberLastOpenFile,
+    workspacesReady,
+  ]);
 
   const openFileNavEntry = useCallback(
     async (entry: FileNavEntry) => {
@@ -859,6 +969,17 @@ export function App() {
         }
 
         setIncludeFileCache(compileContext.includeCache);
+
+        // Source-only edits: one LSP artifacts call (shared snapshot with highlighting).
+        if (originalBytes === null) {
+          const result = await requestSourceOnlyCompileViaLsp(text);
+          if (runId === compileRunRef.current && text === sourceRef.current) {
+            compileParsingRef.current = false;
+            setAnalysis(result);
+            setCompileState(result.compileState);
+          }
+          return;
+        }
 
         const compileOptions = megaloCompileOptionsFromWorkspace(
           activeWorkspace,
@@ -984,6 +1105,16 @@ export function App() {
         compileState: "parsing",
         message: "Compiling Megalo source…",
       }));
+
+      if (originalBytes === null) {
+        const result = await requestSourceOnlyCompileViaLsp(source);
+        if (runId === compileRunRef.current) {
+          compileParsingRef.current = false;
+          setAnalysis(result);
+          setCompileState(result.compileState);
+        }
+        return;
+      }
 
       const compileOptions = megaloCompileOptionsFromWorkspace(
         activeWorkspace,

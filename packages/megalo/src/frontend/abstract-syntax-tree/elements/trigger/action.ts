@@ -100,7 +100,11 @@ export const parseAction = (
   }
 
   if (name.value === "begin") {
-    return parseBegin(ctx, actionToken);
+    return parseBegin(
+      ctx,
+      actionToken,
+      locationSpan(actionToken.location, name.location)
+    );
   }
 
   if (name.value === "for_each") {

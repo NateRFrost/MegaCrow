@@ -13,17 +13,21 @@ import type { AnalysisSnapshot } from "../core";
 import {
   analyzeAndCompile,
   analyzeDocumentSnapshot,
-  analyzeOnly,
   type CompileResolvers,
   MEGACROW_COMPILE_METHOD,
+  MEGACROW_REQUEST_ARTIFACTS_METHOD,
   MEGACROW_RESOLVE_BASE_FILE_METHOD,
   MEGACROW_RESOLVE_INCLUDE_METHOD,
   type MegacrowCompileParams,
   type MegacrowCompileResult,
+  type MegacrowRequestArtifactsParams,
+  type MegacrowRequestArtifactsResult,
   type MegacrowResolveBaseFileParams,
   type MegacrowResolveBaseFileResult,
   type MegacrowResolveIncludeParams,
   type MegacrowResolveIncludeResult,
+  parseDiagnosticsFromSnapshot,
+  requestArtifactsFromSnapshot,
   SEMANTIC_TOKENS_LEGEND,
   semanticTokensFromSnapshot,
 } from "../core";
@@ -43,6 +47,29 @@ interface SnapshotCacheEntry {
 }
 
 const snapshotCache = new Map<string, SnapshotCacheEntry>();
+const snapshotInflight = new Map<string, Promise<SnapshotCacheEntry>>();
+
+/** Coalesce didChange analyzes: one in flight; always process the newest pending. */
+let publishPending: { uri: string; text: string; version: number } | null =
+  null;
+let publishBusy = false;
+
+/** Coalesce requestArtifacts: one in flight; newest params win. */
+let artifactsPending: {
+  params: MegacrowRequestArtifactsParams;
+  resolve: (value: MegacrowRequestArtifactsResult) => void;
+  reject: (reason: unknown) => void;
+} | null = null;
+let artifactsBusy = false;
+
+const staleArtifactsResult = (
+  version: number
+): MegacrowRequestArtifactsResult => ({
+  version,
+  ok: false,
+  error: "superseded",
+  diagnostics: [],
+});
 
 const decodeBase64 = (dataBase64: string): Uint8Array => {
   const binary = atob(dataBase64);
@@ -54,7 +81,10 @@ const decodeBase64 = (dataBase64: string): Uint8Array => {
 };
 
 const createResolvers = (): CompileResolvers => ({
-  resolveInclude: async (path, ctx) => {
+  resolveInclude: async (
+    path: string,
+    ctx: { kind: "include" | "localized_include"; fromUri?: string }
+  ) => {
     const result = (await connection.sendRequest(
       MEGACROW_RESOLVE_INCLUDE_METHOD,
       {
@@ -69,7 +99,7 @@ const createResolvers = (): CompileResolvers => ({
     }
     return { text: result.text, uri: result.uri };
   },
-  resolveBaseFile: async (path, ctx) => {
+  resolveBaseFile: async (path: string, ctx: { fromUri?: string }) => {
     const result = (await connection.sendRequest(
       MEGACROW_RESOLVE_BASE_FILE_METHOD,
       {
@@ -85,23 +115,41 @@ const createResolvers = (): CompileResolvers => ({
   },
 });
 
-const refreshSnapshot = async (
+const refreshSnapshot = (
   uri: string,
   text: string,
   version: number
 ): Promise<SnapshotCacheEntry> => {
-  const snapshot = await analyzeDocumentSnapshot(text, {
-    version: DEFAULT_VERSION,
-    fromUri: uri,
-    resolvers: createResolvers(),
+  const cached = snapshotCache.get(uri);
+  if (cached && cached.version === version) {
+    return Promise.resolve(cached);
+  }
+
+  const inflightKey = `${uri}:${version}`;
+  const existing = snapshotInflight.get(inflightKey);
+  if (existing) {
+    return existing;
+  }
+
+  const promise = (async () => {
+    const snapshot = await analyzeDocumentSnapshot(text, {
+      version: DEFAULT_VERSION,
+      fromUri: uri,
+      resolvers: createResolvers(),
+    });
+    const entry: SnapshotCacheEntry = {
+      snapshot,
+      semanticTokens: semanticTokensFromSnapshot(snapshot),
+      version,
+    };
+    snapshotCache.set(uri, entry);
+    return entry;
+  })().finally(() => {
+    snapshotInflight.delete(inflightKey);
   });
-  const entry: SnapshotCacheEntry = {
-    snapshot,
-    semanticTokens: semanticTokensFromSnapshot(snapshot),
-    version,
-  };
-  snapshotCache.set(uri, entry);
-  return entry;
+
+  snapshotInflight.set(inflightKey, promise);
+  return promise;
 };
 
 const getCachedSnapshot = async (
@@ -115,22 +163,158 @@ const getCachedSnapshot = async (
   return await refreshSnapshot(uri, doc.getText(), doc.version);
 };
 
+/** Lex+parse once on sync; publish parse diagnostics only (full compile is debounced). */
 const publishFor = async (
   uri: string,
   text: string,
   version: number
 ): Promise<void> => {
-  const resolvers = createResolvers();
-  const [diagnostics] = await Promise.all([
-    analyzeOnly(text, {
-      version: DEFAULT_VERSION,
-      fromUri: uri,
-      resolvers,
-    }),
-    refreshSnapshot(uri, text, version),
-  ]);
-  connection.sendDiagnostics({ uri, diagnostics });
+  const entry = await refreshSnapshot(uri, text, version);
+  connection.sendDiagnostics({
+    uri,
+    diagnostics: parseDiagnosticsFromSnapshot(entry.snapshot),
+  });
 };
+
+/**
+ * One analyze at a time. Intermediate keystrokes are dropped; only the newest
+ * pending document is processed after the current run finishes.
+ */
+const drainPublish = async (): Promise<void> => {
+  if (publishBusy) {
+    return;
+  }
+  publishBusy = true;
+  try {
+    while (publishPending) {
+      const job = publishPending;
+      publishPending = null;
+      const doc = documents.get(job.uri);
+      if (doc && doc.version > job.version) {
+        continue;
+      }
+      await publishFor(job.uri, job.text, job.version);
+    }
+  } finally {
+    publishBusy = false;
+    if (publishPending) {
+      void drainPublish();
+    }
+  }
+};
+
+const schedulePublish = (uri: string, text: string, version: number): void => {
+  publishPending = { uri, text, version };
+  void drainPublish();
+};
+
+const runRequestArtifacts = async (
+  params: MegacrowRequestArtifactsParams
+): Promise<MegacrowRequestArtifactsResult> => {
+  const uri = params.textDocument.uri;
+  const existing = documents.get(uri);
+  const text = params.text ?? existing?.getText() ?? "";
+  const version =
+    params.text !== undefined && params.text !== existing?.getText()
+      ? (existing?.version ?? 0) + 1
+      : (existing?.version ?? 0);
+
+  if (params.text !== undefined) {
+    const doc = TextDocument.create(
+      uri,
+      existing?.languageId ?? "megalo",
+      version,
+      text
+    );
+    documents.set(uri, doc);
+  }
+
+  const doc = documents.get(uri);
+  const entry = doc
+    ? await getCachedSnapshot(uri, doc)
+    : await refreshSnapshot(uri, text, version);
+
+  const artifacts = await requestArtifactsFromSnapshot(entry.snapshot, {
+    artifacts: params.artifacts,
+    documentVersion: entry.version,
+    fromUri: uri,
+    objectLists: params.objectLists,
+    resolvers: createResolvers(),
+  });
+
+  if (params.artifacts.includes("semanticTokens") && artifacts.semanticTokens) {
+    entry.semanticTokens = artifacts.semanticTokens;
+    snapshotCache.set(uri, entry);
+  }
+
+  if (artifacts.diagnostics) {
+    connection.sendDiagnostics({
+      uri,
+      diagnostics: artifacts.diagnostics,
+    });
+  }
+
+  return artifacts;
+};
+
+/**
+ * Serialize artifact requests and keep only the newest. Callers whose work was
+ * superseded receive a cheap stub (IDE ignores via run id).
+ */
+const drainArtifacts = async (): Promise<void> => {
+  if (artifactsBusy) {
+    return;
+  }
+  artifactsBusy = true;
+  try {
+    while (artifactsPending) {
+      const job = artifactsPending;
+      artifactsPending = null;
+      try {
+        const result = await runRequestArtifacts(job.params);
+        if (artifactsPending) {
+          job.resolve(
+            staleArtifactsResult(
+              documents.get(job.params.textDocument.uri)?.version ?? 0
+            )
+          );
+        } else {
+          job.resolve(result);
+        }
+      } catch (error) {
+        if (artifactsPending) {
+          job.resolve(
+            staleArtifactsResult(
+              documents.get(job.params.textDocument.uri)?.version ?? 0
+            )
+          );
+        } else {
+          job.reject(error);
+        }
+      }
+    }
+  } finally {
+    artifactsBusy = false;
+    if (artifactsPending) {
+      void drainArtifacts();
+    }
+  }
+};
+
+const enqueueRequestArtifacts = (
+  params: MegacrowRequestArtifactsParams
+): Promise<MegacrowRequestArtifactsResult> =>
+  new Promise((resolve, reject) => {
+    if (artifactsPending) {
+      artifactsPending.resolve(
+        staleArtifactsResult(
+          documents.get(artifactsPending.params.textDocument.uri)?.version ?? 0
+        )
+      );
+    }
+    artifactsPending = { params, resolve, reject };
+    void drainArtifacts();
+  });
 
 connection.onInitialize(
   (_params: InitializeParams): InitializeResult => ({
@@ -153,7 +337,7 @@ connection.onDidOpenTextDocument((params) => {
   const { uri, languageId, version, text } = params.textDocument;
   const doc = TextDocument.create(uri, languageId, version, text);
   documents.set(uri, doc);
-  void publishFor(uri, text, version);
+  schedulePublish(uri, text, version);
 });
 
 connection.onDidChangeTextDocument((params: DidChangeTextDocumentParams) => {
@@ -171,7 +355,7 @@ connection.onDidChangeTextDocument((params: DidChangeTextDocumentParams) => {
     change.text
   );
   documents.set(uri, doc);
-  void publishFor(uri, change.text, version);
+  schedulePublish(uri, change.text, version);
 });
 
 connection.onDidCloseTextDocument((params) => {
@@ -194,18 +378,55 @@ connection.languages.semanticTokens.on(async (params) => {
 });
 
 connection.onRequest(
+  MEGACROW_REQUEST_ARTIFACTS_METHOD,
+  (
+    params: MegacrowRequestArtifactsParams
+  ): Promise<MegacrowRequestArtifactsResult> => enqueueRequestArtifacts(params)
+);
+
+connection.onRequest(
   MEGACROW_COMPILE_METHOD,
   async (params: MegacrowCompileParams): Promise<MegacrowCompileResult> => {
-    const text =
-      params.text ?? documents.get(params.textDocument.uri)?.getText() ?? "";
+    const uri = params.textDocument.uri;
+    const text = params.text ?? documents.get(uri)?.getText() ?? "";
+    const existing = documents.get(uri);
+    const version = existing?.version ?? 0;
+
+    // Prefer shared snapshot cache when text matches the synced document.
+    const cached = snapshotCache.get(uri);
+    if (
+      cached &&
+      cached.version === version &&
+      (params.text === undefined || params.text === cached.snapshot.source)
+    ) {
+      const artifacts = await requestArtifactsFromSnapshot(cached.snapshot, {
+        artifacts: ["diagnostics", "mglo"],
+        documentVersion: version,
+        fromUri: uri,
+        objectLists: params.objectLists,
+        resolvers: createResolvers(),
+      });
+      connection.sendDiagnostics({
+        uri,
+        diagnostics: artifacts.diagnostics ?? [],
+      });
+      return {
+        ok: artifacts.ok === true,
+        diagnostics: artifacts.diagnostics ?? [],
+        dataBase64: artifacts.dataBase64,
+        metadata: artifacts.metadata,
+        error: artifacts.error,
+      };
+    }
+
     const result = await analyzeAndCompile(text, {
       version: DEFAULT_VERSION,
       objectLists: params.objectLists,
-      fromUri: params.textDocument.uri,
+      fromUri: uri,
       resolvers: createResolvers(),
     });
     connection.sendDiagnostics({
-      uri: params.textDocument.uri,
+      uri,
       diagnostics: result.diagnostics,
     });
     return result;

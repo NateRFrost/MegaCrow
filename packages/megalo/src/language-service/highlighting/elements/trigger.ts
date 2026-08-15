@@ -21,7 +21,6 @@ import type {
   SemanticToken,
   SemanticTokenType,
 } from "src/language-service/highlighting/types";
-import { isRootDocumentLocation } from "src/language-service/position";
 
 /** Trigger kinds that mirror variable scopes / types (`variables player`, …). */
 const VARIABLE_TYPE_TRIGGER_KINDS = new Set([
@@ -67,16 +66,7 @@ const highlightBegin = (
   out: SemanticToken[],
   statement: BeginStatementNode
 ): void => {
-  if (!isRootDocumentLocation(statement.location)) {
-    return;
-  }
-  out.push({
-    line: statement.location.start.line - 1,
-    startChar: statement.location.start.column - 1,
-    length: "begin".length,
-    type: "keyword",
-    modifiers: [],
-  });
+  emitLocation(out, statement.keywordLocation, "keyword");
   highlightTriggerStatements(out, statement.statements);
 };
 

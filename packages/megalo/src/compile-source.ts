@@ -10,6 +10,7 @@ import {
 } from "src/diagnostics";
 import { CompilerError } from "src/diagnostics/error";
 import {
+  type AST,
   Parser,
   type ResolveIncludeFn,
 } from "src/frontend/abstract-syntax-tree";
@@ -17,6 +18,7 @@ import type { IR } from "src/frontend/intermediate-representation";
 import { Lowerer } from "src/frontend/intermediate-representation";
 import type { ObjectLists } from "src/frontend/object-lists";
 import { Lexer } from "src/frontend/tokens";
+import type { AnalysisSnapshot } from "src/language-service/snapshot";
 import { loadObjectListsForVersion } from "src/load-object-lists";
 import type { MegacrowExtensions } from "src/megacrow-extensions";
 import { resolveMegacrowExtensions } from "src/megacrow-extensions";
@@ -305,6 +307,87 @@ const resolveAndAttachBase = async (
 };
 
 /**
+ * Lower → resolve base → encode from an existing AST (skips lex/parse).
+ * Always returns diagnostics; `bytes` is only set when there are no errors.
+ */
+export const compileFromAst = async (
+  ast: AST,
+  options: CompileSourceOptions,
+  priorDiagnostics: readonly Diagnostic[] = []
+): Promise<CompileSourceResult> => {
+  const frontend = new MegaloCompilerContext(
+    options.version,
+    options.megacrowExtensions,
+    options.compilerSettings
+  );
+  const objectLists =
+    options.objectLists ?? loadObjectListsForVersion(options.version);
+  const diagnostics = new Diagnostics();
+  for (const diagnostic of priorDiagnostics) {
+    if (diagnostic.severity === DiagnosticSeverity.Error) {
+      diagnostics.addError(diagnostic.message, diagnostic.location);
+    } else {
+      diagnostics.addWarning(diagnostic.message, diagnostic.location);
+    }
+  }
+
+  const lowerer = new Lowerer(frontend);
+  const compiler = getCompilerForVersion(frontend.megaloVersion);
+
+  try {
+    const ir = lowerer.lower(ast, diagnostics, {
+      objectLists,
+    });
+    await resolveAndAttachBase(ir, diagnostics, options);
+
+    if (diagnostics.hasErrors()) {
+      return {
+        diagnostics: [...diagnostics.getErrors(), ...diagnostics.getWarnings()],
+      };
+    }
+
+    const { data, metadata } = compiler.writeMegaloFile(ir, diagnostics);
+    const ok = !diagnostics.hasErrors();
+    return {
+      diagnostics: [...diagnostics.getErrors(), ...diagnostics.getWarnings()],
+      bytes: ok ? data : undefined,
+      metadata: ok ? metadata : undefined,
+    };
+  } catch (error) {
+    if (error instanceof CompilerError) {
+      diagnostics.addError(error.message, error.location ?? UNKNOWN_LOCATION);
+    } else {
+      diagnostics.addError(
+        error instanceof Error ? error.message : String(error),
+        UNKNOWN_LOCATION
+      );
+    }
+    return {
+      diagnostics: [...diagnostics.getErrors(), ...diagnostics.getWarnings()],
+    };
+  }
+};
+
+/**
+ * Compile from an {@link AnalysisSnapshot} without re-lexing or re-parsing.
+ * Parse diagnostics from the snapshot are carried into the result.
+ */
+export const compileFromSnapshot = async (
+  snapshot: AnalysisSnapshot,
+  options: Omit<CompileSourceOptions, "version"> & {
+    version?: SupportedMegaloVersion;
+  } = {}
+): Promise<CompileSourceResult> =>
+  compileFromAst(
+    snapshot.ast,
+    {
+      ...options,
+      version: options.version ?? snapshot.version,
+    },
+    snapshot.parseDiagnostics
+  );
+
+/**
  * Lex → parse (with include expansion) → lower → resolve base → encode a Megalo
  * script to `.mglo` bytes.
  * Always returns diagnostics; `bytes` is only set when there are no errors.
@@ -328,8 +411,6 @@ export const compileSource = async (
 
   const lexer = new Lexer(frontend);
   const parser = new Parser(frontend);
-  const lowerer = new Lowerer(frontend);
-  const compiler = getCompilerForVersion(frontend.megaloVersion);
 
   try {
     const tokens = lexer.lex(source, diagnostics);
@@ -338,24 +419,10 @@ export const compileSource = async (
       resolveInclude: options.resolveInclude,
       fromUri: options.fromUri,
     });
-    const ir = lowerer.lower(ast, diagnostics, {
-      objectLists,
-    });
-    await resolveAndAttachBase(ir, diagnostics, options);
-
-    if (diagnostics.hasErrors()) {
-      return {
-        diagnostics: [...diagnostics.getErrors(), ...diagnostics.getWarnings()],
-      };
-    }
-
-    const { data, metadata } = compiler.writeMegaloFile(ir, diagnostics);
-    const ok = !diagnostics.hasErrors();
-    return {
-      diagnostics: [...diagnostics.getErrors(), ...diagnostics.getWarnings()],
-      bytes: ok ? data : undefined,
-      metadata: ok ? metadata : undefined,
-    };
+    return await compileFromAst(ast, options, [
+      ...diagnostics.getErrors(),
+      ...diagnostics.getWarnings(),
+    ]);
   } catch (error) {
     if (error instanceof CompilerError) {
       diagnostics.addError(error.message, error.location ?? UNKNOWN_LOCATION);

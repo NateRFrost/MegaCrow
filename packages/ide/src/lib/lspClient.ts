@@ -15,8 +15,11 @@ import { getActiveWorkspace, type Workspace } from "./workspace";
 const DEFAULT_DOC_URI = "file:///megalo/editor.megalo";
 
 export const MEGACROW_COMPILE_METHOD = "megacrow/compile";
+export const MEGACROW_REQUEST_ARTIFACTS_METHOD = "megacrow/requestArtifacts";
 export const MEGACROW_RESOLVE_INCLUDE_METHOD = "megacrow/resolveInclude";
 export const MEGACROW_RESOLVE_BASE_FILE_METHOD = "megacrow/resolveBaseFile";
+
+export type MegacrowArtifactKind = "semanticTokens" | "diagnostics" | "mglo";
 
 export interface MegacrowCompileResult {
   dataBase64?: string;
@@ -24,6 +27,16 @@ export interface MegacrowCompileResult {
   error?: string;
   metadata?: import("@megacrow/megalo").CompiledMegaloMetadata;
   ok: boolean;
+}
+
+export interface MegacrowRequestArtifactsResult {
+  dataBase64?: string;
+  diagnostics?: Diagnostic[];
+  error?: string;
+  metadata?: MegacrowCompileResult["metadata"];
+  ok?: boolean;
+  semanticTokens?: number[];
+  version: number;
 }
 
 type DiagnosticsListener = (diagnostics: Diagnostic[]) => void;
@@ -328,26 +341,57 @@ export async function lspCompileSource(text: string): Promise<{
   error?: string;
   metadata?: MegacrowCompileResult["metadata"];
 }> {
-  const connection = await getConnection();
-  await lspSyncDocument(text);
-  const result = (await connection.sendRequest(MEGACROW_COMPILE_METHOD, {
-    textDocument: { uri: documentUri },
-    text,
-  })) as MegacrowCompileResult;
-
-  if (!(result.ok && result.dataBase64)) {
+  const artifacts = await lspRequestArtifacts(text, ["diagnostics", "mglo"]);
+  if (!(artifacts.ok && artifacts.bytes)) {
     return {
       ok: false,
-      diagnostics: result.diagnostics ?? [],
-      error: result.error,
+      diagnostics: artifacts.diagnostics ?? [],
+      error: artifacts.error,
     };
   }
-
   return {
     ok: true,
-    bytes: decodeBase64(result.dataBase64),
+    bytes: artifacts.bytes,
+    diagnostics: artifacts.diagnostics ?? [],
+    metadata: artifacts.metadata,
+  };
+}
+
+/**
+ * Request selected language-service artifacts for the active document.
+ * Lex/parse runs at most once (reuses the LSP snapshot cache when possible).
+ */
+export async function lspRequestArtifacts(
+  text: string,
+  artifacts: MegacrowArtifactKind[]
+): Promise<{
+  ok?: boolean;
+  bytes?: Uint8Array;
+  diagnostics: Diagnostic[];
+  error?: string;
+  metadata?: MegacrowCompileResult["metadata"];
+  semanticTokens?: number[];
+  version: number;
+}> {
+  const connection = await getConnection();
+  await lspSyncDocument(text);
+  const result = (await connection.sendRequest(
+    MEGACROW_REQUEST_ARTIFACTS_METHOD,
+    {
+      textDocument: { uri: documentUri },
+      text,
+      artifacts,
+    }
+  )) as MegacrowRequestArtifactsResult;
+
+  return {
+    ok: result.ok,
+    bytes: result.dataBase64 ? decodeBase64(result.dataBase64) : undefined,
     diagnostics: result.diagnostics ?? [],
+    error: result.error,
     metadata: result.metadata,
+    semanticTokens: result.semanticTokens,
+    version: result.version,
   };
 }
 

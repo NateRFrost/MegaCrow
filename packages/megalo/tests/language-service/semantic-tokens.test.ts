@@ -402,6 +402,38 @@ end
     expect(navpoint).toBeDefined();
   });
 
+  it("highlights bare begin and action begin as keywords", async () => {
+    const source = `trigger initialization
+\taction end_round
+\tbegin
+\t\taction end_round
+\tend
+\taction begin
+\t\taction end_round
+\tend
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    const tokens = getSemanticTokens(snapshot);
+
+    const bareBegin = tokens.find(
+      (token) =>
+        token.type === "keyword" &&
+        token.line === 2 &&
+        token.startChar === 1 &&
+        token.length === "begin".length
+    );
+    const actionBegin = tokens.find(
+      (token) =>
+        token.type === "keyword" &&
+        token.line === 5 &&
+        token.startChar === 1 &&
+        token.length === "action begin".length
+    );
+    expect(bareBegin).toBeDefined();
+    expect(actionBegin).toBeDefined();
+  });
+
   it("does not enum-color unknown player-filter keywords", async () => {
     const source = `variables global
 \tlocal object grid_object none

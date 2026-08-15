@@ -92,6 +92,37 @@ end
     }
   });
 
+  it("lowers action begin the same as bare begin", () => {
+    const source = `trigger general
+\taction begin
+\t\taction print_variable "inner"
+\tend
+end
+`;
+    const { ir, diagnostics } = lower(source);
+    const { actions, triggers } = ir.gameVariant.gameEngine;
+
+    expect(diagnostics.getErrors()).toEqual([]);
+    expect(actions.map((action) => action.type)).toEqual([
+      ActionType.print_variable,
+      ActionType.begin,
+    ]);
+    expect(triggers[0]).toMatchObject({
+      firstAction: 1,
+      actionCount: 1,
+    });
+    const begin = actions[1];
+    expect(begin?.type).toBe(ActionType.begin);
+    if (begin?.type === ActionType.begin) {
+      expect(begin.parameters).toEqual({
+        firstConditionIndex: 0,
+        conditionCount: 0,
+        firstActionIndex: 0,
+        actionCount: 1,
+      });
+    }
+  });
+
   it("sets initialization trigger index", () => {
     const source = `trigger initialization
 \taction end_round

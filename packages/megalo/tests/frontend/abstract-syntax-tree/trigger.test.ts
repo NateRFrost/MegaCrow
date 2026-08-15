@@ -277,6 +277,14 @@ describe("triggerParser", () => {
         },
       ],
     });
+    const begin = element.statements[0];
+    expect(begin?.kind).toBe(SyntaxKind.BEGIN);
+    if (begin?.kind === SyntaxKind.BEGIN) {
+      expect(begin.keywordLocation.start.column).toBe(2); // tab + "action"
+      expect(
+        begin.keywordLocation.end.column - begin.keywordLocation.start.column
+      ).toBe("action begin".length);
+    }
   });
 
   it("parses action for_each with a scoped body", () => {

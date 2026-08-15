@@ -52,6 +52,11 @@ export {
 } from "src/frontend/abstract-syntax-tree/elements/trigger/temporary";
 
 export type BeginStatementNode = ASTNode<SyntaxKind.BEGIN> & {
+  /**
+   * Opening keyword span: bare `begin`, or `action begin` when written with
+   * the optional `action` prefix.
+   */
+  keywordLocation: SourceCodeLocation;
   statements: TriggerStatementNode[];
 };
 
@@ -226,15 +231,17 @@ const parseScopedTriggerBody = (
 
 export const parseBegin = (
   ctx: ParserContext,
-  beginToken: Token
+  openToken: Token,
+  keywordLocation: SourceCodeLocation = openToken.location
 ): BeginStatementNode =>
   withScope(ctx, { kind: ParserScopeKind.Block }, () => {
     const { statements, location } = parseScopedTriggerBody(
       ctx,
-      beginToken.location
+      openToken.location
     );
     return {
       kind: SyntaxKind.BEGIN,
+      keywordLocation,
       statements,
       location,
     };

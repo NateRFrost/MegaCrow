@@ -4,6 +4,7 @@ import {
 } from "@megacrow/megalo";
 import type { Monaco } from "@monaco-editor/react";
 import { lspCompletions, lspHover, lspSemanticTokens } from "../lib/lspClient";
+import { getMegaloFoldRanges } from "../lib/megaloBlockFolding";
 import {
   MEGALO_BUILTIN_GLOBALS,
   MEGALO_BUILTIN_OVERRIDE_OPTIONS,
@@ -15,12 +16,7 @@ import {
   MEGALO_TRIGGER_KINDS,
 } from "../lib/megaloShim";
 import { findPathReferences } from "../lib/pathReferences";
-import {
-  isRegionEndLine,
-  isRegionStartLine,
-  REGION_END,
-  REGION_START,
-} from "../lib/regionComments";
+import { REGION_END, REGION_START } from "../lib/regionComments";
 import { getStringTableFoldLineNumbers } from "../lib/stringTableGroups";
 import { applyEditorTheme } from "./theme";
 
@@ -662,26 +658,11 @@ export function registerMegaloLanguage(monaco: Monaco): void {
     monaco.languages.registerFoldingRangeProvider(MEGALO_LANGUAGE_ID, {
       provideFoldingRanges(model) {
         const lines = model.getLinesContent();
-        const ranges: Monaco["languages"]["FoldingRange"][] = [];
-        const stack: number[] = [];
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i] ?? "";
-          if (isRegionEndLine(line)) {
-            const start = stack.pop();
-            if (start !== undefined && i > start) {
-              ranges.push({
-                start: start + 1,
-                end: i + 1,
-                kind: monaco.languages.FoldingRangeKind.Region,
-              });
-            }
-            continue;
-          }
-          if (isRegionStartLine(line)) {
-            stack.push(i);
-          }
-        }
-        return ranges;
+        return getMegaloFoldRanges(lines).map((range) => ({
+          start: range.start,
+          end: range.end,
+          kind: monaco.languages.FoldingRangeKind.Region,
+        }));
       },
     });
   }

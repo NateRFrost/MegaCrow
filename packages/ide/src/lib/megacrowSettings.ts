@@ -13,12 +13,17 @@ import {
   workspaceOutputPath,
 } from "./opfsStorage";
 import { isTauriRuntime } from "./tauriRuntime";
+import { isPathInWorkspaceInput, normalizePathKey } from "./workspacePaths";
+
+export { isPathInWorkspaceInput } from "./workspacePaths";
 
 export const MEGACROW_SETTINGS_VERSION = 3;
 
 export interface StoredWorkspace {
   id: string;
   inputPath: string;
+  /** Absolute path of the last opened source file in this workspace. */
+  lastOpenFilePath: string | null;
   megaloVersion: MegaloVersionId;
   name: string;
   outputPath: string;
@@ -90,10 +95,6 @@ export function mergeAppSettings(
   };
 }
 
-function normalizePathKey(path: string): string {
-  return path.replace(/\//g, "\\").replace(/\\+$/, "").toLowerCase();
-}
-
 /** Add discovered workspaces that are not already registered by input path. */
 export function mergeDiscoveredWorkspaces(
   existing: StoredWorkspace[],
@@ -115,7 +116,7 @@ export function mergeDiscoveredWorkspaces(
 }
 
 function normalizeStoredWorkspace(
-  raw: Partial<StoredWorkspace>
+  raw: Partial<StoredWorkspace> & Record<string, unknown>
 ): StoredWorkspace | null {
   if (
     typeof raw.id !== "string" ||
@@ -125,6 +126,10 @@ function normalizeStoredWorkspace(
   ) {
     return null;
   }
+  const lastOpenFilePath =
+    typeof raw.lastOpenFilePath === "string" && raw.lastOpenFilePath.length > 0
+      ? raw.lastOpenFilePath
+      : null;
   return {
     id: raw.id,
     name: raw.name,
@@ -133,11 +138,16 @@ function normalizeStoredWorkspace(
       : "107-mcc",
     inputPath: raw.inputPath,
     outputPath: raw.outputPath,
+    lastOpenFilePath:
+      lastOpenFilePath &&
+      isPathInWorkspaceInput(lastOpenFilePath, raw.inputPath)
+        ? lastOpenFilePath
+        : null,
   };
 }
 
 export function normalizeMegacrowSettings(
-  raw: Partial<MegacrowSettings> | null | undefined
+  raw: (Partial<MegacrowSettings> & Record<string, unknown>) | null | undefined
 ): MegacrowSettings {
   const prefs = {
     discordRichPresence:
@@ -155,9 +165,13 @@ export function normalizeMegacrowSettings(
         ? raw.skippedUpdateVersion
         : null,
   };
-  const workspaces = Array.isArray(raw?.workspaces)
+  let workspaces = Array.isArray(raw?.workspaces)
     ? raw.workspaces
-        .map((entry) => normalizeStoredWorkspace(entry))
+        .map((entry) =>
+          normalizeStoredWorkspace(
+            entry as Partial<StoredWorkspace> & Record<string, unknown>
+          )
+        )
         .filter((entry): entry is StoredWorkspace => entry !== null)
     : [];
   let activeWorkspaceId =
@@ -171,6 +185,24 @@ export function normalizeMegacrowSettings(
   if (!activeWorkspaceId && workspaces.length > 0) {
     activeWorkspaceId = workspaces[0].id;
   }
+
+  // Migrate legacy top-level lastOpenFilePath onto the active workspace once.
+  const legacyPath =
+    typeof raw?.lastOpenFilePath === "string" && raw.lastOpenFilePath.length > 0
+      ? raw.lastOpenFilePath
+      : null;
+  if (legacyPath && activeWorkspaceId) {
+    workspaces = workspaces.map((workspace) => {
+      if (workspace.id !== activeWorkspaceId || workspace.lastOpenFilePath) {
+        return workspace;
+      }
+      if (!isPathInWorkspaceInput(legacyPath, workspace.inputPath)) {
+        return workspace;
+      }
+      return { ...workspace, lastOpenFilePath: legacyPath };
+    });
+  }
+
   return {
     version: MEGACROW_SETTINGS_VERSION,
     activeWorkspaceId,
@@ -210,6 +242,7 @@ export function discoveredToStored(
       megaloVersion: isMegaloVersionId(version) ? version : "107-mcc",
       inputPath: entry.inputPath,
       outputPath: entry.outputPath,
+      lastOpenFilePath: null,
     };
   });
 }
@@ -266,6 +299,7 @@ export function browserOpfsStoredWorkspace(): StoredWorkspace {
     megaloVersion: "107-mcc",
     inputPath: workspaceInputPath(),
     outputPath: workspaceOutputPath(),
+    lastOpenFilePath: null,
   };
 }
 

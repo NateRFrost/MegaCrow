@@ -628,3 +628,55 @@ end
     ).toBe(true);
   });
 });
+
+describe("compileFromSnapshot", () => {
+  it("matches compileSource bytes without re-lexing", async () => {
+    const { ALL_MEGACROW_EXTENSIONS } = await import(
+      "../src/megacrow-extensions"
+    );
+    const { analyzeDocument } = await import("../src/language-service/analyze");
+    const { compileFromSnapshot, compileSource } = await import(
+      "../src/compile-source"
+    );
+
+    const options = {
+      version,
+      megacrowExtensions: ALL_MEGACROW_EXTENSIONS,
+    };
+    const fromSource = await compileSource(minimalScript, options);
+    expect(fromSource.bytes).toBeDefined();
+
+    const snapshot = await analyzeDocument(minimalScript, { version });
+    const fromSnapshot = await compileFromSnapshot(snapshot, options);
+
+    expect(fromSnapshot.bytes).toBeDefined();
+    expect(Array.from(fromSnapshot.bytes!)).toEqual(
+      Array.from(fromSource.bytes!)
+    );
+  });
+
+  it("reuses one analysis snapshot for tokens and mglo", async () => {
+    const { ALL_MEGACROW_EXTENSIONS } = await import(
+      "../src/megacrow-extensions"
+    );
+    const { analyzeDocument } = await import("../src/language-service/analyze");
+    const { getSemanticTokens } = await import(
+      "../src/language-service/highlighting"
+    );
+    const { compileFromSnapshot } = await import("../src/compile-source");
+
+    const snapshot = await analyzeDocument(minimalScript, { version });
+    const tokens = getSemanticTokens(snapshot);
+    const compiled = await compileFromSnapshot(snapshot, {
+      megacrowExtensions: ALL_MEGACROW_EXTENSIONS,
+    });
+
+    expect(tokens.length).toBeGreaterThan(0);
+    expect(compiled.bytes).toBeDefined();
+    expect(
+      compiled.diagnostics.filter(
+        (d) => d.severity === DiagnosticSeverity.Error
+      )
+    ).toHaveLength(0);
+  });
+});

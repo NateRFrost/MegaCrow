@@ -13,6 +13,8 @@ pub struct StoredWorkspace {
   pub megalo_version: String,
   pub input_path: String,
   pub output_path: String,
+  #[serde(default)]
+  pub last_open_file_path: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -85,7 +87,6 @@ mod tests {
 
   #[test]
   fn deserializes_frontend_settings_payload() {
-    // Matches what TypeScript sends via save_megacrow_settings (no actionInlayHints).
     let raw = r#"{
       "version": 3,
       "activeWorkspaceId": null,
@@ -100,5 +101,55 @@ mod tests {
     let settings: MegacrowSettings = serde_json::from_str(raw).expect("deserialize");
     assert_eq!(settings.version, 3);
     assert!(settings.workspaces.is_empty());
+  }
+
+  #[test]
+  fn deserializes_workspace_last_open_file_path() {
+    let raw = r#"{
+      "version": 3,
+      "activeWorkspaceId": "ws-1",
+      "workspaces": [{
+        "id": "ws-1",
+        "name": "HREK",
+        "megaloVersion": "107-mcc",
+        "inputPath": "C:/HREK/data/multiplayer/megalo",
+        "outputPath": "C:/HREK/maps/megalo",
+        "lastOpenFilePath": "C:/HREK/data/multiplayer/megalo/foo.txt"
+      }],
+      "discordRichPresence": true,
+      "mccHotReload": true,
+      "gamertag": "",
+      "compilerStrictness": false,
+      "editorTheme": "megacrow-dark",
+      "skippedUpdateVersion": null
+    }"#;
+    let settings: MegacrowSettings = serde_json::from_str(raw).expect("deserialize");
+    assert_eq!(
+      settings.workspaces[0].last_open_file_path.as_deref(),
+      Some("C:/HREK/data/multiplayer/megalo/foo.txt")
+    );
+  }
+
+  #[test]
+  fn workspace_last_open_file_path_defaults_missing() {
+    let raw = r#"{
+      "version": 3,
+      "activeWorkspaceId": "ws-1",
+      "workspaces": [{
+        "id": "ws-1",
+        "name": "HREK",
+        "megaloVersion": "107-mcc",
+        "inputPath": "C:/HREK/data/multiplayer/megalo",
+        "outputPath": "C:/HREK/maps/megalo"
+      }],
+      "discordRichPresence": true,
+      "mccHotReload": true,
+      "gamertag": "",
+      "compilerStrictness": false,
+      "editorTheme": "megacrow-dark",
+      "skippedUpdateVersion": null
+    }"#;
+    let settings: MegacrowSettings = serde_json::from_str(raw).expect("deserialize");
+    assert!(settings.workspaces[0].last_open_file_path.is_none());
   }
 }

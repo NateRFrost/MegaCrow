@@ -1,3 +1,18 @@
+/** Normalize path for case-insensitive Windows-friendly comparisons. */
+export function normalizePathKey(path: string): string {
+  return path.replace(/\//g, "\\").replace(/\\+$/, "").toLowerCase();
+}
+
+/** True when `filePath` is under the workspace input root (or equal to it). */
+export function isPathInWorkspaceInput(
+  filePath: string,
+  workspaceInputPath: string
+): boolean {
+  const file = normalizePathKey(filePath);
+  const root = normalizePathKey(workspaceInputPath);
+  return file === root || file.startsWith(`${root}\\`);
+}
+
 /** If scripts path is .../data/multiplayer/megalo, suggest sibling maps/megalo. */
 export function guessOutputPathFromScripts(scriptsPath: string): string | null {
   const normalized = scriptsPath.replace(/\\/g, "/").replace(/\/+$/, "");

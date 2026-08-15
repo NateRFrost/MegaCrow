@@ -15,6 +15,8 @@ export {
   type CompileSourceOptions,
   type CompileSourceResult,
   clearCompiledBaseSourceCache,
+  compileFromAst,
+  compileFromSnapshot,
   compileSource,
   type ResolveBaseFileFn,
   type ResolveBaseMgloFailureReason,
