@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   megalo:
-    name: @megacrow/megalo
+    name: "@megacrow/megalo"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

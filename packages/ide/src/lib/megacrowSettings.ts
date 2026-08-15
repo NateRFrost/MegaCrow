@@ -64,6 +64,7 @@ export function appSettingsFromMegacrow(
     gamertag: settings.gamertag,
     compilerStrictness: settings.compilerStrictness,
     editorTheme: normalizeEditorThemeId(settings.editorTheme),
+    skippedUpdateVersion: settings.skippedUpdateVersion ?? null,
   };
 }
 
@@ -82,6 +83,10 @@ export function mergeAppSettings(
       patch.editorTheme === undefined
         ? settings.editorTheme
         : normalizeEditorThemeId(patch.editorTheme),
+    skippedUpdateVersion:
+      patch.skippedUpdateVersion === undefined
+        ? (settings.skippedUpdateVersion ?? null)
+        : patch.skippedUpdateVersion,
   };
 }
 
@@ -145,6 +150,10 @@ export function normalizeMegacrowSettings(
     compilerStrictness:
       raw?.compilerStrictness ?? DEFAULT_APP_SETTINGS.compilerStrictness,
     editorTheme: normalizeEditorThemeId(raw?.editorTheme),
+    skippedUpdateVersion:
+      typeof raw?.skippedUpdateVersion === "string"
+        ? raw.skippedUpdateVersion
+        : null,
   };
   const workspaces = Array.isArray(raw?.workspaces)
     ? raw.workspaces

@@ -9,6 +9,7 @@ export interface AppSettings {
   editorTheme: string;
   gamertag: string;
   mccHotReload: boolean;
+  skippedUpdateVersion: string | null;
 }
 
 const STORAGE_KEY = "megacrow_settings";
@@ -19,6 +20,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   gamertag: "",
   compilerStrictness: false,
   editorTheme: DEFAULT_EDITOR_THEME_ID,
+  skippedUpdateVersion: null,
 };
 
 export function readLocalAppSettings(): AppSettings {
@@ -39,6 +41,10 @@ export function readLocalAppSettings(): AppSettings {
       compilerStrictness:
         parsed.compilerStrictness ?? DEFAULT_APP_SETTINGS.compilerStrictness,
       editorTheme: normalizeEditorThemeId(parsed.editorTheme),
+      skippedUpdateVersion:
+        typeof parsed.skippedUpdateVersion === "string"
+          ? parsed.skippedUpdateVersion
+          : null,
     };
   } catch {
     return { ...DEFAULT_APP_SETTINGS };

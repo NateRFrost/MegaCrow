@@ -17,6 +17,7 @@ import { PreReleaseWatermark } from "./components/PreReleaseWatermark";
 import { SidebarVariantHeader } from "./components/SidebarVariantHeader";
 import { StatusBar } from "./components/StatusBar";
 import { Toolbar } from "./components/Toolbar";
+import { UpdateAvailableDialog } from "./components/UpdateAvailableDialog";
 import {
   analyzeMegaloSource,
   type CompileState,
@@ -92,6 +93,7 @@ import {
   writeMgloToWorkspaceOutput,
 } from "./lib/saveGametypeFile";
 import { isTauriRuntime } from "./lib/tauriRuntime";
+import { checkForAppUpdate, type GithubReleaseInfo } from "./lib/updateCheck";
 import {
   PROBLEMS_PANE_MAX_HEIGHT,
   PROBLEMS_PANE_MIN_HEIGHT,
@@ -232,6 +234,11 @@ export function App() {
   const initialMotdOpen = shouldShowMotdOnStartup();
   const motdCountsViewRef = useRef(initialMotdOpen);
   const [motdOpen, setMotdOpen] = useState(initialMotdOpen);
+  const [updateRelease, setUpdateRelease] = useState<GithubReleaseInfo | null>(
+    null
+  );
+  const [updateOpen, setUpdateOpen] = useState(false);
+  const updateCheckDoneRef = useRef(false);
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(true);
   const editorNavigateRef = useRef<
     ((line: number, column?: number) => void) | null
@@ -1319,6 +1326,59 @@ export function App() {
     setMotdOpen(true);
   };
 
+  useEffect(() => {
+    if (updateCheckDoneRef.current || !workspacesReady || !megacrowSettings) {
+      return;
+    }
+    if (!isTauriRuntime()) {
+      updateCheckDoneRef.current = true;
+      return;
+    }
+
+    let cancelled = false;
+    updateCheckDoneRef.current = true;
+    void checkForAppUpdate({
+      currentBuildString: MEGACROW_BUILD_STRING,
+      skippedUpdateVersion: megacrowSettings.skippedUpdateVersion,
+    }).then((result) => {
+      if (cancelled || result.kind !== "available") {
+        return;
+      }
+      setUpdateRelease(result.release);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [megacrowSettings, workspacesReady]);
+
+  useEffect(() => {
+    if (!updateRelease || motdOpen) {
+      setUpdateOpen(false);
+      return;
+    }
+    setUpdateOpen(true);
+  }, [motdOpen, updateRelease]);
+
+  const handleUpdateDismiss = useCallback(() => {
+    setUpdateOpen(false);
+    setUpdateRelease(null);
+  }, []);
+
+  const handleUpdateSkip = useCallback(() => {
+    if (!(megacrowSettings && updateRelease)) {
+      setUpdateOpen(false);
+      setUpdateRelease(null);
+      return;
+    }
+    const next = mergeAppSettings(megacrowSettings, {
+      skippedUpdateVersion: updateRelease.tagName,
+    });
+    setUpdateOpen(false);
+    setUpdateRelease(null);
+    void commitSettings(next);
+  }, [commitSettings, megacrowSettings, updateRelease]);
+
   const {
     width: sidebarWidth,
     open: sidebarOpen,
@@ -1333,6 +1393,13 @@ export function App() {
   return (
     <div className="app">
       <MotdDialog onDismiss={handleMotdDismiss} open={motdOpen} />
+      <UpdateAvailableDialog
+        currentBuildString={MEGACROW_BUILD_STRING}
+        onDismiss={handleUpdateDismiss}
+        onSkip={handleUpdateSkip}
+        open={updateOpen}
+        release={updateRelease}
+      />
       <AddWorkspaceModal
         initialWorkspace={
           editingWorkspaceId

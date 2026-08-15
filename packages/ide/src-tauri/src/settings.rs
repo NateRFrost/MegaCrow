@@ -28,6 +28,8 @@ pub struct MegacrowSettings {
   pub action_inlay_hints: bool,
   #[serde(default = "default_editor_theme")]
   pub editor_theme: String,
+  #[serde(default)]
+  pub skipped_update_version: Option<String>,
 }
 
 fn default_editor_theme() -> String {
@@ -46,6 +48,7 @@ impl Default for MegacrowSettings {
       compiler_strictness: false,
       action_inlay_hints: true,
       editor_theme: default_editor_theme(),
+      skipped_update_version: None,
     }
   }
 }
