@@ -7,6 +7,8 @@ export interface AppSettings {
   compilerStrictness: boolean;
   discordRichPresence: boolean;
   editorTheme: string;
+  /** When true, wrap long lines; when false, use horizontal scroll. */
+  editorWordWrap: boolean;
   gamertag: string;
   mccHotReload: boolean;
   skippedUpdateVersion: string | null;
@@ -20,6 +22,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   gamertag: "",
   compilerStrictness: false,
   editorTheme: DEFAULT_EDITOR_THEME_ID,
+  editorWordWrap: true,
   skippedUpdateVersion: null,
 };
 
@@ -41,6 +44,10 @@ export function readLocalAppSettings(): AppSettings {
       compilerStrictness:
         parsed.compilerStrictness ?? DEFAULT_APP_SETTINGS.compilerStrictness,
       editorTheme: normalizeEditorThemeId(parsed.editorTheme),
+      editorWordWrap:
+        typeof parsed.editorWordWrap === "boolean"
+          ? parsed.editorWordWrap
+          : DEFAULT_APP_SETTINGS.editorWordWrap,
       skippedUpdateVersion:
         typeof parsed.skippedUpdateVersion === "string"
           ? parsed.skippedUpdateVersion

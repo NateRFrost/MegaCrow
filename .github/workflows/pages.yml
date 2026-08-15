@@ -1,27 +1,21 @@
-# Publish the MegaCrow web bundle to GitHub Pages.
+# Publish MegaCrow web to GitHub Pages (no app rebuild).
 #
-# Does not build the app — waits for the Build workflow (or a release tag’s Build)
-# and deploys its megacrow-web artifact.
+# Branch previews are deployed from the Build workflow after megacrow-web uploads.
+# This workflow covers:
+#   - GitHub Release → site root (/)
+#   - Branch deletion → remove /<branch>/
+#   - Manual workflow_dispatch → redeploy from an existing Build artifact
 #
-# Layout (project Pages URL: https://<owner>.github.io/<repo>/):
-#   /              ← GitHub Release
-#   /<branch>/     ← branch Build success
-#
-# Branch deletion removes /<branch>/ from the site.
+# Layout (https://<owner>.github.io/<repo>/):
+#   /              ← release
+#   /<branch>/     ← branch preview (from Build)
 #
 # Setup (once):
-#   Repo Settings → Pages → Build and deployment → Source: Deploy from a branch
-#   Branch: gh-pages / (root)
-#   This workflow file must live on the repository default branch (workflow_run rule).
+#   Repo Settings → Pages → Source: Deploy from a branch → gh-pages / (root)
 
 name: GitHub Pages
 
 on:
-  workflow_run:
-    workflows:
-      - Build
-    types:
-      - completed
   delete:
   release:
     types: [published]
@@ -53,15 +47,9 @@ permissions:
   actions: read
 
 jobs:
-  # ---------------------------------------------------------------------------
-  # Fetch megacrow-web from Build (no app rebuild)
-  # ---------------------------------------------------------------------------
   fetch:
     name: Fetch Build artifact
     if: |
-      (github.event_name == 'workflow_run' &&
-        github.event.workflow_run.head_branch != 'gh-pages' &&
-        contains(fromJSON('["success","failure"]'), github.event.workflow_run.conclusion)) ||
       (github.event_name == 'release' && github.event.action == 'published') ||
       (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
@@ -78,7 +66,6 @@ jobs:
           INPUT_TARGET='${{ github.event.inputs.target || 'auto' }}'
           INPUT_BRANCH='${{ github.event.inputs.branch || '' }}'
           INPUT_TAG='${{ github.event.inputs.tag || '' }}'
-          WR_BRANCH='${{ github.event.workflow_run.head_branch || '' }}'
           RELEASE_TAG='${{ github.event.release.tag_name || '' }}'
           REF_NAME='${{ github.ref_name }}'
 
@@ -86,15 +73,10 @@ jobs:
           destination=
           tag=
           branch=
-          run_id=
 
           if [[ "$EVENT" == "release" ]] || [[ "$INPUT_TARGET" == "root" ]]; then
             mode=root
             tag="${RELEASE_TAG:-$INPUT_TAG}"
-          elif [[ "$EVENT" == "workflow_run" ]]; then
-            mode=branch
-            branch="$WR_BRANCH"
-            run_id='${{ github.event.workflow_run.id }}'
           elif [[ "$INPUT_TARGET" == "branch" ]] || [[ "$INPUT_TARGET" == "auto" ]]; then
             mode=branch
             branch="${INPUT_BRANCH:-$REF_NAME}"
@@ -119,19 +101,9 @@ jobs:
             echo "tag=$tag"
             echo "branch=$branch"
           } >> "$GITHUB_OUTPUT"
-          echo "mode=$mode destination=${destination:-'(root)'} tag=${tag:-'-'} branch=${branch:-'-'} run_id=${run_id:-'-'}"
+          echo "mode=$mode destination=${destination:-'(root)'} tag=${tag:-'-'} branch=${branch:-'-'}"
 
-      - name: Download megacrow-web from workflow_run
-        if: github.event_name == 'workflow_run'
-        uses: actions/download-artifact@v4
-        with:
-          name: megacrow-web
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path: dist
-
-      - name: Download megacrow-web for release/dispatch
-        if: github.event_name != 'workflow_run'
+      - name: Download megacrow-web
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
@@ -208,9 +180,6 @@ jobs:
           path: dist
           retention-days: 7
 
-  # ---------------------------------------------------------------------------
-  # Deploy
-  # ---------------------------------------------------------------------------
   deploy:
     name: Deploy
     needs: fetch
@@ -241,9 +210,6 @@ jobs:
           keep_files: true
           force_orphan: false
 
-  # ---------------------------------------------------------------------------
-  # Branch delete: drop /<branch>/ from gh-pages
-  # ---------------------------------------------------------------------------
   cleanup-branch:
     name: Cleanup deleted branch
     if: github.event_name == 'delete' && github.event.ref_type == 'branch'

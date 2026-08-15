@@ -27,11 +27,14 @@ interface Props {
   documentContent: string;
   /** monaco-themes id (e.g. github-dark). */
   editorTheme?: string;
+  /** Wrap long lines when true; horizontal scroll when false. */
+  editorWordWrap?: boolean;
   /** Changes when a new file is loaded; remounts the editor. */
   foldKey?: string | null;
   hoverContext?: MegaloHoverContext;
   onCompileDebounced?: (source: string) => void;
   onCursorChange?: (line: number, column: number) => void;
+  onEditorWordWrapChange?: (wordWrap: boolean) => void;
   onRegisterGetValue?: (getValue: () => string) => void;
   onRegisterNavigate?: (
     navigate: (line: number, column?: number) => void
@@ -60,6 +63,8 @@ export const MegaloEditor = memo(function MegaloEditor({
   hoverContext,
   plainText = false,
   editorTheme = DEFAULT_EDITOR_THEME_ID,
+  editorWordWrap = true,
+  onEditorWordWrapChange,
 }: Props) {
   const editorRef = useRef<Monaco["editor"]["IStandaloneCodeEditor"] | null>(
     null
@@ -67,6 +72,10 @@ export const MegaloEditor = memo(function MegaloEditor({
   const monacoRef = useRef<Monaco | null>(null);
   const editorThemeRef = useRef(editorTheme);
   editorThemeRef.current = editorTheme;
+  const editorWordWrapRef = useRef(editorWordWrap);
+  editorWordWrapRef.current = editorWordWrap;
+  const onEditorWordWrapChangeRef = useRef(onEditorWordWrapChange);
+  onEditorWordWrapChangeRef.current = onEditorWordWrapChange;
   const foldedForKeyRef = useRef<string | null>(null);
   const foldRunRef = useRef(0);
   const outlineSyncTimerRef = useRef<number | null>(null);
@@ -286,6 +295,12 @@ export const MegaloEditor = memo(function MegaloEditor({
   }, [editorTheme]);
 
   useEffect(() => {
+    editorRef.current?.updateOptions({
+      wordWrap: editorWordWrap ? "on" : "off",
+    });
+  }, [editorWordWrap]);
+
+  useEffect(() => {
     if (plainText) {
       return;
     }
@@ -338,6 +353,17 @@ export const MegaloEditor = memo(function MegaloEditor({
           editor.trigger("keyboard", "editor.action.quickCommand", null);
         }
       );
+
+      editor.addAction({
+        id: "megacrow.toggleWordWrap",
+        label: "View: Toggle Word Wrap",
+        keybindings: [monaco.KeyMod.Alt | monaco.KeyCode.KeyZ],
+        run: () => {
+          const next = !editorWordWrapRef.current;
+          editor.updateOptions({ wordWrap: next ? "on" : "off" });
+          onEditorWordWrapChangeRef.current?.(next);
+        },
+      });
 
       const model = editor.getModel();
       const languageId = plainTextRef.current
@@ -411,7 +437,7 @@ export const MegaloEditor = memo(function MegaloEditor({
         fontLigatures: false,
         disableMonospaceOptimizations: true,
         minimap: { enabled: false },
-        wordWrap: "on",
+        wordWrap: editorWordWrap ? "on" : "off",
         scrollBeyondLastLine: false,
         padding: { top: 10, bottom: 8 },
         folding: true,

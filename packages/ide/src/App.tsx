@@ -1553,12 +1553,16 @@ export function App() {
                 diagnostics={isPlainTextDocument ? [] : analysis.diagnostics}
                 documentContent={documentContent}
                 editorTheme={settings.editorTheme}
+                editorWordWrap={settings.editorWordWrap}
                 foldKey={fileName}
                 hoverContext={editorHoverContext}
                 onCompileDebounced={
                   isPlainTextDocument ? undefined : handleCompileDebounced
                 }
                 onCursorChange={handleCursorChange}
+                onEditorWordWrapChange={(wordWrap) =>
+                  handleSettingsChange({ editorWordWrap: wordWrap })
+                }
                 onRegisterGetValue={handleRegisterGetValue}
                 onRegisterNavigate={handleRegisterNavigate}
                 onSourceDebounced={handleSourceDebounced}

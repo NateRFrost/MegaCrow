@@ -76,6 +76,58 @@ jobs:
           path: packages/ide/dist
           retention-days: 90
 
+  pages:
+    name: Deploy Pages preview
+    needs: web
+    if: >
+      success() &&
+      github.ref != 'refs/heads/gh-pages' &&
+      github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    steps:
+      - name: Resolve destination
+        id: target
+        shell: bash
+        run: |
+          set -euo pipefail
+          destination='${{ github.ref_name }}'
+          case "$destination" in
+            docs|assets|gh-pages|.github|"")
+              echo "Branch name '$destination' is reserved or empty."
+              exit 1
+              ;;
+          esac
+          echo "destination=$destination" >> "$GITHUB_OUTPUT"
+          echo "Deploying Pages preview to /$destination/"
+
+      - name: Download megacrow-web
+        uses: actions/download-artifact@v4
+        with:
+          name: megacrow-web
+          path: dist
+
+      - name: Verify dist
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -f dist/index.html ]]; then
+            echo "megacrow-web artifact is missing index.html"
+            find dist -maxdepth 3 -type f | head -n 50 || true
+            exit 1
+          fi
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: dist
+          destination_dir: ${{ steps.target.outputs.destination }}
+          keep_files: true
+          force_orphan: false
+
   tauri:
     name: Tauri (${{ matrix.platform }})
     needs: prepare

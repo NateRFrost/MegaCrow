@@ -29,12 +29,18 @@ pub struct MegacrowSettings {
   pub compiler_strictness: bool,
   #[serde(default = "default_editor_theme")]
   pub editor_theme: String,
+  #[serde(default = "default_editor_word_wrap")]
+  pub editor_word_wrap: bool,
   #[serde(default)]
   pub skipped_update_version: Option<String>,
 }
 
 fn default_editor_theme() -> String {
   "megacrow-dark".to_string()
+}
+
+fn default_editor_word_wrap() -> bool {
+  true
 }
 
 impl Default for MegacrowSettings {
@@ -48,6 +54,7 @@ impl Default for MegacrowSettings {
       gamertag: String::new(),
       compiler_strictness: false,
       editor_theme: default_editor_theme(),
+      editor_word_wrap: default_editor_word_wrap(),
       skipped_update_version: None,
     }
   }
@@ -101,6 +108,7 @@ mod tests {
     let settings: MegacrowSettings = serde_json::from_str(raw).expect("deserialize");
     assert_eq!(settings.version, 3);
     assert!(settings.workspaces.is_empty());
+    assert!(settings.editor_word_wrap);
   }
 
   #[test]
