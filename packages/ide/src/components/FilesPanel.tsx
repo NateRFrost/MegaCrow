@@ -18,7 +18,6 @@ import {
   listOpfsGametypes,
   type OpfsGametypeEntry,
   opfsGametypeLogicalPath,
-  readOpfsGametype,
   readOpfsGametypeSource,
   renameOpfsGametype,
 } from "../lib/opfsStorage";
@@ -57,7 +56,6 @@ interface Props {
     newName: string,
     absoluteFilePath: string
   ) => void;
-  onOpenFile: (bytes: Uint8Array, name: string) => void;
   onOpenSource: (
     source: string,
     name: string,
@@ -127,7 +125,6 @@ export function FilesPanel({
   onEditWorkspace,
   onDeleteWorkspace,
   workspaceSwitcher = false,
-  onOpenFile,
   onOpenSource,
   onFileDeleted,
   onFileRenamed,
@@ -211,7 +208,7 @@ export function FilesPanel({
         return false;
       }
       setOpfsError(
-        "Megalo .txt source files must be opened in the desktop app. In the browser, open saved gametypes from the list below."
+        "Megalo .txt source files must be opened in the desktop app. In the browser, use New File or open a saved file from the list below."
       );
       return true;
     },
@@ -225,18 +222,24 @@ export function FilesPanel({
       }
       try {
         setOpfsError(null);
-        if (file.name.toLowerCase().endsWith(".txt")) {
+        const lower = file.name.toLowerCase();
+        if (lower.endsWith(".bin") || lower.endsWith(".blf")) {
+          setOpfsError(
+            "Opening compiled .bin / .blf gametypes is not supported yet."
+          );
+          return;
+        }
+        if (lower.endsWith(".txt")) {
           const text = await readTextFileBlob(file);
           onOpenSource(text, file.name);
           return;
         }
-        const bytes = new Uint8Array(await file.arrayBuffer());
-        onOpenFile(bytes, file.name);
+        setOpfsError(`Unsupported file type: ${file.name}`);
       } catch (error) {
         setOpfsError(String(error));
       }
     },
-    [onOpenFile, onOpenSource, rejectBrowserMegaloSource]
+    [onOpenSource, rejectBrowserMegaloSource]
   );
 
   const handleDroppedFiles = useCallback(
@@ -254,18 +257,13 @@ export function FilesPanel({
     async (name: string) => {
       try {
         setOpfsError(null);
-        const bytes = await readOpfsGametype(name);
-        if (bytes.length === 0) {
-          const source = (await readOpfsGametypeSource(name)) ?? "";
-          onOpenSource(source, name);
-          return;
-        }
-        onOpenFile(bytes, name);
+        const source = (await readOpfsGametypeSource(name)) ?? "";
+        onOpenSource(source, name);
       } catch (error) {
         setOpfsError(String(error));
       }
     },
-    [onOpenFile, onOpenSource]
+    [onOpenSource]
   );
 
   const createOpfsFile = useCallback(async () => {
@@ -607,8 +605,8 @@ export function FilesPanel({
               ) : null}
               {opfsFiles.length === 0 && !opfsError ? (
                 <div className="files-empty">
-                  <p>No saved gametypes</p>
-                  <span>Drop a .bin or .blf here, or use New File</span>
+                  <p>No saved files</p>
+                  <span>Use New File to create one</span>
                 </div>
               ) : opfsFiles.length > 0 ? (
                 <ul className="files-tree">

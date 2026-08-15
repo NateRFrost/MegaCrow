@@ -32,13 +32,7 @@ import {
   unresolvedIncludeErrors,
 } from "./megaloShim";
 
-export type CompileState =
-  | "idle"
-  | "decompiling"
-  | "parsing"
-  | "ok"
-  | "warn"
-  | "error";
+export type CompileState = "idle" | "parsing" | "ok" | "warn" | "error";
 
 export interface SourceAnalysis {
   byteDiffCount: number | null;

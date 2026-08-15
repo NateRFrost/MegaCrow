@@ -33,26 +33,6 @@ let _compilerSettings: MegaCrowCompilerSettings = {
   strictStringLiterals: false,
 };
 
-function emptyProgram(): MegaloProgram {
-  return {
-    elements: [],
-    flatConditions: [],
-    flatActions: [],
-    triggerTable: [],
-    specialTriggers: {
-      initialization: -1,
-      localInitialization: -1,
-      hostMigration: -1,
-      doubleMigration: -1,
-      objectDeathEvent: -1,
-      local: -1,
-      pregame: -1,
-    },
-    encodingVersion: 107,
-    buildNumber: -1,
-  };
-}
-
 function compileResultToAnalysis(
   compileState: SourceAnalysis["compileState"],
   message: string,
@@ -173,24 +153,6 @@ async function handleMessage(message: MegaloWorkerRequest): Promise<void> {
     case "setCompilerSettings":
       _compilerSettings = message.compilerSettings;
       break;
-
-    case "decompile": {
-      self.postMessage({
-        kind: "decompile",
-        id: message.id,
-        program: emptyProgram(),
-        source: "; Decompile not available in minimal build\n",
-        analysis: compileResultToAnalysis("error", "Decompile not available", [
-          {
-            line: 1,
-            column: 1,
-            message: "Decompile not available in minimal build",
-            severity: "error",
-          },
-        ]),
-      } satisfies MegaloWorkerResponse);
-      break;
-    }
 
     case "compile":
     case "parse": {

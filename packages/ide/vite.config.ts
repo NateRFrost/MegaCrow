@@ -35,6 +35,10 @@ function resolveExistingFile(base: string): string | null {
 
 function normalizeBase(value: string | undefined): string {
   const raw = (value ?? "/").trim() || "/";
+  // Relative bases (e.g. `./`) so one CI artifact works at /repo/ and /repo/<branch>/.
+  if (raw.startsWith(".")) {
+    return raw.endsWith("/") ? raw : `${raw}/`;
+  }
   const withLeading = raw.startsWith("/") ? raw : `/${raw}`;
   return withLeading.endsWith("/") ? withLeading : `${withLeading}/`;
 }

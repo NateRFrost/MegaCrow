@@ -1,21 +1,27 @@
 # Publish the MegaCrow web bundle to GitHub Pages.
 #
+# Does not build the app — waits for the Build workflow (or a release tag’s Build)
+# and deploys its megacrow-web artifact.
+#
 # Layout (project Pages URL: https://<owner>.github.io/<repo>/):
-#   /              ← GitHub Release (reuses megacrow-web artifact from the tag’s Build)
-#   /<branch>/     ← branch push preview (built here with branch base)
+#   /              ← GitHub Release
+#   /<branch>/     ← branch Build success
 #
 # Branch deletion removes /<branch>/ from the site.
 #
 # Setup (once):
 #   Repo Settings → Pages → Build and deployment → Source: Deploy from a branch
 #   Branch: gh-pages / (root)
+#   This workflow file must live on the repository default branch (workflow_run rule).
 
 name: GitHub Pages
 
 on:
-  push:
-    branches:
-      - "**"
+  workflow_run:
+    workflows:
+      - Build
+    types:
+      - completed
   delete:
   release:
     types: [published]
@@ -33,6 +39,10 @@ on:
         description: "Release tag (required when target is root)"
         required: false
         type: string
+      branch:
+        description: "Branch name (optional when target is branch; default: this ref)"
+        required: false
+        type: string
 
 concurrency:
   group: github-pages
@@ -44,118 +54,132 @@ permissions:
 
 jobs:
   # ---------------------------------------------------------------------------
-  # Branch preview: build with /<repo>/<branch>/ base
+  # Fetch megacrow-web from Build (no app rebuild)
   # ---------------------------------------------------------------------------
-  build-branch:
-    name: Build branch preview
+  fetch:
+    name: Fetch Build artifact
     if: |
-      github.ref != 'refs/heads/gh-pages' && (
-        (github.event_name == 'push') ||
-        (github.event_name == 'workflow_dispatch' && (
-          github.event.inputs.target == 'branch' ||
-          github.event.inputs.target == 'auto'
-        ))
-      )
+      (github.event_name == 'workflow_run' &&
+        github.event.workflow_run.head_branch != 'gh-pages' &&
+        contains(fromJSON('["success","failure"]'), github.event.workflow_run.conclusion)) ||
+      (github.event_name == 'release' && github.event.action == 'published') ||
+      (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     outputs:
+      mode: ${{ steps.target.outputs.mode }}
       destination: ${{ steps.target.outputs.destination }}
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Resolve branch destination
+      - name: Resolve deploy target
         id: target
         shell: bash
         run: |
           set -euo pipefail
-          REPO='${{ github.event.repository.name }}'
-          destination='${{ github.ref_name }}'
-          case "$destination" in
-            docs|assets|gh-pages|.github)
-              echo "Branch name '$destination' conflicts with the release site layout."
-              exit 1
-              ;;
-          esac
-          pages_base="/${REPO}/${destination}/"
-          echo "destination=$destination" >> "$GITHUB_OUTPUT"
-          echo "pages_base=$pages_base" >> "$GITHUB_OUTPUT"
-          echo "Branch preview base=$pages_base"
+          EVENT='${{ github.event_name }}'
+          INPUT_TARGET='${{ github.event.inputs.target || 'auto' }}'
+          INPUT_BRANCH='${{ github.event.inputs.branch || '' }}'
+          INPUT_TAG='${{ github.event.inputs.tag || '' }}'
+          WR_BRANCH='${{ github.event.workflow_run.head_branch || '' }}'
+          RELEASE_TAG='${{ github.event.release.tag_name || '' }}'
+          REF_NAME='${{ github.ref_name }}'
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: package-lock.json
+          mode=
+          destination=
+          tag=
+          branch=
+          run_id=
 
-      - name: Write build info
-        shell: bash
-        env:
-          MEGACROW_BRANCH: ${{ github.ref_name }}
-          MEGACROW_SEQ: ${{ github.run_number }}
-        run: |
-          INFO=$(node scripts/compute-build-string.mjs)
-          node scripts/write-build-info.mjs --from-json "$INFO"
-
-      - name: Install
-        run: npm install
-
-      - name: Build web
-        env:
-          MEGACROW_BASE: ${{ steps.target.outputs.pages_base }}
-        run: npm run build:web --workspace=@megacrow/ide
-
-      - name: Upload dist
-        uses: actions/upload-artifact@v4
-        with:
-          name: megacrow-pages-branch
-          path: packages/ide/dist
-          retention-days: 7
-
-  # ---------------------------------------------------------------------------
-  # Release root: reuse megacrow-web from the Build run that produced the tag
-  # ---------------------------------------------------------------------------
-  fetch-release:
-    name: Fetch release artifact
-    if: |
-      (github.event_name == 'release' && github.event.action == 'published') ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'root')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download megacrow-web for release tag
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-          TAG: ${{ github.event.release.tag_name || github.event.inputs.tag }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ -z "${TAG:-}" ]]; then
-            echo "No release tag provided. For workflow_dispatch with target=root, set the tag input."
+          if [[ "$EVENT" == "release" ]] || [[ "$INPUT_TARGET" == "root" ]]; then
+            mode=root
+            tag="${RELEASE_TAG:-$INPUT_TAG}"
+          elif [[ "$EVENT" == "workflow_run" ]]; then
+            mode=branch
+            branch="$WR_BRANCH"
+            run_id='${{ github.event.workflow_run.id }}'
+          elif [[ "$INPUT_TARGET" == "branch" ]] || [[ "$INPUT_TARGET" == "auto" ]]; then
+            mode=branch
+            branch="${INPUT_BRANCH:-$REF_NAME}"
+          else
+            echo "Unhandled event/target combination"
             exit 1
           fi
 
-          echo "Resolving commit for tag: $TAG"
-          REF_JSON=$(gh api "repos/${REPO}/git/ref/tags/${TAG}")
-          OBJECT_TYPE=$(printf '%s' "$REF_JSON" | jq -r .object.type)
-          OBJECT_SHA=$(printf '%s' "$REF_JSON" | jq -r .object.sha)
-          if [[ "$OBJECT_TYPE" == "tag" ]]; then
-            COMMIT_SHA=$(gh api "repos/${REPO}/git/tags/${OBJECT_SHA}" --jq .object.sha)
-          else
-            COMMIT_SHA="$OBJECT_SHA"
+          if [[ "$mode" == "branch" ]]; then
+            case "$branch" in
+              docs|assets|gh-pages|.github|"")
+                echo "Branch name '$branch' is reserved or empty."
+                exit 1
+                ;;
+            esac
+            destination="$branch"
           fi
-          echo "Tag $TAG → commit $COMMIT_SHA"
 
-          RUN_ID=$(gh run list \
-            --repo "$REPO" \
-            --workflow build.yml \
-            --commit "$COMMIT_SHA" \
-            --status completed \
-            --limit 30 \
-            --json databaseId,conclusion,createdAt \
-            --jq '[.[] | select(.conclusion == "success")] | sort_by(.createdAt) | reverse | .[0].databaseId // empty')
+          {
+            echo "mode=$mode"
+            echo "destination=$destination"
+            echo "tag=$tag"
+            echo "branch=$branch"
+          } >> "$GITHUB_OUTPUT"
+          echo "mode=$mode destination=${destination:-'(root)'} tag=${tag:-'-'} branch=${branch:-'-'} run_id=${run_id:-'-'}"
+
+      - name: Download megacrow-web from workflow_run
+        if: github.event_name == 'workflow_run'
+        uses: actions/download-artifact@v4
+        with:
+          name: megacrow-web
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: dist
+
+      - name: Download megacrow-web for release/dispatch
+        if: github.event_name != 'workflow_run'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          MODE: ${{ steps.target.outputs.mode }}
+          TAG: ${{ steps.target.outputs.tag }}
+          BRANCH: ${{ steps.target.outputs.branch }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          RUN_ID=
+
+          if [[ "$MODE" == "root" ]]; then
+            if [[ -z "${TAG:-}" ]]; then
+              echo "No release tag provided. For workflow_dispatch with target=root, set the tag input."
+              exit 1
+            fi
+            echo "Resolving commit for tag: $TAG"
+            REF_JSON=$(gh api "repos/${REPO}/git/ref/tags/${TAG}")
+            OBJECT_TYPE=$(printf '%s' "$REF_JSON" | jq -r .object.type)
+            OBJECT_SHA=$(printf '%s' "$REF_JSON" | jq -r .object.sha)
+            if [[ "$OBJECT_TYPE" == "tag" ]]; then
+              COMMIT_SHA=$(gh api "repos/${REPO}/git/tags/${OBJECT_SHA}" --jq .object.sha)
+            else
+              COMMIT_SHA="$OBJECT_SHA"
+            fi
+            echo "Tag $TAG → commit $COMMIT_SHA"
+            RUN_ID=$(gh run list \
+              --repo "$REPO" \
+              --workflow build.yml \
+              --commit "$COMMIT_SHA" \
+              --status completed \
+              --limit 30 \
+              --json databaseId,conclusion,createdAt \
+              --jq '[.[] | select(.conclusion == "success")] | sort_by(.createdAt) | reverse | .[0].databaseId // empty')
+          else
+            echo "Finding latest successful Build for branch: $BRANCH"
+            RUN_ID=$(gh run list \
+              --repo "$REPO" \
+              --workflow build.yml \
+              --branch "$BRANCH" \
+              --status completed \
+              --limit 30 \
+              --json databaseId,conclusion,createdAt \
+              --jq '[.[] | select(.conclusion == "success")] | sort_by(.createdAt) | reverse | .[0].databaseId // empty')
+          fi
 
           if [[ -z "$RUN_ID" ]]; then
-            echo "No successful Build workflow run found for commit $COMMIT_SHA (tag $TAG)."
-            echo "Create a GitHub Release only from a build tag that has a megacrow-web artifact."
+            echo "No successful Build workflow run found for this deploy."
             exit 1
           fi
           echo "Using Build run id: $RUN_ID"
@@ -163,23 +187,59 @@ jobs:
           mkdir -p dist
           if ! gh run download "$RUN_ID" --repo "$REPO" --name megacrow-web --dir dist; then
             echo "Failed to download artifact 'megacrow-web' from run $RUN_ID."
-            echo "The artifact may have expired or was never uploaded for this tag."
             exit 1
           fi
 
+      - name: Verify dist
+        shell: bash
+        run: |
+          set -euo pipefail
           if [[ ! -f dist/index.html ]]; then
-            echo "Downloaded megacrow-web artifact is missing index.html"
-            find dist -maxdepth 3 -type f | head -n 50
+            echo "megacrow-web artifact is missing index.html"
+            find dist -maxdepth 3 -type f | head -n 50 || true
             exit 1
           fi
           echo "Fetched megacrow-web ($(du -sh dist | cut -f1))"
 
-      - name: Upload dist
+      - name: Upload dist for deploy job
         uses: actions/upload-artifact@v4
         with:
-          name: megacrow-pages-root
+          name: megacrow-pages-dist
           path: dist
           retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # Deploy
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: Deploy
+    needs: fetch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download dist
+        uses: actions/download-artifact@v4
+        with:
+          name: megacrow-pages-dist
+          path: dist
+
+      - name: Deploy branch preview
+        if: needs.fetch.outputs.mode == 'branch'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: dist
+          destination_dir: ${{ needs.fetch.outputs.destination }}
+          keep_files: true
+          force_orphan: false
+
+      - name: Deploy release root
+        if: needs.fetch.outputs.mode == 'root'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: dist
+          keep_files: true
+          force_orphan: false
 
   # ---------------------------------------------------------------------------
   # Branch delete: drop /<branch>/ from gh-pages
@@ -224,7 +284,6 @@ jobs:
 
           echo "Removing site/$BRANCH"
           rm -rf "site/$BRANCH"
-          # Drop nested empty parents left by feature/foo-style branches (stay inside site/).
           parent=$(dirname "$BRANCH")
           while [[ "$parent" != "." && "$parent" != "/" ]]; do
             if [[ -d "site/$parent" ]] && [[ -z "$(ls -A "site/$parent")" ]]; then
@@ -247,48 +306,3 @@ jobs:
           publish_dir: site
           force_orphan: false
           keep_files: false
-
-  # ---------------------------------------------------------------------------
-  # Deploy branch preview
-  # ---------------------------------------------------------------------------
-  deploy-branch:
-    name: Deploy branch preview
-    needs: build-branch
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download dist
-        uses: actions/download-artifact@v4
-        with:
-          name: megacrow-pages-branch
-          path: dist
-
-      - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: dist
-          destination_dir: ${{ needs.build-branch.outputs.destination }}
-          keep_files: true
-          force_orphan: false
-
-  # ---------------------------------------------------------------------------
-  # Deploy release root
-  # ---------------------------------------------------------------------------
-  deploy-root:
-    name: Deploy release root
-    needs: fetch-release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download dist
-        uses: actions/download-artifact@v4
-        with:
-          name: megacrow-pages-root
-          path: dist
-
-      - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: dist
-          keep_files: true
-          force_orphan: false

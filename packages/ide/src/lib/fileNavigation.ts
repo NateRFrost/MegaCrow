@@ -7,13 +7,7 @@ export interface FileNavSourceEntry {
   type: "source";
 }
 
-export interface FileNavGametypeEntry {
-  bytes: Uint8Array;
-  displayName: string;
-  type: "gametype";
-}
-
-export type FileNavEntry = FileNavSourceEntry | FileNavGametypeEntry;
+export type FileNavEntry = FileNavSourceEntry;
 
 export interface FileNavState {
   entries: FileNavEntry[];
@@ -35,13 +29,10 @@ const samePath = (a: string | null, b: string | null): boolean => {
 };
 
 export const fileNavEntryKey = (entry: FileNavEntry): string => {
-  if (entry.type === "source") {
-    if (entry.absoluteFilePath) {
-      return `source:${entry.absoluteFilePath.replace(/\\/g, "/").toLowerCase()}`;
-    }
-    return `source-name:${entry.displayName.toLowerCase()}`;
+  if (entry.absoluteFilePath) {
+    return `source:${entry.absoluteFilePath.replace(/\\/g, "/").toLowerCase()}`;
   }
-  return `gametype:${entry.displayName.toLowerCase()}`;
+  return `source-name:${entry.displayName.toLowerCase()}`;
 };
 
 export const isSameFileNavEntry = (a: FileNavEntry, b: FileNavEntry): boolean =>
@@ -53,7 +44,7 @@ export const withUpdatedCurrentText = (
   text: string
 ): FileNavState => {
   const current = state.entries[state.index];
-  if (!current || current.type !== "source") {
+  if (!current) {
     return state;
   }
   if (current.text === text) {
@@ -142,15 +133,6 @@ export const sourceNavEntry = (
   text,
 });
 
-export const gametypeNavEntry = (
-  bytes: Uint8Array,
-  displayName: string
-): FileNavGametypeEntry => ({
-  type: "gametype",
-  displayName,
-  bytes,
-});
-
 /** Keep history in sync when the active file is renamed on disk. */
 export const renameFileNavEntries = (
   state: FileNavState,
@@ -160,9 +142,6 @@ export const renameFileNavEntries = (
 ): FileNavState => {
   let changed = false;
   const entries = state.entries.map((entry) => {
-    if (entry.type !== "source") {
-      return entry;
-    }
     const nameMatch =
       entry.displayName.localeCompare(oldName, undefined, {
         sensitivity: "accent",

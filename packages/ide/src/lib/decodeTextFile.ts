@@ -1,6 +1,6 @@
 /**
  * Decode Megalo / Reach `.txt` script bytes.
- * Official and decompiled scripts are usually UTF-16 LE (often with BOM).
+ * Official scripts are usually UTF-16 LE (often with BOM).
  */
 export function decodeTextFile(bytes: Uint8Array): string {
   if (bytes.length === 0) {

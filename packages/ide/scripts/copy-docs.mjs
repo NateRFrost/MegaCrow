@@ -10,6 +10,9 @@ const dest = resolve(ideRoot, "public/docs");
 
 function normalizeBase(value) {
   const raw = (value ?? "/").trim() || "/";
+  if (raw.startsWith(".")) {
+    return raw.endsWith("/") ? raw : `${raw}/`;
+  }
   const withLeading = raw.startsWith("/") ? raw : `/${raw}`;
   return withLeading.endsWith("/") ? withLeading : `${withLeading}/`;
 }

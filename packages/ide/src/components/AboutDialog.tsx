@@ -80,8 +80,8 @@ export function AboutDialog({ open, onClose, onVersionClick }: Props) {
         </div>
 
         <p className="about-tagline" id="about-description">
-          Megalo script IDE for Halo Reach gametypes — decompile, edit, and
-          recompile Reach variant files.
+          Megalo script IDE for Halo Reach gametypes — edit and compile Reach
+          variant scripts.
         </p>
 
         <dl className="about-details">

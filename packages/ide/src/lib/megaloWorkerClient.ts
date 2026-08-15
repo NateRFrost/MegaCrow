@@ -12,7 +12,6 @@ import {
 } from "./megaloCompilerSettings";
 import {
   compileGametypeForSave,
-  decompileGametypeBytes,
   formatMegaloCompileTiming,
   type GametypeSaveFormat,
   type MegaloProgram,
@@ -49,17 +48,6 @@ let currentCompilerSettings: MegaCrowCompilerSettings = {
   creatorGamertag: "",
   strictStringLiterals: false,
 };
-
-const pendingDecompiles = new Map<
-  number,
-  {
-    resolve: (value: {
-      program: MegaloProgram;
-      source: string;
-      analysis: SourceAnalysis;
-    }) => void;
-  }
->();
 
 const pendingParses = new Map<
   number,
@@ -102,17 +90,6 @@ function ensureWorker(): Worker | null {
     );
     worker.onmessage = (event: MessageEvent<MegaloWorkerResponse>) => {
       const response = event.data;
-      if (response.kind === "decompile") {
-        const pending = pendingDecompiles.get(response.id);
-        if (pending) {
-          pendingDecompiles.delete(response.id);
-          pending.resolve({
-            program: response.program,
-            source: response.source,
-            analysis: response.analysis,
-          });
-        }
-      }
       if (response.kind === "parse") {
         const pending = pendingParses.get(response.id);
         if (pending) {
@@ -318,42 +295,6 @@ async function drainSourceOnlyCompile(): Promise<void> {
       void drainSourceOnlyCompile();
     }
   }
-}
-
-export function requestDecompileInWorker(
-  bytes: Uint8Array,
-  options: { fileName: string; editorVersion: string },
-  id: number
-): Promise<{
-  program: MegaloProgram;
-  source: string;
-  analysis: SourceAnalysis;
-}> {
-  const posted = postMegaloWorker({
-    kind: "decompile",
-    id,
-    bytes,
-    fileName: options.fileName,
-    editorVersion: options.editorVersion,
-  });
-  if (!posted) {
-    return (async () => {
-      const { program, source } = decompileGametypeBytes(bytes, options);
-      const analysis = await analyzeMegaloSource(
-        source,
-        bytes,
-        program,
-        source,
-        undefined,
-        undefined,
-        currentCompilerSettings
-      );
-      return { program, source, analysis };
-    })();
-  }
-  return new Promise((resolve) => {
-    pendingDecompiles.set(id, { resolve });
-  });
 }
 
 function parseMegaloSourceFallback(source: string): {

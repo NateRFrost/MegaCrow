@@ -1,6 +1,6 @@
 /**
  * IDE compatibility layer over @megacrow/megalo (minimal compile path).
- * Language-service / decompiler features are stubbed.
+ * Language-service features are stubbed where the full compiler is unavailable.
  */
 
 import type { CompileSourceOptions } from "@megacrow/megalo";
@@ -661,17 +661,6 @@ export async function resolveBaseProgramInDirs(
 
 export function encodeCustomVariantMglo(_variant: unknown): Uint8Array {
   throw new Error("encodeCustomVariantMglo: not available in minimal build");
-}
-
-export function decompileCustomVariant(_bytes: Uint8Array): never {
-  throw new Error("Decompile not available in minimal build");
-}
-
-export function decompileGametypeBytes(
-  bytes: Uint8Array,
-  _fileName?: string
-): never {
-  return decompileCustomVariant(bytes);
 }
 
 export function mergeDerivedWithBase(

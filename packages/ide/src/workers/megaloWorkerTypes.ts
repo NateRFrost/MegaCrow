@@ -32,13 +32,6 @@ export type MegaloWorkerRequest =
       kind: "setCompilerSettings";
       compilerSettings: MegaCrowCompilerSettings;
     }
-  | {
-      kind: "decompile";
-      id: number;
-      bytes: Uint8Array;
-      fileName: string;
-      editorVersion: string;
-    }
   | ({
       kind: "compile";
       id: number;
@@ -64,13 +57,6 @@ export type MegaloWorkerRequest =
     } & BaseResolveFields);
 
 export type MegaloWorkerResponse =
-  | {
-      kind: "decompile";
-      id: number;
-      program: MegaloProgram;
-      source: string;
-      analysis: SourceAnalysis;
-    }
   | { kind: "compile"; id: number; source: string; analysis: SourceAnalysis }
   | {
       kind: "completions";

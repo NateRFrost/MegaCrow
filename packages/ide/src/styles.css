@@ -2394,8 +2394,7 @@ body {
   border-top-color: var(--border-subtle);
 }
 
-.status-bar--parsing,
-.status-bar--decompiling {
+.status-bar--parsing {
   color: var(--text-primary);
   background: var(--bg-chrome);
   border-top-color: var(--border-subtle);
@@ -2429,8 +2428,7 @@ body {
 .status-bar--ok .status-bar-right,
 .status-bar--warn .status-bar-right,
 .status-bar--error .status-bar-right,
-.status-bar--parsing .status-bar-right,
-.status-bar--decompiling .status-bar-right {
+.status-bar--parsing .status-bar-right {
   color: inherit;
   opacity: 0.85;
 }
@@ -2438,8 +2436,7 @@ body {
 .status-bar--ok .status-bar-sep,
 .status-bar--warn .status-bar-sep,
 .status-bar--error .status-bar-sep,
-.status-bar--parsing .status-bar-sep,
-.status-bar--decompiling .status-bar-sep {
+.status-bar--parsing .status-bar-sep {
   opacity: 0.5;
 }
 

@@ -8,7 +8,6 @@ export function StatusIcon({ state }: Props) {
   switch (state) {
     case "idle":
       return <span aria-hidden className="status-icon status-icon--idle" />;
-    case "decompiling":
     case "parsing":
       return <span aria-hidden className="status-icon status-icon--parsing" />;
     case "ok":

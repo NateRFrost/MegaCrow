@@ -34,7 +34,6 @@ import {
   EMPTY_FILE_NAV,
   type FileNavEntry,
   type FileNavState,
-  gametypeNavEntry,
   navigateFileNavBack,
   navigateFileNavForward,
   pushFileNavEntry,
@@ -74,7 +73,6 @@ import {
   postMegaloWorker,
   preloadMegaloWorker,
   requestCompileDownloadInWorker,
-  requestDecompileInWorker,
   requestParseInWorker,
   requestSourceOnlyCompileViaLsp,
   subscribeMegaloWorker,
@@ -88,7 +86,6 @@ import {
 } from "./lib/motd";
 import { isObjectListsPath } from "./lib/objectListsPath";
 import { resolveOpenablePathReference } from "./lib/openPathReference";
-import { isOpfsSupported, saveGametypeToOpfs } from "./lib/opfsStorage";
 import {
   gametypeSaveFileName,
   saveGametypeBytes,
@@ -385,8 +382,6 @@ export function App() {
         state = compileState === "warn" ? "Compile warning" : "Script compiled";
       } else if (compileState === "error") {
         state = "Compile errors";
-      } else if (compileState === "decompiling") {
-        state = "Decompiling gametype";
       } else if (compileState === "parsing") {
         state = "Compiling…";
       } else {
@@ -480,9 +475,9 @@ export function App() {
     setFileName(null);
     setIncludeRoot(null);
     setIncludeFileCache(undefined);
-    setDocumentContent("; Open a Reach .bin or .blf gametype to decompile\n");
-    setOutlineSource("; Open a Reach .bin or .blf gametype to decompile\n");
-    sourceRef.current = "; Open a Reach .bin or .blf gametype to decompile\n";
+    setDocumentContent("");
+    setOutlineSource("");
+    sourceRef.current = "";
     setSyncRevision((n) => n + 1);
     compileParsingRef.current = false;
     setLoadError(null);
@@ -645,69 +640,6 @@ export function App() {
       }
     },
     [fileName, rememberLastOpenFile]
-  );
-
-  const loadGametype = useCallback(
-    (bytes: Uint8Array, name: string) => {
-      const runId = ++loadRunRef.current;
-      rememberLastOpenFile(null);
-      recordFileNavOpen(gametypeNavEntry(bytes, name));
-      setLoadError(null);
-      setCompileState("decompiling");
-      setAnalysis({
-        ...idleAnalysis,
-        compileState: "decompiling",
-        message: "Decompiling…",
-      });
-
-      void requestDecompileInWorker(
-        bytes,
-        {
-          fileName: name,
-          editorVersion: MEGACROW_BUILD_STRING,
-        },
-        runId
-      ).then((result) => {
-        if (runId !== loadRunRef.current) {
-          return;
-        }
-        if (result.analysis.compileState === "error") {
-          setOriginalBytes(null);
-          setBaseProgram(null);
-          setBaselineSource(null);
-          setFileName(null);
-          setIncludeRoot(null);
-          setLoadError(result.analysis.message);
-          setAnalysis(result.analysis);
-          setCompileState("error");
-          setCompiledSize(null);
-          return;
-        }
-
-        const { program, source: decompiled, analysis } = result;
-        setOriginalBytes(bytes);
-        setBaseProgram(program);
-        setBaselineSource(decompiled);
-        setFileName(name);
-        setIncludeRoot(null);
-        applyDocument(decompiled);
-        setAnalysis(analysis);
-        setCompileState(analysis.compileState);
-        setCompiledSize(bytes.length);
-        initMegaloWorkerContext(bytes, program, decompiled);
-
-        if (isOpfsSupported() && !isTauriRuntime()) {
-          void saveGametypeToOpfs(name, bytes, decompiled).then((savedName) => {
-            if (runId !== loadRunRef.current) {
-              return;
-            }
-            setFileName(savedName);
-            setOpfsRevision((n) => n + 1);
-          });
-        }
-      });
-    },
-    [applyDocument, rememberLastOpenFile, recordFileNavOpen]
   );
 
   const loadMegaloSource = useCallback(
@@ -879,10 +811,6 @@ export function App() {
     async (entry: FileNavEntry) => {
       suppressFileNavRef.current = true;
       try {
-        if (entry.type === "gametype") {
-          loadGametype(entry.bytes, entry.displayName);
-          return;
-        }
         if (entry.absoluteFilePath) {
           const fileProvider = createPlatformFileProvider(activeWorkspace);
           const fresh = fileProvider
@@ -908,7 +836,7 @@ export function App() {
         });
       }
     },
-    [activeWorkspace, loadGametype, loadMegaloSource]
+    [activeWorkspace, loadMegaloSource]
   );
 
   const handleNavigateBack = useCallback(() => {
@@ -1597,7 +1525,6 @@ export function App() {
               onEditWorkspace={handleEditWorkspace}
               onFileDeleted={handleFileDeleted}
               onFileRenamed={handleFileRenamed}
-              onOpenFile={loadGametype}
               onOpenSource={loadMegaloSource}
               onSelectWorkspace={handleSelectWorkspace}
               opfsRevision={opfsRevision}

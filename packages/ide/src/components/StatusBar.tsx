@@ -23,7 +23,7 @@ interface Props {
 }
 
 function isTransientCompileState(state: CompileState): boolean {
-  return state === "parsing" || state === "decompiling";
+  return state === "parsing";
 }
 
 function useBarColorState(compileState: CompileState): CompileState {
@@ -48,8 +48,6 @@ function statusToggleLabel(
   switch (state) {
     case "idle":
       return "Ready";
-    case "decompiling":
-      return "Decompiling…";
     case "parsing":
       return "Compiling…";
     case "ok":

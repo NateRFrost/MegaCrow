@@ -65,8 +65,8 @@ jobs:
 
       - name: Build web
         env:
-          # Pages release root is https://<owner>.github.io/<repo>/
-          MEGACROW_BASE: /${{ github.event.repository.name }}/
+          # Relative base so the same artifact works at Pages root and /<branch>/.
+          MEGACROW_BASE: ./
         run: npm run build:web --workspace=@megacrow/ide
 
       - name: Upload web artifact
