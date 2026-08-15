@@ -64,6 +64,9 @@ jobs:
         run: npm install
 
       - name: Build web
+        env:
+          # Pages release root is https://<owner>.github.io/<repo>/
+          MEGACROW_BASE: /${{ github.event.repository.name }}/
         run: npm run build:web --workspace=@megacrow/ide
 
       - name: Upload web artifact
@@ -71,6 +74,7 @@ jobs:
         with:
           name: megacrow-web
           path: packages/ide/dist
+          retention-days: 90
 
   tauri:
     name: Tauri (${{ matrix.platform }})

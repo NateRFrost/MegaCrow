@@ -33,6 +33,14 @@ function resolveExistingFile(base: string): string | null {
   );
 }
 
+function normalizeBase(value: string | undefined): string {
+  const raw = (value ?? "/").trim() || "/";
+  const withLeading = raw.startsWith("/") ? raw : `/${raw}`;
+  return withLeading.endsWith("/") ? withLeading : `${withLeading}/`;
+}
+
+const appBase = normalizeBase(process.env.MEGACROW_BASE);
+
 /** Resolve megalo's `src/...` path alias when Vite bundles @megacrow/megalo sources. */
 function megaloSrcAlias(): Plugin {
   return {
@@ -56,14 +64,21 @@ function megaloSrcAlias(): Plugin {
 }
 
 /**
- * Serve VitePress under /docs.
+ * Serve VitePress under {base}docs.
  * Vite's publicDir sirv does not auto-serve directory indexes (extensions: []),
  * so /docs/ falls through to the IDE SPA index.html without this rewrite.
  */
 function docsCleanUrlFallback(): Plugin {
+  const docsPrefix = `${appBase}docs`.replace(/\/{2,}/g, "/");
   const rewrite: Connect.NextHandleFunction = (req, _res, next) => {
     const raw = req.url;
-    if (!raw?.startsWith("/docs")) {
+    if (
+      !(
+        raw?.startsWith(`${docsPrefix}/`) ||
+        raw?.startsWith(`${docsPrefix}?`) ||
+        raw === docsPrefix
+      )
+    ) {
       next();
       return;
     }
@@ -72,15 +87,15 @@ function docsCleanUrlFallback(): Plugin {
     const pathname = qIndex >= 0 ? raw.slice(0, qIndex) : raw;
     const query = qIndex >= 0 ? raw.slice(qIndex) : "";
 
-    if (pathname.includes(".")) {
+    if (pathname.includes(".", pathname.lastIndexOf("/") + 1)) {
       next();
       return;
     }
 
     const relative =
-      pathname === "/docs" || pathname === "/docs/"
+      pathname === docsPrefix || pathname === `${docsPrefix}/`
         ? ""
-        : pathname.replace(/^\/docs\/?/, "");
+        : pathname.slice(docsPrefix.length).replace(/^\//, "");
 
     const candidates = relative
       ? [
@@ -116,6 +131,7 @@ function docsCleanUrlFallback(): Plugin {
 
 // https://v2.tauri.app/start/frontend/vite/
 export default defineConfig({
+  base: appBase,
   plugins: [react(), megaloSrcAlias(), docsCleanUrlFallback()],
   clearScreen: false,
   resolve: {

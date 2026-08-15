@@ -64,7 +64,7 @@ export function AboutDialog({ open, onClose, onVersionClick }: Props) {
             alt=""
             className="about-icon"
             height={64}
-            src="/megacrow-icon.png"
+            src={`${import.meta.env.BASE_URL}megacrow-icon.png`}
             width={64}
           />
           <h2 className="about-name" id="about-title">

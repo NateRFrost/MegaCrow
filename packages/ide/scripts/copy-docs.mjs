@@ -8,13 +8,24 @@ const docsRoot = resolve(ideRoot, "../docs");
 const src = resolve(docsRoot, ".vitepress/dist");
 const dest = resolve(ideRoot, "public/docs");
 
+function normalizeBase(value) {
+  const raw = (value ?? "/").trim() || "/";
+  const withLeading = raw.startsWith("/") ? raw : `/${raw}`;
+  return withLeading.endsWith("/") ? withLeading : `${withLeading}/`;
+}
+
+const appBase = normalizeBase(process.env.MEGACROW_BASE);
+const docsBase = process.env.DOCS_BASE
+  ? normalizeBase(process.env.DOCS_BASE)
+  : `${appBase}docs/`;
+
 execSync("npm run build", {
   cwd: docsRoot,
   stdio: "inherit",
   shell: true,
   env: {
     ...process.env,
-    DOCS_BASE: "/docs/",
+    DOCS_BASE: docsBase,
   },
 });
 

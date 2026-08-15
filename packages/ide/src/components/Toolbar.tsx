@@ -117,7 +117,11 @@ export function Toolbar({
             title="About MegaCrow"
             type="button"
           >
-            <img alt="" className="brand-icon" src="/megacrow-icon.png" />
+            <img
+              alt=""
+              className="brand-icon"
+              src={`${import.meta.env.BASE_URL}megacrow-icon.png`}
+            />
             <span className="brand-text">
               <span className="brand-title">MegaCrow</span>
               <span className="brand-subtitle">Megalo IDE</span>

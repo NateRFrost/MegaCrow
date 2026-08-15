@@ -2,12 +2,11 @@ import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { isTauriRuntime } from "./tauriRuntime";
 
 const DOCS_LABEL = "docs";
-const DOCS_PATH = "/docs/";
 const DOCS_APP_URL = "docs/index.html";
 
 export async function openDocs(): Promise<void> {
   if (!isTauriRuntime()) {
-    window.open(DOCS_PATH, "megacrow-docs");
+    window.open(`${import.meta.env.BASE_URL}docs/`, "megacrow-docs");
     return;
   }
 
