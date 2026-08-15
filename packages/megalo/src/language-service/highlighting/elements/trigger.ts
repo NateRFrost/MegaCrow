@@ -17,8 +17,19 @@ import {
   emitLocation,
 } from "src/language-service/highlighting/emit";
 import { highlightOperand } from "src/language-service/highlighting/helpers";
-import type { SemanticToken } from "src/language-service/highlighting/types";
+import type {
+  SemanticToken,
+  SemanticTokenType,
+} from "src/language-service/highlighting/types";
 import { isRootDocumentLocation } from "src/language-service/position";
+
+/** Trigger kinds that mirror variable scopes / types (`variables player`, …). */
+const VARIABLE_TYPE_TRIGGER_KINDS = new Set([
+  "player",
+  "random_player",
+  "team",
+  "object",
+]);
 
 const highlightAction = (
   out: SemanticToken[],
@@ -113,18 +124,34 @@ const highlightTriggerStatements = (
   }
 };
 
+const triggerNameTokenType = (
+  name: string,
+  hasSymbol: boolean
+): SemanticTokenType => {
+  if (hasSymbol) {
+    // Object-filter labels (map_object) bind a symbol.
+    return "variable";
+  }
+  if (VARIABLE_TYPE_TRIGGER_KINDS.has(name.toLowerCase())) {
+    return "type";
+  }
+  // Event kinds: initialization, host_migration, …
+  return "enumMember";
+};
+
 export const highlightTrigger = (
   out: SemanticToken[],
   element: TriggerElementNode
 ): void => {
   emitElementKeyword(out, element.keywordLocation);
   if (element.name.value.length > 0) {
-    // Built-in kinds (`player`, `initialization`, …) → enumMember.
-    // Object-filter labels (map_object) bind a symbol → variable.
     emitLocation(
       out,
       element.name.location,
-      element.name.symbolId === undefined ? "enumMember" : "variable"
+      triggerNameTokenType(
+        element.name.value,
+        element.name.symbolId !== undefined
+      )
     );
   }
   highlightTriggerStatements(out, element.statements);

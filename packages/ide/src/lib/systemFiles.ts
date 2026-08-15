@@ -6,7 +6,6 @@ import {
   duplicateTauriMegaloFile,
   listTauriMegaloTree,
   normalizeMegaloTextFileName,
-  pickTauriFolder,
   readTauriMegaloFile,
   renameTauriMegaloFile,
   tauriFolderLabel,
@@ -20,14 +19,6 @@ export interface LocalDiskRoot {
 
 export function isSystemFolderSupported(): boolean {
   return isTauriRuntime();
-}
-
-export async function pickSystemFolder(): Promise<LocalDiskRoot | null> {
-  if (!isTauriRuntime()) {
-    return null;
-  }
-  const path = await pickTauriFolder();
-  return path ? { path } : null;
 }
 
 export async function listSystemMegaloTree(

@@ -1,6 +1,8 @@
 use serde::Serialize;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Command;
+
+use crate::steam::steam_app_install_dirs;
 
 const MCC_STEAM_APP_ID: &str = "976730";
 const MCC_STORE_PACKAGE_PREFIX: &str = "Microsoft.Halifax_";
@@ -19,80 +21,9 @@ enum MccInstall {
   MicrosoftStore { aumid: String, install_path: Option<PathBuf> },
 }
 
-#[cfg(windows)]
-fn read_steam_path() -> Option<PathBuf> {
-  use winreg::enums::*;
-  use winreg::RegKey;
-
-  let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-  let steam = hkcu.open_subkey("Software\\Valve\\Steam").ok()?;
-  let path: String = steam.get_value("SteamPath").ok()?;
-  let path = PathBuf::from(path);
-  if path.is_dir() {
-    Some(path)
-  } else {
-    None
-  }
-}
-
-#[cfg(not(windows))]
-fn read_steam_path() -> Option<PathBuf> {
-  None
-}
-
-fn parse_vdf_quoted_value(content: &str, key: &str) -> Option<String> {
-  let pattern = format!("\"{key}\"");
-  let start = content.find(&pattern)?;
-  let after_key = &content[start + pattern.len()..];
-  let quote_start = after_key.find('"')? + 1;
-  let after_open = &after_key[quote_start..];
-  let quote_end = after_open.find('"')?;
-  Some(after_open[..quote_end].replace("\\\\", "\\"))
-}
-
-fn steam_library_roots(steam_path: &Path) -> Vec<PathBuf> {
-  let mut roots = vec![steam_path.to_path_buf()];
-  let vdf_path = steam_path.join("steamapps").join("libraryfolders.vdf");
-  let Ok(content) = std::fs::read_to_string(&vdf_path) else {
-    return roots;
-  };
-
-  let mut search_from = 0;
-  while let Some(rel) = content[search_from..].find("\"path\"") {
-    let offset = search_from + rel;
-    if let Some(path) = parse_vdf_quoted_value(&content[offset..], "path") {
-      let path = PathBuf::from(path);
-      if path.is_dir() && !roots.iter().any(|existing| existing == &path) {
-        roots.push(path);
-      }
-    }
-    search_from = offset + 6;
-  }
-
-  roots
-}
-
 fn steam_mcc_install() -> Option<PathBuf> {
-  let steam_path = read_steam_path()?;
-  for library_root in steam_library_roots(&steam_path) {
-    let manifest = library_root
-      .join("steamapps")
-      .join(format!("appmanifest_{MCC_STEAM_APP_ID}.acf"));
-    if !manifest.is_file() {
-      continue;
-    }
-    let Ok(content) = std::fs::read_to_string(&manifest) else {
-      continue;
-    };
-    let installdir = parse_vdf_quoted_value(&content, "installdir")?;
-    let install_path = library_root
-      .join("steamapps")
-      .join("common")
-      .join(installdir);
-    // Steam appmanifest presence is enough to launch via steam://; exe names vary by build.
-    return Some(install_path);
-  }
-  None
+  // Prefer the first library that has MCC installed.
+  steam_app_install_dirs(MCC_STEAM_APP_ID).into_iter().next()
 }
 
 #[cfg(windows)]

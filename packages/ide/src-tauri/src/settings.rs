@@ -3,7 +3,7 @@ use std::fs;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
 
-pub const SETTINGS_VERSION: u32 = 2;
+pub const SETTINGS_VERSION: u32 = 3;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -25,7 +25,6 @@ pub struct MegacrowSettings {
   pub mcc_hot_reload: bool,
   pub gamertag: String,
   pub compiler_strictness: bool,
-  pub action_inlay_hints: bool,
   #[serde(default = "default_editor_theme")]
   pub editor_theme: String,
   #[serde(default)]
@@ -46,7 +45,6 @@ impl Default for MegacrowSettings {
       mcc_hot_reload: true,
       gamertag: String::new(),
       compiler_strictness: false,
-      action_inlay_hints: true,
       editor_theme: default_editor_theme(),
       skipped_update_version: None,
     }
@@ -79,4 +77,28 @@ pub fn save_settings(app: &AppHandle, settings: &MegacrowSettings) -> Result<(),
   }
   let raw = serde_json::to_string_pretty(settings).map_err(|error| error.to_string())?;
   fs::write(&path, raw).map_err(|error| error.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn deserializes_frontend_settings_payload() {
+    // Matches what TypeScript sends via save_megacrow_settings (no actionInlayHints).
+    let raw = r#"{
+      "version": 3,
+      "activeWorkspaceId": null,
+      "workspaces": [],
+      "discordRichPresence": true,
+      "mccHotReload": true,
+      "gamertag": "",
+      "compilerStrictness": false,
+      "editorTheme": "megacrow-dark",
+      "skippedUpdateVersion": null
+    }"#;
+    let settings: MegacrowSettings = serde_json::from_str(raw).expect("deserialize");
+    assert_eq!(settings.version, 3);
+    assert!(settings.workspaces.is_empty());
+  }
 }

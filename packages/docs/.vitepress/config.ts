@@ -256,7 +256,7 @@ export default defineConfig(async () => {
         },
       },
       siteTitle:
-        '<span class="megalo-site-title"><span class="megalo-scope">@blamnetwork/</span><span class="megalo-name">megalo</span></span>',
+        `<span class="megalo-site-title"><span class="megalo-site-title-row"><span class="megalo-scope">@blamnetwork/</span><span class="megalo-name">megalo</span></span><span class="megalo-site-build">${MEGACROW_BUILD_STRING}</span></span>`,
       nav: [
         { text: "Blam Network", link: "https://blam.network" },
         { text: "Guide", link: "/guide/quick-start" },

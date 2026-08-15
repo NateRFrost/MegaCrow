@@ -1,5 +1,6 @@
 import type { ConditionStatementNode } from "src/frontend/abstract-syntax-tree/elements/trigger/condition";
 import { highlightConditionParametersDefault } from "src/language-service/highlighting/conditions/default";
+import { highlightPlayerDied } from "src/language-service/highlighting/conditions/player_died";
 import type { SemanticToken } from "src/language-service/highlighting/types";
 
 export type ConditionParameterHighlighter = (
@@ -14,7 +15,9 @@ export type ConditionParameterHighlighter = (
 const CONDITION_PARAMETER_HIGHLIGHTERS: Record<
   string,
   ConditionParameterHighlighter
-> = {};
+> = {
+  player_died: highlightPlayerDied,
+};
 
 /** Dispatch parameter highlighting for a condition statement. */
 export const highlightConditionParameters = (

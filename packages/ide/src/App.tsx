@@ -1392,6 +1392,7 @@ export function App() {
 
   return (
     <div className="app">
+      {MEGACROW_SHOW_WATERMARK ? <PreReleaseWatermark /> : null}
       <MotdDialog onDismiss={handleMotdDismiss} open={motdOpen} />
       <UpdateAvailableDialog
         currentBuildString={MEGACROW_BUILD_STRING}
@@ -1408,14 +1409,11 @@ export function App() {
               ) ?? null)
             : null
         }
-        onCancel={
-          addWorkspaceRequired
-            ? undefined
-            : () => {
-                setAddWorkspaceOpen(false);
-                setEditingWorkspaceId(null);
-              }
-        }
+        onCancel={() => {
+          setAddWorkspaceOpen(false);
+          setAddWorkspaceRequired(false);
+          setEditingWorkspaceId(null);
+        }}
         onSave={handleSaveWorkspace}
         open={addWorkspaceOpen && workspacesReady}
         required={addWorkspaceRequired}
@@ -1492,7 +1490,6 @@ export function App() {
         />
         <section className="editor-pane">
           <div className="editor-pane-main">
-            {MEGACROW_SHOW_WATERMARK ? <PreReleaseWatermark /> : null}
             {fileName ? (
               <Editor
                 diagnostics={isPlainTextDocument ? [] : analysis.diagnostics}

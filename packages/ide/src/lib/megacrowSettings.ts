@@ -14,7 +14,7 @@ import {
 } from "./opfsStorage";
 import { isTauriRuntime } from "./tauriRuntime";
 
-export const MEGACROW_SETTINGS_VERSION = 2;
+export const MEGACROW_SETTINGS_VERSION = 3;
 
 export interface StoredWorkspace {
   id: string;
@@ -228,7 +228,10 @@ export async function bootstrapMegacrowSettings(): Promise<{
   if (raw) {
     const fileVersion = typeof raw.version === "number" ? raw.version : 0;
     let settings = normalizeMegacrowSettings(raw);
-    if (fileVersion < MEGACROW_SETTINGS_VERSION) {
+    const shouldRediscover =
+      fileVersion < MEGACROW_SETTINGS_VERSION ||
+      settings.workspaces.length === 0;
+    if (shouldRediscover) {
       const discovered = discoveredToStored(await discoverHrekWorkspaces());
       settings = normalizeMegacrowSettings({
         ...settings,

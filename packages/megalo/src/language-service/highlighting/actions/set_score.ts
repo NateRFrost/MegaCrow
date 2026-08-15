@@ -6,13 +6,13 @@ import {
 } from "src/language-service/highlighting/helpers";
 import type { SemanticToken } from "src/language-service/highlighting/types";
 
+/** `set_score <math_operation> <value> <team_or_player_target>` */
 export const highlightSetScore = (
   out: SemanticToken[],
   statement: ActionStatementNode
 ): void => {
   const p = statement.parameters;
-  // Parser order: target, operation, value
-  const i = highlightTeamOrPlayerTarget(out, p, 0);
-  highlightOperatorKeyword(out, p[i]);
-  highlightStructural(out, p[i + 1]);
+  highlightOperatorKeyword(out, p[0]);
+  highlightStructural(out, p[1]);
+  highlightTeamOrPlayerTarget(out, p, 2);
 };

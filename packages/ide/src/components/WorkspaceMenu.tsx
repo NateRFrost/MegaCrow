@@ -1,4 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import type { StoredWorkspace } from "../lib/megacrowSettings";
 import { getVersionInfo, type MegaloVersionId } from "../lib/megaloShim";
@@ -90,21 +96,23 @@ export function WorkspaceMenu({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const updatePanelPosition = () => {
+  const updatePanelPosition = useCallback(() => {
     const trigger = triggerRef.current;
     if (!trigger) {
       return;
     }
     const rect = trigger.getBoundingClientRect();
-    const left = Math.min(
+    const nextLeft = Math.min(
       rect.left,
       Math.max(8, window.innerWidth - PANEL_WIDTH - 8)
     );
-    setPanelPos({
-      top: rect.bottom + 4,
-      left,
-    });
-  };
+    const nextTop = rect.bottom + 4;
+    setPanelPos((prev) =>
+      prev.top === nextTop && prev.left === nextLeft
+        ? prev
+        : { top: nextTop, left: nextLeft }
+    );
+  }, []);
 
   useLayoutEffect(() => {
     if (!open) {
@@ -135,19 +143,15 @@ export function WorkspaceMenu({
       }
     };
 
-    const onReposition = () => {
-      updatePanelPosition();
-    };
-
     window.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("resize", onReposition);
-    window.addEventListener("scroll", onReposition, true);
+    window.addEventListener("resize", updatePanelPosition);
+    window.addEventListener("scroll", updatePanelPosition, true);
     return () => {
       window.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("resize", onReposition);
-      window.removeEventListener("scroll", onReposition, true);
+      window.removeEventListener("resize", updatePanelPosition);
+      window.removeEventListener("scroll", updatePanelPosition, true);
     };
   }, [open, updatePanelPosition]);
 

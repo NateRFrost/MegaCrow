@@ -571,4 +571,90 @@ end
     expect(type).toBeDefined();
     expect(grouping).toBeDefined();
   });
+
+  it("highlights hud_post_message sound keywords", async () => {
+    const source = `string_table english
+\tgun_game_hud_final_tier_message "Final tier"
+end
+trigger initialization
+\taction hud_post_message everyone sudden_death gun_game_hud_final_tier_message current_player
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    const tokens = getSemanticTokens(snapshot);
+    const suddenDeath = tokens.find(
+      (token) =>
+        token.type === "enumMember" && token.length === "sudden_death".length
+    );
+    const everyone = tokens.find(
+      (token) =>
+        token.type === "enumMember" && token.length === "everyone".length
+    );
+    expect(suddenDeath).toBeDefined();
+    expect(everyone).toBeDefined();
+  });
+
+  it("highlights set_score team-or-player target after op and value", async () => {
+    const source = `trigger player
+\taction set_score add 1 player killing_player
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    const tokens = getSemanticTokens(snapshot);
+    const playerTarget = tokens.find(
+      (token) =>
+        token.type === "parameter" &&
+        token.length === "player".length &&
+        token.line === 1
+    );
+    const addOp = tokens.find(
+      (token) => token.type === "keyword" && token.length === "add".length
+    );
+    expect(playerTarget).toBeDefined();
+    expect(addOp).toBeDefined();
+  });
+
+  it("highlights player_died killer type keywords", async () => {
+    const source = `trigger player
+\tcondition player_died current_player enemy
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    const tokens = getSemanticTokens(snapshot);
+    const enemy = tokens.find(
+      (token) => token.type === "enumMember" && token.length === "enemy".length
+    );
+    expect(enemy).toBeDefined();
+  });
+
+  it("highlights variable-type trigger kinds as type", async () => {
+    const source = `trigger player
+end
+trigger team
+end
+trigger initialization
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    const tokens = getSemanticTokens(snapshot);
+    const playerKind = tokens.find(
+      (token) =>
+        token.type === "type" &&
+        token.length === "player".length &&
+        token.line === 0
+    );
+    const teamKind = tokens.find(
+      (token) =>
+        token.type === "type" &&
+        token.length === "team".length &&
+        token.line === 2
+    );
+    const initKind = tokens.find(
+      (token) =>
+        token.type === "enumMember" && token.length === "initialization".length
+    );
+    expect(playerKind).toBeDefined();
+    expect(teamKind).toBeDefined();
+    expect(initKind).toBeDefined();
+  });
 });

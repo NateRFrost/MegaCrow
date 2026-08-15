@@ -8,6 +8,7 @@ mod discord_rpc;
 mod mcc_install;
 mod mcc_patches;
 mod settings;
+mod steam;
 mod workspace_discover;
 
 use cli::{CliArgs, CliExitCode, create_headless_cli_window, is_cli_invocation};

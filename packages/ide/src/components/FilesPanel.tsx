@@ -1,10 +1,4 @@
-import {
-  type MouseEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { type MouseEvent, useCallback, useEffect, useState } from "react";
 import { writeClipboardText } from "../lib/clipboard";
 import { readTextFileBlob } from "../lib/decodeTextFile";
 import {
@@ -35,7 +29,6 @@ import {
   isSystemFolderSupported,
   type LocalDiskRoot,
   listSystemMegaloTree,
-  pickSystemFolder,
   readSystemMegaloFile,
   renameSystemMegaloFile,
   resolveSystemMegaloFilePath,
@@ -197,7 +190,11 @@ export function FilesPanel({
   useEffect(() => {
     if (workspace?.type === "tauri") {
       setLocalRoot({ path: workspace.inputPath });
+      return;
     }
+    setLocalRoot(null);
+    setLocalTree([]);
+    setLocalError(null);
   }, [workspace]);
 
   useEffect(() => {
@@ -377,20 +374,6 @@ export function FilesPanel({
     [localRoot, onOpenSource]
   );
 
-  const selectLocalFolder = useCallback(async () => {
-    try {
-      setLocalError(null);
-      const root = await pickSystemFolder();
-      if (!root) {
-        return;
-      }
-      setLocalRoot(root);
-      setLocalTree(await listSystemMegaloTree(root));
-    } catch (error) {
-      setLocalError(String(error));
-    }
-  }, []);
-
   const createLocalFile = useCallback(
     async (parentSegments: string[] = []) => {
       if (!localRoot) {
@@ -553,23 +536,6 @@ export function FilesPanel({
     [refreshPasteFromClipboard]
   );
 
-  const headerActions = useMemo(() => {
-    if (!(localDiskAvailable && localRoot && !workspace)) {
-      return null;
-    }
-    return (
-      <div className="files-panel-actions">
-        <button
-          className="files-panel-action"
-          onClick={() => void selectLocalFolder()}
-          type="button"
-        >
-          Change
-        </button>
-      </div>
-    );
-  }, [localDiskAvailable, localRoot, selectLocalFolder, workspace]);
-
   const isActive = (name: string) =>
     activeFileName !== null &&
     activeFileName.localeCompare(name, undefined, { sensitivity: "accent" }) ===
@@ -611,7 +577,6 @@ export function FilesPanel({
             </h2>
           </div>
         )}
-        {headerActions}
       </header>
 
       <div className="files-panel-body">
@@ -720,28 +685,24 @@ export function FilesPanel({
 
         {localDiskAvailable ? (
           <div className="files-section">
-            {workspace || localRoot ? (
+            {localRoot ? (
               <div className="files-section-label">
-                <span>
-                  {localRoot ? `${systemFolderLabel(localRoot)}/` : "Scripts"}
-                </span>
+                <span>{`${systemFolderLabel(localRoot)}/`}</span>
                 <div className="files-section-label-end">
                   {localTree.length > 0 ? (
                     <span className="files-section-count">
                       {countFiles(localTree)} files
                     </span>
                   ) : null}
-                  {localRoot ? (
-                    <button
-                      aria-label="New File"
-                      className="files-panel-icon-action"
-                      onClick={() => void createLocalFile([])}
-                      title="New File"
-                      type="button"
-                    >
-                      <NewFileGlyph />
-                    </button>
-                  ) : null}
+                  <button
+                    aria-label="New File"
+                    className="files-panel-icon-action"
+                    onClick={() => void createLocalFile([])}
+                    title="New File"
+                    type="button"
+                  >
+                    <NewFileGlyph />
+                  </button>
                 </div>
               </div>
             ) : null}
@@ -777,22 +738,14 @@ export function FilesPanel({
                   )}
                 </>
               ) : (
-                <button
-                  className="files-open-folder"
-                  onClick={() => void selectLocalFolder()}
-                  type="button"
-                >
-                  <svg aria-hidden="true" viewBox="0 0 16 16">
-                    <path
-                      d="M1.5 3.5h4l1.2 1.2H14.5v8.3H1.5z"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeLinejoin="round"
-                      strokeWidth="1.2"
-                    />
-                  </svg>
-                  <span>Open folder…</span>
-                </button>
+                <div className="files-empty">
+                  <p>No workspace</p>
+                  <span>
+                    {onAddWorkspace
+                      ? "Add a workspace to browse Megalo scripts"
+                      : "Select a workspace to browse Megalo scripts"}
+                  </span>
+                </div>
               )}
             </div>
           </div>

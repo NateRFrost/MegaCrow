@@ -129,16 +129,39 @@
   font-size: var(--megalo-site-title-size);
   font-weight: 600;
   line-height: 1.1;
+  height: auto;
 }
 
 .megalo-site-title {
   display: inline-flex;
-  gap: 0;
-  align-items: baseline;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
   font-family: "Fixedsys", "Fixedsys Excelsior 3.01", var(--megalo-font-mono);
   font-size: var(--megalo-site-title-size);
   font-weight: 400;
   line-height: 1.1;
+}
+
+.megalo-site-title-row {
+  display: inline-flex;
+  gap: 0;
+  align-items: baseline;
+}
+
+.megalo-site-build {
+  max-width: min(280px, 42vw);
+  overflow: hidden;
+  font-family: var(--megalo-font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--vp-c-text-2);
+  text-overflow: ellipsis;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .megalo-scope {

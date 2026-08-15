@@ -52,17 +52,21 @@ export function AddWorkspaceModal({
       return;
     }
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !required) {
+      if (event.key === "Escape") {
         onCancel?.();
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, required, onCancel]);
+  }, [open, onCancel]);
 
   if (!open) {
     return null;
   }
+
+  const dismiss = () => {
+    onCancel?.();
+  };
 
   const pickScripts = async () => {
     const selected = await pickTauriFolder();
@@ -118,8 +122,8 @@ export function AddWorkspaceModal({
     <div
       className="workspace-modal-backdrop"
       onClick={(event) => {
-        if (event.target === event.currentTarget && !required) {
-          onCancel?.();
+        if (event.target === event.currentTarget) {
+          dismiss();
         }
       }}
       role="presentation"
@@ -134,29 +138,28 @@ export function AddWorkspaceModal({
           <h2 className="workspace-modal-title" id="workspace-modal-title">
             {isEdit ? "Edit workspace" : "Add workspace"}
           </h2>
-          {required ? null : (
-            <button
-              aria-label="Close"
-              className="workspace-modal-close"
-              onClick={() => onCancel?.()}
-              title="Close"
-              type="button"
-            >
-              <svg aria-hidden="true" viewBox="0 0 16 16">
-                <path
-                  d="M4.2 4.2 11.8 11.8M11.8 4.2 4.2 11.8"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeWidth="1.4"
-                />
-              </svg>
-            </button>
-          )}
+          <button
+            aria-label="Close"
+            className="workspace-modal-close"
+            onClick={dismiss}
+            title="Close"
+            type="button"
+          >
+            <svg aria-hidden="true" viewBox="0 0 16 16">
+              <path
+                d="M4.2 4.2 11.8 11.8M11.8 4.2 4.2 11.8"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeWidth="1.4"
+              />
+            </svg>
+          </button>
         </div>
         <p className="workspace-modal-hint">
-          Point MegaCrow at a Halo Reach Editing Kit scripts folder and the
-          matching maps/megalo output folder.
+          {required
+            ? "No workspace was found automatically. Point MegaCrow at a Halo Reach Editing Kit scripts folder and the matching maps/megalo output folder, or close and add one later."
+            : "Point MegaCrow at a Halo Reach Editing Kit scripts folder and the matching maps/megalo output folder."}
         </p>
 
         <label className="workspace-modal-field">
@@ -216,15 +219,13 @@ export function AddWorkspaceModal({
         {error ? <p className="workspace-modal-error">{error}</p> : null}
 
         <div className="workspace-modal-footer">
-          {required ? null : (
-            <button
-              className="workspace-modal-secondary"
-              onClick={() => onCancel?.()}
-              type="button"
-            >
-              Cancel
-            </button>
-          )}
+          <button
+            className="workspace-modal-secondary"
+            onClick={dismiss}
+            type="button"
+          >
+            Cancel
+          </button>
           <button
             className="workspace-modal-primary"
             disabled={busy}
