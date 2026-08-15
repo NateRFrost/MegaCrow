@@ -21,12 +21,12 @@ const formatLocationRef = (location: SourceLocation): string | undefined => {
 };
 
 export const diagnosticMessages = {
-  unusedValue(overriddenAt: SourceLocation): string {
+  unusedValue(name: string, overriddenAt: SourceLocation): string {
     const location = formatLocationRef(overriddenAt);
     if (location === undefined) {
-      return translate("unused_value");
+      return translate("unused_value", { name });
     }
-    return translate("unused_value_overridden_at", { location });
+    return translate("unused_value_overridden_at", { name, location });
   },
 
   invalidParameterCount(expected: number, got: number): string {

@@ -19,12 +19,19 @@ export const lowerTimerSetRate = (
 ): Action => {
   requireParamCount(parameters, 2, location);
   const paramCtx = asParameterLoweringContext(ctx);
-  return {
+  const rate = lowerFloatParam(
+    parameters[1]!,
+    paramCtx,
+    "timer rate",
+    location
+  );
+  const action: Action = {
     type: ActionType.timer_set_rate,
     parameters: {
       timer: resolveCustomTimerReference(parameters[0]!, paramCtx),
-      rate: lowerFloatParam(parameters[1]!, paramCtx, "timer rate", location)
-        .value,
+      rate: rate.value,
     },
   };
+  ctx.ir.locations.record(action.parameters, "rate", rate.location);
+  return action;
 };

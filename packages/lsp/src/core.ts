@@ -14,6 +14,7 @@ import {
   SEMANTIC_TOKEN_TYPES,
   SourceLocationType,
   type SupportedMegaloVersion,
+  summarizeIncludeDiagnostics,
 } from "@megacrow/megalo";
 import {
   type Diagnostic,
@@ -71,9 +72,10 @@ export type CompileResolvers = Pick<
 >;
 
 export const toLspDiagnostics = (
-  diagnostics: MegaloDiagnostic[]
+  diagnostics: MegaloDiagnostic[],
+  source?: string
 ): Diagnostic[] =>
-  diagnostics.flatMap((d) => {
+  summarizeIncludeDiagnostics(diagnostics, source).flatMap((d) => {
     const severity =
       d.severity === MegaloSeverity.Error
         ? DiagnosticSeverity.Error
@@ -151,7 +153,7 @@ export const analyzeAndCompile = async (
     resolveBaseFile: options.resolvers?.resolveBaseFile,
     megacrowExtensions: ALL_MEGACROW_EXTENSIONS,
   });
-  const diagnostics = toLspDiagnostics(result.diagnostics);
+  const diagnostics = toLspDiagnostics(result.diagnostics, source);
   if (!result.bytes) {
     return {
       ok: false,
@@ -187,7 +189,7 @@ export const analyzeOnly = async (
     resolveBaseFile: options.resolvers?.resolveBaseFile,
     megacrowExtensions: ALL_MEGACROW_EXTENSIONS,
   });
-  return toLspDiagnostics(result.diagnostics);
+  return toLspDiagnostics(result.diagnostics, source);
 };
 
 export const classifySemanticTokens = async (

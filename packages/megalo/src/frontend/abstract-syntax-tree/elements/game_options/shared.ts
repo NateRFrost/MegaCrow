@@ -1,4 +1,7 @@
-import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
+import {
+  type SourceCodeLocation,
+  spanSourceCodeLocations,
+} from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
 import {
   type ASTErrorNode,
@@ -11,14 +14,7 @@ import { type Token, TokenKind } from "src/frontend/tokens";
 export const isEndToken = (token: Token | undefined): boolean =>
   token?.kind === TokenKind.Identifier && token.value === "end";
 
-export const locationSpan = (
-  start: SourceCodeLocation,
-  end: SourceCodeLocation
-): SourceCodeLocation => ({
-  type: SourceLocationType.SOURCE_CODE,
-  start: start.start,
-  end: end.end,
-});
+export const locationSpan = spanSourceCodeLocations;
 
 export const parseIdentifier = (
   ctx: ParserContext,

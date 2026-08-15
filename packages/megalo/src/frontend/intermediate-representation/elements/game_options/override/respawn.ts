@@ -21,7 +21,8 @@ export const tryLowerRespawnOverride = (
         respawn,
         "loadoutCamTime",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -33,7 +34,8 @@ export const tryLowerRespawnOverride = (
         respawn,
         "livesPerRound",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -45,7 +47,8 @@ export const tryLowerRespawnOverride = (
         respawn,
         "teamLivesPerRound",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -57,7 +60,8 @@ export const tryLowerRespawnOverride = (
         respawn,
         "respawnTimeSeconds",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -69,7 +73,8 @@ export const tryLowerRespawnOverride = (
         respawn,
         "suicidePenaltySeconds",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -81,7 +86,8 @@ export const tryLowerRespawnOverride = (
         respawn,
         "betrayalPenaltySeconds",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -93,7 +99,8 @@ export const tryLowerRespawnOverride = (
         respawn,
         "respawnGrowthSeconds",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -105,7 +112,8 @@ export const tryLowerRespawnOverride = (
         respawn,
         "respawnPlayerTraitsDurationSeconds",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }

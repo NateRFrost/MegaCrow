@@ -75,7 +75,8 @@ export const lowerLoadoutPaletteOverride = (
     markCurrentValueUnused(
       ctx.ir.locations.get(loadoutTraits.loadoutPalettes, String(slotIndex)),
       ctx.diagnostics,
-      entry.location
+      entry.location,
+      tier.value
     );
   }
 
@@ -93,7 +94,8 @@ export const lowerLoadoutPaletteOverride = (
       loadoutTraits,
       "spartanLoadoutsEnabled",
       true,
-      entry.location
+      entry.location,
+      "spartan_loadouts_enabled"
     );
   }
   if (loadoutTraits.eliteLoadoutsEnabled !== true) {
@@ -103,7 +105,8 @@ export const lowerLoadoutPaletteOverride = (
       loadoutTraits,
       "eliteLoadoutsEnabled",
       true,
-      entry.location
+      entry.location,
+      "elite_loadouts_enabled"
     );
   }
 };

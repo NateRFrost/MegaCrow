@@ -28,6 +28,10 @@ export {
   SourceLocationType,
   UNKNOWN_LOCATION,
 } from "src/diagnostics";
+export {
+  includeDiagnosticSummaryMessage,
+  summarizeIncludeDiagnostics,
+} from "src/diagnostics/summarizeInclude";
 export type { ResolveIncludeFn } from "src/frontend/abstract-syntax-tree";
 export type { ObjectLists } from "src/frontend/object-lists";
 export {

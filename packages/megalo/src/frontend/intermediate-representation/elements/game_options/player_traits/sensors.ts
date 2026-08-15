@@ -39,7 +39,8 @@ export const lowerSensorsOption = (
         traits.sensors,
         "motionTrackerMode",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -57,7 +58,8 @@ export const lowerSensorsOption = (
         traits.sensors,
         "motionTrackerRange",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }

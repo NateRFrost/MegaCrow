@@ -139,7 +139,10 @@ import {
   encodeVariantVariable,
 } from "src/backend/compile/107-mcc/references";
 import { BUILT_IN_LOCATION, type Diagnostics } from "src/diagnostics";
-import type { IR } from "src/frontend/intermediate-representation";
+import type {
+  FieldLocations,
+  IR,
+} from "src/frontend/intermediate-representation";
 import {
   type Action,
   ActionType,
@@ -197,7 +200,8 @@ const assignSetBoundaryParameters = (
 };
 const compileAction = (
   _action: Action,
-  _diagnostics: Diagnostics
+  _diagnostics: Diagnostics,
+  locations: FieldLocations
 ): c_action => {
   const action = _action;
   const target = new c_action();
@@ -359,7 +363,8 @@ const compileAction = (
       params.m_timer = encodeCustomTimerReference(action.parameters.timer);
       params.m_rate = encodeGameEngineTimerRate(
         action.parameters.rate,
-        _diagnostics
+        _diagnostics,
+        locations.get(action.parameters, "rate")
       );
       target.m_timer_set_rate_parameters = params;
       break;
@@ -1210,7 +1215,7 @@ export const compileActions = (
   diagnostics: Diagnostics
 ): void => {
   const actions = ir.gameVariant.gameEngine.actions.map((action) =>
-    compileAction(action, diagnostics)
+    compileAction(action, diagnostics, ir.locations)
   );
   gameVariant.m_game_engine.m_actions = actions;
   validatePregameActions(ir, actions, diagnostics);

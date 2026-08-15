@@ -36,7 +36,8 @@ export const lowerAppearanceOption = (
         traits.appearance,
         "activeCamo",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -54,7 +55,8 @@ export const lowerAppearanceOption = (
         traits.appearance,
         "waypoint",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -72,7 +74,8 @@ export const lowerAppearanceOption = (
         traits.appearance,
         "gamertag",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -96,7 +99,8 @@ export const lowerAppearanceOption = (
         traits.appearance,
         "forcedChangeColor",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }

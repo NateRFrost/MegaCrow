@@ -1,4 +1,7 @@
-import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
+import {
+  spanSourceCodeLocations as locationSpan,
+  type SourceCodeLocation,
+} from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import {
@@ -31,15 +34,6 @@ export type TemporaryStatementNode = ASTNode<SyntaxKind.TEMPORARY> & {
   name: { value: string; location: SourceCodeLocation; symbolId?: number };
   initial: ASTConditionOperandNode;
 };
-
-const locationSpan = (
-  start: SourceCodeLocation,
-  end: SourceCodeLocation
-): SourceCodeLocation => ({
-  type: SourceLocationType.SOURCE_CODE,
-  start: start.start,
-  end: end.end,
-});
 
 const isTriggerStatementBoundary = (token: Token | undefined): boolean =>
   !token ||

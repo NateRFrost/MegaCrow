@@ -44,7 +44,8 @@ export const mapObjectLowerer: ElementLowerer<MapObjectElementNode> = (
             filter,
             "label",
             label,
-            property.value.location
+            property.value.location,
+            "label"
           );
           break;
         }
@@ -59,7 +60,8 @@ export const mapObjectLowerer: ElementLowerer<MapObjectElementNode> = (
             filter,
             "objectType",
             objectType,
-            property.value.location
+            property.value.location,
+            "type"
           );
           break;
         }
@@ -81,7 +83,8 @@ export const mapObjectLowerer: ElementLowerer<MapObjectElementNode> = (
             filter,
             "team",
             team,
-            property.value.location
+            property.value.location,
+            "team"
           );
           break;
         }
@@ -93,7 +96,8 @@ export const mapObjectLowerer: ElementLowerer<MapObjectElementNode> = (
             filter,
             "userData",
             property.value.value,
-            property.value.location
+            property.value.location,
+            "user_data"
           );
           break;
         }
@@ -105,7 +109,8 @@ export const mapObjectLowerer: ElementLowerer<MapObjectElementNode> = (
             filter,
             "min",
             property.value.value,
-            property.value.location
+            property.value.location,
+            "min"
           );
           break;
         }

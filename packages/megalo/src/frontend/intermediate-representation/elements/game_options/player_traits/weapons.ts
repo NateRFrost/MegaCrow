@@ -79,7 +79,8 @@ export const lowerWeaponsOption = (
         traits.weapons,
         "damageModifierPercentageSetting",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -108,7 +109,8 @@ export const lowerWeaponsOption = (
         traits.weapons,
         "meleeDamageModifierPercentageSetting",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -125,7 +127,8 @@ export const lowerWeaponsOption = (
         traits.weapons,
         "initialPrimaryWeaponAbsoluteIndex",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -142,7 +145,8 @@ export const lowerWeaponsOption = (
         traits.weapons,
         "initialSecondaryWeaponAbsoluteIndex",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -159,7 +163,8 @@ export const lowerWeaponsOption = (
         traits.weapons,
         "initialEquipmentAbsoluteIndex",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -184,7 +189,8 @@ export const lowerWeaponsOption = (
         traits.weapons,
         "initialGrenadeCount",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -196,7 +202,8 @@ export const lowerWeaponsOption = (
         traits.weapons,
         "rechargingGrenades",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -210,7 +217,8 @@ export const lowerWeaponsOption = (
         enabled.value
           ? InfiniteAmmoSetting.Enabled
           : InfiniteAmmoSetting.Disabled,
-        enabled.location
+        enabled.location,
+        identifier
       );
       return true;
     }
@@ -224,7 +232,8 @@ export const lowerWeaponsOption = (
         enabled.value
           ? InfiniteAmmoSetting.BottomlessClip
           : InfiniteAmmoSetting.Disabled,
-        enabled.location
+        enabled.location,
+        identifier
       );
       return true;
     }
@@ -236,7 +245,8 @@ export const lowerWeaponsOption = (
         traits.weapons,
         "weaponPickup",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -248,7 +258,8 @@ export const lowerWeaponsOption = (
         traits.weapons,
         "dropEquipment",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -260,7 +271,8 @@ export const lowerWeaponsOption = (
         traits.weapons,
         "infiniteEquipment",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -292,7 +304,8 @@ export const lowerWeaponsOption = (
         traits.weapons,
         "equipmentUsage",
         enabled,
-        first.location
+        first.location,
+        identifier
       );
       return true;
     }

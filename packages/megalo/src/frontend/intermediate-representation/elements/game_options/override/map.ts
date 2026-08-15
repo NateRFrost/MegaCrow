@@ -26,7 +26,8 @@ export const tryLowerMapOverride = (
         map,
         "grenadesOnMap",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -38,7 +39,8 @@ export const tryLowerMapOverride = (
         map,
         "shortcutsOnMap",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -50,7 +52,8 @@ export const tryLowerMapOverride = (
         map,
         "equipmentOnMap",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -62,7 +65,8 @@ export const tryLowerMapOverride = (
         map,
         "powerupsOnMap",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -74,7 +78,8 @@ export const tryLowerMapOverride = (
         map,
         "turretsOnMap",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -86,7 +91,8 @@ export const tryLowerMapOverride = (
         map,
         "indestructibleVehicles",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -98,7 +104,8 @@ export const tryLowerMapOverride = (
         map,
         "redPowerupDurationSeconds",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -110,7 +117,8 @@ export const tryLowerMapOverride = (
         map,
         "bluePowerupDurationSeconds",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -122,7 +130,8 @@ export const tryLowerMapOverride = (
         map,
         "yellowPowerupDurationSeconds",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -134,7 +143,8 @@ export const tryLowerMapOverride = (
         map,
         "weaponSetAbsoluteIndex",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -146,7 +156,8 @@ export const tryLowerMapOverride = (
         map,
         "vehicleSetAbsoluteIndex",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }

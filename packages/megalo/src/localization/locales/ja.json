@@ -1,6 +1,6 @@
 {
-  "unused_value": "未使用: この値は後で上書きされています。",
-  "unused_value_overridden_at": "未使用: この値は {{location}} で上書きされています。",
+  "unused_value": "未使用: \"{{name}}\" は後で上書きされています。",
+  "unused_value_overridden_at": "未使用: \"{{name}}\" は {{location}} で上書きされています。",
   "unrecognized_element": "認識できない要素 '{{value}}'。",
   "expected_token_kind": "{{expected}} 型のトークンが必要ですが、{{kind}} 型のトークン {{token}} が見つかりました",
   "expected_end_before_eof": "ファイル末尾の前に 'end' が必要です",

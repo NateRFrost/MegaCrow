@@ -1,4 +1,7 @@
-import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
+import {
+  type SourceCodeLocation,
+  spanSourceCodeLocations,
+} from "src/diagnostics";
 import type { Tokens } from "src/frontend/tokens";
 
 /// <summary>
@@ -12,9 +15,5 @@ export const spanLocation = (tokens: Tokens): SourceCodeLocation => {
   if (!(first && last)) {
     throw new Error("spanLocation requires a non-empty token list");
   }
-  return {
-    type: SourceLocationType.SOURCE_CODE,
-    start: first.location.start,
-    end: last.location.end,
-  };
+  return spanSourceCodeLocations(first.location, last.location);
 };

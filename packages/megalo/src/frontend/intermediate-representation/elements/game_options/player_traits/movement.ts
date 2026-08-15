@@ -36,7 +36,8 @@ export const lowerMovementOption = (
         traits.movement,
         "speedPercentage",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -54,7 +55,8 @@ export const lowerMovementOption = (
         traits.movement,
         "gravityPercentage",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -72,7 +74,8 @@ export const lowerMovementOption = (
         traits.movement,
         "vehicleUsage",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -90,7 +93,8 @@ export const lowerMovementOption = (
         traits.movement,
         "jumpModifier",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -124,7 +128,8 @@ export const lowerMovementOption = (
         traits.movement,
         "sprinting",
         enabled,
-        first.location
+        first.location,
+        identifier
       );
       return true;
     }

@@ -1,4 +1,8 @@
-import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
+import {
+  spanSourceCodeLocations as locationSpan,
+  type SourceCodeLocation,
+  SourceLocationType,
+} from "src/diagnostics";
 import {
   type ASTNode,
   SyntaxKind,
@@ -11,15 +15,6 @@ export type ASTCommentNode = ASTNode<SyntaxKind.COMMENT> & {
   /** Line the comment documents — next code line for leading, same line for trailing. */
   describesLine: SourceCodeLocation;
 };
-
-const locationSpan = (
-  start: SourceCodeLocation,
-  end: SourceCodeLocation
-): SourceCodeLocation => ({
-  type: SourceLocationType.SOURCE_CODE,
-  start: start.start,
-  end: end.end,
-});
 
 const lineStartLocation = (
   location: SourceCodeLocation
@@ -37,6 +32,7 @@ const lineStartLocation = (
     line: location.start.line,
     column: 1,
   },
+  ...(location.include ? { include: location.include } : {}),
 });
 
 const syntheticLineLocation = (
@@ -56,8 +52,8 @@ const syntheticLineLocation = (
     line,
     column: 1,
   },
+  ...(near.include ? { include: near.include } : {}),
 });
-
 const isLeadingComment = (tokens: Tokens, index: number): boolean => {
   const previous = tokens[index - 1];
   const token = tokens[index]!;

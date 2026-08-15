@@ -1,4 +1,7 @@
-import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
+import {
+  spanSourceCodeLocations as locationSpan,
+  type SourceCodeLocation,
+} from "src/diagnostics";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import {
   type ASTErrorNode,
@@ -63,15 +66,6 @@ export const scanDynamicStringPlaceholders = (
 
   return placeholders;
 };
-
-const locationSpan = (
-  start: SourceCodeLocation,
-  end: SourceCodeLocation
-): SourceCodeLocation => ({
-  type: SourceLocationType.SOURCE_CODE,
-  start: start.start,
-  end: end.end,
-});
 
 const makeReferenceNode = (
   ctx: ParserContext,

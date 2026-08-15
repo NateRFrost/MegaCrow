@@ -5,7 +5,8 @@ import { diagnosticMessages } from "src/diagnostics/messages";
 export const markCurrentValueUnused = (
   previousLocation: SourceLocation | undefined,
   diagnostics: Diagnostics,
-  overriddenAt: SourceLocation
+  overriddenAt: SourceLocation,
+  name: string
 ): void => {
   if (
     previousLocation === undefined ||
@@ -15,7 +16,7 @@ export const markCurrentValueUnused = (
     return;
   }
   diagnostics.addWarning(
-    diagnosticMessages.unusedValue(overriddenAt),
+    diagnosticMessages.unusedValue(name, overriddenAt),
     previousLocation
   );
 };

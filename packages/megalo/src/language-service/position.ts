@@ -51,6 +51,7 @@ export const positionToOffset = (
 
 export const isRootDocumentLocation = (location: SourceCodeLocation): boolean =>
   location.type === SourceLocationType.SOURCE_CODE &&
+  location.include === undefined &&
   location.start.line > 0 &&
   location.start.absoluteOffset === location.start.localOffset;
 

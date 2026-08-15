@@ -1,5 +1,6 @@
 import type { MegaloCompilerContext } from "src/context";
 import type { Diagnostics } from "src/diagnostics";
+import { rootIncludeDeclaration } from "src/diagnostics";
 import { IncludeDiagnostics } from "src/diagnostics/include";
 import { diagnosticMessages } from "src/diagnostics/messages";
 import {
@@ -341,11 +342,18 @@ export class Parser {
       const lexer = new Lexer(this.frontend);
       const nestedTokens = lexer.lex(resolved.text, included);
       // Rebase absolute offsets only; keep localOffset for IDE / IncludeLocation.source.
+      // Stamp include provenance so IR-time diagnostics (unused overrides, etc.)
+      // still map to the include directive instead of fake root-file lines.
       const offsetState = options.absoluteOffsetState ?? { next: 0 };
       const offsetBase = offsetState.next;
+      const includeDeclaration = rootIncludeDeclaration(element.location);
       for (const token of nestedTokens) {
         token.location = {
           ...token.location,
+          include: {
+            file: resolved.uri,
+            declaration: includeDeclaration,
+          },
           start: {
             ...token.location.start,
             absoluteOffset: token.location.start.localOffset + offsetBase,

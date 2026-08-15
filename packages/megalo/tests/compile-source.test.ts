@@ -119,6 +119,100 @@ end
     }
   });
 
+  it("tags unused-value overrides from includes as IncludeLocation", async () => {
+    const files = new Map<string, string>([
+      [
+        "shared.txt",
+        `string_table english
+\tname "From Include"
+end
+engine_data
+\tname name
+end
+`,
+      ],
+    ]);
+
+    const result = await compileSource(
+      `include "shared.txt"
+string_table english
+\tname "From Root"
+end
+engine_data
+\tname name
+end
+`,
+      {
+        version,
+        resolveInclude: (path) => {
+          const text = files.get(path);
+          return text ? { text, uri: path } : null;
+        },
+      }
+    );
+
+    const unused = result.diagnostics.filter(
+      (d) =>
+        d.severity === DiagnosticSeverity.Warning &&
+        d.message.toLowerCase().includes("unused")
+    );
+    expect(unused.length).toBeGreaterThan(0);
+    for (const d of unused) {
+      expect(d.location.type).toBe(SourceLocationType.INCLUDE);
+      if (d.location.type === SourceLocationType.INCLUDE) {
+        expect(d.location.declaration.start.line).toBe(1);
+        expect(d.location.file).toBe("shared.txt");
+        expect(d.location.source.start.line).toBeGreaterThan(1);
+      }
+    }
+  });
+
+  it("summarizes include diagnostics into one problem per include directive", async () => {
+    const { summarizeIncludeDiagnostics } = await import(
+      "../src/diagnostics/summarizeInclude"
+    );
+    const files = new Map<string, string>([
+      [
+        "shared.txt",
+        `string_table english
+\tname "From Include"
+end
+engine_data
+\tname name
+end
+`,
+      ],
+    ]);
+
+    const source = `include "shared.txt"
+string_table english
+\tname "From Root"
+end
+engine_data
+\tname name
+end
+`;
+    const result = await compileSource(source, {
+      version,
+      resolveInclude: (path) => {
+        const text = files.get(path);
+        return text ? { text, uri: path } : null;
+      },
+    });
+
+    const summarized = summarizeIncludeDiagnostics(result.diagnostics, source);
+    const includeSummaries = summarized.filter(
+      (d) => d.location.type === SourceLocationType.INCLUDE
+    );
+    expect(includeSummaries).toHaveLength(1);
+    expect(includeSummaries[0]?.message).toMatch(
+      /^include shared\.txt contains \d+ warnings?$/
+    );
+    if (includeSummaries[0]?.location.type === SourceLocationType.INCLUDE) {
+      expect(includeSummaries[0].location.declaration.start.line).toBe(1);
+    }
+  });
+
   it("errors when the same string token is redefined for a language across includes", async () => {
     const files = new Map<string, string>([
       [
@@ -527,7 +621,10 @@ end
     expect(diagnostics.hasErrors()).toBe(false);
     expect(ast.elements.length).toBeGreaterThanOrEqual(2);
     expect(
-      ast.elements.every((e) => e.elementKind !== ElementKind.INCLUDE)
+      ast.elements.some((e) => e.elementKind === ElementKind.INCLUDE)
+    ).toBe(true);
+    expect(
+      ast.elements.some((e) => e.elementKind === ElementKind.CONSTANTS)
     ).toBe(true);
   });
 });

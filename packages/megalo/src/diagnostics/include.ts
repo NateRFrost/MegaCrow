@@ -7,6 +7,7 @@ import {
   type SourceCodeLocation,
   type SourceLocation,
   SourceLocationType,
+  stripIncludeProvenance,
 } from "src/diagnostics/index";
 
 /**
@@ -49,6 +50,7 @@ export class IncludeDiagnostics extends Diagnostics {
       return {
         ...location,
         declaration: this.declaration,
+        source: stripIncludeProvenance(location.source),
       };
     }
     if (!isSourceCodeLocation(location)) {
@@ -61,7 +63,7 @@ export class IncludeDiagnostics extends Diagnostics {
       type: SourceLocationType.INCLUDE,
       file: this.file,
       declaration: this.declaration,
-      source: location,
+      source: stripIncludeProvenance(location),
     };
   }
 }

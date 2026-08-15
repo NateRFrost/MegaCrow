@@ -37,7 +37,8 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
               ir.gameVariant,
               "baseNameStringIndex",
               titleIndex + 1,
-              parameter.location
+              parameter.location,
+              "name"
             );
           } else {
             const localizedName = new StringTable();
@@ -48,7 +49,8 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
               ir.gameVariant,
               "localizedName",
               localizedName,
-              parameter.location
+              parameter.location,
+              "name"
             );
           }
         });
@@ -65,7 +67,8 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
             ir.gameVariant,
             "localizedDescription",
             localizedDescription,
-            parameter.location
+            parameter.location,
+            "description"
           );
         });
         break;
@@ -84,7 +87,8 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
             ir.gameVariant,
             "engineIcon",
             icon.value,
-            icon.location
+            icon.location,
+            "icon"
           );
         });
         break;
@@ -106,7 +110,8 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
             ir.gameVariant,
             "localizedCategory",
             localizedCategory,
-            parameter.location
+            parameter.location,
+            "category"
           );
           // engine_data category is weird, it maps to a string table entry and an enum
           // the symbol name has the prefix "engine_category_" so we need to remove it to get the enum member name
@@ -116,12 +121,11 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
           );
           const enumValue = parseEngineCategory(enumValueKey);
           if (enumValue !== undefined) {
-            setField(
-              ir.locations,
-              diagnostics,
+            // Same authoring site as localizedCategory — don't double-warn on override.
+            ir.gameVariant.engineCategory = enumValue;
+            ir.locations.record(
               ir.gameVariant,
               "engineCategory",
-              enumValue,
               parameter.location
             );
           }

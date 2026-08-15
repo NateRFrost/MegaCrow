@@ -64,7 +64,8 @@ export const playerRatingLowerer: ElementLowerer<PlayerRatingElementNode> = (
           ratings,
           "showInScoreboard",
           value.value !== 0,
-          value.location
+          value.location,
+          "show_in_scoreboard"
         );
         return;
       }
@@ -86,7 +87,8 @@ export const playerRatingLowerer: ElementLowerer<PlayerRatingElementNode> = (
         ratings,
         irKey,
         value.value,
-        value.location
+        value.location,
+        field.key
       );
     });
   }

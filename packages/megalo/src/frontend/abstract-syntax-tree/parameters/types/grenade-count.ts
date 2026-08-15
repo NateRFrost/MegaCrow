@@ -1,4 +1,7 @@
-import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
+import {
+  spanSourceCodeLocations as locationSpan,
+  type SourceCodeLocation,
+} from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import {
@@ -29,15 +32,6 @@ export type ASTGrenadeCountNode = ASTNode<SyntaxKind.GRENADE_COUNT> &
 
 const GRENADE_TYPES = new Set(["frag", "plasma", "each"]);
 const GRENADE_PRESETS = new Set(["none", "default"]);
-
-const locationSpan = (
-  start: SourceCodeLocation,
-  end: SourceCodeLocation
-): SourceCodeLocation => ({
-  type: SourceLocationType.SOURCE_CODE,
-  start: start.start,
-  end: end.end,
-});
 
 export const grenadeCountParser: ParameterParser = (
   ctx: ParserContext,

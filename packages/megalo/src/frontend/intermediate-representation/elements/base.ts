@@ -23,6 +23,7 @@ export const baseLowerer: ElementLowerer<BaseElementNode> = (element, ctx) => {
     ctx.ir,
     "baseFilePath",
     element.file.value,
-    element.location
+    element.location,
+    "base"
   );
 };

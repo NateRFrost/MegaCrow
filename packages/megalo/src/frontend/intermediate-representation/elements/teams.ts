@@ -103,7 +103,8 @@ const lowerTeam = (
           team,
           "name",
           name,
-          property.parameters[0]?.location
+          property.parameters[0]?.location,
+          "name"
         );
         break;
       }
@@ -124,7 +125,8 @@ const lowerTeam = (
           team,
           "designator",
           TEAM_DESIGNATOR_INDICES[keyword],
-          property.parameters[0]?.location
+          property.parameters[0]?.location,
+          "designator"
         );
         break;
       }
@@ -146,7 +148,8 @@ const lowerTeam = (
           team,
           "model",
           model,
-          property.parameters[0]?.location
+          property.parameters[0]?.location,
+          "model"
         );
         break;
       }
@@ -177,7 +180,8 @@ const lowerTeam = (
           team,
           "teamColor",
           { r: r.value, g: g.value, b: b.value },
-          locationSpan(rNode.location, bNode.location)
+          locationSpan(rNode.location, bNode.location),
+          property.identifier
         );
         break;
       }
@@ -209,7 +213,8 @@ const lowerTeam = (
           team,
           "fireteamCount",
           count.value,
-          count.location
+          count.location,
+          property.identifier
         );
         break;
       }
@@ -248,7 +253,8 @@ export const teamsLowerer: ElementLowerer<TeamsElementNode> = (
             teamOptions,
             "model",
             model,
-            property.parameters[0]?.location
+            property.parameters[0]?.location,
+            "model"
           );
           break;
         }
@@ -270,7 +276,8 @@ export const teamsLowerer: ElementLowerer<TeamsElementNode> = (
             teamOptions,
             "designatorSwitchType",
             switchType,
-            property.parameters[0]?.location
+            property.parameters[0]?.location,
+            "designator_switch_type"
           );
           break;
         }

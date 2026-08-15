@@ -133,7 +133,8 @@ export const applyBuiltinLockHide = (
       ir.gameVariant.baseVariantParametersLocked,
       flag,
       true,
-      location
+      location,
+      optionName
     );
   } else {
     // `override` without `lock` clears a base-inherited lock.
@@ -143,7 +144,8 @@ export const applyBuiltinLockHide = (
       ir.gameVariant.baseVariantParametersLocked,
       flag,
       false,
-      location
+      location,
+      optionName
     );
   }
   if (modifiers.hide) {
@@ -153,7 +155,8 @@ export const applyBuiltinLockHide = (
       ir.gameVariant.baseVariantParametersHidden,
       flag,
       true,
-      location
+      location,
+      optionName
     );
   }
 };

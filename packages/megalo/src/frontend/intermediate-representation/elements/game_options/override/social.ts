@@ -21,7 +21,8 @@ export const tryLowerSocialOverride = (
         social,
         "friendlyFireEnabled",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -33,7 +34,8 @@ export const tryLowerSocialOverride = (
         social,
         "betrayalBootingEnabled",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -45,7 +47,8 @@ export const tryLowerSocialOverride = (
         social,
         "enemyVoiceEnabled",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -57,7 +60,8 @@ export const tryLowerSocialOverride = (
         social,
         "openChannelVoiceEnabled",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -69,7 +73,8 @@ export const tryLowerSocialOverride = (
         social,
         "deadPlayerVoiceEnabled",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }

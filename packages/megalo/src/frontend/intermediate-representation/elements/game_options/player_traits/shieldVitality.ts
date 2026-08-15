@@ -50,7 +50,8 @@ export const lowerShieldVitalityOption = (
         traits.shieldVitality,
         "damageResistancePercentage",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -68,7 +69,8 @@ export const lowerShieldVitalityOption = (
         traits.shieldVitality,
         "bodyRechargeRatePercentage",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -86,7 +88,8 @@ export const lowerShieldVitalityOption = (
         traits.shieldVitality,
         "shieldRechargeRatePercentage",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -104,7 +107,8 @@ export const lowerShieldVitalityOption = (
         traits.shieldVitality,
         "vampirismPercentage",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -116,7 +120,8 @@ export const lowerShieldVitalityOption = (
         traits.shieldVitality,
         "headshotImmunity",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -134,7 +139,8 @@ export const lowerShieldVitalityOption = (
         traits.shieldVitality,
         "bodyMultiplierPercentage",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -152,7 +158,8 @@ export const lowerShieldVitalityOption = (
         traits.shieldVitality,
         "shieldMultiplierPercentage",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -164,7 +171,8 @@ export const lowerShieldVitalityOption = (
         traits.shieldVitality,
         "assasinationImmunity",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }
@@ -176,7 +184,8 @@ export const lowerShieldVitalityOption = (
         traits.shieldVitality,
         "deathless",
         value.value,
-        value.location
+        value.location,
+        identifier
       );
       return true;
     }

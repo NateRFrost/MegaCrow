@@ -78,7 +78,8 @@ export const loadoutLowerer = (
             traits,
             "name",
             value.value,
-            value.location
+            value.location,
+            "name"
           );
           break;
         }
@@ -95,7 +96,8 @@ export const loadoutLowerer = (
             traits,
             "initialPrimaryWeaponAbsoluteIndex",
             value.value,
-            value.location
+            value.location,
+            "primary_weapon"
           );
           break;
         }
@@ -112,7 +114,8 @@ export const loadoutLowerer = (
             traits,
             "initialSecondaryWeaponAbsoluteIndex",
             value.value,
-            value.location
+            value.location,
+            "backpack_weapon"
           );
           break;
         }
@@ -129,7 +132,8 @@ export const loadoutLowerer = (
             traits,
             "initialEquipmentAbsoluteIndex",
             value.value,
-            value.location
+            value.location,
+            "equipment"
           );
           break;
         }
@@ -142,7 +146,8 @@ export const loadoutLowerer = (
             traits,
             "initialGrenadeCountSetting",
             value.value,
-            value.location
+            value.location,
+            "grenades"
           );
           break;
         }

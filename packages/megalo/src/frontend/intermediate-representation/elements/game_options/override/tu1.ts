@@ -24,7 +24,8 @@ export const tryLowerTu1Override = (
         tu1,
         "alwaysSpilloverDamage",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -36,7 +37,8 @@ export const tryLowerTu1Override = (
         tu1,
         "armorLockStickiesRemain",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -48,7 +50,8 @@ export const tryLowerTu1Override = (
         tu1,
         "attachedDamageBypassShields",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -60,7 +63,8 @@ export const tryLowerTu1Override = (
         tu1,
         "activeCamoOverrideEnergyCurve",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -72,7 +76,8 @@ export const tryLowerTu1Override = (
         tu1,
         "swordGunClangKills",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -84,7 +89,8 @@ export const tryLowerTu1Override = (
         tu1,
         "magnumIsAutomatic",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -96,7 +102,8 @@ export const tryLowerTu1Override = (
         tu1,
         "precisionBloom",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -108,7 +115,8 @@ export const tryLowerTu1Override = (
         tu1,
         "armorLockDamageDrain",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -120,7 +128,8 @@ export const tryLowerTu1Override = (
         tu1,
         "armorLockDamageDrainLimit",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -132,7 +141,8 @@ export const tryLowerTu1Override = (
         tu1,
         "activeCamoEnergyCurveMin",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -144,7 +154,8 @@ export const tryLowerTu1Override = (
         tu1,
         "activeCamoEnergyCurveMax",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -156,7 +167,8 @@ export const tryLowerTu1Override = (
         tu1,
         "magnumDamage",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -168,7 +180,8 @@ export const tryLowerTu1Override = (
         tu1,
         "magnumFireDelay",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }

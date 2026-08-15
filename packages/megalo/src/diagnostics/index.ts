@@ -37,8 +37,21 @@ export const UNKNOWN_LOCATION: UnknownLocation = {
   type: SourceLocationType.UNKNOWN,
 };
 
+/** Provenance for a span that was lexed inside an included file. */
+export interface IncludeProvenance {
+  /** Include directive in the outermost open document (or next outer file). */
+  declaration: SourceCodeLocation;
+  file: string;
+}
+
 export interface SourceCodeLocation {
   end: SourcePosition;
+  /**
+   * Set on tokens/AST spans from included files so IR-time diagnostics
+   * (which bypass {@link IncludeDiagnostics}) can still become
+   * {@link IncludeLocation}.
+   */
+  include?: IncludeProvenance;
   start: SourcePosition;
   type: SourceLocationType.SOURCE_CODE;
 }
@@ -54,6 +67,37 @@ export interface IncludeLocation {
   source: SourceCodeLocation;
   type: SourceLocationType.INCLUDE;
 }
+
+/** Drop include provenance (e.g. when storing as IncludeLocation.source). */
+export const stripIncludeProvenance = (
+  location: SourceCodeLocation
+): SourceCodeLocation => ({
+  type: SourceLocationType.SOURCE_CODE,
+  start: location.start,
+  end: location.end,
+});
+
+/** Walk include provenance to the outermost root-document declaration. */
+export const rootIncludeDeclaration = (
+  location: SourceCodeLocation
+): SourceCodeLocation => {
+  let current = location;
+  while (current.include) {
+    current = current.include.declaration;
+  }
+  return stripIncludeProvenance(current);
+};
+
+/** Span from `start` through `end`, preserving include provenance from `start`. */
+export const spanSourceCodeLocations = (
+  start: SourceCodeLocation,
+  end: SourceCodeLocation
+): SourceCodeLocation => ({
+  type: SourceLocationType.SOURCE_CODE,
+  start: start.start,
+  end: end.end,
+  ...(start.include ? { include: start.include } : {}),
+});
 
 export interface BuiltInLocation {
   type: SourceLocationType.BUILT_IN;
@@ -98,6 +142,21 @@ export const isUnknownLocation = (
   location: SourceLocation
 ): location is UnknownLocation => location.type === SourceLocationType.UNKNOWN;
 
+/** Promote include-stamped source spans to IncludeLocation for hosts. */
+export const normalizeDiagnosticLocation = (
+  location: SourceLocation
+): SourceLocation => {
+  if (!isSourceCodeLocation(location) || location.include === undefined) {
+    return location;
+  }
+  return {
+    type: SourceLocationType.INCLUDE,
+    file: location.include.file,
+    declaration: rootIncludeDeclaration(location.include.declaration),
+    source: stripIncludeProvenance(location),
+  };
+};
+
 export enum DiagnosticSeverity {
   Error = 0,
   Warning = 1,
@@ -118,12 +177,16 @@ export class Diagnostics {
     this.warnings.push({
       message,
       severity: DiagnosticSeverity.Warning,
-      location,
+      location: normalizeDiagnosticLocation(location),
     });
   }
 
   public addError(message: string, location: SourceLocation): void {
-    this.errors.push({ message, severity: DiagnosticSeverity.Error, location });
+    this.errors.push({
+      message,
+      severity: DiagnosticSeverity.Error,
+      location: normalizeDiagnosticLocation(location),
+    });
   }
 
   public getWarnings(): Diagnostic[] {

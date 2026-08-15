@@ -26,7 +26,8 @@ export const tryLowerMiscOverride = (
         misc,
         "teamsEnabled",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -38,7 +39,8 @@ export const tryLowerMiscOverride = (
         ir.gameVariant,
         "fireTeamsEnabled",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -50,7 +52,8 @@ export const tryLowerMiscOverride = (
         ir.gameVariant,
         "scoreToWinRound",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -62,7 +65,8 @@ export const tryLowerMiscOverride = (
         base,
         "teamScoringMethod",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -74,7 +78,8 @@ export const tryLowerMiscOverride = (
         misc,
         "roundTimeLimitMinutes",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -86,7 +91,8 @@ export const tryLowerMiscOverride = (
         misc,
         "roundCount",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -98,7 +104,8 @@ export const tryLowerMiscOverride = (
         misc,
         "earlyVictoryWinCount",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -110,7 +117,8 @@ export const tryLowerMiscOverride = (
         misc,
         "suddenDeathTimeLimitSeconds",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -122,7 +130,8 @@ export const tryLowerMiscOverride = (
         misc,
         "perfectionEnabled",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }
@@ -134,7 +143,8 @@ export const tryLowerMiscOverride = (
         misc,
         "gracePeriodTimeLimitSeconds",
         value.value,
-        value.location
+        value.location,
+        optionName
       );
       return true;
     }

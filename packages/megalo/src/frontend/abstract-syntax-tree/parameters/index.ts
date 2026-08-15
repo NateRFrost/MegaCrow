@@ -1,4 +1,7 @@
-import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
+import {
+  spanSourceCodeLocations as locationSpan,
+  type SourceCodeLocation,
+} from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import {
@@ -234,15 +237,6 @@ const isVariableParameterType = (type: ParameterType): boolean =>
   type === ParameterType.Team ||
   type === ParameterType.Player ||
   type === ParameterType.Object;
-
-const locationSpan = (
-  start: SourceCodeLocation,
-  end: SourceCodeLocation
-): SourceCodeLocation => ({
-  type: SourceLocationType.SOURCE_CODE,
-  start: start.start,
-  end: end.end,
-});
 
 /** Parse a single `.member` after a root identifier that has already been consumed. */
 export const parseMemberReference = (

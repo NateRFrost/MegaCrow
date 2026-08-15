@@ -18,7 +18,8 @@ export const mapPermissionsLowerer: ElementLowerer<
   markCurrentValueUnused(
     ctx.ir.locations.get(ctx.ir.gameVariant, "mapPermissions"),
     ctx.diagnostics,
-    element.location
+    element.location,
+    "map_permissions"
   );
   const permissions = {
     exceptMapIds: [] as number[],
@@ -55,7 +56,8 @@ export const mapPermissionsLowerer: ElementLowerer<
               permissions,
               "allowByDefault",
               entry.value.value === "true",
-              entry.value.location
+              entry.value.location,
+              "default"
             );
             return;
           }
@@ -71,7 +73,8 @@ export const mapPermissionsLowerer: ElementLowerer<
             permissions,
             "allowByDefault",
             value.value !== 0,
-            value.location
+            value.location,
+            "default"
           );
           return;
         }

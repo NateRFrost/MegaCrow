@@ -1,6 +1,6 @@
 {
-  "unused_value": "Unused: this value is overridden later.",
-  "unused_value_overridden_at": "Unused: this value is overridden at {{location}}.",
+  "unused_value": "Unused: \"{{name}}\" is overridden later.",
+  "unused_value_overridden_at": "Unused: \"{{name}}\" is overridden at {{location}}.",
   "unrecognized_element": "Unrecognized element '{{value}}'.",
   "expected_token_kind": "Expected token of type {{expected}}, got one of type {{kind}}: {{token}}",
   "expected_end_before_eof": "Expected 'end' before end of file",
