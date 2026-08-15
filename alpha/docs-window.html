@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="./megacrow-icon.png">
+    <title>MegaCrow Docs</title>
+    <script type="module" crossorigin src="./assets/docs-window-CP3liWK8.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/tauriRuntime-DtPG0GLQ.js">
+    <link rel="modulepreload" crossorigin href="./assets/window-uj017Hl8.js">
+    <link rel="stylesheet" crossorigin href="./assets/docs-window-DnKokRNA.css">
+  </head>
+  <body>
+    <div class="docs-shell">
+      <header class="docs-chrome" data-tauri-drag-region>
+        <div class="docs-chrome-leading">
+          <div aria-label="Page history" class="docs-nav" role="group">
+            <button
+              aria-label="Back"
+              class="docs-nav-btn"
+              disabled
+              id="docs-back"
+              title="Back (Alt+Left)"
+              type="button"
+            >
+              <svg aria-hidden="true" viewBox="0 0 16 16">
+                <path
+                  d="M9.75 3.25 5 8l4.75 4.75"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.35"
+                />
+              </svg>
+            </button>
+            <button
+              aria-label="Forward"
+              class="docs-nav-btn"
+              disabled
+              id="docs-forward"
+              title="Forward (Alt+Right)"
+              type="button"
+            >
+              <svg aria-hidden="true" viewBox="0 0 16 16">
+                <path
+                  d="M6.25 3.25 11 8l-4.75 4.75"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.35"
+                />
+              </svg>
+            </button>
+          </div>
+          <span class="docs-chrome-title">Docs</span>
+        </div>
+        <div class="docs-chrome-trailing" id="docs-window-controls"></div>
+      </header>
+      <iframe
+        class="docs-frame"
+        id="docs-frame"
+        src="./docs/index.html"
+        title="MegaCrow documentation"
+      ></iframe>
+    </div>
+  </body>
+</html>
