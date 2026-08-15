@@ -157,6 +157,11 @@ export function DiagnosticsTray({
   const warningCount = diagnostics.length - errorCount;
 
   const sorted = [...diagnostics].sort((a, b) => {
+    const aSeverity = severityOf(a);
+    const bSeverity = severityOf(b);
+    if (aSeverity !== bSeverity) {
+      return aSeverity === "error" ? -1 : 1;
+    }
     if (a.trayOnly !== b.trayOnly) {
       return a.trayOnly ? 1 : -1;
     }
