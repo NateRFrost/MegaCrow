@@ -202,22 +202,20 @@ export const MegaloEditor = memo(function MegaloEditor({
       return;
     }
 
-    const viewState = editor.saveViewState();
     suppressContentHandlerRef.current = true;
     try {
       model.setValue(content);
+      editor.setPosition({ lineNumber: 1, column: 1 });
+      editor.setScrollTop(0);
     } finally {
       suppressContentHandlerRef.current = false;
-    }
-    if (viewState) {
-      editor.restoreViewState(viewState);
     }
   }, [clearPendingSyncTimers]);
 
   useEffect(() => {
     foldedForKeyRef.current = null;
     foldRunRef.current += 1;
-  }, []);
+  }, [foldKey]);
 
   useEffect(() => {
     const monaco = monacoRef.current;
@@ -256,7 +254,7 @@ export const MegaloEditor = memo(function MegaloEditor({
 
   useEffect(() => {
     applyDocumentToModel();
-  }, [applyDocumentToModel]);
+  }, [applyDocumentToModel, syncRevision]);
 
   const diagnosticsRef = useRef(diagnostics);
   diagnosticsRef.current = diagnostics;
@@ -277,7 +275,7 @@ export const MegaloEditor = memo(function MegaloEditor({
 
   useEffect(() => {
     applyDiagnostics();
-  }, [applyDiagnostics]);
+  }, [applyDiagnostics, diagnostics]);
 
   useEffect(() => {
     const monaco = monacoRef.current;
