@@ -514,6 +514,16 @@ export class SymbolBinder {
     this.table[symbolId].references.push(reference);
   }
 
+  public setScopeStart(symbolId: SymbolId, position: SourcePosition): void {
+    const entry = this.table[symbolId];
+    if (entry !== undefined) {
+      entry.range = {
+        ...entry.range,
+        start: position,
+      };
+    }
+  }
+
   public setScopeEnd(symbolId: SymbolId, position: SourcePosition): void {
     const entry = this.table[symbolId];
     if (entry !== undefined) {

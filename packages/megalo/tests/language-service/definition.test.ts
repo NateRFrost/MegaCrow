@@ -126,4 +126,57 @@ end
       expect(target.file).toBe("shared.txt");
     }
   });
+
+  it("does not navigate bundled object-list enums", async () => {
+    const source = `variables global
+\tlocal object created none
+end
+trigger initialization
+\taction create_object "warthog" at current_player never_garbage
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    const position = positionOf(
+      source,
+      snapshot.lineStarts,
+      "warthog",
+      source.indexOf("create_object")
+    );
+    expect(definitionAtPosition(snapshot, position)).toBeNull();
+  });
+
+  it("navigates workspace object-list entries to their source file", async () => {
+    const source = `variables global
+\tlocal object created none
+end
+trigger initialization
+\taction create_object "warthog" at current_player never_garbage
+end
+`;
+    const objectsPath = "C:/workspace/object_lists/objects.txt";
+    const snapshot = await analyzeDocument(source, {
+      version,
+      objectLists: {
+        objects: {
+          file: objectsPath,
+          entries: ["spartan", "", "warthog", "ghost"],
+        },
+      },
+    });
+    const position = positionOf(
+      source,
+      snapshot.lineStarts,
+      "warthog",
+      source.indexOf("create_object")
+    );
+    const target = definitionAtPosition(snapshot, position);
+    expect(target).toEqual({
+      kind: "file",
+      file: objectsPath,
+      range: {
+        start: { line: 2, character: 0 },
+        end: { line: 2, character: "warthog".length },
+      },
+    });
+  });
 });

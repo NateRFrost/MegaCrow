@@ -49,17 +49,46 @@ export const OBJECT_LIST_TYPES: readonly ObjectListType[] = [
   ObjectListType.Strings,
 ];
 
+export type ObjectListEntries = readonly string[];
+
+export interface ObjectListFileSource {
+  readonly entries: ObjectListEntries;
+  readonly file: string;
+}
+
+export type ObjectListData = ObjectListEntries | ObjectListFileSource;
+
 export type ObjectLists = Readonly<
-  Partial<Record<ObjectListType, readonly string[]>>
+  Partial<Record<ObjectListType, ObjectListData>>
 >;
+
+export const isObjectListFileSource = (
+  data: ObjectListData | undefined
+): data is ObjectListFileSource =>
+  data !== undefined && !Array.isArray(data) && "entries" in data;
+
+export const objectListEntries = (
+  data: ObjectListData | undefined
+): ObjectListEntries => {
+  if (data === undefined) {
+    return [];
+  }
+  return isObjectListFileSource(data) ? data.entries : data;
+};
+
+export const objectListSourceFile = (
+  data: ObjectListData | undefined
+): string | undefined => (isObjectListFileSource(data) ? data.file : undefined);
 
 export const objectListLocation = (
   objectType: ObjectListType,
-  index: number
+  index: number,
+  file?: string
 ): ObjectListLocation => ({
   type: SourceLocationType.OBJECT_LIST,
   objectType,
   source: { localOffset: -1, absoluteOffset: -1, line: index, column: 0 },
+  ...(file === undefined ? {} : { file }),
 });
 
 export class ObjectListParser {

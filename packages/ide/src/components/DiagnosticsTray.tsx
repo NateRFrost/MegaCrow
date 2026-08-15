@@ -27,10 +27,15 @@ function severityOf(d: MegaloDiagnostic): "error" | "warning" {
 }
 
 function formatDiagnosticCopy(diagnostic: MegaloDiagnostic): string {
+  const severity = severityOf(diagnostic);
   if (diagnostic.trayOnly) {
-    return diagnostic.message;
+    return `${severity}: ${diagnostic.message}`;
   }
-  return `Ln ${diagnostic.line}, Col ${diagnostic.column}: ${diagnostic.message}`;
+  return `${severity}: Ln ${diagnostic.line}, Col ${diagnostic.column}: ${diagnostic.message}`;
+}
+
+function formatAllDiagnosticsCopy(diagnostics: MegaloDiagnostic[]): string {
+  return diagnostics.map(formatDiagnosticCopy).join("\n");
 }
 
 function SeverityIcon({ severity }: { severity: "error" | "warning" }) {
@@ -210,15 +215,29 @@ export function DiagnosticsTray({
             )}
           </span>
         </div>
-        <button
-          aria-label="Close problems"
-          className="diagnostics-tray-close"
-          onClick={onClose}
-          title="Close"
-          type="button"
-        >
-          ×
-        </button>
+        <div className="diagnostics-tray-actions">
+          <button
+            aria-label="Copy all problems"
+            className="diagnostics-tray-action"
+            disabled={sorted.length === 0}
+            onClick={() => {
+              void writeClipboardText(formatAllDiagnosticsCopy(sorted));
+            }}
+            title="Copy all"
+            type="button"
+          >
+            Copy all
+          </button>
+          <button
+            aria-label="Close problems"
+            className="diagnostics-tray-close"
+            onClick={onClose}
+            title="Close"
+            type="button"
+          >
+            ×
+          </button>
+        </div>
       </div>
       <ul className="diagnostics-tray-list">
         {sorted.length === 0 ? (

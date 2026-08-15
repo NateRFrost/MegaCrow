@@ -17,8 +17,25 @@ import {
   OverrideValueKind,
 } from "src/frontend/abstract-syntax-tree/elements/game_options/types";
 import { isPlayerTraitsOverrideOption } from "src/frontend/language-configuration/omni/game_options";
+import { ObjectListType } from "src/frontend/object-lists";
 import { SymbolKind } from "src/frontend/symbol-table";
 import { type Token, TokenKind } from "src/frontend/tokens";
+
+const objectListTypeForOverride = (
+  name: OverrideNameNode
+): ObjectListType | undefined => {
+  if (name.kind !== SyntaxKind.REFERENCE) {
+    return;
+  }
+  switch (name.identifier) {
+    case "weapon_set":
+      return ObjectListType.WeaponSets;
+    case "vehicle_set":
+      return ObjectListType.VehicleSets;
+    default:
+      return;
+  }
+};
 
 const parseOverrideName = (
   ctx: ParserContext,
@@ -88,7 +105,8 @@ const isNestedPlayerTraitsOverride = (
 
 const parseOverrideSimpleValue = (
   ctx: ParserContext,
-  anchor: Token
+  anchor: Token,
+  objectListType?: ObjectListType
 ): OverrideSimpleValueNode["value"] => {
   const token = ctx.peekToken();
   if (
@@ -100,6 +118,23 @@ const parseOverrideSimpleValue = (
 
   if (token?.kind === TokenKind.Identifier) {
     const valueToken = ctx.getToken();
+
+    if (objectListType !== undefined) {
+      const listSymbolId = ctx.symbolParser.lookupObjectListItem(
+        objectListType,
+        valueToken.value
+      );
+      if (listSymbolId !== undefined) {
+        ctx.symbolParser.recordReference(listSymbolId, valueToken.location);
+        return {
+          kind: SyntaxKind.REFERENCE,
+          identifier: valueToken.value,
+          symbolId: listSymbolId,
+          location: valueToken.location,
+        };
+      }
+    }
+
     const symbolId = ctx.symbolParser.lookupSymbol(valueToken.value);
     if (symbolId !== undefined) {
       ctx.symbolParser.recordReference(symbolId, valueToken.location);
@@ -161,7 +196,11 @@ export const overrideParser = (
   ) {
     value = {
       kind: OverrideValueKind.SIMPLE,
-      value: parseOverrideSimpleValue(ctx, nameToken),
+      value: parseOverrideSimpleValue(
+        ctx,
+        nameToken,
+        objectListTypeForOverride(name)
+      ),
     };
   } else if (isEndToken(peek)) {
     value = {

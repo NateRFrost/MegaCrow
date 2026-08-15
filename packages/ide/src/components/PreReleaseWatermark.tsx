@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSystemUsername } from "../lib/systemUsername";
+import { getDiscordUsername } from "../lib/discordRpc";
 
 function pad2(value: number): string {
   return String(value).padStart(2, "0");
@@ -15,13 +15,21 @@ export function PreReleaseWatermark() {
 
   useEffect(() => {
     let cancelled = false;
-    void getSystemUsername().then((value) => {
-      if (!cancelled) {
-        setUsername(value);
-      }
-    });
+
+    const refresh = () => {
+      void getDiscordUsername().then((value) => {
+        if (!cancelled) {
+          setUsername(value);
+        }
+      });
+    };
+
+    refresh();
+    // Discord may connect after launch; keep the name in sync.
+    const id = window.setInterval(refresh, 5000);
     return () => {
       cancelled = true;
+      window.clearInterval(id);
     };
   }, []);
 
@@ -32,13 +40,13 @@ export function PreReleaseWatermark() {
     return () => window.clearInterval(id);
   }, []);
 
+  const timestamp = formatWatermarkTimestamp(now);
+
   return (
     <div aria-hidden="true" className="pre-release-watermark">
       <div className="pre-release-watermark-title">PRE-RELEASE BUILD</div>
       <div className="pre-release-watermark-meta">
-        {username === null
-          ? "…"
-          : `${username} @ ${formatWatermarkTimestamp(now)}`}
+        {username ? `${username} @ ${timestamp}` : timestamp}
       </div>
     </div>
   );

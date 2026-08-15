@@ -25,6 +25,7 @@ import {
   type SourceAnalysis,
 } from "./lib/analyzeSource";
 import type { AppSettings } from "./lib/appSettings";
+import type { MegaloDiagnostic } from "./lib/diagnostics";
 import {
   setDiscordPresenceEnabled,
   updateDiscordPresence,
@@ -51,6 +52,7 @@ import {
 } from "./lib/includeDiagnostics";
 import {
   lspAnalyzeObjectList,
+  lspResetSession,
   lspSetObjectLists,
   lspVersionConfiguration,
 } from "./lib/lspClient";
@@ -124,6 +126,7 @@ import {
 } from "./lib/workspace";
 import { workspaceUnexpectedFailure } from "./lib/workspaceBase";
 import { prepareWorkspaceCompileContext } from "./lib/workspaceCompileContext";
+import { materializeObjectListsOnFirstSave } from "./lib/workspaceObjectLists";
 import type { MegaloHoverContext } from "./monaco/megalo-language";
 import {
   setMegaloDefinitionOpenHandler,
@@ -258,6 +261,9 @@ export function App() {
   const [baselineSource, setBaselineSource] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<SourceAnalysis>(idleAnalysis);
   const [objectListNames, setObjectListNames] = useState<readonly string[]>([]);
+  const [missingObjectListNames, setMissingObjectListNames] = useState<
+    readonly string[]
+  >([]);
   const [objectListsEpoch, setObjectListsEpoch] = useState(0);
   const [compileState, setCompileState] = useState<CompileState>("idle");
   const [cursorLine, setCursorLine] = useState(1);
@@ -288,9 +294,11 @@ export function App() {
   const includeRootRef = useRef(includeRoot);
   const fileNameRef = useRef(fileName);
   const activeWorkspaceRef = useRef(activeWorkspace);
+  const objectListNamesRef = useRef(objectListNames);
   includeRootRef.current = includeRoot;
   fileNameRef.current = fileName;
   activeWorkspaceRef.current = activeWorkspace;
+  objectListNamesRef.current = objectListNames;
   const compileParsingRef = useRef(false);
   const sourceLoadInProgressRef = useRef(false);
   /** Skip the next baseline-compile effect after loadMegaloSource already compiled. */
@@ -458,9 +466,33 @@ export function App() {
     []
   );
 
+  const objectListDiagnostics = useMemo((): MegaloDiagnostic[] => {
+    if (missingObjectListNames.length === 0) {
+      return [];
+    }
+    const listed = missingObjectListNames.join(", ");
+    return [
+      {
+        line: 0,
+        column: 0,
+        severity: "warning",
+        trayOnly: true,
+        message:
+          missingObjectListNames.length === 1
+            ? `Missing object list file object_lists/${listed}`
+            : `Missing object list files in object_lists/: ${listed}`,
+      },
+    ];
+  }, [missingObjectListNames]);
+
+  const displayDiagnostics = useMemo(
+    () => [...analysis.diagnostics, ...objectListDiagnostics],
+    [analysis.diagnostics, objectListDiagnostics]
+  );
+
   const warningCount = useMemo(
-    () => analysis.diagnostics.filter((d) => d.severity === "warning").length,
-    [analysis.diagnostics]
+    () => displayDiagnostics.filter((d) => d.severity === "warning").length,
+    [displayDiagnostics]
   );
 
   const isPlainTextDocument = useMemo(
@@ -510,7 +542,9 @@ export function App() {
 
   const clearWorkspace = useCallback(() => {
     loadRunRef.current += 1;
+    compileRunRef.current += 1;
     saveRunRef.current += 1;
+    downloadRunRef.current += 1;
     sourceLoadInProgressRef.current = false;
     skipBaselineCompileRef.current = false;
     suppressFileNavRef.current = false;
@@ -531,6 +565,8 @@ export function App() {
     setCompileState("idle");
     setCompiledSize(null);
     setFileNav(EMPTY_FILE_NAV);
+    setMissingObjectListNames([]);
+    void lspResetSession();
   }, []);
 
   const recordFileNavOpen = useCallback((entry: FileNavEntry) => {
@@ -990,12 +1026,24 @@ export function App() {
     const runId = ++saveRunRef.current;
     void (async () => {
       try {
-        const saved = await persistOpenSourceFile({
-          absoluteFilePath,
-          fileName: name,
-          opfs,
-          text,
-        });
+        let saved = false;
+        if (absoluteFilePath?.trim() && isObjectListsPath(absoluteFilePath)) {
+          saved = await materializeObjectListsOnFirstSave({
+            absoluteFilePath: absoluteFilePath.trim(),
+            text,
+            objectListNames: objectListNamesRef.current,
+            megaloVersionId:
+              activeWorkspaceRef.current?.megaloVersion ?? "107-mcc",
+          });
+        }
+        if (!saved) {
+          saved = await persistOpenSourceFile({
+            absoluteFilePath,
+            fileName: name,
+            opfs,
+            text,
+          });
+        }
         if (
           !saved ||
           runId !== saveRunRef.current ||
@@ -1004,6 +1052,9 @@ export function App() {
           return;
         }
         lastPersistedSourceRef.current = text;
+        if (isObjectListsPath(absoluteFilePath ?? name)) {
+          setLocalDiskRevision((n) => n + 1);
+        }
       } catch (error) {
         console.error("Failed to save source file:", error);
       }
@@ -1151,6 +1202,21 @@ export function App() {
       void lspSetObjectLists(lists);
       setMegaloWorkerObjectLists(lists);
       setObjectListsEpoch((value) => value + 1);
+    },
+    []
+  );
+
+  const handleMissingObjectListNamesChange = useCallback(
+    (names: readonly string[]) => {
+      setMissingObjectListNames((prev) => {
+        if (
+          prev.length === names.length &&
+          prev.every((name, index) => name === names[index])
+        ) {
+          return prev;
+        }
+        return names;
+      });
     },
     []
   );
@@ -1728,6 +1794,9 @@ export function App() {
               onEditWorkspace={handleEditWorkspace}
               onFileDeleted={handleFileDeleted}
               onFileRenamed={handleFileRenamed}
+              onMissingObjectListNamesChange={
+                handleMissingObjectListNamesChange
+              }
               onOpenSource={loadMegaloSource}
               onSelectWorkspace={handleSelectWorkspace}
               onWorkspaceObjectListsChange={handleWorkspaceObjectListsChange}
@@ -1791,7 +1860,7 @@ export function App() {
                 role="separator"
               />
               <DiagnosticsTray
-                diagnostics={analysis.diagnostics}
+                diagnostics={displayDiagnostics}
                 height={problemsPaneHeight}
                 onClose={() => setDiagnosticsOpen(false)}
                 onNavigate={handleNavigateToDiagnostic}

@@ -1,5 +1,17 @@
 import type { IR } from "src/frontend/intermediate-representation";
 
+function englishFromScriptString(
+  ir: IR,
+  oneBasedIndex: number
+): string | undefined {
+  if (oneBasedIndex <= 0) {
+    return;
+  }
+  const entry = ir.gameVariant.scriptStrings.toArray()[oneBasedIndex - 1];
+  const text = entry?.english?.trim();
+  return text ? text : undefined;
+}
+
 export function applyMetadata(ir: IR) {
   if (ir.gameVariant.localizedName) {
     const name = ir.gameVariant.localizedName.toArray()[0]?.english ?? "";
@@ -11,6 +23,14 @@ export function applyMetadata(ir: IR) {
         "name",
         location
       );
+    }
+  } else {
+    const name = englishFromScriptString(
+      ir,
+      ir.gameVariant.baseNameStringIndex
+    );
+    if (name !== undefined) {
+      ir.gameVariant.baseVariant.metadata.name = name;
     }
   }
   if (ir.gameVariant.localizedDescription) {

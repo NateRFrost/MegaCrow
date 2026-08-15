@@ -6,6 +6,7 @@ import {
   EDITOR_LINE_HEIGHT,
 } from "../lib/editorFont";
 import { lspSyncDocument, subscribeLspDiagnostics } from "../lib/lspClient";
+import { showSourceFileQuickOpen } from "../lib/sourceFileQuickOpen";
 import {
   MEGALO_LANGUAGE_ID,
   type MegaloDiagnostic,
@@ -46,6 +47,15 @@ interface Props {
 const OUTLINE_DEBOUNCE_MS = 300;
 const COMPILE_DEBOUNCE_MS = 400;
 const CURSOR_DEBOUNCE_MS = 120;
+
+interface ModelContentChange {
+  rangeLength: number;
+  text: string;
+}
+
+interface ModelContentChangedEvent {
+  changes: readonly ModelContentChange[];
+}
 
 export const MegaloEditor = memo(function MegaloEditor({
   documentContent,
@@ -277,6 +287,15 @@ export const MegaloEditor = memo(function MegaloEditor({
       );
 
       editor.addAction({
+        id: "megacrow.goToFile",
+        label: "Go to File...",
+        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyP],
+        run: (ed: Monaco["editor"]["IStandaloneCodeEditor"]) => {
+          void showSourceFileQuickOpen(ed);
+        },
+      });
+
+      editor.addAction({
         id: "megacrow.toggleWordWrap",
         label: "View: Toggle Word Wrap",
         keybindings: [monaco.KeyMod.Alt | monaco.KeyCode.KeyZ],
@@ -321,7 +340,7 @@ export const MegaloEditor = memo(function MegaloEditor({
         editor.focus();
       });
 
-      model?.onDidChangeContent(() => {
+      model?.onDidChangeContent((event: ModelContentChangedEvent) => {
         if (suppressContentHandlerRef.current) {
           return;
         }
@@ -329,6 +348,28 @@ export const MegaloEditor = memo(function MegaloEditor({
         scheduleCompileSync();
         if (!plainTextRef.current) {
           void lspSyncDocument(editor.getModel()?.getValue() ?? "");
+          // Space-separated Megalo slots: reopen suggest after space / `.` / `_`,
+          // and after backspace/delete (Monaco only auto-triggers on typed chars).
+          const shouldRetriggerSuggest = event.changes.some(
+            (change: ModelContentChange) => {
+              if (
+                change.text === " " ||
+                change.text === "." ||
+                change.text === "_"
+              ) {
+                return true;
+              }
+              return change.text === "" && change.rangeLength > 0;
+            }
+          );
+          if (shouldRetriggerSuggest) {
+            queueMicrotask(() => {
+              if (editorRef.current !== editor) {
+                return;
+              }
+              editor.trigger("megacrow", "editor.action.triggerSuggest", {});
+            });
+          }
         }
       });
       applyDiagnostics();
@@ -362,6 +403,8 @@ export const MegaloEditor = memo(function MegaloEditor({
         wordWrap: editorWordWrap ? "on" : "off",
         scrollBeyondLastLine: false,
         padding: { top: 10, bottom: 8 },
+        // Keep suggest/hover widgets from being clipped by the problems pane.
+        fixedOverflowWidgets: true,
         folding: true,
         showFoldingControls: "mouseover",
         "semanticHighlighting.enabled": true,
@@ -369,6 +412,7 @@ export const MegaloEditor = memo(function MegaloEditor({
         tabSize: 4,
         quickSuggestions: { other: true, comments: false, strings: false },
         suggestOnTriggerCharacters: true,
+        acceptSuggestionOnCommitCharacter: false,
         quickSuggestionsDelay: 0,
         wordBasedSuggestions: "off",
         suggest: {

@@ -8,12 +8,16 @@ import {
   type SymbolTableHudWidgetEntry,
 } from "../../../src/frontend/symbol-table";
 import { Lexer } from "../../../src/frontend/tokens";
+import type { MegacrowExtensions } from "../../../src/megacrow-extensions";
 import { MEGALO_VERSIONS } from "../../../src/version";
 
-const parse = (source: string) => {
+const parse = (
+  source: string,
+  megacrowExtensions?: Partial<MegacrowExtensions>
+) => {
   const diagnostics = new Diagnostics();
   const version = MEGALO_VERSIONS["107-mcc"];
-  const frontend = new MegaloCompilerContext(version);
+  const frontend = new MegaloCompilerContext(version, megacrowExtensions);
   const tokens = new Lexer(frontend).lex(source, diagnostics);
   const ast = new Parser(frontend).parse(tokens, diagnostics);
   return { ast, symbolTable: ast.symbolTable.toArray(), diagnostics };
@@ -116,5 +120,116 @@ end
     expect(
       hudWidgetSymbols(symbolTable).filter((e) => e.name === "shared_widget")
     ).toHaveLength(2);
+  });
+
+  it("errors on legacy text-prefixed entries without supportLegacySyntax", () => {
+    const source = `hud_widgets
+\ttext tier_widget top_left
+end
+`;
+
+    const { ast, diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(true);
+    expect(diagnostics.getErrors()[0]?.message).toContain("MegaloEdit");
+    expect(diagnostics.getWarnings()).toHaveLength(0);
+
+    const element = ast.elements[0]!;
+    if (element.elementKind !== ElementKind.HUD_WIDGETS) {
+      return;
+    }
+    expect(element.entries[0]).toMatchObject({
+      textKeyword: { value: "text" },
+      name: { value: "tier_widget" },
+      position: { value: "top_left" },
+    });
+  });
+
+  it("warns on legacy text-prefixed entries when supportLegacySyntax is enabled", () => {
+    const source = `hud_widgets
+\ttext tier_widget top_left
+\ttext game_time_widget top_left
+\ttext proximity_warning top_center
+end
+`;
+
+    const { ast, symbolTable, diagnostics } = parse(source, {
+      supportLegacySyntax: true,
+    });
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(diagnostics.getWarnings()).toHaveLength(3);
+    for (const warning of diagnostics.getWarnings()) {
+      expect(warning.message).toContain("text");
+      expect(warning.message).toContain("MegaloEdit");
+    }
+
+    const element = ast.elements[0]!;
+    expect(element.elementKind).toBe(ElementKind.HUD_WIDGETS);
+    if (element.elementKind !== ElementKind.HUD_WIDGETS) {
+      return;
+    }
+
+    expect(element.entries).toHaveLength(3);
+    expect(element.entries[0]).toMatchObject({
+      textKeyword: { value: "text" },
+      name: { value: "tier_widget" },
+      position: { value: "top_left" },
+    });
+    expect(hudWidgetSymbols(symbolTable).map((entry) => entry.name)).toEqual([
+      "tier_widget",
+      "game_time_widget",
+      "proximity_warning",
+    ]);
+  });
+
+  it("does not warn about legacy text prefix below version 106", () => {
+    const source = `hud_widgets
+\ttext tier_widget top_left
+end
+`;
+    const diagnostics = new Diagnostics();
+    const frontend = new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"]);
+    Object.defineProperty(frontend, "megaloVersion", {
+      configurable: true,
+      get: () => ({ version: 49 }),
+    });
+    const tokens = new Lexer(frontend).lex(source, diagnostics);
+    new Parser(frontend).parse(tokens, diagnostics);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(diagnostics.getWarnings()).toHaveLength(0);
+  });
+
+  it("keeps a widget named text parsable without a legacy prefix", () => {
+    const source = `hud_widgets
+\ttext top_left
+end
+`;
+
+    const { ast, diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(
+      diagnostics
+        .getWarnings()
+        .filter((warning) => warning.message.includes("MegaloEdit"))
+        .concat(
+          diagnostics
+            .getErrors()
+            .filter((error) => error.message.includes("MegaloEdit"))
+        )
+    ).toHaveLength(0);
+
+    const element = ast.elements[0]!;
+    if (element.elementKind !== ElementKind.HUD_WIDGETS) {
+      return;
+    }
+
+    expect(element.entries[0]).toMatchObject({
+      name: { value: "text" },
+      position: { value: "top_left" },
+    });
+    expect(element.entries[0]?.textKeyword).toBeUndefined();
   });
 });

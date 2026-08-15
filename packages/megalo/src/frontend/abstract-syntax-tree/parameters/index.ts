@@ -27,7 +27,7 @@ import {
   type SymbolTableEntry,
   VariableType,
 } from "src/frontend/symbol-table";
-import { TokenKind } from "src/frontend/tokens";
+import { type Token, TokenKind } from "src/frontend/tokens";
 
 export type { ASTDynamicStringNode } from "src/frontend/abstract-syntax-tree/parameters/types/dynamic-string";
 export { scanDynamicStringPlaceholders } from "src/frontend/abstract-syntax-tree/parameters/types/dynamic-string";
@@ -224,6 +224,7 @@ export const matchesParameterType = (
     case ParameterType.PlayerTraits:
       return entry.kind === SymbolKind.PlayerTraits;
     case ParameterType.String:
+    case ParameterType.DynamicString:
       return entry.kind === SymbolKind.String;
     default:
       return false;
@@ -298,14 +299,41 @@ const lookupReferenceSymbolId = (
   ctx.symbolParser.lookupObjectFilter(name) ??
   ctx.symbolParser.lookupPlayerTraits(name);
 
+/** Next-token boundaries that belong to the trigger statement parser, not operands. */
+const isTriggerStatementBoundary = (token: Token | undefined): boolean => {
+  if (token === undefined) {
+    return true;
+  }
+  if (token.kind !== TokenKind.Identifier) {
+    return false;
+  }
+  switch (token.value) {
+    case "end":
+    case "action":
+    case "condition":
+    case "begin":
+    case "temporary":
+      return true;
+    default:
+      return false;
+  }
+};
+
 const consumeLenientParameter = (
   ctx: ParserContext,
   anchor: SourceCodeLocation
 ): ASTParameterNode => {
   const token = ctx.peekToken();
 
+  if (token === undefined || isTriggerStatementBoundary(token)) {
+    return {
+      kind: SyntaxKind.INVALID,
+      location: anchor,
+    };
+  }
+
   if (
-    token?.kind === TokenKind.Identifier &&
+    token.kind === TokenKind.Identifier &&
     ctx.peekToken(1)?.kind === TokenKind.MemberVariableSeparator
   ) {
     const rootToken = ctx.getToken();
@@ -744,10 +772,20 @@ const parseSlot = (
       ctx.reset(mark);
     }
 
+    if (isTriggerStatementBoundary(ctx.peekToken())) {
+      return [];
+    }
     return [consumeLenientParameter(ctx, anchor)];
   }
 
-  return [parseParameter(ctx, slot) ?? consumeLenientParameter(ctx, anchor)];
+  const parameter = parseParameter(ctx, slot);
+  if (parameter !== undefined) {
+    return [parameter];
+  }
+  if (isTriggerStatementBoundary(ctx.peekToken())) {
+    return [];
+  }
+  return [consumeLenientParameter(ctx, anchor)];
 };
 
 const tryParseSignature = (

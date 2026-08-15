@@ -42,3 +42,14 @@ interface Window {
     mode?: "read" | "readwrite";
   }): Promise<FileSystemDirectoryHandle>;
 }
+
+declare module "monaco-editor/esm/vs/editor/standalone/browser/standaloneServices.js" {
+  export const StandaloneServices: {
+    get(serviceId: unknown): unknown;
+    initialize(overrides: Record<string, unknown>): unknown;
+  };
+}
+
+declare module "monaco-editor/esm/vs/platform/quickinput/common/quickInput.js" {
+  export const IQuickInputService: unknown;
+}

@@ -13,7 +13,9 @@ import {
   OBJECT_LIST_TYPES,
   type ObjectLists,
   type ObjectListType,
+  objectListEntries,
   objectListLocation,
+  objectListSourceFile,
 } from "src/frontend/object-lists";
 import {
   type SymbolBinder,
@@ -89,7 +91,9 @@ export class ParserSymbolContext {
     diagnostics: Diagnostics
   ): void {
     for (const objectType of OBJECT_LIST_TYPES) {
-      const entries = objectLists[objectType] ?? [];
+      const table = objectLists[objectType];
+      const entries = objectListEntries(table);
+      const file = objectListSourceFile(table);
       const byName = new Map<string, SymbolId>();
       for (let i = 0; i < entries.length; i++) {
         const name = entries[i]!;
@@ -103,7 +107,7 @@ export class ParserSymbolContext {
         if (byName.has(name)) {
           diagnostics.addError(
             `Duplicate object "${name}" in ${objectType} object list`,
-            objectListLocation(objectType, i)
+            objectListLocation(objectType, i, file)
           );
           continue;
         }
@@ -112,7 +116,7 @@ export class ParserSymbolContext {
           name,
           objectType,
           index: i,
-          declaration: objectListLocation(objectType, i),
+          declaration: objectListLocation(objectType, i, file),
         });
         byName.set(name, id);
       }
@@ -516,10 +520,18 @@ export class ParserSymbolContext {
     return;
   }
 
-  public pushScope(scope: ParserScope = { kind: ParserScopeKind.Block }): void {
+  public pushScope(
+    scope: ParserScope = { kind: ParserScopeKind.Block },
+    start?: SourcePosition
+  ): void {
     this.symbolScopes.push(new Map());
     this.scopeSymbolIds.push([]);
     addBuiltInScopeVariables(this.frontend.megaloVersion, this, scope);
+    if (start !== undefined) {
+      for (const id of this.scopeSymbolIds.at(-1) ?? []) {
+        this.symbolBinder.setScopeStart(id, start);
+      }
+    }
   }
 
   /**

@@ -32,3 +32,18 @@ export async function setDiscordPresenceEnabled(
     // Discord may be closed or RPC unavailable.
   }
 }
+
+/** Discord display name from IPC READY; null on web or when Discord is unavailable. */
+export async function getDiscordUsername(): Promise<string | null> {
+  if (!isTauriRuntime()) {
+    return null;
+  }
+
+  try {
+    const username = await invoke<string | null>("get_discord_username");
+    const trimmed = username?.trim();
+    return trimmed ? trimmed : null;
+  } catch {
+    return null;
+  }
+}

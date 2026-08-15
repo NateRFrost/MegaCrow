@@ -222,6 +222,26 @@ end
     expect(overrideKeywords).toHaveLength(3);
   });
 
+  it("highlights weapon_set and vehicle_set object-list values as enumMember", async () => {
+    const source = `game_options
+\toverride weapon_set slayer_pro
+\toverride vehicle_set mongoose_only
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    const tokens = getSemanticTokens(snapshot);
+    const slayerPro = tokens.find(
+      (token) =>
+        token.type === "enumMember" && token.length === "slayer_pro".length
+    );
+    const mongooseOnly = tokens.find(
+      (token) =>
+        token.type === "enumMember" && token.length === "mongoose_only".length
+    );
+    expect(slayerPro).toBeDefined();
+    expect(mongooseOnly).toBeDefined();
+  });
+
   it("highlights nested base_player_traits override name as variable and fields as parameter", async () => {
     const source = `game_options
 \toverride base_player_traits
@@ -586,6 +606,34 @@ end
     expect(lowCenter).toBeDefined();
   });
 
+  it("highlights legacy hud_widgets text prefix as enumMember", async () => {
+    const source = `hud_widgets
+\ttext proximity_warning high_center
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    const tokens = getSemanticTokens(snapshot);
+
+    const textKeyword = tokens.find(
+      (token) =>
+        token.type === "enumMember" &&
+        token.length === "text".length &&
+        token.line === 1
+    );
+    const name = tokens.find(
+      (token) =>
+        token.type === "variable" && token.length === "proximity_warning".length
+    );
+    const position = tokens.find(
+      (token) =>
+        token.type === "enumMember" && token.length === "high_center".length
+    );
+
+    expect(textKeyword).toBeDefined();
+    expect(name).toBeDefined();
+    expect(position).toBeDefined();
+  });
+
   it("highlights loadout item slots as parameter", async () => {
     const source = `loadout spartan_loadout
 \tprimary_weapon assault_rifle
@@ -758,6 +806,8 @@ trigger team
 end
 trigger initialization
 end
+trigger fuck
+end
 `;
     const snapshot = await analyzeDocument(source, { version });
     const tokens = getSemanticTokens(snapshot);
@@ -777,9 +827,59 @@ end
       (token) =>
         token.type === "enumMember" && token.length === "initialization".length
     );
+    const unknown = tokens.find(
+      (token) => token.type === "enumMember" && token.length === "fuck".length
+    );
     expect(playerKind).toBeDefined();
     expect(teamKind).toBeDefined();
     expect(initKind).toBeDefined();
+    expect(unknown).toBeUndefined();
+  });
+
+  it("highlights for_each targets with the same kind styling as triggers", async () => {
+    const source = `map_object invasion_objective
+end
+trigger initialization
+\taction for_each player
+\tend
+\taction for_each team
+\tend
+\taction for_each general
+\tend
+\taction for_each invasion_objective
+\tend
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    const tokens = getSemanticTokens(snapshot);
+    const playerTarget = tokens.find(
+      (token) =>
+        token.type === "type" &&
+        token.length === "player".length &&
+        token.line === 3
+    );
+    const teamTarget = tokens.find(
+      (token) =>
+        token.type === "type" &&
+        token.length === "team".length &&
+        token.line === 5
+    );
+    const generalTarget = tokens.find(
+      (token) =>
+        token.type === "enumMember" &&
+        token.length === "general".length &&
+        token.line === 7
+    );
+    const filterTarget = tokens.find(
+      (token) =>
+        token.type === "variable" &&
+        token.length === "invasion_objective".length &&
+        token.line === 9
+    );
+    expect(playerTarget).toBeDefined();
+    expect(teamTarget).toBeDefined();
+    expect(generalTarget).toBeDefined();
+    expect(filterTarget).toBeDefined();
   });
 
   it("highlights quoted object-list names as enumMember", async () => {

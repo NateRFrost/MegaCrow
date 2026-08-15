@@ -6,14 +6,21 @@ import {
   type CompiledMegaloMetadata,
   type CompileSourceOptions,
   compileFromSnapshot,
+  completeQuotedPath,
+  completionsAtPosition,
   type DefinitionTarget,
   definitionAtPosition,
   encodeSemanticTokens,
   getConfigurationForVersion,
+  getQuotedPathCompletionQuery,
   getSemanticTokens,
+  type CompletionItem as MegaloCompletionItem,
+  type CompletionKind as MegaloCompletionKind,
   type Diagnostic as MegaloDiagnostic,
   DiagnosticSeverity as MegaloSeverity,
   type ObjectLists,
+  type PathDirectoryEntry,
+  type QuotedPathCompletionQuery,
   SEMANTIC_TOKEN_MODIFIERS,
   SEMANTIC_TOKEN_TYPES,
   SourceLocationType,
@@ -21,6 +28,8 @@ import {
   summarizeIncludeDiagnostics,
 } from "@megacrow/megalo";
 import {
+  type CompletionItem,
+  CompletionItemKind,
   type Diagnostic,
   DiagnosticSeverity,
   type LocationLink,
@@ -31,12 +40,15 @@ export const MEGACROW_COMPILE_METHOD = "megacrow/compile";
 export const MEGACROW_REQUEST_ARTIFACTS_METHOD = "megacrow/requestArtifacts";
 export const MEGACROW_RESOLVE_INCLUDE_METHOD = "megacrow/resolveInclude";
 export const MEGACROW_RESOLVE_BASE_FILE_METHOD = "megacrow/resolveBaseFile";
+export const MEGACROW_LIST_DIRECTORY_METHOD = "megacrow/listDirectory";
 export const MEGACROW_VERSION_CONFIGURATION_METHOD =
   "megacrow/versionConfiguration";
 export const MEGACROW_ANALYZE_OBJECT_LIST_METHOD = "megacrow/analyzeObjectList";
 export const MEGACROW_SET_OBJECT_LISTS_METHOD = "megacrow/setObjectLists";
 export const MEGACROW_SET_RESOLVE_BASE_FILE_METHOD =
   "megacrow/setResolveBaseFile";
+/** Drop all open documents, caches, and pending analysis (workspace / session switch). */
+export const MEGACROW_RESET_SESSION_METHOD = "megacrow/resetSession";
 
 export const SEMANTIC_TOKENS_LEGEND: SemanticTokensLegend = {
   tokenTypes: [...SEMANTIC_TOKEN_TYPES],
@@ -101,6 +113,16 @@ export type MegacrowResolveBaseFileResult =
   | { dataBase64: string }
   | { error: string };
 
+export interface MegacrowListDirectoryParams {
+  /** Relative directory under the document (or search root). Empty = document dir. */
+  directory: string;
+  fromUri?: string;
+}
+
+export type MegacrowListDirectoryResult =
+  | { entries: PathDirectoryEntry[] }
+  | { error: string };
+
 export interface MegacrowVersionConfigurationResult {
   objectListNames: readonly string[];
 }
@@ -122,6 +144,9 @@ export interface MegacrowSetResolveBaseFileParams {
   /** When false, compile omits `resolveBaseFile` (silent sibling-source JIT). */
   enabled: boolean;
 }
+
+/** Params for {@link MEGACROW_RESET_SESSION_METHOD} (currently unused; reserved). */
+export type MegacrowResetSessionParams = Record<string, never>;
 
 export type CompileResolvers = Pick<
   CompileSourceOptions,
@@ -427,4 +452,55 @@ export const definitionFromSnapshot = (
   ];
 };
 
+const toLspCompletionKind = (
+  kind: MegaloCompletionKind
+): CompletionItemKind => {
+  switch (kind) {
+    case "keyword":
+      return CompletionItemKind.Keyword;
+    case "function":
+      return CompletionItemKind.Function;
+    case "variable":
+      return CompletionItemKind.Variable;
+    case "enumMember":
+      return CompletionItemKind.EnumMember;
+    case "constant":
+      return CompletionItemKind.Constant;
+    case "property":
+      return CompletionItemKind.Property;
+    case "snippet":
+      return CompletionItemKind.Snippet;
+    case "file":
+      return CompletionItemKind.File;
+    case "folder":
+      return CompletionItemKind.Folder;
+    default:
+      return CompletionItemKind.Text;
+  }
+};
+
+const toLspCompletionItems = (
+  items: MegaloCompletionItem[]
+): CompletionItem[] =>
+  items.map((entry) => ({
+    label: entry.label,
+    kind: toLspCompletionKind(entry.kind),
+    detail: entry.detail,
+    insertText: entry.insertText,
+    sortText: entry.sortText,
+    filterText: entry.filterText,
+  }));
+
+export const completionsFromSnapshot = (
+  snapshot: AnalysisSnapshot,
+  position: { line: number; character: number }
+): CompletionItem[] =>
+  toLspCompletionItems(completionsAtPosition(snapshot, position));
+
+export const pathCompletionsFromEntries = (
+  query: QuotedPathCompletionQuery,
+  entries: readonly PathDirectoryEntry[]
+): CompletionItem[] => toLspCompletionItems(completeQuotedPath(query, entries));
+
 export type { AnalysisSnapshot, DefinitionTarget };
+export { getQuotedPathCompletionQuery };

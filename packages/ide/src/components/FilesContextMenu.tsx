@@ -3,8 +3,8 @@ import { createPortal } from "react-dom";
 import { fileManagerRevealLabel } from "../lib/revealInFileManager";
 
 export type FilesContextTarget =
-  | { type: "file"; path: string[] }
-  | { type: "directory"; path: string[] };
+  | { type: "file"; path: string[]; virtual?: boolean }
+  | { type: "directory"; path: string[]; virtual?: boolean };
 
 export type FilesContextSource = "local" | "opfs" | "builds";
 
@@ -101,11 +101,17 @@ export function FilesContextMenu({
   }
 
   const isFile = menu.target.type === "file";
+  const isVirtual = menu.target.virtual === true;
   const { source } = menu;
   const canReveal =
-    onReveal !== undefined && (source === "local" || source === "builds");
-  const canRename = source !== "builds" && (isFile || source === "local");
-  const canDelete = isFile || source === "local" || source === "builds";
+    onReveal !== undefined &&
+    !isVirtual &&
+    (source === "local" || source === "builds");
+  const canRename =
+    !isVirtual && source !== "builds" && (isFile || source === "local");
+  const canDelete =
+    !isVirtual && (isFile || source === "local" || source === "builds");
+  const canCopy = isFile && source !== "builds" && !isVirtual;
   const showNewActions = menu.target.type === "directory" && source === "local";
 
   return createPortal(
@@ -148,7 +154,7 @@ export function FilesContextMenu({
           ) : null}
         </>
       ) : null}
-      {isFile && source !== "builds" ? (
+      {canCopy ? (
         <button
           className="files-context-menu-item"
           onClick={() => {

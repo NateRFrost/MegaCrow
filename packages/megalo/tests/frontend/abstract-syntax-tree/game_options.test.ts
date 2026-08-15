@@ -12,6 +12,7 @@ import {
   type SymbolTableGameOptionEntry,
 } from "../../../src/frontend/symbol-table";
 import { Lexer } from "../../../src/frontend/tokens";
+import { loadObjectListsForVersion } from "../../../src/load-object-lists";
 import { MEGALO_VERSIONS } from "../../../src/version";
 
 const parse = (source: string) => {
@@ -19,7 +20,11 @@ const parse = (source: string) => {
   const version = MEGALO_VERSIONS["107-mcc"];
   const frontend = new MegaloCompilerContext(version);
   const tokens = new Lexer(frontend).lex(source, diagnostics);
-  const ast = new Parser(frontend).parse(tokens, diagnostics);
+  const ast = new Parser(frontend).parse(
+    tokens,
+    diagnostics,
+    loadObjectListsForVersion(version)
+  );
   return { ast, symbolTable: ast.symbolTable.toArray(), diagnostics };
 };
 
@@ -363,8 +368,58 @@ end
     });
     expect(vehicleEntry.value).toMatchObject({
       kind: OverrideValueKind.SIMPLE,
-      value: { kind: SyntaxKind.KEYWORD, value: "no_vehicles" },
+      value: {
+        kind: SyntaxKind.REFERENCE,
+        identifier: "no_vehicles",
+      },
     });
+  });
+
+  it("resolves weapon_set and vehicle_set object-list values as references", () => {
+    const source = `game_options
+\toverride weapon_set slayer_pro
+\toverride vehicle_set mongoose_only
+end
+`;
+
+    const { ast, diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+
+    const element = ast.elements[0]!;
+    if (element.elementKind !== ElementKind.GAME_OPTIONS) {
+      return;
+    }
+
+    const weaponEntry = element.entries[0];
+    if (weaponEntry?.kind !== GameOptionEntryKind.OVERRIDE) {
+      throw new Error("expected override entry");
+    }
+    expect(weaponEntry.value).toMatchObject({
+      kind: OverrideValueKind.SIMPLE,
+      value: {
+        kind: SyntaxKind.REFERENCE,
+        identifier: "slayer_pro",
+      },
+    });
+    expect(
+      (weaponEntry.value as { value: { symbolId?: number } }).value.symbolId
+    ).toBeDefined();
+
+    const vehicleEntry = element.entries[1];
+    if (vehicleEntry?.kind !== GameOptionEntryKind.OVERRIDE) {
+      throw new Error("expected override entry");
+    }
+    expect(vehicleEntry.value).toMatchObject({
+      kind: OverrideValueKind.SIMPLE,
+      value: {
+        kind: SyntaxKind.REFERENCE,
+        identifier: "mongoose_only",
+      },
+    });
+    expect(
+      (vehicleEntry.value as { value: { symbolId?: number } }).value.symbolId
+    ).toBeDefined();
   });
 
   it("parses loadout_palette override", () => {

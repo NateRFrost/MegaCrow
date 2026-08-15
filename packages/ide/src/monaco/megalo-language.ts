@@ -678,6 +678,10 @@ const monacoCompletionKind = (
       return Kind.EnumMember;
     case 21: // Constant
       return Kind.Constant;
+    case 17: // File
+      return Kind.File;
+    case 19: // Folder
+      return Kind.Folder;
     case 1: // Text
       return Kind.Text;
     default:
@@ -826,7 +830,7 @@ export function registerMegaloLanguage(monaco: Monaco): void {
   completionDisposable = monaco.languages.registerCompletionItemProvider(
     MEGALO_LANGUAGE_ID,
     {
-      triggerCharacters: [" ", ".", "_"],
+      triggerCharacters: [" ", ".", "_", '"', "/"],
       async provideCompletionItems(model, position) {
         try {
           const items = await lspCompletions(model.getValue(), {
@@ -834,26 +838,43 @@ export function registerMegaloLanguage(monaco: Monaco): void {
             character: position.column - 1,
           });
           const word = model.getWordUntilPosition(position);
-          const range = {
+          const lineContent = model.getLineContent(position.lineNumber);
+          const before = lineContent.slice(0, position.column - 1);
+          const defaultRange = {
             startLineNumber: position.lineNumber,
             endLineNumber: position.lineNumber,
             startColumn: word.startColumn,
             endColumn: word.endColumn,
           };
+          // Path segments may include `.` (e.g. `script.txt`); replace from the
+          // last `/` or opening `"` through the cursor.
+          const pathSegStart = Math.max(
+            before.lastIndexOf("/"),
+            before.lastIndexOf('"')
+          );
+          const pathRange = {
+            startLineNumber: position.lineNumber,
+            endLineNumber: position.lineNumber,
+            startColumn: pathSegStart + 2,
+            endColumn: position.column,
+          };
           return {
-            suggestions: items.map((item) => ({
-              label: item.label,
-              kind: monacoCompletionKind(monaco, item.kind),
-              detail: item.detail,
-              documentation:
-                typeof item.documentation === "string"
-                  ? item.documentation
-                  : item.documentation?.value,
-              insertText: item.insertText ?? item.label,
-              // Keep short prefixes (1–2 chars) matching; Monaco scores on filterText.
-              filterText: item.label,
-              range,
-            })),
+            suggestions: items.map((item) => {
+              const isPath =
+                item.kind === 17 /* File */ || item.kind === 19 /* Folder */;
+              return {
+                label: item.label,
+                kind: monacoCompletionKind(monaco, item.kind),
+                detail: item.detail,
+                documentation:
+                  typeof item.documentation === "string"
+                    ? item.documentation
+                    : item.documentation?.value,
+                insertText: item.insertText ?? item.label,
+                filterText: item.filterText ?? item.label,
+                range: isPath ? pathRange : defaultRange,
+              };
+            }),
             // Re-query as the user keeps typing so 1-char prefixes aren't stuck.
             incomplete: true,
           };

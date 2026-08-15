@@ -1,6 +1,7 @@
 import type { SourceCodeLocation, SourceLocation } from "src/diagnostics";
 import {
   isIncludeLocation,
+  isObjectListLocation,
   isSourceCodeLocation,
   SourceLocationType,
 } from "src/diagnostics";
@@ -40,15 +41,28 @@ const sourceCodeToRange = (location: SourceCodeLocation): DefinitionRange => ({
 const spanLength = (location: SourceCodeLocation): number =>
   Math.max(0, location.end.localOffset - location.start.localOffset);
 
-/** Declarations we can navigate to (not built-ins / object-list enums). */
+/** Declarations we can navigate to (not built-ins / bundled object-list enums). */
 const navigableDeclaration = (
-  declaration: SourceLocation
+  declaration: SourceLocation,
+  entry: SymbolTableEntry
 ): DefinitionTarget | null => {
   if (isIncludeLocation(declaration)) {
     return {
       kind: "file",
       file: declaration.file,
       range: sourceCodeToRange(declaration.source),
+    };
+  }
+  if (isObjectListLocation(declaration) && declaration.file !== undefined) {
+    const line = Math.max(0, declaration.source.line);
+    const nameLength = entry.name.length;
+    return {
+      kind: "file",
+      file: declaration.file,
+      range: {
+        start: { line, character: 0 },
+        end: { line, character: Math.max(1, nameLength) },
+      },
     };
   }
   if (!isSourceCodeLocation(declaration)) {
@@ -97,7 +111,8 @@ const rootHitLocations = (entry: SymbolTableEntry): SourceCodeLocation[] => {
 
 /**
  * Resolve go-to-definition for a 0-based position in the snapshot's root document.
- * Returns null for built-ins, object-list enums, and unknown symbols.
+ * Returns null for built-ins, bundled object-list enums, and unknown symbols.
+ * Workspace object-list entries (with a source file) navigate to that file.
  */
 export const definitionAtPosition = (
   snapshot: AnalysisSnapshot,
@@ -129,7 +144,7 @@ export const definitionAtPosition = (
   }
 
   for (const declaration of entryDeclarations(best.entry)) {
-    const target = navigableDeclaration(declaration);
+    const target = navigableDeclaration(declaration, best.entry);
     if (target) {
       return target;
     }

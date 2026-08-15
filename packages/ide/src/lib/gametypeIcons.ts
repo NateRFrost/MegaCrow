@@ -1,6 +1,6 @@
 /** Reach fileshare gametype icons (`reach_gametypes_*.png`). */
 
-const FILESHARE_BASE = "/img/fileshare";
+const FILESHARE_BASE = `${import.meta.env.BASE_URL}img/fileshare`;
 
 /** Matches HREK `engine_icons.txt` order used by `k_engine_icon_*` symbols. */
 const ENGINE_ICON_SUFFIXES = [

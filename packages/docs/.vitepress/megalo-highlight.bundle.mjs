@@ -1098,6 +1098,15 @@ var SymbolBinder = class {
   addReference(symbolId, reference) {
     this.table[symbolId].references.push(reference);
   }
+  setScopeStart(symbolId, position) {
+    const entry = this.table[symbolId];
+    if (entry !== void 0) {
+      entry.range = {
+        ...entry.range,
+        start: position
+      };
+    }
+  }
   setScopeEnd(symbolId, position) {
     const entry = this.table[symbolId];
     if (entry !== void 0) {
@@ -6096,8 +6105,8 @@ var lookupObjectFilterReference = (ctx, name, location) => {
   }
   return symbolId;
 };
-var withScope = (ctx, scope, fn) => {
-  ctx.symbolParser.pushScope(scope);
+var withScope = (ctx, scope, fn, start) => {
+  ctx.symbolParser.pushScope(scope, start);
   try {
     const result = fn();
     ctx.symbolParser.popScope(result.location.end);
@@ -6190,18 +6199,23 @@ var parseScopedTriggerBody = (ctx, openLocation) => {
     location: locationSpan(openLocation, endLocation)
   };
 };
-var parseBegin = (ctx, openToken, keywordLocation = openToken.location) => withScope(ctx, { kind: 0 /* Block */ }, () => {
-  const { statements, location } = parseScopedTriggerBody(
-    ctx,
-    openToken.location
-  );
-  return {
-    kind: 11 /* BEGIN */,
-    keywordLocation,
-    statements,
-    location
-  };
-});
+var parseBegin = (ctx, openToken, keywordLocation = openToken.location) => withScope(
+  ctx,
+  { kind: 0 /* Block */ },
+  () => {
+    const { statements, location } = parseScopedTriggerBody(
+      ctx,
+      openToken.location
+    );
+    return {
+      kind: 11 /* BEGIN */,
+      keywordLocation,
+      statements,
+      location
+    };
+  },
+  openToken.location.start
+);
 var parseForEachTarget = (ctx, anchor) => {
   const token = ctx.peekToken();
   if (token?.kind !== 1 /* Identifier */) {
@@ -6245,7 +6259,8 @@ var parseForEach = (ctx, actionToken) => {
         statements,
         location
       };
-    }
+    },
+    actionToken.location.start
   );
 };
 var triggerParser = (ctx, elementToken) => {
@@ -6288,7 +6303,8 @@ var triggerParser = (ctx, elementToken) => {
         statements,
         location: locationSpan(elementToken.location, consumedEnd.location)
       };
-    }
+    },
+    elementToken.location.start
   );
 };
 
@@ -7157,10 +7173,15 @@ var ParserSymbolContext = class {
     }
     return;
   }
-  pushScope(scope = { kind: 0 /* Block */ }) {
+  pushScope(scope = { kind: 0 /* Block */ }, start) {
     this.symbolScopes.push(/* @__PURE__ */ new Map());
     this.scopeSymbolIds.push([]);
     addBuiltInScopeVariables(this.frontend.megaloVersion, this, scope);
+    if (start !== void 0) {
+      for (const id of this.scopeSymbolIds.at(-1) ?? []) {
+        this.symbolBinder.setScopeStart(id, start);
+      }
+    }
   }
   /**
    * Pop the current (non-global) scope and mark its symbols as ending at `endPosition`.
@@ -8622,6 +8643,150 @@ var buildSnapshot = (source, version2, objectLists2) => {
 };
 var analyzeDocumentSync = (source, options) => buildSnapshot(source, options.version, options.objectLists);
 
+// ../megalo/src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_sounds.ts
+var megaloSound = megaloEnum([
+  "none",
+  "slayer",
+  "ctf",
+  "flag_captured",
+  "flag_dropped",
+  "flag_recovered",
+  "flag_reset",
+  "flag_stolen",
+  "flag_taken",
+  "vip",
+  "new_vip",
+  "vip_killed",
+  "juggernaut",
+  "new_juggernaut",
+  "territories",
+  "territory_captured",
+  "territory_lost",
+  "assault",
+  "bomb_armed",
+  "bomb_detonated",
+  "bomb_disarmed",
+  "bomb_dropped",
+  "bomb_reset",
+  "bomb_returned",
+  "bomb_taken",
+  "infection",
+  "infected",
+  "last_man_standing",
+  "new_zombie",
+  "oddball",
+  "ball_spawned",
+  "ball_taken",
+  "ball_dropped",
+  "ball_reset",
+  "king",
+  "hill_controlled",
+  "hill_contested",
+  "hill_moved",
+  "headhunter",
+  "stockpile",
+  "race",
+  "defense",
+  "offense",
+  "destination_moved",
+  "generator_armed",
+  "core_armed",
+  "generator_disarmed",
+  "core_disarmed",
+  "sudden_death",
+  "game_over",
+  "bone_cv_defeat",
+  "bone_cv_ph1_defeat",
+  "bone_cv_ph1_intro",
+  "bone_cv_ph1_victory",
+  "bone_cv_ph2_defeat",
+  "bone_cv_ph2_victory",
+  "bone_cv_ph3_victory",
+  "bone_cv_victory",
+  "bone_sp_defeat",
+  "bone_sp_ph1_intro",
+  "bone_sp_ph1_victory",
+  "bone_sp_ph2_intro",
+  "bone_sp_ph2_victory",
+  "bone_sp_ph3_intro",
+  "bone_sp_ph3_victory",
+  "isle_cv_defeat",
+  "isle_cv_ph1_defeat",
+  "isle_cv_ph1_intro",
+  "isle_cv_ph2_intro",
+  "isle_cv_ph2_victory",
+  "isle_cv_ph3_intro",
+  "isle_cv_ph3_victory",
+  "isle_sp_defeat",
+  "isle_sp_ph1_defeat",
+  "isle_sp_ph1_extra",
+  "isle_sp_ph1_intro",
+  "isle_sp_ph1_victory",
+  "isle_sp_ph2_defeat",
+  "isle_sp_ph2_victory",
+  "isle_sp_ph3_victory",
+  "isle_sp_victory",
+  "bone_sp_ph3_defeat",
+  "isle_cv_ph3_defeat",
+  "covy_big_win",
+  "covy_win1",
+  "covy_win2",
+  "invasion_beginning",
+  "unsc_big_win",
+  "unsc_win1",
+  "unsc_win2",
+  "power_down",
+  "reinforcements",
+  "respawn_tick",
+  "alpha_under_attack",
+  "bravo_under_attack",
+  "charlie_under_attack"
+]);
+var MegaloSound = megaloSound.enum;
+
+// ../megalo/src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions.ts
+var numericComparison = megaloEnum([
+  "less_than",
+  { name: "<", aliasOf: "less_than" },
+  "greater_than",
+  { name: ">", aliasOf: "greater_than" },
+  "equal_to",
+  { name: "==", aliasOf: "equal_to" },
+  "less_than_or_equal_to",
+  { name: "<=", aliasOf: "less_than_or_equal_to" },
+  "greater_than_or_equal_to",
+  { name: ">=", aliasOf: "greater_than_or_equal_to" },
+  "not_equal_to",
+  { name: "!=", aliasOf: "not_equal_to" }
+]);
+var NumericComparison = numericComparison.enum;
+var conditionType = megaloEnum([
+  "if",
+  "object_in_area",
+  "player_died",
+  "team_disposition",
+  "timer_expired",
+  "object_is_type",
+  "team_is_active",
+  "object_out_of_bounds",
+  "player_is_fire_team_leader",
+  "player_assisted_with_kill",
+  "object_matches_filter",
+  "player_is_active",
+  "equipment_is_active",
+  "player_is_spartan",
+  "player_is_elite",
+  "player_is_editor",
+  "game_is_forge"
+]);
+var ConditionType = conditionType.enum;
+var disposition = megaloEnum([
+  "neutral",
+  "friendly",
+  "enemy"
+]);
+var Disposition = disposition.enum;
+
 // ../megalo/src/language-service/highlighting/emit.ts
 var emitLocation = (out, location, type, modifiers = []) => {
   if (!isRootDocumentLocation(location)) {
@@ -9447,107 +9612,6 @@ var highlightHsFunctionCall = (out, statement) => {
   const p = statement.parameters;
   highlightParameterKeyword(out, p[0]);
 };
-
-// ../megalo/src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_sounds.ts
-var megaloSound = megaloEnum([
-  "none",
-  "slayer",
-  "ctf",
-  "flag_captured",
-  "flag_dropped",
-  "flag_recovered",
-  "flag_reset",
-  "flag_stolen",
-  "flag_taken",
-  "vip",
-  "new_vip",
-  "vip_killed",
-  "juggernaut",
-  "new_juggernaut",
-  "territories",
-  "territory_captured",
-  "territory_lost",
-  "assault",
-  "bomb_armed",
-  "bomb_detonated",
-  "bomb_disarmed",
-  "bomb_dropped",
-  "bomb_reset",
-  "bomb_returned",
-  "bomb_taken",
-  "infection",
-  "infected",
-  "last_man_standing",
-  "new_zombie",
-  "oddball",
-  "ball_spawned",
-  "ball_taken",
-  "ball_dropped",
-  "ball_reset",
-  "king",
-  "hill_controlled",
-  "hill_contested",
-  "hill_moved",
-  "headhunter",
-  "stockpile",
-  "race",
-  "defense",
-  "offense",
-  "destination_moved",
-  "generator_armed",
-  "core_armed",
-  "generator_disarmed",
-  "core_disarmed",
-  "sudden_death",
-  "game_over",
-  "bone_cv_defeat",
-  "bone_cv_ph1_defeat",
-  "bone_cv_ph1_intro",
-  "bone_cv_ph1_victory",
-  "bone_cv_ph2_defeat",
-  "bone_cv_ph2_victory",
-  "bone_cv_ph3_victory",
-  "bone_cv_victory",
-  "bone_sp_defeat",
-  "bone_sp_ph1_intro",
-  "bone_sp_ph1_victory",
-  "bone_sp_ph2_intro",
-  "bone_sp_ph2_victory",
-  "bone_sp_ph3_intro",
-  "bone_sp_ph3_victory",
-  "isle_cv_defeat",
-  "isle_cv_ph1_defeat",
-  "isle_cv_ph1_intro",
-  "isle_cv_ph2_intro",
-  "isle_cv_ph2_victory",
-  "isle_cv_ph3_intro",
-  "isle_cv_ph3_victory",
-  "isle_sp_defeat",
-  "isle_sp_ph1_defeat",
-  "isle_sp_ph1_extra",
-  "isle_sp_ph1_intro",
-  "isle_sp_ph1_victory",
-  "isle_sp_ph2_defeat",
-  "isle_sp_ph2_victory",
-  "isle_sp_ph3_victory",
-  "isle_sp_victory",
-  "bone_sp_ph3_defeat",
-  "isle_cv_ph3_defeat",
-  "covy_big_win",
-  "covy_win1",
-  "covy_win2",
-  "invasion_beginning",
-  "unsc_big_win",
-  "unsc_win1",
-  "unsc_win2",
-  "power_down",
-  "reinforcements",
-  "respawn_tick",
-  "alpha_under_attack",
-  "bravo_under_attack",
-  "charlie_under_attack"
-]);
-var MegaloSound = megaloSound.enum;
 
 // ../megalo/src/language-service/highlighting/actions/hud_post_message.ts
 var highlightHudPostMessage = (out, statement) => {
@@ -10603,6 +10667,10 @@ var MODIFIER_INDEX = Object.fromEntries(
 var TYPE_PRIORITY = {
   comment: 100,
   regexp: 110,
+  // Object-list names are often written in quotes (`create_object "warthog"`,
+  // `map_object` type, …). Those resolve to enumMember; that must beat the
+  // lexical string span that covers the same quotes.
+  enumMember: 105,
   string: 100,
   number: 100,
   operator: 100,
@@ -10611,7 +10679,6 @@ var TYPE_PRIORITY = {
   property: 80,
   class: 80,
   type: 80,
-  enumMember: 80,
   modifier: 70,
   variable: 60,
   keyword: 40

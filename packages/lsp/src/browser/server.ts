@@ -4,6 +4,7 @@ import {
   BrowserMessageReader,
   BrowserMessageWriter,
   createConnection,
+  type Diagnostic,
   type DidChangeTextDocumentParams,
   type InitializeParams,
   type InitializeResult,
@@ -16,10 +17,14 @@ import {
   analyzeDocumentSnapshot,
   analyzeObjectListFor,
   type CompileResolvers,
+  completionsFromSnapshot,
   definitionFromSnapshot,
+  getQuotedPathCompletionQuery,
   MEGACROW_ANALYZE_OBJECT_LIST_METHOD,
   MEGACROW_COMPILE_METHOD,
+  MEGACROW_LIST_DIRECTORY_METHOD,
   MEGACROW_REQUEST_ARTIFACTS_METHOD,
+  MEGACROW_RESET_SESSION_METHOD,
   MEGACROW_RESOLVE_BASE_FILE_METHOD,
   MEGACROW_RESOLVE_INCLUDE_METHOD,
   MEGACROW_SET_OBJECT_LISTS_METHOD,
@@ -29,6 +34,8 @@ import {
   type MegacrowAnalyzeObjectListResult,
   type MegacrowCompileParams,
   type MegacrowCompileResult,
+  type MegacrowListDirectoryParams,
+  type MegacrowListDirectoryResult,
   type MegacrowRequestArtifactsParams,
   type MegacrowRequestArtifactsResult,
   type MegacrowResolveBaseFileParams,
@@ -39,6 +46,7 @@ import {
   type MegacrowSetResolveBaseFileParams,
   type MegacrowVersionConfigurationResult,
   parseDiagnosticsFromSnapshot,
+  pathCompletionsFromEntries,
   requestArtifactsFromSnapshot,
   SEMANTIC_TOKENS_LEGEND,
   semanticTokensFromSnapshot,
@@ -75,6 +83,8 @@ const snapshotInflight = new Map<string, Promise<SnapshotCacheEntry>>();
 let publishPending: { uri: string; text: string; version: number } | null =
   null;
 let publishBusy = false;
+/** Bumped on session reset so in-flight publishes discard their results. */
+let sessionEpoch = 0;
 
 /** Coalesce requestArtifacts: one in flight; newest params win. */
 let artifactsPending: {
@@ -92,6 +102,38 @@ const staleArtifactsResult = (
   error: "superseded",
   diagnostics: [],
 });
+
+const clearDocumentState = (uri: string): void => {
+  documents.delete(uri);
+  snapshotCache.delete(uri);
+  connection.sendDiagnostics({
+    uri,
+    diagnostics: [],
+  });
+};
+
+const resetSession = (): void => {
+  sessionEpoch += 1;
+  publishPending = null;
+  if (artifactsPending) {
+    artifactsPending.resolve(
+      staleArtifactsResult(
+        documents.get(artifactsPending.params.textDocument.uri)?.version ?? 0
+      )
+    );
+    artifactsPending = null;
+  }
+  const uris = [...documents.keys()];
+  documents.clear();
+  snapshotCache.clear();
+  snapshotInflight.clear();
+  for (const uri of uris) {
+    connection.sendDiagnostics({
+      uri,
+      diagnostics: [],
+    });
+  }
+};
 
 const decodeBase64 = (dataBase64: string): Uint8Array => {
   const binary = atob(dataBase64);
@@ -202,9 +244,17 @@ const getCachedSnapshot = async (
 const publishFor = async (
   uri: string,
   text: string,
-  version: number
+  version: number,
+  epoch: number
 ): Promise<void> => {
   const entry = await refreshSnapshot(uri, text, version);
+  if (epoch !== sessionEpoch) {
+    return;
+  }
+  const doc = documents.get(uri);
+  if (!doc || doc.version !== version) {
+    return;
+  }
   connection.sendDiagnostics({
     uri,
     diagnostics: parseDiagnosticsFromSnapshot(entry.snapshot),
@@ -223,12 +273,13 @@ const drainPublish = async (): Promise<void> => {
   try {
     while (publishPending) {
       const job = publishPending;
+      const epoch = sessionEpoch;
       publishPending = null;
       const doc = documents.get(job.uri);
-      if (doc && doc.version > job.version) {
+      if (!doc || doc.version > job.version) {
         continue;
       }
-      await publishFor(job.uri, job.text, job.version);
+      await publishFor(job.uri, job.text, job.version, epoch);
     }
   } finally {
     publishBusy = false;
@@ -283,10 +334,13 @@ const runRequestArtifacts = async (
   }
 
   if (artifacts.diagnostics) {
-    connection.sendDiagnostics({
-      uri,
-      diagnostics: artifacts.diagnostics,
-    });
+    const latest = documents.get(uri);
+    if (latest && latest.version === entry.version) {
+      connection.sendDiagnostics({
+        uri,
+        diagnostics: artifacts.diagnostics,
+      });
+    }
   }
 
   return artifacts;
@@ -304,10 +358,11 @@ const drainArtifacts = async (): Promise<void> => {
   try {
     while (artifactsPending) {
       const job = artifactsPending;
+      const epoch = sessionEpoch;
       artifactsPending = null;
       try {
         const result = await runRequestArtifacts(job.params);
-        if (artifactsPending) {
+        if (epoch !== sessionEpoch || artifactsPending) {
           job.resolve(
             staleArtifactsResult(
               documents.get(job.params.textDocument.uri)?.version ?? 0
@@ -317,7 +372,7 @@ const drainArtifacts = async (): Promise<void> => {
           job.resolve(result);
         }
       } catch (error) {
-        if (artifactsPending) {
+        if (epoch !== sessionEpoch || artifactsPending) {
           job.resolve(
             staleArtifactsResult(
               documents.get(job.params.textDocument.uri)?.version ?? 0
@@ -356,6 +411,10 @@ connection.onInitialize(
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Full,
       definitionProvider: true,
+      completionProvider: {
+        triggerCharacters: [" ", ".", "_", '"', "/"],
+        resolveProvider: false,
+      },
       semanticTokensProvider: {
         legend: SEMANTIC_TOKENS_LEGEND,
         full: true,
@@ -395,12 +454,11 @@ connection.onDidChangeTextDocument((params: DidChangeTextDocumentParams) => {
 });
 
 connection.onDidCloseTextDocument((params) => {
-  documents.delete(params.textDocument.uri);
-  snapshotCache.delete(params.textDocument.uri);
-  connection.sendDiagnostics({
-    uri: params.textDocument.uri,
-    diagnostics: [],
-  });
+  clearDocumentState(params.textDocument.uri);
+});
+
+connection.onNotification(MEGACROW_RESET_SESSION_METHOD, () => {
+  resetSession();
 });
 
 connection.languages.semanticTokens.on(async (params) => {
@@ -421,6 +479,37 @@ connection.onDefinition(async (params) => {
   }
   const entry = await getCachedSnapshot(uri, doc);
   return definitionFromSnapshot(entry.snapshot, uri, params.position);
+});
+
+connection.onCompletion(async (params) => {
+  const uri = params.textDocument.uri;
+  const doc = documents.get(uri);
+  if (!doc) {
+    return [];
+  }
+  const entry = await getCachedSnapshot(uri, doc);
+  const pathQuery = getQuotedPathCompletionQuery(
+    entry.snapshot,
+    params.position
+  );
+  if (pathQuery) {
+    try {
+      const listed = (await connection.sendRequest(
+        MEGACROW_LIST_DIRECTORY_METHOD,
+        {
+          directory: pathQuery.directory,
+          fromUri: uri,
+        } satisfies MegacrowListDirectoryParams
+      )) as MegacrowListDirectoryResult;
+      if (!("error" in listed)) {
+        return pathCompletionsFromEntries(pathQuery, listed.entries);
+      }
+    } catch (error) {
+      console.warn("[megacrow-lsp] listDirectory failed", error);
+    }
+    return [];
+  }
+  return completionsFromSnapshot(entry.snapshot, params.position);
 });
 
 connection.onRequest(
@@ -449,7 +538,19 @@ connection.onRequest(
     const text = params.text ?? documents.get(uri)?.getText() ?? "";
     const existing = documents.get(uri);
     const version = existing?.version ?? 0;
+    const epoch = sessionEpoch;
     const objectLists = params.objectLists ?? workspaceObjectLists;
+
+    const publishIfCurrent = (diagnostics: Diagnostic[]): void => {
+      if (epoch !== sessionEpoch) {
+        return;
+      }
+      const latest = documents.get(uri);
+      if (!latest || latest.version !== version) {
+        return;
+      }
+      connection.sendDiagnostics({ uri, diagnostics });
+    };
 
     // Prefer shared snapshot cache when text matches the synced document.
     const cached = snapshotCache.get(uri);
@@ -465,10 +566,7 @@ connection.onRequest(
         objectLists,
         resolvers: createResolvers(),
       });
-      connection.sendDiagnostics({
-        uri,
-        diagnostics: artifacts.diagnostics ?? [],
-      });
+      publishIfCurrent(artifacts.diagnostics ?? []);
       return {
         ok: artifacts.ok === true,
         diagnostics: artifacts.diagnostics ?? [],
@@ -484,10 +582,7 @@ connection.onRequest(
       fromUri: uri,
       resolvers: createResolvers(),
     });
-    connection.sendDiagnostics({
-      uri,
-      diagnostics: result.diagnostics,
-    });
+    publishIfCurrent(result.diagnostics);
     return result;
   }
 );

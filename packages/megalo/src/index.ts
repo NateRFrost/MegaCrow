@@ -46,7 +46,18 @@ export {
   summarizeIncludeDiagnostics,
 } from "src/diagnostics/summarizeInclude";
 export type { ResolveIncludeFn } from "src/frontend/abstract-syntax-tree";
-export type { ObjectLists } from "src/frontend/object-lists";
+export type {
+  ObjectListData,
+  ObjectListEntries,
+  ObjectListFileSource,
+  ObjectLists,
+} from "src/frontend/object-lists";
+export {
+  isObjectListFileSource,
+  ObjectListType,
+  objectListEntries,
+  objectListSourceFile,
+} from "src/frontend/object-lists";
 export {
   type AnalysisSnapshot,
   type AnalyzeDocumentOptions,
@@ -55,17 +66,25 @@ export {
   analyzeDocument,
   analyzeDocumentSync,
   analyzeObjectListSource,
+  type CompletionItem,
+  type CompletionKind,
+  completeQuotedPath,
+  completionsAtPosition,
   type DefinitionRange,
   type DefinitionTarget,
   definitionAtPosition,
   encodeSemanticTokens,
+  getQuotedPathCompletionQuery,
   getSemanticTokens,
   objectListEntryCount,
+  type PathDirectoryEntry,
+  type QuotedPathCompletionQuery,
   SEMANTIC_TOKEN_MODIFIERS,
   SEMANTIC_TOKEN_TYPES,
   type SemanticToken,
   type SemanticTokenModifier,
   type SemanticTokenType,
+  splitPathPrefix,
 } from "src/language-service";
 export { loadObjectListsForVersion } from "src/load-object-lists";
 export {

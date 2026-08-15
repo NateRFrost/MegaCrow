@@ -12,7 +12,11 @@ import {
   readFileClipboard,
   writeFileClipboard,
 } from "../lib/fileClipboard";
-import { formatLocalDiskPath, pathKey } from "../lib/localFolder";
+import {
+  formatLocalDiskPath,
+  type LocalDiskNode,
+  pathKey,
+} from "../lib/localFolder";
 import type { StoredWorkspace } from "../lib/megacrowSettings";
 import type { MegaloIncludeRoot } from "../lib/megaloIncludes";
 import {
@@ -28,6 +32,10 @@ import {
   renameOpfsGametype,
 } from "../lib/opfsStorage";
 import { revealInFileManager } from "../lib/revealInFileManager";
+import {
+  flattenSourceFileNodes,
+  setSourceFileQuickOpenEntries,
+} from "../lib/sourceFileQuickOpen";
 import {
   createSystemMegaloDirectory,
   createSystemMegaloTextFile,
@@ -53,10 +61,13 @@ import {
 import { watchWorkspaceInput } from "../lib/watchWorkspaceInput";
 import type { Workspace } from "../lib/workspace";
 import {
+  defaultObjectListText,
+  findLocalDiskNode,
   loadWorkspaceObjectLists,
   objectListsFolderIsEmpty,
 } from "../lib/workspaceObjectLists";
 import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
+import { ConfirmReplaceDialog } from "./ConfirmReplaceDialog";
 import {
   FilesContextMenu,
   type FilesContextMenuState,
@@ -64,7 +75,11 @@ import {
   type FilesContextTarget,
 } from "./FilesContextMenu";
 import { FilesRenameInput } from "./FilesRenameInput";
-import { LocalDiskTree, MEGACROW_TREE_PATH_MIME } from "./LocalDiskTree";
+import {
+  isMegacrowTreeDragActive,
+  LocalDiskTree,
+  MEGACROW_TREE_PATH_MIME,
+} from "./LocalDiskTree";
 import { WorkspaceMenu } from "./WorkspaceMenu";
 
 interface Props {
@@ -83,6 +98,8 @@ interface Props {
     newName: string,
     absoluteFilePath: string
   ) => void;
+  /** Recognized list filenames missing when the workspace partially provides object lists. */
+  onMissingObjectListNamesChange?: (names: readonly string[]) => void;
   onOpenSource: (
     source: string,
     name: string,
@@ -252,15 +269,14 @@ export function FilesPanel({
   activeFileName,
   objectListNames = [],
   onWorkspaceObjectListsChange,
+  onMissingObjectListNamesChange,
   onClearEditor,
   opfsRevision,
   localDiskRevision,
 }: Props) {
   const [opfsFiles, setOpfsFiles] = useState<OpfsGametypeEntry[]>([]);
   const [opfsError, setOpfsError] = useState<string | null>(null);
-  const [localTree, setLocalTree] = useState<
-    Awaited<ReturnType<typeof listSystemMegaloTree>>
-  >([]);
+  const [localTree, setLocalTree] = useState<LocalDiskNode[]>([]);
   const [localError, setLocalError] = useState<string | null>(null);
   const [buildOutputs, setBuildOutputs] = useState<BuildOutputEntry[]>([]);
   const [buildsError, setBuildsError] = useState<string | null>(null);
@@ -272,6 +288,12 @@ export function FilesPanel({
     path: string[];
     source: FilesContextSource;
     target: FilesContextTarget;
+  } | null>(null);
+  const [pendingReplace, setPendingReplace] = useState<{
+    displayName: string;
+    fromPath: string[];
+    targetKind: "file" | "directory";
+    toParentPath: string[];
   } | null>(null);
   const [renamingPathKey, setRenamingPathKey] = useState<string | null>(null);
   const [renamingOpfsName, setRenamingOpfsName] = useState<string | null>(null);
@@ -323,17 +345,22 @@ export function FilesPanel({
     if (!rootPath) {
       setLocalTree([]);
       onWorkspaceObjectListsChange?.(null);
+      onMissingObjectListNamesChange?.([]);
       lastObjectListsJsonRef.current = "";
       return;
     }
     const root: LocalDiskRoot = { path: rootPath };
     try {
       setLocalError(null);
-      const tree = await listSystemMegaloTree(root);
+      const { nodes: tree, missingListNames } = await listSystemMegaloTree(
+        root,
+        objectListNames
+      );
       if (localRootPathRef.current !== rootPath) {
         return;
       }
       setLocalTree(tree);
+      onMissingObjectListNamesChange?.(missingListNames);
       if (objectListsFolderIsEmpty(tree)) {
         setEnsureExpandedKeys((keys) =>
           keys.includes("object_lists") ? keys : [...keys, "object_lists"]
@@ -354,8 +381,13 @@ export function FilesPanel({
       }
       setLocalError(String(error));
       setLocalTree([]);
+      onMissingObjectListNamesChange?.([]);
     }
-  }, [objectListNames, onWorkspaceObjectListsChange]);
+  }, [
+    objectListNames,
+    onMissingObjectListNamesChange,
+    onWorkspaceObjectListsChange,
+  ]);
 
   const refreshBuilds = useCallback(async () => {
     if (!outputPath) {
@@ -384,8 +416,13 @@ export function FilesPanel({
     lastObjectListsJsonRef.current = "";
     if (!localRootPath) {
       onWorkspaceObjectListsChange?.(null);
+      onMissingObjectListNamesChange?.([]);
     }
-  }, [localRootPath, onWorkspaceObjectListsChange]);
+  }, [
+    localRootPath,
+    onMissingObjectListNamesChange,
+    onWorkspaceObjectListsChange,
+  ]);
 
   useEffect(() => {
     void refreshOpfs();
@@ -616,18 +653,52 @@ export function FilesPanel({
       }
       try {
         setLocalError(null);
-        const text = await readSystemMegaloFile(localRoot, path);
         const absoluteFilePath = await resolveSystemMegaloFilePath(
           localRoot,
           path
         );
+        const node = findLocalDiskNode(localTree, path);
+        let text: string;
+        if (node?.virtual) {
+          text = defaultObjectListText(
+            node.name,
+            workspace?.megaloVersion ?? "107-mcc"
+          );
+        } else {
+          text = await readSystemMegaloFile(localRoot, path);
+        }
         onOpenSource(text, formatLocalDiskPath(path), { absoluteFilePath });
       } catch (error) {
         setLocalError(String(error));
       }
     },
-    [localRoot, onOpenSource]
+    [localRoot, localTree, onOpenSource, workspace?.megaloVersion]
   );
+
+  useEffect(() => {
+    const next = [
+      ...flattenSourceFileNodes(localTree).map((node) => {
+        const dir = node.path.slice(0, -1);
+        return {
+          id: `local:${pathKey(node.path)}`,
+          label: node.name,
+          description:
+            dir.length > 0
+              ? formatLocalDiskPath(dir)
+              : (workspace?.name ?? "Workspace"),
+          open: () => void openLocalFile(node.path),
+        };
+      }),
+      ...opfsFiles.map((entry) => ({
+        id: `opfs:${entry.name}`,
+        label: entry.name,
+        description: "Browser storage",
+        open: () => void openOpfsFile(entry.name),
+      })),
+    ];
+    setSourceFileQuickOpenEntries(next);
+    return () => setSourceFileQuickOpenEntries([]);
+  }, [localTree, opfsFiles, openLocalFile, openOpfsFile, workspace?.name]);
 
   const createLocalFile = useCallback(
     async (parentSegments: string[] = []) => {
@@ -713,33 +784,34 @@ export function FilesPanel({
     [localRoot, onFileRenamed, refreshLocal]
   );
 
-  const moveLocalEntry = useCallback(
-    async (fromPath: string[], toParentPath: string[]) => {
+  const applyLocalMove = useCallback(
+    async (
+      fromPath: string[],
+      toParentPath: string[],
+      options?: { replace?: boolean }
+    ) => {
       if (!localRoot) {
         return;
       }
       const oldDisplay = formatLocalDiskPath(fromPath);
       try {
         setLocalError(null);
-        let result = await moveSystemMegaloEntry(
+        const result = await moveSystemMegaloEntry(
           localRoot,
           fromPath,
-          toParentPath
+          toParentPath,
+          options
         );
         if (result.status === "needs_replace") {
-          if (
-            !window.confirm(
-              `"${result.displayName}" already exists in the destination. Replace it?`
-            )
-          ) {
-            return;
-          }
-          result = await moveSystemMegaloEntry(
-            localRoot,
+          const destPath = [...toParentPath, result.displayName];
+          const destNode = findLocalDiskNode(localTree, destPath);
+          setPendingReplace({
             fromPath,
             toParentPath,
-            { replace: true }
-          );
+            displayName: result.displayName,
+            targetKind: destNode?.type === "directory" ? "directory" : "file",
+          });
+          return;
         }
         if (result.status === "noop") {
           return;
@@ -762,7 +834,13 @@ export function FilesPanel({
         setLocalError(String(error));
       }
     },
-    [localRoot, onFileRenamed, refreshLocal]
+    [localRoot, localTree, onFileRenamed, refreshLocal]
+  );
+
+  const moveLocalEntry = useCallback(
+    (fromPath: string[], toParentPath: string[]) =>
+      applyLocalMove(fromPath, toParentPath),
+    [applyLocalMove]
   );
 
   const deleteLocalFile = useCallback(
@@ -825,7 +903,7 @@ export function FilesPanel({
   const onTreeContextMenu = useCallback(
     (
       event: MouseEvent,
-      target: { type: "file" | "directory"; path: string[] }
+      target: { type: "file" | "directory"; path: string[]; virtual?: boolean }
     ) => {
       setPastePayload(null);
       setContextMenu({
@@ -898,6 +976,7 @@ export function FilesPanel({
       className={`files-panel${dragActive ? " files-panel--drag" : ""}`}
       onDragLeave={(event) => {
         if (
+          isMegacrowTreeDragActive() ||
           Array.from(event.dataTransfer.types).includes(MEGACROW_TREE_PATH_MIME)
         ) {
           return;
@@ -906,6 +985,7 @@ export function FilesPanel({
       }}
       onDragOver={(event) => {
         if (
+          isMegacrowTreeDragActive() ||
           Array.from(event.dataTransfer.types).includes(MEGACROW_TREE_PATH_MIME)
         ) {
           return;
@@ -915,6 +995,7 @@ export function FilesPanel({
       }}
       onDrop={(event) => {
         if (
+          isMegacrowTreeDragActive() ||
           Array.from(event.dataTransfer.types).includes(MEGACROW_TREE_PATH_MIME)
         ) {
           return;
@@ -1102,9 +1183,13 @@ export function FilesPanel({
                       key={workspace?.id ?? localRootPath ?? "local"}
                       nodes={localTree}
                       objectListNames={objectListNames}
-                      onBeginRename={(path) =>
-                        setRenamingPathKey(pathKey(path))
-                      }
+                      onBeginRename={(path) => {
+                        const node = findLocalDiskNode(localTree, path);
+                        if (node?.virtual) {
+                          return;
+                        }
+                        setRenamingPathKey(pathKey(path));
+                      }}
                       onCancelRename={() => setRenamingPathKey(null)}
                       onCommitRename={(path, name) =>
                         void commitRename(path, name)
@@ -1201,7 +1286,7 @@ export function FilesPanel({
                             onContextMenu={(event) =>
                               onBuildsContextMenu(event, entry.name)
                             }
-                            title={`${entry.name} — clears the editor`}
+                            title={entry.name}
                             type="button"
                           >
                             <span
@@ -1310,6 +1395,9 @@ export function FilesPanel({
           })();
         }}
         onDelete={(target, source) => {
+          if (target.virtual) {
+            return;
+          }
           setPendingDelete({
             path: target.path,
             source,
@@ -1352,6 +1440,10 @@ export function FilesPanel({
             return;
           }
           if (source === "builds") {
+            return;
+          }
+          const node = findLocalDiskNode(localTree, path);
+          if (node?.virtual) {
             return;
           }
           setRenamingPathKey(pathKey(path));
@@ -1428,13 +1520,26 @@ export function FilesPanel({
         open={pendingDelete !== null}
         targetKind={pendingDelete?.target.type ?? "file"}
       />
+
+      <ConfirmReplaceDialog
+        name={pendingReplace?.displayName ?? ""}
+        onCancel={() => setPendingReplace(null)}
+        onConfirm={() => {
+          if (!pendingReplace) {
+            return;
+          }
+          const { fromPath, toParentPath } = pendingReplace;
+          setPendingReplace(null);
+          void applyLocalMove(fromPath, toParentPath, { replace: true });
+        }}
+        open={pendingReplace !== null}
+        targetKind={pendingReplace?.targetKind ?? "file"}
+      />
     </section>
   );
 }
 
-function countFiles(
-  nodes: Awaited<ReturnType<typeof listSystemMegaloTree>>
-): number {
+function countFiles(nodes: LocalDiskNode[]): number {
   let total = 0;
   for (const node of nodes) {
     if (node.type === "file") {

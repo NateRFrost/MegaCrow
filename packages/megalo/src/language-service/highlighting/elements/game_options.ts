@@ -108,8 +108,19 @@ export const highlightGameOptions = (
           "kind" in simple &&
           simple.kind === SyntaxKind.KEYWORD
         ) {
-          highlightEnumKeyword(out, simple, BOOLEAN_KEYWORDS);
+          const optionName =
+            entry.name.kind === SyntaxKind.REFERENCE
+              ? entry.name.identifier
+              : entry.name.kind === "player_traits_override"
+                ? entry.name.option
+                : undefined;
+          const allowed =
+            optionName === "weapon_set" || optionName === "vehicle_set"
+              ? OBJECT_LIST_SENTINELS
+              : BOOLEAN_KEYWORDS;
+          highlightEnumKeyword(out, simple, allowed);
         }
+        // REFERENCES (incl. object-list items) are painted via the symbol table.
       } else if (entry.value.kind === OverrideValueKind.LOADOUT_PALETTE) {
         if (!("kind" in entry.value.tier)) {
           emitLocation(

@@ -58,6 +58,29 @@ async function getDirectoryHandle(
   return current;
 }
 
+/** List immediate children of a logical OPFS workspace directory. */
+export async function listOpfsWorkspaceDirectory(
+  logicalDir: string
+): Promise<Array<{ name: string; directory: boolean }>> {
+  if (!isOpfsSupported()) {
+    return [];
+  }
+  const normalized = logicalDir.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+  const dir = await getDirectoryHandle(normalized, false);
+  if (!dir) {
+    return [];
+  }
+  const result: Array<{ name: string; directory: boolean }> = [];
+  for await (const [name, handle] of dir.entries()) {
+    if (handle.kind === "directory") {
+      result.push({ name, directory: true });
+    } else if (handle.kind === "file") {
+      result.push({ name, directory: false });
+    }
+  }
+  return result;
+}
+
 /** Read a file from the OPFS workspace using a logical path (`workspace/input/...`). */
 export async function readOpfsWorkspaceBytes(
   logicalPath: string

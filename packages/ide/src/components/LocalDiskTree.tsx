@@ -1,13 +1,12 @@
 import {
   type CSSProperties,
-  type DragEvent as ReactDragEvent,
   type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
   useRef,
   useState,
 } from "react";
-import { createPortal } from "react-dom";
 import {
   formatLocalDiskPath,
   type LocalDiskNode,
@@ -20,11 +19,16 @@ import {
 } from "../lib/objectListsPath";
 import { FilesRenameInput } from "./FilesRenameInput";
 
-/** Custom DnD type for in-tree moves (must be lowercase for Chromium). */
+/** @deprecated Kept so FilesPanel can ignore stale HTML5 tree MIME if present. */
 export const MEGACROW_TREE_PATH_MIME = "application/x-megacrow-tree-path";
 
-const SCROLL_EDGE_PX = 44;
-const SCROLL_MAX_SPEED = 22;
+const DRAG_THRESHOLD_PX = 5;
+
+let activeTreeDragPath: string[] | null = null;
+
+export function isMegacrowTreeDragActive(): boolean {
+  return activeTreeDragPath !== null;
+}
 
 interface Props {
   activeFileName: string | null;
@@ -38,20 +42,12 @@ interface Props {
   onCommitRename: (path: string[], newName: string) => void;
   onContextMenu: (
     event: ReactMouseEvent,
-    target: { type: "file" | "directory"; path: string[] }
+    target: { type: "file" | "directory"; path: string[]; virtual?: boolean }
   ) => void;
   /** Move `fromPath` into `toParentPath` (empty = workspace root). */
   onMoveEntry: (fromPath: string[], toParentPath: string[]) => void;
   onOpenFile: (path: string[]) => void;
   renamingPathKey: string | null;
-}
-
-type DragPreviewKind = "file" | "folder" | "object-lists" | "object-list-file";
-
-interface DragPreviewState {
-  kind: DragPreviewKind;
-  label: string;
-  width: number;
 }
 
 function FileGlyph() {
@@ -110,7 +106,6 @@ function FolderGlyph({ open }: { open: boolean }) {
   );
 }
 
-/** Object list tables — folder with list rows. */
 function ObjectListsFolderGlyph() {
   return (
     <svg
@@ -136,22 +131,23 @@ function ObjectListsFolderGlyph() {
   );
 }
 
-/** Recognized object list file — same green accent as the object_lists folder. */
-function ObjectListFileGlyph() {
+function ObjectListFileGlyph({ virtual = false }: { virtual?: boolean }) {
   return (
     <svg
       aria-hidden="true"
-      className="files-glyph files-glyph--object-list-file"
+      className={`files-glyph files-glyph--object-list-file${virtual ? " files-glyph--virtual" : " files-glyph--filled"}`}
       viewBox="0 0 16 16"
     >
       <path
+        className="files-glyph-body"
         d="M3.5 1.5h6l3 3V14.5h-9z"
-        fill="none"
+        fill={virtual ? "none" : "currentColor"}
         stroke="currentColor"
         strokeLinejoin="round"
         strokeWidth="1.2"
       />
       <path
+        className="files-glyph-fold"
         d="M9.5 1.5V4.5H12.5"
         fill="none"
         stroke="currentColor"
@@ -159,6 +155,7 @@ function ObjectListFileGlyph() {
         strokeWidth="1.2"
       />
       <path
+        className="files-glyph-detail"
         d="M5.25 8h5.5M5.25 10.25h5.5M5.25 12.5h3.5"
         fill="none"
         stroke="currentColor"
@@ -190,44 +187,6 @@ function ChevronGlyph({ open }: { open: boolean }) {
   );
 }
 
-function DragPreviewGlyph({ kind }: { kind: DragPreviewKind }) {
-  switch (kind) {
-    case "folder":
-      return <FolderGlyph open={false} />;
-    case "object-lists":
-      return <ObjectListsFolderGlyph />;
-    case "object-list-file":
-      return <ObjectListFileGlyph />;
-    default:
-      return <FileGlyph />;
-  }
-}
-
-function parseDragPath(event: ReactDragEvent): string[] | null {
-  const raw = event.dataTransfer.getData(MEGACROW_TREE_PATH_MIME);
-  if (!raw) {
-    return null;
-  }
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    if (
-      !(
-        Array.isArray(parsed) &&
-        parsed.every((segment) => typeof segment === "string")
-      )
-    ) {
-      return null;
-    }
-    return parsed as string[];
-  } catch {
-    return null;
-  }
-}
-
-function hasTreeDrag(event: ReactDragEvent): boolean {
-  return Array.from(event.dataTransfer.types).includes(MEGACROW_TREE_PATH_MIME);
-}
-
 function isSamePath(a: string[], b: string[]): boolean {
   return (
     a.length === b.length && a.every((segment, index) => segment === b[index])
@@ -244,31 +203,71 @@ function isPathPrefix(prefix: string[], path: string[]): boolean {
   return prefix.every((segment, index) => segment === path[index]);
 }
 
-/** Destination parent folder for a drop on a node (files → their parent). */
-function dropParentForNode(
-  node: LocalDiskNode,
-  fromPath: string[] | null
+function parsePathKey(key: string): string[] {
+  if (key === "") {
+    return [];
+  }
+  return key.split("/");
+}
+
+/** Destination parent for a drop path key (files → their parent). */
+function dropParentForPathKey(
+  targetKey: string,
+  targetType: "file" | "directory" | "root",
+  fromPath: string[]
 ): string[] | null {
-  const parent = node.type === "directory" ? node.path : node.path.slice(0, -1);
-  if (!fromPath) {
-    return parent;
+  if (targetType === "root") {
+    if (isPathPrefix(fromPath, [])) {
+      return null;
+    }
+    const fromParent = fromPath.slice(0, -1);
+    if (isSamePath(fromParent, [])) {
+      return null;
+    }
+    return [];
   }
-  // Cannot drop a folder onto itself.
-  if (node.type === "directory" && isSamePath(fromPath, node.path)) {
-    return null;
+  const targetPath = parsePathKey(targetKey);
+  if (targetType === "directory") {
+    if (isSamePath(fromPath, targetPath)) {
+      return null;
+    }
+    if (isPathPrefix(fromPath, targetPath)) {
+      return null;
+    }
+    return targetPath;
   }
-  // Cannot move a folder into one of its descendants.
+  const parent = targetPath.slice(0, -1);
   if (isPathPrefix(fromPath, parent)) {
     return null;
   }
   return parent;
 }
 
-function transparentDragImage(): HTMLCanvasElement {
-  const canvas = document.createElement("canvas");
-  canvas.width = 1;
-  canvas.height = 1;
-  return canvas;
+function findDropTarget(
+  clientX: number,
+  clientY: number
+): {
+  key: string;
+  type: "file" | "directory" | "root";
+} | null {
+  const el = document.elementFromPoint(clientX, clientY);
+  if (!(el instanceof Element)) {
+    return null;
+  }
+  const row = el.closest("[data-tree-drop]");
+  if (row instanceof HTMLElement) {
+    const key = row.dataset.treePath;
+    const type = row.dataset.treeDrop;
+    if (key === undefined || (type !== "file" && type !== "directory")) {
+      return null;
+    }
+    return { key, type };
+  }
+  const root = el.closest("[data-tree-root]");
+  if (root) {
+    return { key: "", type: "root" };
+  }
+  return null;
 }
 
 function TreeNode({
@@ -280,17 +279,13 @@ function TreeNode({
   expandedPaths,
   objectListNames,
   renamingPathKey,
-  suppressClickRef,
-  onDragOverTarget,
-  onTreeDragStart,
-  onTreeDragEnd,
+  onPointerDownRow,
   onToggleDirectory,
   onOpenFile,
   onBeginRename,
   onCommitRename,
   onCancelRename,
   onContextMenu,
-  onMoveEntry,
 }: {
   node: LocalDiskNode;
   depth: number;
@@ -300,14 +295,10 @@ function TreeNode({
   expandedPaths: Set<string>;
   objectListNames: readonly string[];
   renamingPathKey: string | null;
-  suppressClickRef: { current: boolean };
-  onDragOverTarget: (key: string | null) => void;
-  onTreeDragStart: (
-    event: ReactDragEvent<HTMLButtonElement>,
-    node: LocalDiskNode,
-    kind: DragPreviewKind
+  onPointerDownRow: (
+    event: ReactPointerEvent<HTMLDivElement>,
+    node: LocalDiskNode
   ) => void;
-  onTreeDragEnd: () => void;
   onToggleDirectory: (path: string[]) => void;
   onOpenFile: (path: string[]) => void;
   onBeginRename: (path: string[]) => void;
@@ -315,9 +306,8 @@ function TreeNode({
   onCancelRename: () => void;
   onContextMenu: (
     event: ReactMouseEvent,
-    target: { type: "file" | "directory"; path: string[] }
+    target: { type: "file" | "directory"; path: string[]; virtual?: boolean }
   ) => void;
-  onMoveEntry: (fromPath: string[], toParentPath: string[]) => void;
 }) {
   const displayPath = formatLocalDiskPath(node.path);
   const nodeKey = pathKey(node.path);
@@ -326,49 +316,6 @@ function TreeNode({
   const isDragging = draggingKey === nodeKey;
   const isDropTarget = dragOverKey === nodeKey && !isDragging;
   const indent = { "--files-depth": String(depth) } as CSSProperties;
-
-  const onDragOver = (event: ReactDragEvent) => {
-    if (!hasTreeDrag(event)) {
-      return;
-    }
-    event.preventDefault();
-    event.stopPropagation();
-    event.dataTransfer.dropEffect = "move";
-    if (draggingKey === nodeKey) {
-      onDragOverTarget(null);
-      return;
-    }
-    onDragOverTarget(nodeKey);
-  };
-
-  const onDragLeave = (event: ReactDragEvent) => {
-    if (!hasTreeDrag(event)) {
-      return;
-    }
-    const related = event.relatedTarget as Node | null;
-    if (related && event.currentTarget.contains(related)) {
-      return;
-    }
-    onDragOverTarget(null);
-  };
-
-  const onDrop = (event: ReactDragEvent) => {
-    if (!hasTreeDrag(event)) {
-      return;
-    }
-    event.preventDefault();
-    event.stopPropagation();
-    onDragOverTarget(null);
-    const fromPath = parseDragPath(event);
-    if (!fromPath) {
-      return;
-    }
-    const toParent = dropParentForNode(node, fromPath);
-    if (!toParent) {
-      return;
-    }
-    onMoveEntry(fromPath, toParent);
-  };
 
   if (node.type === "file") {
     const isActive =
@@ -379,19 +326,21 @@ function TreeNode({
     const recognizedObjectList =
       isObjectListsPath(node.path) &&
       isRecognizedObjectListName(node.name, objectListNames);
-    const previewKind: DragPreviewKind = recognizedObjectList
-      ? "object-list-file"
-      : "file";
+    const isVirtual = node.virtual === true;
 
     return (
       <li className="files-tree-node">
         {isRenaming ? (
           <div
-            className={`files-row-btn files-row-btn--renaming${isActive ? " files-row-btn--active" : ""}${recognizedObjectList ? " files-row-btn--object-list-file" : ""}`}
+            className={`files-row-btn files-row-btn--renaming${isActive ? " files-row-btn--active" : ""}${recognizedObjectList ? " files-row-btn--object-list-file" : ""}${isVirtual ? " files-row-btn--virtual" : ""}`}
             style={indent}
           >
             <span aria-hidden="true" className="files-chevron-spacer" />
-            {recognizedObjectList ? <ObjectListFileGlyph /> : <FileGlyph />}
+            {recognizedObjectList ? (
+              <ObjectListFileGlyph virtual={isVirtual} />
+            ) : (
+              <FileGlyph />
+            )}
             <FilesRenameInput
               initialName={node.name}
               onCancel={onCancelRename}
@@ -399,48 +348,54 @@ function TreeNode({
             />
           </div>
         ) : (
-          <button
-            className={`files-row-btn${isActive ? " files-row-btn--active" : ""}${recognizedObjectList ? " files-row-btn--object-list-file" : ""}${isDragging ? " files-row-btn--dragging" : ""}${isDropTarget ? " files-row-btn--drop-target" : ""}`}
-            draggable
-            onClick={() => {
-              if (suppressClickRef.current) {
-                suppressClickRef.current = false;
-                return;
-              }
-              onOpenFile(node.path);
-            }}
+          <div
+            className={`files-row-btn${isActive ? " files-row-btn--active" : ""}${recognizedObjectList ? " files-row-btn--object-list-file" : ""}${isVirtual ? " files-row-btn--virtual" : ""}${isDragging ? " files-row-btn--dragging" : ""}${isDropTarget ? " files-row-btn--drop-target" : ""}`}
+            data-tree-drop="file"
+            data-tree-path={nodeKey}
+            onClick={() => onOpenFile(node.path)}
             onContextMenu={(event) => {
               event.preventDefault();
-              onContextMenu(event, { type: "file", path: node.path });
+              onContextMenu(event, {
+                type: "file",
+                path: node.path,
+                virtual: isVirtual,
+              });
             }}
-            onDragEnd={onTreeDragEnd}
-            onDragLeave={onDragLeave}
-            onDragOver={onDragOver}
-            onDragStart={(event) => onTreeDragStart(event, node, previewKind)}
-            onDrop={onDrop}
             onKeyDown={(event) => {
-              if (event.key === "F2") {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onOpenFile(node.path);
+              } else if (event.key === "F2" && !isVirtual) {
                 event.preventDefault();
                 onBeginRename(node.path);
               }
             }}
+            onPointerDown={
+              isVirtual ? undefined : (event) => onPointerDownRow(event, node)
+            }
+            role="treeitem"
             style={indent}
-            title={displayPath}
-            type="button"
+            tabIndex={0}
+            title={
+              isVirtual
+                ? `${displayPath} (bundled default — save to create file)`
+                : displayPath
+            }
           >
             <span aria-hidden="true" className="files-chevron-spacer" />
-            {recognizedObjectList ? <ObjectListFileGlyph /> : <FileGlyph />}
+            {recognizedObjectList ? (
+              <ObjectListFileGlyph virtual={isVirtual} />
+            ) : (
+              <FileGlyph />
+            )}
             <span className="files-row-label">{node.name}</span>
-          </button>
+          </div>
         )}
       </li>
     );
   }
 
   const isObjectLists = isObjectListsDirectoryName(node.name);
-  const previewKind: DragPreviewKind = isObjectLists
-    ? "object-lists"
-    : "folder";
 
   return (
     <li className="files-tree-node files-tree-node--branch">
@@ -462,35 +417,30 @@ function TreeNode({
           />
         </div>
       ) : (
-        <button
+        <div
           aria-expanded={isExpanded}
           className={`files-row-btn files-row-btn--folder${isObjectLists ? " files-row-btn--object-lists" : ""}${isDragging ? " files-row-btn--dragging" : ""}${isDropTarget ? " files-row-btn--drop-target" : ""}`}
-          draggable
-          onClick={() => {
-            if (suppressClickRef.current) {
-              suppressClickRef.current = false;
-              return;
-            }
-            onToggleDirectory(node.path);
-          }}
+          data-tree-drop="directory"
+          data-tree-path={nodeKey}
+          onClick={() => onToggleDirectory(node.path)}
           onContextMenu={(event) => {
             event.preventDefault();
             onContextMenu(event, { type: "directory", path: node.path });
           }}
-          onDragEnd={onTreeDragEnd}
-          onDragLeave={onDragLeave}
-          onDragOver={onDragOver}
-          onDragStart={(event) => onTreeDragStart(event, node, previewKind)}
-          onDrop={onDrop}
           onKeyDown={(event) => {
-            if (event.key === "F2") {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              onToggleDirectory(node.path);
+            } else if (event.key === "F2") {
               event.preventDefault();
               onBeginRename(node.path);
             }
           }}
+          onPointerDown={(event) => onPointerDownRow(event, node)}
+          role="treeitem"
           style={indent}
+          tabIndex={0}
           title={displayPath}
-          type="button"
         >
           <ChevronGlyph open={isExpanded} />
           {isObjectLists ? (
@@ -499,22 +449,14 @@ function TreeNode({
             <FolderGlyph open={isExpanded} />
           )}
           <span className="files-row-label">{node.name}</span>
-        </button>
+        </div>
       )}
-      {isExpanded && isObjectLists && (node.children?.length ?? 0) === 0 ? (
-        <p
-          className="files-object-lists-hint"
-          style={
-            {
-              "--files-depth": String(depth + 1),
-            } as CSSProperties
-          }
-        >
-          No object lists provided, MegaCrow will use the default lists
-        </p>
-      ) : null}
       {isExpanded && node.children && node.children.length > 0 ? (
-        <ul className="files-tree">
+        <ul
+          className={`files-tree${isDropTarget ? " files-tree--drop-target" : ""}`}
+          data-tree-drop="directory"
+          data-tree-path={nodeKey}
+        >
           {node.children.map((child) => (
             <TreeNode
               activeFileName={activeFileName}
@@ -529,14 +471,10 @@ function TreeNode({
               onCancelRename={onCancelRename}
               onCommitRename={onCommitRename}
               onContextMenu={onContextMenu}
-              onDragOverTarget={onDragOverTarget}
-              onMoveEntry={onMoveEntry}
               onOpenFile={onOpenFile}
+              onPointerDownRow={onPointerDownRow}
               onToggleDirectory={onToggleDirectory}
-              onTreeDragEnd={onTreeDragEnd}
-              onTreeDragStart={onTreeDragStart}
               renamingPathKey={renamingPathKey}
-              suppressClickRef={suppressClickRef}
             />
           ))}
         </ul>
@@ -563,21 +501,15 @@ export function LocalDiskTree({
   );
   const [draggingKey, setDraggingKey] = useState<string | null>(null);
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
-  const [dragPreview, setDragPreview] = useState<DragPreviewState | null>(null);
+  const pendingRef = useRef<{
+    path: string[];
+    x: number;
+    y: number;
+  } | null>(null);
+  const draggingPathRef = useRef<string[] | null>(null);
+  const dragOverKeyRef = useRef<string | null>(null);
   const suppressClickRef = useRef(false);
-  const scrollParentRef = useRef<HTMLElement | null>(null);
-  const dragPreviewElRef = useRef<HTMLDivElement | null>(null);
-  const pointerRef = useRef({ x: 0, y: 0 });
-  const autoScrollRafRef = useRef<number | null>(null);
   const rootDropKey = "";
-
-  const placeDragPreview = useCallback((x: number, y: number) => {
-    const el = dragPreviewElRef.current;
-    if (!el) {
-      return;
-    }
-    el.style.transform = `translate3d(${x + 10}px, ${y + 8}px, 0)`;
-  }, []);
 
   useEffect(() => {
     if (ensureExpandedKeys.length === 0) {
@@ -596,93 +528,20 @@ export function LocalDiskTree({
     });
   }, [ensureExpandedKeys]);
 
-  const stopAutoScroll = useCallback(() => {
-    if (autoScrollRafRef.current !== null) {
-      cancelAnimationFrame(autoScrollRafRef.current);
-      autoScrollRafRef.current = null;
-    }
+  const clearDrag = useCallback(() => {
+    pendingRef.current = null;
+    draggingPathRef.current = null;
+    activeTreeDragPath = null;
+    dragOverKeyRef.current = null;
+    setDraggingKey(null);
+    setDragOverKey(null);
   }, []);
-
-  const tickAutoScroll = useCallback(() => {
-    const scrollEl = scrollParentRef.current;
-    if (!scrollEl) {
-      autoScrollRafRef.current = null;
-      return;
-    }
-    const rect = scrollEl.getBoundingClientRect();
-    const { y } = pointerRef.current;
-    let delta = 0;
-    if (y < rect.top + SCROLL_EDGE_PX) {
-      const intensity = Math.min(
-        1,
-        (rect.top + SCROLL_EDGE_PX - y) / SCROLL_EDGE_PX
-      );
-      delta = -SCROLL_MAX_SPEED * intensity;
-    } else if (y > rect.bottom - SCROLL_EDGE_PX) {
-      const intensity = Math.min(
-        1,
-        (y - (rect.bottom - SCROLL_EDGE_PX)) / SCROLL_EDGE_PX
-      );
-      delta = SCROLL_MAX_SPEED * intensity;
-    }
-    if (delta !== 0) {
-      scrollEl.scrollTop += delta;
-    }
-    autoScrollRafRef.current = requestAnimationFrame(tickAutoScroll);
-  }, []);
-
-  const startAutoScroll = useCallback(() => {
-    if (autoScrollRafRef.current !== null) {
-      return;
-    }
-    autoScrollRafRef.current = requestAnimationFrame(tickAutoScroll);
-  }, [tickAutoScroll]);
-
-  useEffect(() => {
-    if (!draggingKey) {
-      stopAutoScroll();
-      return;
-    }
-
-    // Capture phase: row/root handlers call stopPropagation(), so a bubble
-    // listener on document never sees dragover while over the tree.
-    const onDragOverDocument = (event: DragEvent) => {
-      pointerRef.current = { x: event.clientX, y: event.clientY };
-      placeDragPreview(event.clientX, event.clientY);
-      startAutoScroll();
-    };
-
-    const onWheel = (event: WheelEvent) => {
-      const scrollEl = scrollParentRef.current;
-      if (!scrollEl) {
-        return;
-      }
-      // HTML5 DnD blocks native scroll; apply wheel to the tree manually.
-      const line =
-        event.deltaMode === 1
-          ? 16
-          : event.deltaMode === 2
-            ? scrollEl.clientHeight
-            : 1;
-      scrollEl.scrollTop += event.deltaY * line;
-      event.preventDefault();
-    };
-
-    document.addEventListener("dragover", onDragOverDocument, true);
-    // Wheel during drag often targets window/body, not the scroll container.
-    window.addEventListener("wheel", onWheel, {
-      capture: true,
-      passive: false,
-    });
-
-    return () => {
-      document.removeEventListener("dragover", onDragOverDocument, true);
-      window.removeEventListener("wheel", onWheel, true);
-      stopAutoScroll();
-    };
-  }, [draggingKey, placeDragPreview, startAutoScroll, stopAutoScroll]);
 
   const onToggleDirectory = useCallback((path: string[]) => {
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false;
+      return;
+    }
     const key = pathKey(path);
     setExpandedPaths((current) => {
       const next = new Set(current);
@@ -695,157 +554,145 @@ export function LocalDiskTree({
     });
   }, []);
 
-  const onDragOverTarget = useCallback((key: string | null) => {
-    setDragOverKey((prev) => (prev === key ? prev : key));
-  }, []);
-
-  const onTreeDragStart = useCallback(
-    (
-      event: ReactDragEvent<HTMLButtonElement>,
-      node: LocalDiskNode,
-      kind: DragPreviewKind
-    ) => {
-      if (renamingPathKey === pathKey(node.path)) {
-        event.preventDefault();
+  const onOpenFileGuarded = useCallback(
+    (path: string[]) => {
+      if (suppressClickRef.current) {
+        suppressClickRef.current = false;
         return;
       }
-      event.dataTransfer.setData(
-        MEGACROW_TREE_PATH_MIME,
-        JSON.stringify(node.path)
-      );
-      event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.setDragImage(transparentDragImage(), 0, 0);
-
-      const rect = event.currentTarget.getBoundingClientRect();
-      const scrollParent = event.currentTarget.closest(
-        ".files-section-scroll"
-      ) as HTMLElement | null;
-      scrollParentRef.current = scrollParent;
-      pointerRef.current = { x: event.clientX, y: event.clientY };
-      suppressClickRef.current = false;
-      setDraggingKey(pathKey(node.path));
-      setDragPreview({
-        kind,
-        label: node.name,
-        width: Math.max(120, Math.round(rect.width)),
-      });
-      // Place on next paint once the portal mounts.
-      requestAnimationFrame(() => {
-        placeDragPreview(event.clientX, event.clientY);
-      });
-      startAutoScroll();
+      onOpenFile(path);
     },
-    [placeDragPreview, renamingPathKey, startAutoScroll]
+    [onOpenFile]
   );
 
-  const onTreeDragEnd = useCallback(() => {
-    suppressClickRef.current = true;
-    setDraggingKey(null);
-    setDragOverKey(null);
-    setDragPreview(null);
-    scrollParentRef.current = null;
-    stopAutoScroll();
-  }, [stopAutoScroll]);
+  const onPointerDownRow = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>, node: LocalDiskNode) => {
+      if (event.button !== 0 || renamingPathKey === pathKey(node.path)) {
+        return;
+      }
+      pendingRef.current = {
+        path: node.path,
+        x: event.clientX,
+        y: event.clientY,
+      };
+    },
+    [renamingPathKey]
+  );
 
-  const onRootDragOver = (event: ReactDragEvent) => {
-    if (!hasTreeDrag(event)) {
-      return;
-    }
-    event.preventDefault();
-    event.stopPropagation();
-    event.dataTransfer.dropEffect = "move";
-    setDragOverKey((prev) => (prev === rootDropKey ? prev : rootDropKey));
-  };
+  useEffect(() => {
+    const onPointerMove = (event: PointerEvent) => {
+      const pending = pendingRef.current;
+      if (pending && draggingPathRef.current === null) {
+        const dx = event.clientX - pending.x;
+        const dy = event.clientY - pending.y;
+        if (dx * dx + dy * dy < DRAG_THRESHOLD_PX * DRAG_THRESHOLD_PX) {
+          return;
+        }
+        draggingPathRef.current = pending.path;
+        activeTreeDragPath = pending.path;
+        pendingRef.current = null;
+        setDraggingKey(pathKey(pending.path));
+        suppressClickRef.current = true;
+      }
 
-  const onRootDragLeave = (event: ReactDragEvent) => {
-    if (!hasTreeDrag(event)) {
-      return;
-    }
-    const related = event.relatedTarget as Node | null;
-    if (related && event.currentTarget.contains(related)) {
-      return;
-    }
-    setDragOverKey(null);
-  };
+      const fromPath = draggingPathRef.current;
+      if (!fromPath) {
+        return;
+      }
 
-  const onRootDrop = (event: ReactDragEvent) => {
-    if (!hasTreeDrag(event)) {
-      return;
-    }
-    event.preventDefault();
-    event.stopPropagation();
-    setDragOverKey(null);
-    const fromPath = parseDragPath(event);
-    if (!fromPath || fromPath.length === 0) {
-      return;
-    }
-    // Already at root.
-    if (fromPath.length === 1) {
-      return;
-    }
-    onMoveEntry(fromPath, []);
-  };
+      event.preventDefault();
+      const target = findDropTarget(event.clientX, event.clientY);
+      let nextKey: string | null = null;
+      if (target) {
+        const toParent = dropParentForPathKey(
+          target.key,
+          target.type,
+          fromPath
+        );
+        if (toParent !== null) {
+          nextKey = target.type === "root" ? rootDropKey : target.key;
+        }
+      }
+      if (dragOverKeyRef.current !== nextKey) {
+        dragOverKeyRef.current = nextKey;
+        setDragOverKey(nextKey);
+      }
+    };
+
+    const onPointerUp = (event: PointerEvent) => {
+      const fromPath = draggingPathRef.current;
+      if (!fromPath) {
+        pendingRef.current = null;
+        return;
+      }
+
+      const target = findDropTarget(event.clientX, event.clientY);
+      let toParent: string[] | null = null;
+      if (target) {
+        toParent = dropParentForPathKey(target.key, target.type, fromPath);
+      }
+
+      clearDrag();
+      if (toParent !== null) {
+        onMoveEntry(fromPath, toParent);
+      }
+    };
+
+    const onPointerCancel = () => {
+      clearDrag();
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        clearDrag();
+      }
+    };
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerCancel);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerCancel);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [clearDrag, onMoveEntry]);
+
+  // Keep module flag in sync if the tree unmounts mid-drag.
+  useEffect(
+    () => () => {
+      activeTreeDragPath = null;
+    },
+    []
+  );
 
   return (
-    <>
-      <ul
-        className={`files-tree${dragOverKey === rootDropKey ? " files-tree--drop-target" : ""}`}
-        onDragLeave={onRootDragLeave}
-        onDragOver={onRootDragOver}
-        onDrop={onRootDrop}
-      >
-        {nodes.map((node) => (
-          <TreeNode
-            activeFileName={activeFileName}
-            depth={0}
-            draggingKey={draggingKey}
-            dragOverKey={dragOverKey}
-            expandedPaths={expandedPaths}
-            key={pathKey(node.path)}
-            node={node}
-            objectListNames={objectListNames}
-            onBeginRename={onBeginRename}
-            onCancelRename={onCancelRename}
-            onCommitRename={onCommitRename}
-            onContextMenu={onContextMenu}
-            onDragOverTarget={onDragOverTarget}
-            onMoveEntry={onMoveEntry}
-            onOpenFile={onOpenFile}
-            onToggleDirectory={onToggleDirectory}
-            onTreeDragEnd={onTreeDragEnd}
-            onTreeDragStart={onTreeDragStart}
-            renamingPathKey={renamingPathKey}
-            suppressClickRef={suppressClickRef}
-          />
-        ))}
-      </ul>
-      {dragPreview
-        ? createPortal(
-            <div
-              aria-hidden="true"
-              className={`files-drag-preview${
-                dragPreview.kind === "folder" ||
-                dragPreview.kind === "object-lists"
-                  ? " files-drag-preview--folder"
-                  : ""
-              }${
-                dragPreview.kind === "object-lists"
-                  ? " files-drag-preview--object-lists"
-                  : ""
-              }${
-                dragPreview.kind === "object-list-file"
-                  ? " files-drag-preview--object-list-file"
-                  : ""
-              }`}
-              ref={dragPreviewElRef}
-              style={{ width: dragPreview.width }}
-            >
-              <DragPreviewGlyph kind={dragPreview.kind} />
-              <span className="files-row-label">{dragPreview.label}</span>
-            </div>,
-            document.body
-          )
-        : null}
-    </>
+    <ul
+      className={`files-tree${dragOverKey === rootDropKey ? " files-tree--drop-target" : ""}${draggingKey ? " files-tree--dragging" : ""}`}
+      data-tree-root=""
+    >
+      {nodes.map((node) => (
+        <TreeNode
+          activeFileName={activeFileName}
+          depth={0}
+          draggingKey={draggingKey}
+          dragOverKey={dragOverKey}
+          expandedPaths={expandedPaths}
+          key={pathKey(node.path)}
+          node={node}
+          objectListNames={objectListNames}
+          onBeginRename={onBeginRename}
+          onCancelRename={onCancelRename}
+          onCommitRename={onCommitRename}
+          onContextMenu={onContextMenu}
+          onOpenFile={onOpenFileGuarded}
+          onPointerDownRow={onPointerDownRow}
+          onToggleDirectory={onToggleDirectory}
+          renamingPathKey={renamingPathKey}
+        />
+      ))}
+    </ul>
   );
 }

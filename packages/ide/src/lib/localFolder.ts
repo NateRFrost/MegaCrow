@@ -17,6 +17,11 @@ export interface LocalDiskNode {
   /** Path segments from the selected root folder. */
   path: string[];
   type: "directory" | "file";
+  /**
+   * Bundled default shown in the tree before the file exists on disk
+   * (object list tables). Saving materializes the file and clears this flag.
+   */
+  virtual?: boolean;
 }
 
 function pathKey(path: string[]): string {

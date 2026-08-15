@@ -38,6 +38,11 @@ fn set_discord_presence_enabled(
 }
 
 #[tauri::command]
+fn get_discord_username(discord: tauri::State<DiscordRpc>) -> Option<String> {
+  discord.username()
+}
+
+#[tauri::command]
 fn write_mcc_hot_reload_mglo(data: Vec<u8>) -> Result<String, String> {
   let path = mcc_hot_reload_mglo_path();
   if let Some(parent) = path.parent() {
@@ -104,13 +109,6 @@ fn save_megacrow_settings(app: AppHandle, settings: MegacrowSettings) -> Result<
 }
 
 #[tauri::command]
-fn get_system_username() -> String {
-  std::env::var("USERNAME")
-    .or_else(|_| std::env::var("USER"))
-    .unwrap_or_else(|_| "unknown".to_string())
-}
-
-#[tauri::command]
 fn discover_hrek_workspaces() -> Vec<DiscoveredWorkspace> {
   workspace_discover::discover_hrek_workspaces()
 }
@@ -157,12 +155,12 @@ pub fn run() {
       write_mcc_hot_reload_mglo,
       update_discord_presence,
       set_discord_presence_enabled,
+      get_discord_username,
       detect_mcc_install,
       launch_mcc,
       load_megacrow_settings,
       save_megacrow_settings,
       discover_hrek_workspaces,
-      get_system_username,
       clipboard_files::clipboard_write_files,
       cli::get_cli_args,
       cli::cli_log,

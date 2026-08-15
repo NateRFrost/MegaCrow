@@ -12,6 +12,9 @@ export const highlightHudWidgets = (
 ): void => {
   emitElementKeyword(out, element.keywordLocation);
   for (const entry of element.entries) {
+    if (entry.textKeyword !== undefined) {
+      emitLocation(out, entry.textKeyword.location, "enumMember");
+    }
     if (!isAstErrorNode(entry.name)) {
       emitLocation(out, entry.name.location, "variable");
     }

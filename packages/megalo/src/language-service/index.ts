@@ -10,6 +10,24 @@ export {
   objectListEntryCount,
 } from "src/language-service/analyze-object-list";
 export {
+  type ActionCompleter,
+  type ActionCompletionContext,
+  type CompletionContext,
+  type CompletionItem,
+  type CompletionKind,
+  type CompletionPrefix,
+  type CompletionRange,
+  type ConditionCompleter,
+  type ConditionCompletionContext,
+  completeQuotedPath,
+  completionsAtPosition,
+  getQuotedPathCompletionQuery,
+  type PathDirectiveKind,
+  type PathDirectoryEntry,
+  type QuotedPathCompletionQuery,
+  splitPathPrefix,
+} from "src/language-service/completion";
+export {
   type DefinitionRange,
   type DefinitionTarget,
   definitionAtPosition,

@@ -9,6 +9,7 @@ import type { ConditionStatementNode } from "src/frontend/abstract-syntax-tree/e
 import type { TemporaryStatementNode } from "src/frontend/abstract-syntax-tree/elements/trigger/temporary";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { TRIGGER_EXECUTION_KINDS } from "src/frontend/language-configuration/omni/triggers";
 import { highlightActionParameters } from "src/language-service/highlighting/actions";
 import { highlightConditionParameters } from "src/language-service/highlighting/conditions";
 import {
@@ -29,6 +30,8 @@ const VARIABLE_TYPE_TRIGGER_KINDS = new Set([
   "team",
   "object",
 ]);
+
+const TRIGGER_EXECUTION_KIND_SET = new Set<string>(TRIGGER_EXECUTION_KINDS);
 
 const highlightAction = (
   out: SemanticToken[],
@@ -75,7 +78,15 @@ const highlightForEach = (
   statement: ForEachStatementNode
 ): void => {
   emitKeywordRange(out, statement.location, statement.target.location);
-  emitLocation(out, statement.target.location, "variable");
+  if (statement.target.value.length > 0) {
+    const tokenType = triggerNameTokenType(
+      statement.target.value,
+      statement.target.symbolId !== undefined
+    );
+    if (tokenType !== undefined) {
+      emitLocation(out, statement.target.location, tokenType);
+    }
+  }
   highlightTriggerStatements(out, statement.statements);
 };
 
@@ -117,16 +128,20 @@ const highlightTriggerStatements = (
 const triggerNameTokenType = (
   name: string,
   hasSymbol: boolean
-): SemanticTokenType => {
+): SemanticTokenType | undefined => {
   if (hasSymbol) {
     // Object-filter labels (map_object) bind a symbol.
     return "variable";
   }
-  if (VARIABLE_TYPE_TRIGGER_KINDS.has(name.toLowerCase())) {
+  const lower = name.toLowerCase();
+  if (VARIABLE_TYPE_TRIGGER_KINDS.has(lower)) {
     return "type";
   }
-  // Event kinds: initialization, host_migration, …
-  return "enumMember";
+  if (TRIGGER_EXECUTION_KIND_SET.has(lower)) {
+    // Event kinds: initialization, host_migration, …
+    return "enumMember";
+  }
+  return;
 };
 
 export const highlightTrigger = (
@@ -135,14 +150,13 @@ export const highlightTrigger = (
 ): void => {
   emitElementKeyword(out, element.keywordLocation);
   if (element.name.value.length > 0) {
-    emitLocation(
-      out,
-      element.name.location,
-      triggerNameTokenType(
-        element.name.value,
-        element.name.symbolId !== undefined
-      )
+    const tokenType = triggerNameTokenType(
+      element.name.value,
+      element.name.symbolId !== undefined
     );
+    if (tokenType !== undefined) {
+      emitLocation(out, element.name.location, tokenType);
+    }
   }
   highlightTriggerStatements(out, element.statements);
 };

@@ -22,17 +22,59 @@ interface HudWidgetEntryNodePosition {
   value: string;
 }
 
+export interface HudWidgetEntryTextKeyword {
+  location: SourceCodeLocation;
+  value: "text";
+}
+
 export interface HudWidgetEntryNode {
   location: SourceCodeLocation;
   name: HudWidgetEntryNodeName | ASTErrorNode;
   position: HudWidgetEntryNodePosition | ASTErrorNode;
+  textKeyword?: HudWidgetEntryTextKeyword;
 }
 
 export type HudWidgetsElementNode = ASTElementBase<ElementKind.HUD_WIDGETS> & {
   entries: HudWidgetEntryNode[];
 };
 
+const tryConsumeLegacyTextKeyword = (
+  ctx: ParserContext
+): HudWidgetEntryTextKeyword | undefined => {
+  const first = ctx.peekToken();
+  const second = ctx.peekToken(1);
+  const third = ctx.peekToken(2);
+  if (
+    !(
+      first?.kind === TokenKind.Identifier &&
+      first.value === "text" &&
+      second?.kind === TokenKind.Identifier &&
+      third?.kind === TokenKind.Identifier &&
+      first.location.start.line === second.location.start.line &&
+      second.location.start.line === third.location.start.line
+    )
+  ) {
+    return;
+  }
+
+  const textToken = ctx.getToken();
+  if (ctx.frontend.megaloVersion.version >= 106) {
+    const message = diagnosticMessages.legacyHudWidgetTextKeyword();
+    if (ctx.frontend.megacrowExtensions.supportLegacySyntax) {
+      ctx.diagnostics.addWarning(message, textToken.location);
+    } else {
+      ctx.diagnostics.addError(message, textToken.location);
+    }
+  }
+
+  return {
+    value: "text",
+    location: textToken.location,
+  };
+};
+
 const parseHudWidgetEntry = (ctx: ParserContext): HudWidgetEntryNode => {
+  const textKeyword = tryConsumeLegacyTextKeyword(ctx);
   const nameToken = ctx.getToken();
   let name: HudWidgetEntryNode["name"];
   if (nameToken.kind === TokenKind.Identifier) {
@@ -78,12 +120,15 @@ const parseHudWidgetEntry = (ctx: ParserContext): HudWidgetEntryNode => {
     };
   }
 
+  const startLocation = textKeyword?.location ?? nameToken.location;
+
   return {
+    ...(textKeyword === undefined ? {} : { textKeyword }),
     name,
     position,
     location: {
       type: SourceLocationType.SOURCE_CODE,
-      start: nameToken.location.start,
+      start: startLocation.start,
       end: positionToken.location.end,
     },
   };

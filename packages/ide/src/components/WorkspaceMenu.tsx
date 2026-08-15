@@ -23,7 +23,7 @@ interface Props {
 
 /** Reach is the only supported game/version today. */
 function gameIconSrc(_version: MegaloVersionId): string {
-  return "/img/icons/game-reach.png";
+  return `${import.meta.env.BASE_URL}img/icons/game-reach.png`;
 }
 
 function WorkspaceVersionLabel({

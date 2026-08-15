@@ -314,4 +314,12 @@ export const diagnosticMessages = {
   teamColorOverridesDoNotApplyInMccMenus(): string {
     return translate("team_color_overrides_do_not_apply_in_mcc_menus");
   },
+
+  legacyHudWidgetTextKeyword(): string {
+    return translate("legacy_hud_widget_text_keyword");
+  },
+
+  unsupportedDynamicStringReplacement(got: string): string {
+    return translate("unsupported_dynamic_string_replacement", { got });
+  },
 };

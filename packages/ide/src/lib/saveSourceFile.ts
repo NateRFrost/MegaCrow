@@ -1,4 +1,5 @@
-import { writeFile } from "@tauri-apps/plugin-fs";
+import { dirname } from "@tauri-apps/api/path";
+import { mkdir, writeFile } from "@tauri-apps/plugin-fs";
 import { encodeMegaloTextFile } from "./decodeTextFile";
 import { writeOpfsGametypeSource } from "./opfsStorage";
 import { isTauriRuntime } from "./tauriRuntime";
@@ -8,6 +9,8 @@ export async function saveSourceFileToDisk(
   absolutePath: string,
   text: string
 ): Promise<void> {
+  const parent = await dirname(absolutePath);
+  await mkdir(parent, { recursive: true });
   await writeFile(absolutePath, encodeMegaloTextFile(text));
 }
 

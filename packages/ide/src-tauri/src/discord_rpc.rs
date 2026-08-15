@@ -1,4 +1,5 @@
 use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
+use serde_json::Value;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
@@ -15,6 +16,8 @@ struct RpcPresence {
   details: String,
   state: String,
   enabled: bool,
+  /// Discord display name / username from the IPC READY payload.
+  username: Option<String>,
 }
 
 impl Default for RpcPresence {
@@ -23,6 +26,7 @@ impl Default for RpcPresence {
       details: "MegaCrow".into(),
       state: "Editing Halo Reach gametypes".into(),
       enabled: true,
+      username: None,
     }
   }
 }
@@ -57,19 +61,75 @@ impl DiscordRpc {
     };
     guard.enabled = enabled;
   }
+
+  pub fn username(&self) -> Option<String> {
+    self
+      .state
+      .lock()
+      .ok()
+      .and_then(|guard| guard.username.clone())
+  }
+}
+
+fn set_username(state: &Arc<Mutex<RpcPresence>>, username: Option<String>) {
+  if let Ok(mut guard) = state.lock() {
+    guard.username = username;
+  }
+}
+
+fn parse_ready_username(payload: &Value) -> Option<String> {
+  let user = payload.get("data")?.get("user")?;
+  let global_name = user
+    .get("global_name")
+    .and_then(Value::as_str)
+    .map(str::trim)
+    .filter(|value| !value.is_empty());
+  let username = user
+    .get("username")
+    .and_then(Value::as_str)
+    .map(str::trim)
+    .filter(|value| !value.is_empty());
+  global_name.or(username).map(str::to_string)
+}
+
+/// Handshake like `DiscordIpc::connect`, but keep the READY user for the watermark.
+fn connect_and_read_user(client: &mut DiscordIpcClient) -> Result<Option<String>, String> {
+  client
+    .connect_ipc()
+    .map_err(|error| error.to_string())?;
+  client
+    .send(
+      serde_json::json!({
+        "v": 1,
+        "client_id": APPLICATION_ID,
+      }),
+      0,
+    )
+    .map_err(|error| error.to_string())?;
+  let (_opcode, payload) = client.recv().map_err(|error| error.to_string())?;
+  Ok(parse_ready_username(&payload))
 }
 
 fn run_discord_loop(state: Arc<Mutex<RpcPresence>>) {
   loop {
     let mut client = DiscordIpcClient::new(APPLICATION_ID);
 
-    if let Err(error) = client.connect() {
-      log::debug!("Discord RPC: waiting for Discord ({error})");
-      thread::sleep(Duration::from_secs(30));
-      continue;
+    match connect_and_read_user(&mut client) {
+      Ok(username) => {
+        set_username(&state, username.clone());
+        if let Some(name) = username {
+          log::info!("Discord RPC connected as {name}");
+        } else {
+          log::info!("Discord RPC connected (no username in READY)");
+        }
+      }
+      Err(error) => {
+        set_username(&state, None);
+        log::debug!("Discord RPC: waiting for Discord ({error})");
+        thread::sleep(Duration::from_secs(30));
+        continue;
+      }
     }
-
-    log::info!("Discord RPC connected");
 
     loop {
       let snapshot = state
@@ -88,6 +148,7 @@ fn run_discord_loop(state: Arc<Mutex<RpcPresence>>) {
         .state(&snapshot.state);
 
       if let Err(error) = client.set_activity(payload) {
+        set_username(&state, None);
         log::debug!("Discord RPC: reconnecting ({error})");
         break;
       }

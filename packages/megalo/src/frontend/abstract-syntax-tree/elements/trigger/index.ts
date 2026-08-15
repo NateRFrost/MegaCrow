@@ -1,4 +1,4 @@
-import type { SourceCodeLocation } from "src/diagnostics";
+import type { SourceCodeLocation, SourcePosition } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import {
@@ -106,9 +106,10 @@ const lookupObjectFilterReference = (
 const withScope = <T extends { location: SourceCodeLocation }>(
   ctx: ParserContext,
   scope: ParserScope,
-  fn: () => T
+  fn: () => T,
+  start?: SourcePosition
 ): T => {
-  ctx.symbolParser.pushScope(scope);
+  ctx.symbolParser.pushScope(scope, start);
   try {
     const result = fn();
     ctx.symbolParser.popScope(result.location.end);
@@ -234,18 +235,23 @@ export const parseBegin = (
   openToken: Token,
   keywordLocation: SourceCodeLocation = openToken.location
 ): BeginStatementNode =>
-  withScope(ctx, { kind: ParserScopeKind.Block }, () => {
-    const { statements, location } = parseScopedTriggerBody(
-      ctx,
-      openToken.location
-    );
-    return {
-      kind: SyntaxKind.BEGIN,
-      keywordLocation,
-      statements,
-      location,
-    };
-  });
+  withScope(
+    ctx,
+    { kind: ParserScopeKind.Block },
+    () => {
+      const { statements, location } = parseScopedTriggerBody(
+        ctx,
+        openToken.location
+      );
+      return {
+        kind: SyntaxKind.BEGIN,
+        keywordLocation,
+        statements,
+        location,
+      };
+    },
+    openToken.location.start
+  );
 
 const parseForEachTarget = (
   ctx: ParserContext,
@@ -300,7 +306,8 @@ export const parseForEach = (
         statements,
         location,
       };
-    }
+    },
+    actionToken.location.start
   );
 };
 
@@ -351,6 +358,7 @@ export const triggerParser = (
         statements,
         location: locationSpan(elementToken.location, consumedEnd.location),
       };
-    }
+    },
+    elementToken.location.start
   );
 };

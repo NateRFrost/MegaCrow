@@ -80,12 +80,20 @@ fn mui_entry_is_hrek_tool(raw_name: &str, label: &str) -> bool {
 fn hrek_paths_from_install_root(root: &Path) -> Option<(PathBuf, PathBuf)> {
   let input = root.join("data").join("multiplayer").join("megalo");
   let output = root.join("maps").join("megalo");
-  // Scripts tree is required. maps/megalo may be missing until first compile.
-  if input.is_dir() {
-    Some((input, output))
-  } else {
-    None
+  // Scripts tree is required.
+  if !input.is_dir() {
+    return None;
   }
+  // Some editing kits ship without maps/megalo; create it so compile output has a home.
+  if !output.is_dir() {
+    if let Err(error) = std::fs::create_dir_all(&output) {
+      eprintln!(
+        "[megacrow] failed to create {}: {error}",
+        output.display()
+      );
+    }
+  }
+  Some((input, output))
 }
 
 /// Read `displayName` from `<HREK>/project.xml` when present.
@@ -278,6 +286,34 @@ mod tests {
       r"C:\Program Files (x86)\Steam\steamapps\common\HREK\MegaloEdit.exe.FriendlyAppName"
     ));
     assert!(label_matches_hrek_tool("HR MegaloEdit"));
+  }
+
+  #[test]
+  fn creates_maps_megalo_when_missing() {
+    let dir = std::env::temp_dir().join(format!(
+      "megacrow_hrek_maps_megalo_{}",
+      std::process::id()
+    ));
+    let _ = std::fs::remove_dir_all(&dir);
+    let scripts = dir
+      .join("data")
+      .join("multiplayer")
+      .join("megalo");
+    std::fs::create_dir_all(&scripts).expect("scripts dir");
+
+    let output = dir.join("maps").join("megalo");
+    assert!(!output.exists());
+
+    let paths = hrek_paths_from_install_root(&dir).expect("hrek paths");
+    assert_eq!(paths.0, scripts);
+    assert_eq!(paths.1, output);
+    assert!(
+      output.is_dir(),
+      "expected maps/megalo to be created at {}",
+      output.display()
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
   }
 
   #[test]

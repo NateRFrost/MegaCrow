@@ -9,12 +9,33 @@ import {
 import { encodeGameEngineCategory } from "src/backend/compile/107-mcc/enums/e_game_engine_category";
 import type { IR } from "src/frontend/intermediate-representation";
 
+function applyHistory(
+  target: {
+    timestamp: Date;
+    xuid: bigint;
+    name: string;
+    is_online: boolean;
+  },
+  source: {
+    timestamp: Date;
+    xuid: bigint;
+    name: string;
+    isOnline: boolean;
+  }
+): void {
+  target.timestamp = source.timestamp;
+  target.xuid = source.xuid;
+  target.name = source.name;
+  target.is_online = source.isOnline;
+}
+
 export const compileMetadata = (
   ir: IR,
   gameVariant: c_game_engine_custom_variant
 ): void => {
   const variant = ir.gameVariant;
   const metadata = gameVariant.m_base_variant.m_metadata;
+  const irMetadata = variant.baseVariant.metadata;
 
   metadata.general.file_type = e_file_type.GameVariant;
   metadata.general.activity = e_gui_game_mode.multiplayer;
@@ -38,10 +59,13 @@ export const compileMetadata = (
     metadata.display.megalo_category_index = engineCategory;
   }
 
-  if (variant.baseVariant.metadata.name !== undefined) {
-    metadata.name = variant.baseVariant.metadata.name;
+  if (irMetadata.name !== undefined) {
+    metadata.name = irMetadata.name;
   }
-  if (variant.baseVariant.metadata.description !== undefined) {
-    metadata.description = variant.baseVariant.metadata.description;
+  if (irMetadata.description !== undefined) {
+    metadata.description = irMetadata.description;
   }
+
+  applyHistory(metadata.creation_history, irMetadata.creationHistory);
+  applyHistory(metadata.modification_history, irMetadata.modificationHistory);
 };

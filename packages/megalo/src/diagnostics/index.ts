@@ -104,6 +104,7 @@ export interface BuiltInLocation {
 }
 
 export interface ObjectListLocation {
+  file?: string;
   objectType: ObjectListType;
   source: SourcePosition;
   type: SourceLocationType.OBJECT_LIST;

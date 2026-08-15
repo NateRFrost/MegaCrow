@@ -1,7 +1,9 @@
+import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { ASTDynamicStringNode } from "src/frontend/abstract-syntax-tree/parameters/types/dynamic-string";
 import { LowerError } from "src/frontend/intermediate-representation/error";
+import { CustomVariableType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import type { DynamicString } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_text";
 import {
   type ReplaceableToken,
@@ -17,11 +19,43 @@ import {
   type ElementLowerContext,
 } from "src/frontend/intermediate-representation/parameters/context";
 
+const describeReplacementOperand = (node: ASTParameterNode): string => {
+  switch (node.kind) {
+    case SyntaxKind.REFERENCE:
+      return node.identifier;
+    case SyntaxKind.MEMBER_REFERENCE:
+      return `${node.root}.${node.member.value}`;
+    case SyntaxKind.KEYWORD:
+      return node.value;
+    case SyntaxKind.INTEGER:
+      return String(node.value);
+    case SyntaxKind.FLOATING_POINT:
+      return String(node.value);
+    case SyntaxKind.QUOTED_STRING:
+      return `"${node.value}"`;
+    case SyntaxKind.INVALID:
+      return "<invalid>";
+    default:
+      return SyntaxKind[node.kind] ?? "expression";
+  }
+};
+
 const lowerReplacement = (
   node: ASTParameterNode,
   ctx: ElementLowerContext
 ): ReplaceableToken => {
   const paramCtx = asParameterLoweringContext(ctx);
+
+  // `%n` accepts immediate integer literals (same as MegaloEdit / docs examples).
+  if (node.kind === SyntaxKind.INTEGER) {
+    return {
+      type: ReplaceableTokenType.CustomVariable,
+      customVariable: {
+        type: CustomVariableType.Constant,
+        immediateValue: node.value,
+      },
+    };
+  }
 
   if (
     node.kind === SyntaxKind.REFERENCE ||
@@ -58,7 +92,9 @@ const lowerReplacement = (
   }
 
   throw new LowerError(
-    "Unsupported dynamic-string replacement.",
+    diagnosticMessages.unsupportedDynamicStringReplacement(
+      describeReplacementOperand(node)
+    ),
     node.location
   );
 };

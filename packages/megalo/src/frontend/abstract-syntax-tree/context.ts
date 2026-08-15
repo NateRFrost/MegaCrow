@@ -22,6 +22,7 @@ export class ParserContext {
   private readonly tokens: Tokens;
   private tokenIndex = 0;
 
+  public readonly frontend: MegaloCompilerContext;
   public readonly diagnostics: Diagnostics;
   public readonly symbolParser: ParserSymbolContext;
 
@@ -42,6 +43,7 @@ export class ParserContext {
     /** When set, reuse scopes so include expansion shares the parent symbol table. */
     sharedSymbolParser?: ParserSymbolContext
   ) {
+    this.frontend = frontend;
     this.diagnostics = diagnostics;
     this.tokens = tokens;
     this.symbolParser =

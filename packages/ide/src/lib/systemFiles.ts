@@ -28,9 +28,13 @@ export function isSystemFolderSupported(): boolean {
 }
 
 export async function listSystemMegaloTree(
-  root: LocalDiskRoot
-): Promise<LocalDiskNode[]> {
-  return withObjectListsFolder(await listTauriMegaloTree(root.path));
+  root: LocalDiskRoot,
+  objectListNames: readonly string[] = []
+): Promise<{ nodes: LocalDiskNode[]; missingListNames: readonly string[] }> {
+  return withObjectListsFolder(
+    await listTauriMegaloTree(root.path),
+    objectListNames
+  );
 }
 
 export async function listSystemBuildOutputs(

@@ -44,10 +44,15 @@ const isTriggerStatementBoundary = (token: Token | undefined): boolean =>
       token.value === "begin" ||
       token.value === "temporary"));
 
+interface ParsedTemporaryStorage {
+  accepted: boolean;
+  storage: TemporaryStatementNode["storage"];
+}
+
 const parseTemporaryStorage = (
   ctx: ParserContext,
   anchor: Token
-): TemporaryStatementNode["storage"] | undefined => {
+): ParsedTemporaryStorage | undefined => {
   const token = ctx.peekToken();
   if (token?.kind !== TokenKind.Identifier) {
     ctx.diagnostics.addError(
@@ -67,12 +72,22 @@ const parseTemporaryStorage = (
       diagnosticMessages.expectedTemporaryStorage(storageToken.value),
       storageToken.location
     );
-    return;
+    // Keep the bad token's span so completion still targets storage (slot 0).
+    return {
+      accepted: false,
+      storage: {
+        value: "number",
+        location: storageToken.location,
+      },
+    };
   }
 
   return {
-    value: storageToken.value,
-    location: storageToken.location,
+    accepted: true,
+    storage: {
+      value: storageToken.value,
+      location: storageToken.location,
+    },
   };
 };
 
@@ -104,14 +119,15 @@ export const parseTemporary = (
   ctx: ParserContext,
   temporaryToken: Token
 ): TemporaryStatementNode => {
-  const storage = parseTemporaryStorage(ctx, temporaryToken);
+  const parsedStorage = parseTemporaryStorage(ctx, temporaryToken);
+  const storage = parsedStorage?.storage;
   const name = parseTemporaryName(ctx, temporaryToken);
 
   let symbolId: number | undefined;
-  if (storage !== undefined && name !== undefined) {
+  if (parsedStorage?.accepted === true && name !== undefined) {
     symbolId = ctx.symbolParser.addVariableToScope({
       name: name.value,
-      type: variableTypeFromName(storage.value),
+      type: variableTypeFromName(parsedStorage.storage.value),
       declaration: name.location,
       scope: VariableScope.Temporary,
     });

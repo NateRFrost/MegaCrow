@@ -36,6 +36,8 @@
   "unsupported_field": "'{{fieldPath}}' is not supported by {{versionLabel}}.",
   "only_one_base_directive_allowed": "Only one base directive is allowed",
   "duplicate_declaration_name_ignored": "Duplicate {{kind}} name '{{name}}' will be ignored for name lookup (MegaloEdit uses the first declaration)",
+  "legacy_hud_widget_text_keyword": "Legacy 'text' prefix on hud_widgets entries is old syntax and will not compile with MegaloEdit",
+  "unsupported_dynamic_string_replacement": "'{{got}}' is not a valid dynamic-string replacement. Use a declared reference that matches the placeholder (%n number, %p player, %t team, %o object, %s timer).",
   "element_not_allowed_in_base_derived": "'{{element}}' is not allowed in a base-derived script",
   "game_option_not_allowed_in_base_derived": "'{{entry}}' cannot define new entries in a base-derived script; override an existing option instead",
   "game_option_override_requires_base": "'{{entry}}' override form requires a base-derived script",

@@ -10,6 +10,7 @@ import type {
   PublishDiagnosticsParams,
 } from "vscode-languageserver-protocol";
 import { createPlatformFileProvider } from "./fileProvider";
+import { listPathDirectoryEntries } from "./listPathDirectory";
 import { getActiveWorkspace, type Workspace } from "./workspace";
 
 const DEFAULT_DOC_URI = "file:///megalo/editor.megalo";
@@ -18,12 +19,14 @@ export const MEGACROW_COMPILE_METHOD = "megacrow/compile";
 export const MEGACROW_REQUEST_ARTIFACTS_METHOD = "megacrow/requestArtifacts";
 export const MEGACROW_RESOLVE_INCLUDE_METHOD = "megacrow/resolveInclude";
 export const MEGACROW_RESOLVE_BASE_FILE_METHOD = "megacrow/resolveBaseFile";
+export const MEGACROW_LIST_DIRECTORY_METHOD = "megacrow/listDirectory";
 export const MEGACROW_VERSION_CONFIGURATION_METHOD =
   "megacrow/versionConfiguration";
 export const MEGACROW_ANALYZE_OBJECT_LIST_METHOD = "megacrow/analyzeObjectList";
 export const MEGACROW_SET_OBJECT_LISTS_METHOD = "megacrow/setObjectLists";
 export const MEGACROW_SET_RESOLVE_BASE_FILE_METHOD =
   "megacrow/setResolveBaseFile";
+export const MEGACROW_RESET_SESSION_METHOD = "megacrow/resetSession";
 
 export type MegacrowArtifactKind = "semanticTokens" | "diagnostics" | "mglo";
 
@@ -61,6 +64,15 @@ interface ResolveBaseFileParams {
 }
 
 type ResolveBaseFileResult = { dataBase64: string } | { error: string };
+
+interface ListDirectoryParams {
+  directory: string;
+  fromUri?: string;
+}
+
+type ListDirectoryResult =
+  | { entries: Array<{ name: string; directory: boolean }> }
+  | { error: string };
 
 let connectionPromise: Promise<MessageConnection> | null = null;
 let documentVersion = 1;
@@ -193,18 +205,54 @@ export function lspConfigureResolveContext(options: {
     const nextPath = options.filePath;
     const nextUri = nextPath ? pathToDocumentUri(nextPath) : DEFAULT_DOC_URI;
     if (nextPath !== activeFilePath || nextUri !== documentUri) {
+      const previousUri = documentUri;
+      const wasOpen = documentOpen;
       // Editor often syncs before includeRoot is applied; reopen under the real URI.
       textToResync = lastSyncedText;
       activeFilePath = nextPath;
       documentUri = nextUri;
       documentOpen = false;
       lastSyncedText = null;
+      // Drop markers immediately — late publishes for the previous URI are ignored.
+      for (const listener of diagnosticsListeners) {
+        listener([]);
+      }
+      if (wasOpen && previousUri !== nextUri) {
+        void getConnection().then((connection) => {
+          connection.sendNotification("textDocument/didClose", {
+            textDocument: { uri: previousUri },
+          });
+        });
+      }
     }
   }
 
   if (textToResync !== null) {
     void lspSyncDocument(textToResync);
   }
+}
+
+/**
+ * Drop all LSP document / snapshot / pending-analysis state (workspace switch,
+ * clear editor). Immediately clears client-side diagnostic listeners.
+ */
+export async function lspResetSession(): Promise<void> {
+  const connection = await getConnection();
+  const previousUri = documentUri;
+  const wasOpen = documentOpen;
+  documentOpen = false;
+  lastSyncedText = null;
+  documentUri = DEFAULT_DOC_URI;
+  activeFilePath = null;
+  for (const listener of diagnosticsListeners) {
+    listener([]);
+  }
+  if (wasOpen) {
+    connection.sendNotification("textDocument/didClose", {
+      textDocument: { uri: previousUri },
+    });
+  }
+  connection.sendNotification(MEGACROW_RESET_SESSION_METHOD, {});
 }
 
 async function handleResolveInclude(
@@ -260,6 +308,30 @@ async function handleResolveBaseFile(
   };
 }
 
+async function handleListDirectory(
+  params: ListDirectoryParams
+): Promise<ListDirectoryResult> {
+  const workspace = configuredWorkspace ?? getActiveWorkspace();
+  const fileProvider = createPlatformFileProvider(workspace);
+  if (!fileProvider) {
+    return { error: "No file provider available for path completion" };
+  }
+
+  const relative = (params.directory ?? "")
+    .replace(/\\/g, "/")
+    .replace(/^\/+/, "");
+  const searchDirs = resolveSearchDirs(params.fromUri);
+  const baseDir = searchDirs[0];
+  if (!baseDir || baseDir === ".") {
+    return { error: "No directory available for path completion" };
+  }
+  const absolute = relative
+    ? fileProvider.resolvePath(relative, baseDir)
+    : baseDir;
+  const entries = await listPathDirectoryEntries(absolute);
+  return { entries };
+}
+
 async function getConnection(): Promise<MessageConnection> {
   if (!connectionPromise) {
     connectionPromise = (async () => {
@@ -275,6 +347,10 @@ async function getConnection(): Promise<MessageConnection> {
       connection.onNotification(
         "textDocument/publishDiagnostics",
         (params: PublishDiagnosticsParams) => {
+          // Ignore late publishes for closed / previous document URIs.
+          if (params.uri !== documentUri) {
+            return;
+          }
           for (const listener of diagnosticsListeners) {
             listener(params.diagnostics);
           }
@@ -288,6 +364,10 @@ async function getConnection(): Promise<MessageConnection> {
       connection.onRequest(
         MEGACROW_RESOLVE_BASE_FILE_METHOD,
         (params: ResolveBaseFileParams) => handleResolveBaseFile(params)
+      );
+      connection.onRequest(
+        MEGACROW_LIST_DIRECTORY_METHOD,
+        (params: ListDirectoryParams) => handleListDirectory(params)
       );
 
       const initParams: InitializeParams = {
@@ -529,6 +609,7 @@ export async function lspCompletions(
     kind?: number;
     detail?: string;
     documentation?: string | { kind: string; value: string };
+    filterText?: string;
     insertText?: string;
   }>
 > {
@@ -551,6 +632,7 @@ export async function lspCompletions(
           kind?: number;
           detail?: string;
           documentation?: string | { kind: string; value: string };
+          filterText?: string;
           insertText?: string;
         }>;
       }
