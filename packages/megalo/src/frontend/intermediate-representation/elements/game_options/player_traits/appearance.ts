@@ -12,40 +12,6 @@ import {
 } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 import { setField } from "src/frontend/intermediate-representation/setField";
 
-const ACTIVE_CAMO: Record<string, ActiveCamo> = {
-  off: ActiveCamo.Off,
-  on: ActiveCamo.On,
-  poor: ActiveCamo.Poor,
-  good: ActiveCamo.Good,
-  excellent: ActiveCamo.Excellent,
-  invisible: ActiveCamo.Invisible,
-};
-
-const WAYPOINT: Record<string, WaypointVisibility> = {
-  unchanged: WaypointVisibility.Unchanged,
-  off: WaypointVisibility.Off,
-  allies: WaypointVisibility.Allies,
-  all: WaypointVisibility.All,
-};
-
-const FORCED_COLOR: Record<string, ForcedChangeColor> = {
-  unchanged: ForcedChangeColor.Unchanged,
-  off: ForcedChangeColor.Off,
-  red: ForcedChangeColor.Red,
-  blue: ForcedChangeColor.Blue,
-  green: ForcedChangeColor.Green,
-  yellow: ForcedChangeColor.Yellow,
-  purple: ForcedChangeColor.Purple,
-  orange: ForcedChangeColor.Orange,
-  brown: ForcedChangeColor.Brown,
-  pink: ForcedChangeColor.Pink,
-  // TODO: Check
-  white: ForcedChangeColor.White,
-  black: ForcedChangeColor.Black,
-  zombie: ForcedChangeColor.Zombie,
-  extra4: ForcedChangeColor.Extra4,
-};
-
 /** Returns true if `identifier` was handled as an appearance trait. */
 export const lowerAppearanceOption = (
   identifier: string,
@@ -63,7 +29,7 @@ export const lowerAppearanceOption = (
           location
         );
       }
-      const value = resolveEnumKeyword(first, ACTIVE_CAMO, "active_camo");
+      const value = resolveEnumKeyword(first, ActiveCamo, "active_camo");
       setField(
         ir.locations,
         diagnostics,
@@ -81,7 +47,7 @@ export const lowerAppearanceOption = (
           location
         );
       }
-      const value = resolveEnumKeyword(first, WAYPOINT, "waypoint");
+      const value = resolveEnumKeyword(first, WaypointVisibility, "waypoint");
       setField(
         ir.locations,
         diagnostics,
@@ -99,7 +65,7 @@ export const lowerAppearanceOption = (
           location
         );
       }
-      const value = resolveEnumKeyword(first, WAYPOINT, "waypoint");
+      const value = resolveEnumKeyword(first, WaypointVisibility, "waypoint");
       setField(
         ir.locations,
         diagnostics,
@@ -123,7 +89,7 @@ export const lowerAppearanceOption = (
           first.location
         );
       }
-      const value = resolveEnumKeyword(first, FORCED_COLOR, "color");
+      const value = resolveEnumKeyword(first, ForcedChangeColor, "color");
       setField(
         ir.locations,
         diagnostics,

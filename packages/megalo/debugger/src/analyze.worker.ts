@@ -26,6 +26,7 @@ import {
 } from "../../src/frontend/symbol-table";
 import { Lexer, type Token, TokenKind } from "../../src/frontend/tokens/index";
 import { setLocale } from "../../src/localization";
+import { ALL_MEGACROW_EXTENSIONS } from "../../src/megacrow-extensions";
 import { MEGALO_VERSIONS } from "../../src/version";
 import type {
   AnalyzeRequest,
@@ -36,7 +37,11 @@ import type {
   WorkerResponse,
 } from "./analyze.types";
 
-const frontend = new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"]);
+const frontend = new MegaloCompilerContext(
+  MEGALO_VERSIONS["107-mcc"],
+  ALL_MEGACROW_EXTENSIONS
+);
+
 const lexer = new Lexer(frontend);
 const parser = new Parser(frontend);
 const lowerer = new Lowerer(frontend);

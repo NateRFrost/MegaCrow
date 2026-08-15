@@ -22,7 +22,7 @@ export const lowerGetPlayerHoldingObject = (
   requireParamCount(parameters, 2, location);
   const paramCtx = asParameterLoweringContext(ctx);
   return {
-    type: ActionType.GetPlayerHoldingObject,
+    type: ActionType.get_player_holding_object,
     parameters: {
       object: resolveObjectReference(parameters[0]!, paramCtx),
       playerOut: resolvePlayerReference(parameters[1]!, paramCtx),

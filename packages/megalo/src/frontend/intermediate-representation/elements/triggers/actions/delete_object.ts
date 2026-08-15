@@ -18,7 +18,7 @@ export const lowerDeleteObject = (
 ): Action => {
   requireParamCount(parameters, 1, location);
   return {
-    type: ActionType.DeleteObject,
+    type: ActionType.delete_object,
     parameters: {
       object: resolveObjectReference(
         parameters[0]!,

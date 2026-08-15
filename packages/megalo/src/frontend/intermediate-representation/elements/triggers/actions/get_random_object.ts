@@ -44,7 +44,7 @@ export const lowerGetRandomObject = (
   requireParamCount(parameters, 3, location);
   const paramCtx = asParameterLoweringContext(ctx);
   return {
-    type: ActionType.GetRandomObject,
+    type: ActionType.get_random_object,
     parameters: {
       filterIndex: resolveObjectFilterIndex(parameters[0]!, ctx, location),
       ignoreObject: resolveObjectReference(parameters[1]!, paramCtx),

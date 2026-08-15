@@ -25,7 +25,11 @@ import { compilePlayerRatings } from "src/backend/compile/107-mcc/player_rating"
 import { compileTeams } from "src/backend/compile/107-mcc/teams";
 import { compileTriggers } from "src/backend/compile/107-mcc/triggers";
 import { compileVariableMetadata } from "src/backend/compile/107-mcc/variableMetadata";
-import { CompiledMegaloMetadata, Compiler, EngineIcon } from "src/backend/compile/compiler";
+import {
+  type CompiledMegaloMetadata,
+  Compiler,
+  EngineIcon,
+} from "src/backend/compile/compiler";
 import {
   assertCompatibleIR,
   type CompilerCapabilities,
@@ -294,21 +298,25 @@ export class Compiler107MCC extends Compiler {
       case 30:
         return EngineIcon.Attack;
       default:
-        return undefined
+        return;
     }
-  }
+  };
 
   private mapLocalizedString(
     table: c_string_table,
     stringIndex: number
   ): Record<StringTableLanguage, string> | undefined {
     if (stringIndex < 0) {
-      return undefined;
+      return;
     }
 
     const entry = {} as Record<StringTableLanguage, string>;
     let hasAny = false;
-    for (let languageIndex = 0; languageIndex < STRING_TABLE_LANGUAGES.length; languageIndex++) {
+    for (
+      let languageIndex = 0;
+      languageIndex < STRING_TABLE_LANGUAGES.length;
+      languageIndex++
+    ) {
       const language = STRING_TABLE_LANGUAGES[languageIndex]!;
       const value = table.strings[languageIndex]?.[stringIndex] ?? "";
       entry[language] = value;
@@ -337,12 +345,18 @@ export class Compiler107MCC extends Compiler {
     };
   }
 
-  public dryRun(ir: IR, diagnostics: Diagnostics): { metadata: CompiledMegaloMetadata } {
+  public dryRun(
+    ir: IR,
+    diagnostics: Diagnostics
+  ): { metadata: CompiledMegaloMetadata } {
     const gametype = this.compile(ir, diagnostics);
     return { metadata: this.getGametypeMetadata(gametype) };
   }
 
-  public writeMegaloFile(ir: IR, diagnostics: Diagnostics): { data: Uint8Array, metadata: CompiledMegaloMetadata } {
+  public writeMegaloFile(
+    ir: IR,
+    diagnostics: Diagnostics
+  ): { data: Uint8Array; metadata: CompiledMegaloMetadata } {
     const gametype = this.compile(ir, diagnostics);
     if (diagnostics.hasErrors()) {
       throw new CompilerError(

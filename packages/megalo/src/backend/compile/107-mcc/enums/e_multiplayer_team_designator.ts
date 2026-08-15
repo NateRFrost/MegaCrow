@@ -1,33 +1,33 @@
 import { e_multiplayer_team_designator } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { MultiplayerTeamDesignator } from "src/frontend/intermediate-representation/game/game_engine_default";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
+import {
+  MultiplayerTeamDesignator,
+  type MultiplayerTeamDesignator as MultiplayerTeamDesignatorName,
+} from "src/frontend/intermediate-representation/game/game_engine_default";
+
+const MULTIPLAYER_TEAM_DESIGNATOR_TO_BLF = {
+  [MultiplayerTeamDesignator.none]: e_multiplayer_team_designator.none,
+  [MultiplayerTeamDesignator.defenders]: e_multiplayer_team_designator.defenders,
+  [MultiplayerTeamDesignator.attackers]: e_multiplayer_team_designator.attackers,
+  [MultiplayerTeamDesignator.third_party]:
+    e_multiplayer_team_designator.third_party,
+  [MultiplayerTeamDesignator.fourth_party]:
+    e_multiplayer_team_designator.fourth_party,
+  [MultiplayerTeamDesignator.fifth_party]:
+    e_multiplayer_team_designator.fifth_party,
+  [MultiplayerTeamDesignator.sixth_party]:
+    e_multiplayer_team_designator.sixth_party,
+  [MultiplayerTeamDesignator.seventh_party]:
+    e_multiplayer_team_designator.seventh_party,
+  [MultiplayerTeamDesignator.eighth_party]:
+    e_multiplayer_team_designator.eighth_party,
+  [MultiplayerTeamDesignator.neutral]: e_multiplayer_team_designator.neutral,
+} as const satisfies Record<
+  MultiplayerTeamDesignatorName,
+  e_multiplayer_team_designator
+>;
 
 export const encodeMultiplayerTeamDesignator = (
-  value: MultiplayerTeamDesignator
-): e_multiplayer_team_designator => {
-  switch (value) {
-    case MultiplayerTeamDesignator.None:
-      return e_multiplayer_team_designator.none;
-    case MultiplayerTeamDesignator.Defenders:
-      return e_multiplayer_team_designator.defenders;
-    case MultiplayerTeamDesignator.Attackers:
-      return e_multiplayer_team_designator.attackers;
-    case MultiplayerTeamDesignator.ThirdParty:
-      return e_multiplayer_team_designator.third_party;
-    case MultiplayerTeamDesignator.FourthParty:
-      return e_multiplayer_team_designator.fourth_party;
-    case MultiplayerTeamDesignator.FifthParty:
-      return e_multiplayer_team_designator.fifth_party;
-    case MultiplayerTeamDesignator.SixthParty:
-      return e_multiplayer_team_designator.sixth_party;
-    case MultiplayerTeamDesignator.SeventhParty:
-      return e_multiplayer_team_designator.seventh_party;
-    case MultiplayerTeamDesignator.EighthParty:
-      return e_multiplayer_team_designator.eighth_party;
-    case MultiplayerTeamDesignator.Neutral:
-      return e_multiplayer_team_designator.neutral;
-    default: {
-      const _exhaustive: never = value;
-      return _exhaustive;
-    }
-  }
-};
+  value: MultiplayerTeamDesignatorName
+): e_multiplayer_team_designator =>
+  mapMegaloEnum(value, MULTIPLAYER_TEAM_DESIGNATOR_TO_BLF);

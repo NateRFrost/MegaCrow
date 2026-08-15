@@ -11,7 +11,6 @@ ManagedMegalo maps tokens to `e_team_scoring_method` on the game variant (`set_t
 | `sum` | Add each team member's contribution |
 | `minimum` | Use the lowest contributing score on the team |
 | `maximum` | Use the highest contributing score on the team |
-| `default` | Leave the map default unchanged |
 
 ```megalo
 override team_scoring_mode sum

@@ -26,7 +26,7 @@ export const lowerObjectSetScale = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.ObjectSetScale,
+    type: ActionType.object_set_scale,
 
     parameters: {
       object: resolveObjectReference(parameters[0]!, paramCtx),

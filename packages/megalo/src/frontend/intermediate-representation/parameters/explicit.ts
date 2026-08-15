@@ -38,15 +38,29 @@ const TEAM_EXPLICIT_NAMES: Partial<Record<ExplicitTeam, string>> = {
   [ExplicitTeam.TargetTeam]: "target_team",
 };
 
-export const TEAM_DESIGNATOR_INDICES: Record<TeamDesignator, number> = {
-  attackers: MultiplayerTeamDesignator.Attackers,
-  defenders: MultiplayerTeamDesignator.Defenders,
-  third_party: MultiplayerTeamDesignator.ThirdParty,
-  fourth_party: MultiplayerTeamDesignator.FourthParty,
-  fifth_party: MultiplayerTeamDesignator.FifthParty,
-  sixth_party: MultiplayerTeamDesignator.SixthParty,
-  seventh_party: MultiplayerTeamDesignator.SeventhParty,
-  eighth_party: MultiplayerTeamDesignator.EighthParty,
+export const TEAM_DESIGNATOR_INDICES: Record<
+  TeamDesignator,
+  MultiplayerTeamDesignator
+> = {
+  attackers: MultiplayerTeamDesignator.attackers,
+  defenders: MultiplayerTeamDesignator.defenders,
+  third_party: MultiplayerTeamDesignator.third_party,
+  fourth_party: MultiplayerTeamDesignator.fourth_party,
+  fifth_party: MultiplayerTeamDesignator.fifth_party,
+  sixth_party: MultiplayerTeamDesignator.sixth_party,
+  seventh_party: MultiplayerTeamDesignator.seventh_party,
+  eighth_party: MultiplayerTeamDesignator.eighth_party,
+};
+
+const DESIGNATOR_TO_EXPLICIT_TEAM: Record<TeamDesignator, ExplicitTeam> = {
+  defenders: ExplicitTeam.Team0,
+  attackers: ExplicitTeam.Team1,
+  third_party: ExplicitTeam.Team2,
+  fourth_party: ExplicitTeam.Team3,
+  fifth_party: ExplicitTeam.Team4,
+  sixth_party: ExplicitTeam.Team5,
+  seventh_party: ExplicitTeam.Team6,
+  eighth_party: ExplicitTeam.Team7,
 };
 
 export type TemporaryStorage = Exclude<TemporaryStorageName, "number">;
@@ -180,7 +194,7 @@ export const parseExplicitTeam = (name: string): ExplicitTeam => {
     return found;
   }
   if (isTeamDesignator(name)) {
-    return enumSlotValue(ExplicitTeam, "Team", TEAM_DESIGNATOR_INDICES[name]);
+    return DESIGNATOR_TO_EXPLICIT_TEAM[name];
   }
   throw new Error(`Unknown explicit team '${name}'`);
 };

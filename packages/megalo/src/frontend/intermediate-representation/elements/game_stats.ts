@@ -7,34 +7,18 @@ import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagn
 import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  GameStatisticFormat,
-  GameStatisticGrouping,
+  gameStatisticFormat,
+  gameStatisticGrouping,
   GameStatisticSortOrder,
   type MegaloGameStatistic,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_statistics";
 import { resolveScriptStringTableReference } from "src/frontend/intermediate-representation/parameters/resolveScriptStringTableReference";
 
-const GAME_STATISTIC_FORMATS: Record<string, GameStatisticFormat> = {
-  number: GameStatisticFormat.Number,
-  delta: GameStatisticFormat.NumberWithSign,
-  percentage: GameStatisticFormat.Percentage,
-  timer: GameStatisticFormat.Time,
-};
-
-const GAME_STATISTIC_FORMAT_NAMES = Object.keys(GAME_STATISTIC_FORMATS);
-
-const GAME_STATISTIC_GROUPINGS: Record<string, GameStatisticGrouping> = {
-  none: GameStatisticGrouping.Player,
-  team: GameStatisticGrouping.Team,
-};
-
-const GAME_STATISTIC_GROUPING_NAMES = Object.keys(GAME_STATISTIC_GROUPINGS);
-
-const GAME_STATISTIC_SORT_ORDERS: Record<number, GameStatisticSortOrder> = {
-  [-1]: GameStatisticSortOrder.None,
-  0: GameStatisticSortOrder.Ascending,
-  1: GameStatisticSortOrder.Descending,
-};
+const GAME_STATISTIC_SORT_ORDERS = new Set<number>([
+  GameStatisticSortOrder.None,
+  GameStatisticSortOrder.Ascending,
+  GameStatisticSortOrder.Descending,
+]);
 
 export const gameStatsLowerer: ElementLowerer<GameStatsElementNode> = (
   element,
@@ -55,30 +39,29 @@ export const gameStatsLowerer: ElementLowerer<GameStatsElementNode> = (
       assertSyntaxKind(entry.grouping, SyntaxKind.KEYWORD);
       assertSyntaxKind(entry.sort, SyntaxKind.INTEGER);
 
-      const format = GAME_STATISTIC_FORMATS[entry.type.value];
+      const format = gameStatisticFormat.parse(entry.type.value);
       if (format === undefined) {
         throw new LowerError(
           diagnosticMessages.expectedOneOf(
-            GAME_STATISTIC_FORMAT_NAMES.map((name) => `'${name}'`),
+            gameStatisticFormat.names.map((name) => `'${name}'`),
             entry.type.value
           ),
           entry.type.location
         );
       }
 
-      const grouping = GAME_STATISTIC_GROUPINGS[entry.grouping.value];
+      const grouping = gameStatisticGrouping.parse(entry.grouping.value);
       if (grouping === undefined) {
         throw new LowerError(
           diagnosticMessages.expectedOneOf(
-            GAME_STATISTIC_GROUPING_NAMES.map((name) => `'${name}'`),
+            gameStatisticGrouping.names.map((name) => `'${name}'`),
             entry.grouping.value
           ),
           entry.grouping.location
         );
       }
 
-      const sortOrder = GAME_STATISTIC_SORT_ORDERS[entry.sort.value];
-      if (sortOrder === undefined) {
+      if (!GAME_STATISTIC_SORT_ORDERS.has(entry.sort.value)) {
         throw new LowerError(
           diagnosticMessages.expectedOneOf(
             ["'-1'", "'0'", "'1'"],
@@ -87,6 +70,7 @@ export const gameStatsLowerer: ElementLowerer<GameStatsElementNode> = (
           entry.sort.location
         );
       }
+      const sortOrder = entry.sort.value as GameStatisticSortOrder;
 
       const nameStringIndex = resolveScriptStringTableReference(
         entry.labelString,

@@ -22,7 +22,7 @@ export const lowerPlayerSetObjective = (
   requireParamCount(parameters, 2, location);
 
   return {
-    type: ActionType.PlayerSetObjective,
+    type: ActionType.player_set_objective,
 
     parameters: {
       player: resolvePlayerReference(

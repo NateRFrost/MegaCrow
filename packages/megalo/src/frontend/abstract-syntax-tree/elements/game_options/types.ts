@@ -41,6 +41,8 @@ export enum OverrideValueKind {
 export interface GameOptionModifiers {
   hide: boolean;
   lock: boolean;
+  hideLocation?: SourceCodeLocation;
+  lockLocation?: SourceCodeLocation;
 }
 
 export interface UserDefinedOptionValueNode {
@@ -55,6 +57,7 @@ export interface UserDefinedOptionNode {
   description: ASTStringLiteralOrReference;
   displayName: ASTStringLiteralOrReference;
   kind: GameOptionEntryKind.OPTION | GameOptionEntryKind.RANGED_OPTION;
+  keywordLocation: SourceCodeLocation;
   location: SourceCodeLocation;
   modifiers: GameOptionModifiers;
   name: { value: string; location: SourceCodeLocation } | ASTErrorNode;
@@ -63,6 +66,7 @@ export interface UserDefinedOptionNode {
 
 export interface UserDefinedOptionOverrideNode {
   kind: GameOptionEntryKind.OPTION_OVERRIDE;
+  keywordLocation: SourceCodeLocation;
   location: SourceCodeLocation;
   modifiers: GameOptionModifiers;
   target:
@@ -113,6 +117,7 @@ export type OverrideNameNode =
 
 export interface OverrideEntryNode {
   kind: GameOptionEntryKind.OVERRIDE;
+  keywordLocation: SourceCodeLocation;
   location: SourceCodeLocation;
   modifiers: GameOptionModifiers;
   name: OverrideNameNode;

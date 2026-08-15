@@ -2,15 +2,8 @@ import {
   c_action,
   type c_game_engine_custom_variant,
   e_action_type,
-  type e_biped_give_weapon_mode,
   type e_chud_navpoint_icon_type,
   e_fireteam_filter_flags,
-  type e_game_engine_timer_rate,
-  type e_grenade_type,
-  type e_megalo_sound,
-  type e_navpoint_priority,
-  type e_scriptable_game_buttons,
-  type e_weapon_pickup_priority,
   s_action_adjust_grenades_parameters,
   s_action_apply_player_traits_parameters,
   s_action_begin_parameters,
@@ -119,7 +112,15 @@ import {
   s_action_weapon_set_pickup_priority_parameters,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
 import { encodeActionType } from "src/backend/compile/107-mcc/enums/e_action_type";
+import { encodeBipedGiveWeaponMode } from "src/backend/compile/107-mcc/enums/e_biped_give_weapon_mode";
+import { encodeGameEngineTimerRate } from "src/backend/compile/107-mcc/enums/e_game_engine_timer_rate";
+import { encodeGrenadeType } from "src/backend/compile/107-mcc/enums/e_grenade_type";
 import { encodeMathOperation } from "src/backend/compile/107-mcc/enums/e_math_operation";
+import { encodeMegaloSound } from "src/backend/compile/107-mcc/enums/e_megalo_sound";
+import { encodeNavpointPriority } from "src/backend/compile/107-mcc/enums/e_navpoint_priority";
+import { encodeScriptableGameButtons } from "src/backend/compile/107-mcc/enums/e_scriptable_game_buttons";
+import { encodeWeaponPickupPriority } from "src/backend/compile/107-mcc/enums/e_weapon_pickup_priority";
+import { encodeLoadoutPaletteIndex } from "src/backend/compile/107-mcc/enums/loadout_palette_index";
 import {
   encodeBoundaryShape,
   encodeCreateObjectFlags,
@@ -170,19 +171,19 @@ const assignSetBoundaryParameters = (
   params.m_object = encodeObjectReference(boundary.object);
   params.m_shape = encodeBoundaryShape(boundary.shape) as typeof params.m_shape;
   switch (boundary.shape) {
-    case BoundaryShape.None:
+    case BoundaryShape.none:
       break;
-    case BoundaryShape.Sphere:
+    case BoundaryShape.sphere:
       params.m_variable_1 = encodeCustomVariableReference(boundary.radius);
       break;
-    case BoundaryShape.Box:
+    case BoundaryShape.box:
       // MegaloEdit encode order: width, depth, pos_height, neg_height
       params.m_variable_1 = encodeCustomVariableReference(boundary.width);
       params.m_variable_2 = encodeCustomVariableReference(boundary.depth);
       params.m_variable_3 = encodeCustomVariableReference(boundary.posHeight);
       params.m_variable_4 = encodeCustomVariableReference(boundary.negHeight);
       break;
-    case BoundaryShape.Cylinder:
+    case BoundaryShape.cylinder:
       // MegaloEdit encode order: radius, pos_height, neg_height
       params.m_variable_1 = encodeCustomVariableReference(boundary.radius);
       params.m_variable_2 = encodeCustomVariableReference(boundary.posHeight);
@@ -202,7 +203,7 @@ const compileAction = (
   const target = new c_action();
   target.m_type = encodeActionType(action.type);
   switch (action.type) {
-    case ActionType.SetScore: {
+    case ActionType.set_score: {
       const params = new s_action_set_score_parameters();
       params.m_target = encodeTeamOrPlayerTarget(action.parameters.target);
       params.m_operation = encodeMathOperation(action.parameters.operation);
@@ -212,7 +213,7 @@ const compileAction = (
       target.m_set_score_parameters = params;
       break;
     }
-    case ActionType.CreateObject: {
+    case ActionType.create_object: {
       const params = new s_action_create_object_parameters();
       params.m_object_type = encodeObjectTypeReference(
         action.parameters.objectType
@@ -232,13 +233,13 @@ const compileAction = (
       target.m_create_object_parameters = params;
       break;
     }
-    case ActionType.DeleteObject: {
+    case ActionType.delete_object: {
       const params = new s_action_delete_object_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       target.m_delete_object_parameters = params;
       break;
     }
-    case ActionType.NavpointSetVisible: {
+    case ActionType.navpoint_set_visible: {
       const params = new s_action_navpoint_set_visible_parameters();
       params.m_object = encodeObjectReference(action.parameters.navpoint);
       params.m_player_filter_modifier = encodePlayerFilterModifier(
@@ -247,7 +248,7 @@ const compileAction = (
       target.m_navpoint_set_visible_parameters = params;
       break;
     }
-    case ActionType.NavpointSetIcon: {
+    case ActionType.navpoint_set_icon: {
       const params = new s_action_navpoint_set_icon_parameters();
       params.m_object = encodeObjectReference(action.parameters.navpoint);
       params.m_navpoint_icon = Number(
@@ -261,22 +262,21 @@ const compileAction = (
       target.m_navpoint_set_icon_parameters = params;
       break;
     }
-    case ActionType.NavpointSetPriority: {
+    case ActionType.navpoint_set_priority: {
       const params = new s_action_navpoint_set_priority_parameters();
       params.m_object = encodeObjectReference(action.parameters.navpoint);
-      params.m_priority = action.parameters
-        .priority as unknown as e_navpoint_priority;
+      params.m_priority = encodeNavpointPriority(action.parameters.priority);
       target.m_navpoint_set_priority_parameters = params;
       break;
     }
-    case ActionType.NavpointSetTimer: {
+    case ActionType.navpoint_set_timer: {
       const params = new s_action_navpoint_set_timer_parameters();
       params.m_object = encodeObjectReference(action.parameters.navpoint);
       params.m_timer_index = action.parameters.timerIndex;
       target.m_navpoint_set_timer_parameters = params;
       break;
     }
-    case ActionType.NavpointSetVisibleRange: {
+    case ActionType.navpoint_set_visible_range: {
       const params = new s_action_navpoint_set_visible_range_parameters();
       params.m_object = encodeObjectReference(action.parameters.navpoint);
       params.m_variable_1 = encodeCustomVariableReference(
@@ -288,7 +288,7 @@ const compileAction = (
       target.m_navpoint_set_visible_range_parameters = params;
       break;
     }
-    case ActionType.Set: {
+    case ActionType.set: {
       const params = new s_action_set_parameters();
       params.m_variable_1 = encodeVariantVariable(action.parameters.left);
       params.m_variable_2 = encodeVariantVariable(action.parameters.right);
@@ -296,20 +296,20 @@ const compileAction = (
       target.m_set_parameters = params;
       break;
     }
-    case ActionType.SetBoundary: {
+    case ActionType.set_boundary: {
       const params = new s_action_set_boundary_parameters();
       assignSetBoundaryParameters(params, action.parameters);
       target.m_set_boundary_parameters = params;
       break;
     }
-    case ActionType.ApplyPlayerTraits: {
+    case ActionType.apply_player_traits: {
       const params = new s_action_apply_player_traits_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_trait_index = action.parameters.traitIndex;
       target.m_apply_player_traits_parameters = params;
       break;
     }
-    case ActionType.SetPickupFilter: {
+    case ActionType.set_pickup_filter: {
       const params = new s_action_set_pickup_filter_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_player_filter_modifier = encodePlayerFilterModifier(
@@ -318,7 +318,7 @@ const compileAction = (
       target.m_set_pickup_filter_parameters = params;
       break;
     }
-    case ActionType.SetRespawnFilter: {
+    case ActionType.set_respawn_filter: {
       const params = new s_action_set_respawn_filter_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_player_filter_modifier = encodePlayerFilterModifier(
@@ -327,7 +327,7 @@ const compileAction = (
       target.m_set_respawn_filter_parameters = params;
       break;
     }
-    case ActionType.SetFireteamRespawnFilter: {
+    case ActionType.set_fireteam_respawn_filter: {
       const params = new s_action_set_fireteam_respawn_filter_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_fireteam_filter = encodeFireteamFilter(
@@ -336,7 +336,7 @@ const compileAction = (
       target.m_set_fireteam_respawn_filter_parameters = params;
       break;
     }
-    case ActionType.SetProgressBar: {
+    case ActionType.set_progress_bar: {
       const params = new s_action_set_progress_bar_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_player_filter_modifier = encodePlayerFilterModifier(
@@ -346,47 +346,48 @@ const compileAction = (
       target.m_set_progress_bar_parameters = params;
       break;
     }
-    case ActionType.HudPostMessage: {
+    case ActionType.hud_post_message: {
       const params = new s_action_hud_post_message_parameters();
       params.m_target = encodeTeamOrPlayerTarget(action.parameters.target);
-      params.m_sound_index = action.parameters
-        .soundIndex as unknown as e_megalo_sound;
+      params.m_sound_index = encodeMegaloSound(action.parameters.soundIndex);
       params.m_string = encodeDynamicString(action.parameters.string);
       target.m_hud_post_message_parameters = params;
       break;
     }
-    case ActionType.TimerSetRate: {
+    case ActionType.timer_set_rate: {
       const params = new s_action_timer_set_rate_parameters();
       params.m_timer = encodeCustomTimerReference(action.parameters.timer);
-      params.m_rate = action.parameters
-        .rate as unknown as e_game_engine_timer_rate;
+      params.m_rate = encodeGameEngineTimerRate(
+        action.parameters.rate,
+        _diagnostics
+      );
       target.m_timer_set_rate_parameters = params;
       break;
     }
-    case ActionType.PrintVariable: {
+    case ActionType.print_variable: {
       const params = new s_action_print_variable_parameters();
       params.m_string = encodeDynamicString(action.parameters.string);
       target.m_print_variable_parameters = params;
       break;
     }
-    case ActionType.GetPlayerHoldingObject: {
+    case ActionType.get_player_holding_object: {
       const params = new s_action_get_player_holding_object_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_player = encodePlayerReference(action.parameters.playerOut);
       target.m_get_player_holding_object_parameters = params;
       break;
     }
-    case ActionType.ForEach: {
+    case ActionType.for_each: {
       const params = new s_action_for_each_parameters();
       params.m_trigger_index = action.parameters.triggerIndex;
       target.m_for_each_parameters = params;
       break;
     }
-    case ActionType.EndRound: {
+    case ActionType.end_round: {
       target.m_end_round_parameters = new s_action_end_round_parameters();
       break;
     }
-    case ActionType.BoundarySetVisible: {
+    case ActionType.boundary_set_visible: {
       const params = new s_action_boundary_set_visible_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_player_filter_modifier = encodePlayerFilterModifier(
@@ -395,14 +396,14 @@ const compileAction = (
       target.m_boundary_set_visible_parameters = params;
       break;
     }
-    case ActionType.ObjectDestroy: {
+    case ActionType.object_destroy: {
       const params = new s_action_object_destroy_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_no_statistics = action.parameters.noStatistics ?? false;
       target.m_object_destroy_parameters = params;
       break;
     }
-    case ActionType.ObjectSetInvincibility: {
+    case ActionType.object_set_invincibility: {
       const params = new s_action_object_set_invincibility_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_variable = encodeCustomVariableReference(
@@ -411,7 +412,7 @@ const compileAction = (
       target.m_object_set_invincibility_parameters = params;
       break;
     }
-    case ActionType.Random: {
+    case ActionType.random: {
       const params = new s_action_random_parameters();
       params.m_variable_1 = encodeCustomVariableReference(
         action.parameters.range
@@ -422,12 +423,12 @@ const compileAction = (
       target.m_random_parameters = params;
       break;
     }
-    case ActionType.BreakIntoDebugger: {
+    case ActionType.break_into_debugger: {
       target.m_break_into_debugger_parameters =
         new s_action_break_into_debugger_parameters();
       break;
     }
-    case ActionType.ObjectGetOrientation: {
+    case ActionType.object_get_orientation: {
       const params = new s_action_object_get_orientation_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_variable = encodeCustomVariableReference(
@@ -436,7 +437,7 @@ const compileAction = (
       target.m_object_get_orientation_parameters = params;
       break;
     }
-    case ActionType.ObjectGetVelocity: {
+    case ActionType.object_get_velocity: {
       const params = new s_action_object_get_velocity_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_variable = encodeCustomVariableReference(
@@ -445,7 +446,7 @@ const compileAction = (
       target.m_object_get_velocity_parameters = params;
       break;
     }
-    case ActionType.PlayerDeathGetKillingPlayer: {
+    case ActionType.player_death_get_killing_player: {
       const params = new s_action_player_death_get_killing_player_parameters();
       params.m_player_1 = encodePlayerReference(action.parameters.deadPlayer);
       params.m_player_2 = encodePlayerReference(
@@ -454,7 +455,7 @@ const compileAction = (
       target.m_player_death_get_killing_player_parameters = params;
       break;
     }
-    case ActionType.PlayerDeathGetDamageType: {
+    case ActionType.player_death_get_damage_type: {
       const params = new s_action_player_death_get_damage_type_parameters();
       params.m_player = encodePlayerReference(action.parameters.deadPlayer);
       params.m_variable = encodeCustomVariableReference(
@@ -463,7 +464,7 @@ const compileAction = (
       target.m_player_death_get_damage_type_parameters = params;
       break;
     }
-    case ActionType.PlayerDeathGetSpecialType: {
+    case ActionType.player_death_get_special_type: {
       const params = new s_action_player_death_get_special_type_parameters();
       params.m_player = encodePlayerReference(action.parameters.deadPlayer);
       params.m_variable = encodeCustomVariableReference(
@@ -472,13 +473,13 @@ const compileAction = (
       target.m_player_death_get_special_type_parameters = params;
       break;
     }
-    case ActionType.DebuggingEnableTracing: {
+    case ActionType.debugging_enable_tracing: {
       const params = new s_action_debugging_enable_tracing_parameters();
       params.m_tracing_enabled = action.parameters.tracingEnabled;
       target.m_debugging_enable_tracing_parameters = params;
       break;
     }
-    case ActionType.ObjectAttach: {
+    case ActionType.object_attach: {
       const params = new s_action_object_attach_parameters();
       params.m_object_1 = encodeObjectReference(action.parameters.child);
       params.m_object_2 = encodeObjectReference(action.parameters.parent);
@@ -488,13 +489,13 @@ const compileAction = (
       target.m_object_attach_parameters = params;
       break;
     }
-    case ActionType.ObjectDetach: {
+    case ActionType.object_detach: {
       const params = new s_action_object_detach_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       target.m_object_detach_parameters = params;
       break;
     }
-    case ActionType.PlayerGetPlace: {
+    case ActionType.player_get_place: {
       const params = new s_action_player_get_place_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_variable = encodeCustomVariableReference(
@@ -503,7 +504,7 @@ const compileAction = (
       target.m_player_get_place_parameters = params;
       break;
     }
-    case ActionType.TeamGetPlace: {
+    case ActionType.team_get_place: {
       const params = new s_action_team_get_place_parameters();
       params.m_team = encodeTeamReference(action.parameters.team);
       params.m_variable = encodeCustomVariableReference(
@@ -512,7 +513,7 @@ const compileAction = (
       target.m_team_get_place_parameters = params;
       break;
     }
-    case ActionType.PlayerGetKillingSpreeCount: {
+    case ActionType.player_get_killing_spree_count: {
       const params = new s_action_player_get_killing_spree_count_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_variable = encodeCustomVariableReference(
@@ -521,7 +522,7 @@ const compileAction = (
       target.m_player_get_killing_spree_count_parameters = params;
       break;
     }
-    case ActionType.PlayerAdjustMoney: {
+    case ActionType.player_adjust_money: {
       const params = new s_action_player_adjust_money_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_math_operation = encodeMathOperation(
@@ -533,7 +534,7 @@ const compileAction = (
       target.m_player_adjust_money_parameters = params;
       break;
     }
-    case ActionType.PlayerEnablePurchases: {
+    case ActionType.player_enable_purchases: {
       const params = new s_action_player_enable_purchases_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_variable = encodeCustomVariableReference(
@@ -545,76 +546,77 @@ const compileAction = (
       target.m_player_enable_purchases_parameters = params;
       break;
     }
-    case ActionType.PlayerGetVehicle: {
+    case ActionType.player_get_vehicle: {
       const params = new s_action_player_get_vehicle_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_object = encodeObjectReference(action.parameters.vehicleOut);
       target.m_player_get_vehicle_parameters = params;
       break;
     }
-    case ActionType.PlayerSetVehicle: {
+    case ActionType.player_set_vehicle: {
       const params = new s_action_player_set_vehicle_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_object = encodeObjectReference(action.parameters.vehicle);
       target.m_player_set_vehicle_parameters = params;
       break;
     }
-    case ActionType.PlayerSetUnit: {
+    case ActionType.player_set_unit: {
       const params = new s_action_player_set_unit_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_object = encodeObjectReference(action.parameters.unit);
       target.m_player_set_unit_parameters = params;
       break;
     }
-    case ActionType.TimerReset: {
+    case ActionType.timer_reset: {
       const params = new s_action_timer_reset_parameters();
       params.m_timer = encodeCustomTimerReference(action.parameters.timer);
       target.m_timer_reset_parameters = params;
       break;
     }
-    case ActionType.WeaponSetPickupPriority: {
+    case ActionType.weapon_set_pickup_priority: {
       const params = new s_action_weapon_set_pickup_priority_parameters();
       params.m_object = encodeObjectReference(action.parameters.weapon);
-      params.m_weapon_pickup_priority = action.parameters
-        .priority as unknown as e_weapon_pickup_priority;
+      params.m_weapon_pickup_priority = encodeWeaponPickupPriority(
+        action.parameters.priority
+      );
       target.m_weapon_set_pickup_priority_parameters = params;
       break;
     }
-    case ActionType.ObjectBounce: {
+    case ActionType.object_bounce: {
       const params = new s_action_object_bounce_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       target.m_object_bounce_parameters = params;
       break;
     }
-    case ActionType.HudWidgetSetText: {
+    case ActionType.hud_widget_set_text: {
       const params = new s_action_hud_widget_set_text_parameters();
       params.m_widget_index = action.parameters.widgetIndex;
       params.m_string = encodeDynamicString(action.parameters.string);
       target.m_hud_widget_set_text_parameters = params;
       break;
     }
-    case ActionType.HudWidgetSetValue: {
+    case ActionType.hud_widget_set_value: {
       const params = new s_action_hud_widget_set_value_parameters();
       params.m_widget_index = action.parameters.widgetIndex;
       params.m_string = encodeDynamicString(action.parameters.value);
       target.m_hud_widget_set_value_parameters = params;
       break;
     }
-    case ActionType.HudWidgetSetMeter: {
+    case ActionType.hud_widget_set_meter: {
       const params = new s_action_hud_widget_set_meter_parameters();
       params.m_widget_index = action.parameters.widgetIndex;
       params.m_meter_input = encodeHudMeterInput(action.parameters.meterInput);
       target.m_hud_widget_set_meter_parameters = params;
       break;
     }
-    case ActionType.HudWidgetSetIcon: {
+    case ActionType.hud_widget_set_icon: {
       const params = new s_action_hud_widget_set_icon_parameters();
       params.m_widget_index = action.parameters.widgetIndex;
       params.m_icon_index = action.parameters.iconIndex;
       target.m_hud_widget_set_icon_parameters = params;
       break;
     }
-    case ActionType.HudWidgetSetVisibility: {
+    case ActionType.hud_widget_set_visibility: {
       const params = new s_action_hud_widget_set_visibility_parameters();
       params.m_widget_index = action.parameters.widgetIndex;
       params.m_player = encodePlayerReference(action.parameters.player);
@@ -622,16 +624,15 @@ const compileAction = (
       target.m_hud_widget_set_visibility_parameters = params;
       break;
     }
-    case ActionType.PlaySound: {
+    case ActionType.play_sound: {
       const params = new s_action_play_sound_parameters();
-      params.m_sound_index = action.parameters
-        .soundIndex as unknown as e_megalo_sound;
+      params.m_sound_index = encodeMegaloSound(action.parameters.soundIndex);
       params.m_immediate = action.parameters.immediate;
       params.m_target = encodeTeamOrPlayerTarget(action.parameters.target);
       target.m_play_sound_parameters = params;
       break;
     }
-    case ActionType.ObjectSetScale: {
+    case ActionType.object_set_scale: {
       const params = new s_action_object_set_scale_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_variable = encodeCustomVariableReference(
@@ -640,14 +641,14 @@ const compileAction = (
       target.m_object_set_scale_parameters = params;
       break;
     }
-    case ActionType.NavpointSetText: {
+    case ActionType.navpoint_set_text: {
       const params = new s_action_navpoint_set_text_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_string = encodeDynamicString(action.parameters.string);
       target.m_navpoint_set_text_parameters = params;
       break;
     }
-    case ActionType.ObjectGetShield: {
+    case ActionType.object_get_shield: {
       const params = new s_action_object_get_shield_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_variable = encodeCustomVariableReference(
@@ -656,7 +657,7 @@ const compileAction = (
       target.m_object_get_shield_parameters = params;
       break;
     }
-    case ActionType.ObjectGetHealth: {
+    case ActionType.object_get_health: {
       const params = new s_action_object_get_health_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_variable = encodeCustomVariableReference(
@@ -665,21 +666,21 @@ const compileAction = (
       target.m_object_get_health_parameters = params;
       break;
     }
-    case ActionType.PlayerSetObjective: {
+    case ActionType.player_set_objective: {
       const params = new s_action_player_set_objective_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_string = encodeDynamicString(action.parameters.objective);
       target.m_player_set_objective_parameters = params;
       break;
     }
-    case ActionType.PlayerSetObjectiveAllegiance: {
+    case ActionType.player_set_objective_allegiance: {
       const params = new s_action_player_set_objective_allegiance_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_string = encodeDynamicString(action.parameters.allegiance);
       target.m_player_set_objective_allegiance_parameters = params;
       break;
     }
-    case ActionType.PlayerSetObjectiveAllegianceIcon: {
+    case ActionType.player_set_objective_allegiance_icon: {
       const params =
         new s_action_player_set_objective_allegiance_icon_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
@@ -687,21 +688,21 @@ const compileAction = (
       target.m_player_set_objective_allegiance_icon_parameters = params;
       break;
     }
-    case ActionType.TeamSetCoopSpawning: {
+    case ActionType.team_set_coop_spawning: {
       const params = new s_action_team_set_coop_spawning_parameters();
       params.m_team = encodeTeamReference(action.parameters.team);
       params.m_enabled = action.parameters.coopSpawningEnabled;
       target.m_team_set_coop_spawning_parameters = params;
       break;
     }
-    case ActionType.TeamSetPrimaryRespawnObject: {
+    case ActionType.team_set_primary_respawn_object: {
       const params = new s_action_team_set_primary_respawn_object_parameters();
       params.m_team = encodeTeamReference(action.parameters.team);
       params.m_object = encodeObjectReference(action.parameters.respawnObject);
       target.m_team_set_primary_respawn_object_parameters = params;
       break;
     }
-    case ActionType.PlayerSetPrimaryRespawnObject: {
+    case ActionType.player_set_primary_respawn_object: {
       const params =
         new s_action_player_set_primary_respawn_object_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
@@ -709,7 +710,7 @@ const compileAction = (
       target.m_player_set_primary_respawn_object_parameters = params;
       break;
     }
-    case ActionType.PlayerGetFireteamIndex: {
+    case ActionType.player_get_fireteam_index: {
       const params = new s_action_player_get_fireteam_index_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_variable = encodeCustomVariableReference(
@@ -718,7 +719,7 @@ const compileAction = (
       target.m_player_get_fireteam_index_parameters = params;
       break;
     }
-    case ActionType.PlayerSetFireteamIndex: {
+    case ActionType.player_set_fireteam_index: {
       const params = new s_action_player_set_fireteam_index_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_variable = encodeCustomVariableReference(
@@ -727,7 +728,7 @@ const compileAction = (
       target.m_player_set_fireteam_index_parameters = params;
       break;
     }
-    case ActionType.ObjectAdjustShield: {
+    case ActionType.object_adjust_shield: {
       const params = new s_action_object_adjust_shield_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_operation = encodeMathOperation(action.parameters.operation);
@@ -737,7 +738,7 @@ const compileAction = (
       target.m_object_adjust_shield_parameters = params;
       break;
     }
-    case ActionType.ObjectAdjustHealth: {
+    case ActionType.object_adjust_health: {
       const params = new s_action_object_adjust_health_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_operation = encodeMathOperation(action.parameters.operation);
@@ -747,7 +748,7 @@ const compileAction = (
       target.m_object_adjust_health_parameters = params;
       break;
     }
-    case ActionType.ObjectGetDistance: {
+    case ActionType.object_get_distance: {
       const params = new s_action_object_get_distance_parameters();
       params.m_object_1 = encodeObjectReference(action.parameters.from);
       params.m_object_2 = encodeObjectReference(action.parameters.to);
@@ -757,7 +758,7 @@ const compileAction = (
       target.m_object_get_distance_parameters = params;
       break;
     }
-    case ActionType.ObjectAdjustMaximumShield: {
+    case ActionType.object_adjust_maximum_shield: {
       const params = new s_action_object_adjust_maximum_shield_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_operation = encodeMathOperation(action.parameters.operation);
@@ -767,7 +768,7 @@ const compileAction = (
       target.m_object_adjust_maximum_shield_parameters = params;
       break;
     }
-    case ActionType.ObjectAdjustMaximumHealth: {
+    case ActionType.object_adjust_maximum_health: {
       const params = new s_action_object_adjust_maximum_health_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_operation = encodeMathOperation(action.parameters.operation);
@@ -777,14 +778,14 @@ const compileAction = (
       target.m_object_adjust_maximum_health_parameters = params;
       break;
     }
-    case ActionType.PlayerSetRequisitionPalette: {
+    case ActionType.player_set_requisition_palette: {
       const params = new s_action_player_set_requisition_palette_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_new_palette = action.parameters.requisitionPaletteIndex;
       target.m_player_set_requisition_palette_parameters = params;
       break;
     }
-    case ActionType.DeviceSetPower: {
+    case ActionType.device_set_power: {
       const params = new s_action_device_set_power_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_variable = encodeCustomVariableReference(
@@ -793,7 +794,7 @@ const compileAction = (
       target.m_device_set_power_parameters = params;
       break;
     }
-    case ActionType.DeviceGetPower: {
+    case ActionType.device_get_power: {
       const params = new s_action_device_get_power_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_variable = encodeCustomVariableReference(
@@ -802,7 +803,7 @@ const compileAction = (
       target.m_device_get_power_parameters = params;
       break;
     }
-    case ActionType.DeviceSetPosition: {
+    case ActionType.device_set_position: {
       const params = new s_action_device_set_position_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_variable = encodeCustomVariableReference(
@@ -811,7 +812,7 @@ const compileAction = (
       target.m_device_set_position_parameters = params;
       break;
     }
-    case ActionType.DeviceGetPosition: {
+    case ActionType.device_get_position: {
       const params = new s_action_device_get_position_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_variable = encodeCustomVariableReference(
@@ -820,11 +821,10 @@ const compileAction = (
       target.m_device_get_position_parameters = params;
       break;
     }
-    case ActionType.AdjustGrenades: {
+    case ActionType.adjust_grenades: {
       const params = new s_action_adjust_grenades_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
-      params.m_grenade_type = action.parameters
-        .grenadeType as unknown as e_grenade_type;
+      params.m_grenade_type = encodeGrenadeType(action.parameters.grenadeType);
       params.m_math_operation = encodeMathOperation(
         action.parameters.operation
       );
@@ -834,7 +834,7 @@ const compileAction = (
       target.m_adjust_grenades_parameters = params;
       break;
     }
-    case ActionType.SubmitIncident: {
+    case ActionType.submit_incident: {
       const params = new s_action_submit_incident_parameters();
       params.m_incident_id = action.parameters.statIndex;
       params.m_target_1 = encodeTeamOrPlayerTarget(action.parameters.cause);
@@ -842,7 +842,7 @@ const compileAction = (
       target.m_submit_incident_parameters = params;
       break;
     }
-    case ActionType.SubmitIncidentWithCustomValue: {
+    case ActionType.submit_incident_with_custom_value: {
       const params =
         new s_action_submit_incident_with_custom_value_parameters();
       params.m_incident_id = action.parameters.statIndex;
@@ -854,14 +854,16 @@ const compileAction = (
       target.m_submit_incident_with_custom_value_parameters = params;
       break;
     }
-    case ActionType.SetLoadoutPalette: {
+    case ActionType.set_loadout_palette: {
       const params = new s_action_set_loadout_palette_parameters();
       params.m_target = encodeTeamOrPlayerTarget(action.parameters.target);
-      params.m_loadout_palette_index = action.parameters.loadoutPaletteIndex;
+      params.m_loadout_palette_index = encodeLoadoutPaletteIndex(
+        action.parameters.loadoutPaletteIndex
+      );
       target.m_set_loadout_palette_parameters = params;
       break;
     }
-    case ActionType.DeviceSetPositionTrack: {
+    case ActionType.device_set_position_track: {
       const params = new s_action_device_set_position_track_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_animation_name_index = action.parameters.animationNameIndex;
@@ -871,7 +873,7 @@ const compileAction = (
       target.m_device_set_position_track_parameters = params;
       break;
     }
-    case ActionType.DeviceAnimatePosition: {
+    case ActionType.device_animate_position: {
       const params = new s_action_device_animate_position_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_variable_1 = encodeCustomVariableReference(
@@ -889,7 +891,7 @@ const compileAction = (
       target.m_device_animate_position_parameters = params;
       break;
     }
-    case ActionType.DeviceSetPositionImmediate: {
+    case ActionType.device_set_position_immediate: {
       const params = new s_action_device_set_position_immediate_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_variable = encodeCustomVariableReference(
@@ -898,7 +900,7 @@ const compileAction = (
       target.m_device_set_position_immediate_parameters = params;
       break;
     }
-    case ActionType.SavedFilmInsertMarker: {
+    case ActionType.saved_film_insert_marker: {
       const params = new s_action_saved_film_insert_marker_parameters();
       params.m_variable = encodeCustomVariableReference(
         action.parameters.offsetSeconds
@@ -907,7 +909,7 @@ const compileAction = (
       target.m_saved_film_insert_marker_parameters = params;
       break;
     }
-    case ActionType.RespawnZoneEnable: {
+    case ActionType.respawn_zone_enable: {
       const params = new s_action_respawn_zone_enable_parameters();
       params.m_object = encodeObjectReference(action.parameters.respawnZone);
       params.m_variable = encodeCustomVariableReference(
@@ -916,7 +918,7 @@ const compileAction = (
       target.m_respawn_zone_enable_parameters = params;
       break;
     }
-    case ActionType.PlayerGetWeapon: {
+    case ActionType.player_get_weapon: {
       const params = new s_action_player_get_weapon_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_primary = action.parameters.primary;
@@ -924,14 +926,14 @@ const compileAction = (
       target.m_player_get_weapon_parameters = params;
       break;
     }
-    case ActionType.PlayerGetEquipment: {
+    case ActionType.player_get_equipment: {
       const params = new s_action_player_get_equipment_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_object = encodeObjectReference(action.parameters.equipmentOut);
       target.m_player_get_equipment_parameters = params;
       break;
     }
-    case ActionType.ObjectSetNeverGarbage: {
+    case ActionType.object_set_never_garbage: {
       const params = new s_action_object_set_never_garbage_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_variable = encodeCustomVariableReference(
@@ -940,14 +942,14 @@ const compileAction = (
       target.m_object_set_never_garbage_parameters = params;
       break;
     }
-    case ActionType.PlayerGetTargetObject: {
+    case ActionType.player_get_target_object: {
       const params = new s_action_player_get_target_object_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_object = encodeObjectReference(action.parameters.objectOut);
       target.m_player_get_target_object_parameters = params;
       break;
     }
-    case ActionType.CreateTunnel: {
+    case ActionType.create_tunnel: {
       const params = new s_action_create_tunnel_parameters();
       params.m_object_1 = encodeObjectReference(
         action.parameters.from
@@ -967,7 +969,7 @@ const compileAction = (
       target.m_create_tunnel_parameters = params;
       break;
     }
-    case ActionType.DebugForcePlayerViewCount: {
+    case ActionType.debug_force_player_view_count: {
       const params = new s_action_debug_force_player_view_count_parameters();
       params.m_variable = encodeCustomVariableReference(
         action.parameters.viewCount
@@ -975,21 +977,21 @@ const compileAction = (
       target.m_debug_force_player_view_count_parameters = params;
       break;
     }
-    case ActionType.PlayerPickUpWeapon: {
+    case ActionType.player_pick_up_weapon: {
       const params = new s_action_player_pick_up_weapon_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_object = encodeObjectReference(action.parameters.weapon);
       target.m_player_pick_up_weapon_parameters = params;
       break;
     }
-    case ActionType.PlayerSetCoopSpawning: {
+    case ActionType.player_set_coop_spawning: {
       const params = new s_action_player_set_coop_spawning_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_enabled = action.parameters.enabled;
       target.m_player_set_coop_spawning_parameters = params;
       break;
     }
-    case ActionType.ObjectSetOrientation: {
+    case ActionType.object_set_orientation: {
       const params = new s_action_object_set_orientation_parameters();
       params.m_object_1 = encodeObjectReference(action.parameters.object);
       params.m_object_2 = encodeObjectReference(action.parameters.source);
@@ -998,7 +1000,7 @@ const compileAction = (
       target.m_object_set_orientation_parameters = params;
       break;
     }
-    case ActionType.ObjectFaceObject: {
+    case ActionType.object_face_object: {
       const params = new s_action_object_face_object_parameters();
       params.m_object_1 = encodeObjectReference(action.parameters.object);
       params.m_object_2 = encodeObjectReference(action.parameters.target);
@@ -1008,18 +1010,17 @@ const compileAction = (
       target.m_object_face_object_parameters = params;
       break;
     }
-    case ActionType.BipedGiveWeapon: {
+    case ActionType.biped_give_weapon: {
       const params = new s_action_biped_give_weapon_parameters();
       params.m_object = encodeObjectReference(action.parameters.biped);
       params.m_object_type = encodeObjectTypeReference(
         action.parameters.weapon
       );
-      params.m_mode = action.parameters
-        .mode as unknown as e_biped_give_weapon_mode;
+      params.m_mode = encodeBipedGiveWeaponMode(action.parameters.mode);
       target.m_biped_give_weapon_parameters = params;
       break;
     }
-    case ActionType.BipedDropWeapon: {
+    case ActionType.biped_drop_weapon: {
       const params = new s_action_biped_drop_weapon_parameters();
       params.m_object = encodeObjectReference(action.parameters.biped);
       params.m_primary = action.parameters.primary;
@@ -1027,7 +1028,7 @@ const compileAction = (
       target.m_biped_drop_weapon_parameters = params;
       break;
     }
-    case ActionType.SetScenarioInterpolatorState: {
+    case ActionType.set_scenario_interpolator_state: {
       const params = new s_action_set_scenario_interpolator_state_parameters();
       params.m_variable_1 = encodeCustomVariableReference(
         action.parameters.interpolatorIndex
@@ -1038,7 +1039,7 @@ const compileAction = (
       target.m_set_scenario_interpolator_state_parameters = params;
       break;
     }
-    case ActionType.GetRandomObject: {
+    case ActionType.get_random_object: {
       const params = new s_action_get_random_object_parameters();
       params.m_object_1 = encodeObjectReference(action.parameters.ignoreObject);
       params.m_object_2 = encodeObjectReference(action.parameters.objectOut);
@@ -1046,7 +1047,7 @@ const compileAction = (
       target.m_get_random_object_parameters = params;
       break;
     }
-    case ActionType.GameGriefRecordCustomPenalty: {
+    case ActionType.game_grief_record_custom_penalty: {
       const params = new s_action_game_grief_record_custom_penalty_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_variable = encodeCustomVariableReference(
@@ -1055,14 +1056,14 @@ const compileAction = (
       target.m_game_grief_record_custom_penalty_parameters = params;
       break;
     }
-    case ActionType.BoundarySetPlayerColor: {
+    case ActionType.boundary_set_player_color: {
       const params = new s_action_boundary_set_player_color_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_player_index = action.parameters.playerIndex;
       target.m_boundary_set_player_color_parameters = params;
       break;
     }
-    case ActionType.Begin: {
+    case ActionType.begin: {
       const params = new s_action_begin_parameters();
       params.m_first_condition_index = action.parameters.firstConditionIndex;
       params.m_condition_count = action.parameters.conditionCount;
@@ -1071,38 +1072,37 @@ const compileAction = (
       target.m_begin_parameters = params;
       break;
     }
-    case ActionType.HsFunctionCall: {
+    case ActionType.hs_function_call: {
       const params = new s_action_hs_function_call_parameters();
       params.m_function_name_index = action.parameters.functionNameIndex + 1;
       target.m_hs_function_call_parameters = params;
       break;
     }
-    case ActionType.GetButtonTime: {
+    case ActionType.get_button_time: {
       const params = new s_action_get_button_time_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
-      params.m_buttons = action.parameters
-        .button as unknown as e_scriptable_game_buttons;
+      params.m_buttons = encodeScriptableGameButtons(action.parameters.button);
       params.m_variable = encodeCustomVariableReference(
         action.parameters.timeOut
       );
       target.m_get_button_time_parameters = params;
       break;
     }
-    case ActionType.TeamSetVehicleSpawning: {
+    case ActionType.team_set_vehicle_spawning: {
       const params = new s_action_team_set_vehicle_spawning_parameters();
       params.m_team = encodeTeamReference(action.parameters.team);
       params.m_enabled = action.parameters.enabled;
       target.m_team_set_vehicle_spawning_parameters = params;
       break;
     }
-    case ActionType.PlayerSetVehicleSpawning: {
+    case ActionType.player_set_vehicle_spawning: {
       const params = new s_action_player_set_vehicle_spawning_parameters();
       params.m_player = encodePlayerReference(action.parameters.player);
       params.m_enabled = action.parameters.enabled;
       target.m_player_set_vehicle_spawning_parameters = params;
       break;
     }
-    case ActionType.SetPlayerRespawnVehicle: {
+    case ActionType.set_player_respawn_vehicle: {
       const params = new s_action_set_player_respawn_vehicle_parameters();
       params.m_object_type = encodeObjectTypeReference(
         action.parameters.objectType
@@ -1111,7 +1111,7 @@ const compileAction = (
       target.m_set_player_respawn_vehicle_parameters = params;
       break;
     }
-    case ActionType.SetTeamRespawnVehicle: {
+    case ActionType.set_team_respawn_vehicle: {
       const params = new s_action_set_team_respawn_vehicle_parameters();
       params.m_object_type = encodeObjectTypeReference(
         action.parameters.objectType
@@ -1120,7 +1120,7 @@ const compileAction = (
       target.m_set_team_respawn_vehicle_parameters = params;
       break;
     }
-    case ActionType.HideObject: {
+    case ActionType.hide_object: {
       const params = new s_action_hide_object_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
       params.m_should_hide = action.parameters.shouldHide;

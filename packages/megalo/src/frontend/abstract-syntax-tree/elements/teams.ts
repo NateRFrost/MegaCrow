@@ -26,10 +26,12 @@ import type { MegaloVersion } from "src/version";
 
 export interface TeamsPropertyNode {
   identifier: string;
+  location: SourceCodeLocation;
   parameters: ASTParameterNode[];
 }
 
 export interface TeamNode {
+  keywordLocation: SourceCodeLocation;
   location: SourceCodeLocation;
   properties: TeamsPropertyNode[];
 }
@@ -125,6 +127,7 @@ const parseTeamBlock = (ctx: ParserContext, teamToken: Token): TeamNode => {
     if (parser) {
       properties.push({
         identifier: propertyIdentifier.value,
+        location: propertyIdentifier.location,
         parameters: parser(ctx, propertyIdentifier.location),
       });
     } else {
@@ -139,6 +142,7 @@ const parseTeamBlock = (ctx: ParserContext, teamToken: Token): TeamNode => {
   const endLocation = endToken?.location ?? teamToken.location;
 
   return {
+    keywordLocation: teamToken.location,
     properties,
     location: locationSpan(teamToken.location, endLocation),
   };
@@ -187,6 +191,7 @@ export const teamsParser = (
     if (parser) {
       properties.push({
         identifier: propertyIdentifier.value,
+        location: propertyIdentifier.location,
         parameters: parser(ctx, propertyIdentifier.location),
       });
     } else {

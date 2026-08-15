@@ -48,13 +48,13 @@ end
     });
     expect(conditions).toHaveLength(1);
     expect(conditions[0]).toMatchObject({
-      type: ConditionType.GameIsForge,
+      type: ConditionType.game_is_forge,
       negated: false,
       unionGroup: 0,
       executeBeforeAction: 0,
     });
     expect(actions).toHaveLength(1);
-    expect(actions[0]?.type).toBe(ActionType.EndRound);
+    expect(actions[0]?.type).toBe(ActionType.end_round);
   });
 
   it("flattens nested begin with body before the begin action globally", () => {
@@ -71,18 +71,18 @@ end
 
     expect(diagnostics.getErrors()).toEqual([]);
     expect(actions.map((action) => action.type)).toEqual([
-      ActionType.PrintVariable,
-      ActionType.EndRound,
-      ActionType.Begin,
-      ActionType.EndRound,
+      ActionType.print_variable,
+      ActionType.end_round,
+      ActionType.begin,
+      ActionType.end_round,
     ]);
     expect(triggers[0]).toMatchObject({
       firstAction: 1,
       actionCount: 3,
     });
     const begin = actions[2];
-    expect(begin?.type).toBe(ActionType.Begin);
-    if (begin?.type === ActionType.Begin) {
+    expect(begin?.type).toBe(ActionType.begin);
+    if (begin?.type === ActionType.begin) {
       expect(begin.parameters).toEqual({
         firstConditionIndex: 0,
         conditionCount: 0,
@@ -133,13 +133,13 @@ end
 
     expect(diagnostics.getErrors()).toEqual([]);
     expect(actions.map((action) => action.type)).toEqual([
-      ActionType.Set,
-      ActionType.Set,
-      ActionType.EndRound,
+      ActionType.set,
+      ActionType.set,
+      ActionType.end_round,
     ]);
-    expect(actions[0]?.type).toBe(ActionType.Set);
-    if (actions[0]?.type === ActionType.Set) {
-      expect(actions[0].parameters.operation).toBe(MathOperation.SetTo);
+    expect(actions[0]?.type).toBe(ActionType.set);
+    if (actions[0]?.type === ActionType.set) {
+      expect(actions[0].parameters.operation).toBe(MathOperation.set_to);
     }
   });
 
@@ -169,11 +169,11 @@ end
       actionCount: 1,
     });
     expect(actions.map((action) => action.type)).toEqual([
-      ActionType.EndRound,
-      ActionType.ForEach,
+      ActionType.end_round,
+      ActionType.for_each,
     ]);
     expect(actions[1]).toMatchObject({
-      type: ActionType.ForEach,
+      type: ActionType.for_each,
       parameters: { triggerIndex: 1 },
     });
   });
@@ -201,8 +201,28 @@ end
     expect(diagnostics.getErrors()).toEqual([]);
     expect(actions).toHaveLength(1);
     expect(actions[0]).toMatchObject({
-      type: ActionType.ApplyPlayerTraits,
+      type: ActionType.apply_player_traits,
       parameters: { traitIndex: 1 },
+    });
+  });
+
+  it("lowers play_sound with everyone, immediate, and sound name", () => {
+    const source = `trigger general
+\taction play_sound everyone immediate covy_win1
+end
+`;
+    const { ir, diagnostics } = lower(source);
+    const { actions } = ir.gameVariant.gameEngine;
+
+    expect(diagnostics.getErrors()).toEqual([]);
+    expect(actions).toHaveLength(1);
+    expect(actions[0]).toMatchObject({
+      type: ActionType.play_sound,
+      parameters: {
+        immediate: true,
+        soundIndex: "covy_win1",
+        target: { type: "everyone" },
+      },
     });
   });
 });

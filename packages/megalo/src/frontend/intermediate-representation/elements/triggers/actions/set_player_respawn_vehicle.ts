@@ -82,7 +82,7 @@ export const lowerSetPlayerRespawnVehicle = (
   requireParamCount(parameters, 2, location);
   const paramCtx = asParameterLoweringContext(ctx);
   return {
-    type: ActionType.SetPlayerRespawnVehicle,
+    type: ActionType.set_player_respawn_vehicle,
     parameters: {
       objectType: resolveRespawnVehicleObjectType(
         parameters[0]!,

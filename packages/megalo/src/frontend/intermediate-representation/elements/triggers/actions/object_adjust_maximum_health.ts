@@ -19,10 +19,10 @@ import {
 
 const lowerVitalityAdjustment = (
   type:
-    | ActionType.ObjectAdjustShield
-    | ActionType.ObjectAdjustHealth
-    | ActionType.ObjectAdjustMaximumShield
-    | ActionType.ObjectAdjustMaximumHealth,
+    | typeof ActionType.object_adjust_shield
+    | typeof ActionType.object_adjust_health
+    | typeof ActionType.object_adjust_maximum_shield
+    | typeof ActionType.object_adjust_maximum_health,
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
   location: SourceCodeLocation
@@ -45,7 +45,7 @@ export const lowerObjectAdjustMaximumHealth = (
   location: SourceCodeLocation
 ): Action =>
   lowerVitalityAdjustment(
-    ActionType.ObjectAdjustMaximumHealth,
+    ActionType.object_adjust_maximum_health,
     parameters,
     ctx,
     location

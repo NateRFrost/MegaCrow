@@ -22,7 +22,7 @@ export const lowerNavpointSetText = (
   requireParamCount(parameters, 2, location);
 
   return {
-    type: ActionType.NavpointSetText,
+    type: ActionType.navpoint_set_text,
 
     parameters: {
       object: resolveObjectReference(

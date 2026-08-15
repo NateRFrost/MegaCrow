@@ -1,8 +1,16 @@
 import {
   type CompileSourceOptions,
+  type AnalysisSnapshot,
+  ALL_MEGACROW_EXTENSIONS,
+  analyzeDocument,
+  type CompiledMegaloMetadata,
   compileSource,
   type Diagnostic as MegaloDiagnostic,
   DiagnosticSeverity as MegaloSeverity,
+  encodeSemanticTokens,
+  getSemanticTokens,
+  SEMANTIC_TOKEN_MODIFIERS,
+  SEMANTIC_TOKEN_TYPES,
   type ObjectLists,
   SourceLocationType,
   type SupportedMegaloVersion,
@@ -10,11 +18,17 @@ import {
 import {
   type Diagnostic,
   DiagnosticSeverity,
+  type SemanticTokensLegend,
 } from "vscode-languageserver/browser";
 
 export const MEGACROW_COMPILE_METHOD = "megacrow/compile";
 export const MEGACROW_RESOLVE_INCLUDE_METHOD = "megacrow/resolveInclude";
 export const MEGACROW_RESOLVE_BASE_FILE_METHOD = "megacrow/resolveBaseFile";
+
+export const SEMANTIC_TOKENS_LEGEND: SemanticTokensLegend = {
+  tokenTypes: [...SEMANTIC_TOKEN_TYPES],
+  tokenModifiers: [...SEMANTIC_TOKEN_MODIFIERS],
+};
 
 export interface MegacrowCompileParams {
   objectLists?: ObjectLists;
@@ -28,6 +42,7 @@ export interface MegacrowCompileResult {
   dataBase64?: string;
   diagnostics: Diagnostic[];
   error?: string;
+  metadata?: CompiledMegaloMetadata;
   ok: boolean;
 }
 
@@ -58,7 +73,7 @@ export type CompileResolvers = Pick<
 export const toLspDiagnostics = (
   diagnostics: MegaloDiagnostic[]
 ): Diagnostic[] =>
-  diagnostics.map((d) => {
+  diagnostics.flatMap((d) => {
     const severity =
       d.severity === MegaloSeverity.Error
         ? DiagnosticSeverity.Error
@@ -68,48 +83,46 @@ export const toLspDiagnostics = (
 
     if (d.location.type === SourceLocationType.SOURCE_CODE) {
       const { start, end } = d.location;
-      return {
-        severity,
-        message: d.message,
-        range: {
-          start: {
-            line: Math.max(0, start.line - 1),
-            character: Math.max(0, start.column - 1),
-          },
-          end: {
-            line: Math.max(0, end.line - 1),
-            character: Math.max(0, end.column - 1),
+      return [
+        {
+          severity,
+          message: d.message,
+          range: {
+            start: {
+              line: Math.max(0, start.line - 1),
+              character: Math.max(0, start.column - 1),
+            },
+            end: {
+              line: Math.max(0, end.line - 1),
+              character: Math.max(0, end.column - 1),
+            },
           },
         },
-      };
+      ];
     }
 
     if (d.location.type === SourceLocationType.INCLUDE) {
       const { start, end } = d.location.declaration;
-      return {
-        severity,
-        message: d.message,
-        range: {
-          start: {
-            line: Math.max(0, start.line - 1),
-            character: Math.max(0, start.column - 1),
-          },
-          end: {
-            line: Math.max(0, end.line - 1),
-            character: Math.max(0, end.column - 1),
+      return [
+        {
+          severity,
+          message: d.message,
+          range: {
+            start: {
+              line: Math.max(0, start.line - 1),
+              character: Math.max(0, start.column - 1),
+            },
+            end: {
+              line: Math.max(0, end.line - 1),
+              character: Math.max(0, end.column - 1),
+            },
           },
         },
-      };
+      ];
     }
 
-    return {
-      severity,
-      message: d.message,
-      range: {
-        start: { line: 0, character: 0 },
-        end: { line: 0, character: 0 },
-      },
-    };
+    // UNKNOWN / BUILT_IN / OBJECT_LIST: no document span — omit from LSP publish.
+    return [];
   });
 
 const bytesToBase64 = (bytes: Uint8Array): string => {
@@ -136,6 +149,7 @@ export const analyzeAndCompile = async (
     fromUri: options.fromUri,
     resolveInclude: options.resolvers?.resolveInclude,
     resolveBaseFile: options.resolvers?.resolveBaseFile,
+    megacrowExtensions: ALL_MEGACROW_EXTENSIONS,
   });
   const diagnostics = toLspDiagnostics(result.diagnostics);
   if (!result.bytes) {
@@ -152,6 +166,7 @@ export const analyzeAndCompile = async (
     ok: true,
     diagnostics,
     dataBase64: bytesToBase64(result.bytes),
+    metadata: result.metadata,
   };
 };
 
@@ -170,6 +185,42 @@ export const analyzeOnly = async (
     fromUri: options.fromUri,
     resolveInclude: options.resolvers?.resolveInclude,
     resolveBaseFile: options.resolvers?.resolveBaseFile,
+    megacrowExtensions: ALL_MEGACROW_EXTENSIONS,
   });
   return toLspDiagnostics(result.diagnostics);
 };
+
+export const classifySemanticTokens = async (
+  source: string,
+  options: {
+    version: SupportedMegaloVersion;
+    objectLists?: ObjectLists;
+    fromUri?: string;
+    resolvers?: CompileResolvers;
+  }
+): Promise<number[]> => {
+  const snapshot = await analyzeDocumentSnapshot(source, options);
+  return encodeSemanticTokens(getSemanticTokens(snapshot));
+};
+
+export const analyzeDocumentSnapshot = async (
+  source: string,
+  options: {
+    version: SupportedMegaloVersion;
+    objectLists?: ObjectLists;
+    fromUri?: string;
+    resolvers?: CompileResolvers;
+  }
+): Promise<AnalysisSnapshot> =>
+  analyzeDocument(source, {
+    version: options.version,
+    objectLists: options.objectLists,
+    fromUri: options.fromUri,
+    resolveInclude: options.resolvers?.resolveInclude,
+  });
+
+export const semanticTokensFromSnapshot = (
+  snapshot: AnalysisSnapshot
+): number[] => encodeSemanticTokens(getSemanticTokens(snapshot));
+
+export type { AnalysisSnapshot };

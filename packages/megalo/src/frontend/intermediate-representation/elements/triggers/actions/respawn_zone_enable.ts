@@ -26,7 +26,7 @@ export const lowerRespawnZoneEnable = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.RespawnZoneEnable,
+    type: ActionType.respawn_zone_enable,
 
     parameters: {
       respawnZone: resolveObjectReference(parameters[0]!, paramCtx),

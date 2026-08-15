@@ -11,6 +11,7 @@ import {
 import { TextDocument } from "vscode-languageserver-textdocument";
 import {
   analyzeAndCompile,
+  analyzeDocumentSnapshot,
   analyzeOnly,
   type CompileResolvers,
   MEGACROW_COMPILE_METHOD,
@@ -22,7 +23,10 @@ import {
   type MegacrowResolveBaseFileResult,
   type MegacrowResolveIncludeParams,
   type MegacrowResolveIncludeResult,
+  SEMANTIC_TOKENS_LEGEND,
+  semanticTokensFromSnapshot,
 } from "../core";
+import type { AnalysisSnapshot } from "../core";
 
 const DEFAULT_VERSION = MEGALO_VERSIONS["107-mcc"];
 
@@ -31,6 +35,14 @@ const writer = new BrowserMessageWriter(self as DedicatedWorkerGlobalScope);
 const connection = createConnection(reader, writer);
 
 const documents = new Map<string, TextDocument>();
+
+type SnapshotCacheEntry = {
+  snapshot: AnalysisSnapshot;
+  semanticTokens: number[];
+  version: number;
+};
+
+const snapshotCache = new Map<string, SnapshotCacheEntry>();
 
 const decodeBase64 = (dataBase64: string): Uint8Array => {
   const binary = atob(dataBase64);
@@ -53,7 +65,7 @@ const createResolvers = (): CompileResolvers => ({
     )) as MegacrowResolveIncludeResult;
 
     if ("error" in result) {
-      return null;
+      throw new Error(result.error);
     }
     return { text: result.text, uri: result.uri };
   },
@@ -67,18 +79,56 @@ const createResolvers = (): CompileResolvers => ({
     )) as MegacrowResolveBaseFileResult;
 
     if ("error" in result) {
-      return null;
+      throw new Error(result.error);
     }
     return decodeBase64(result.dataBase64);
   },
 });
 
-const publishFor = async (uri: string, text: string): Promise<void> => {
-  const diagnostics = await analyzeOnly(text, {
+const refreshSnapshot = async (
+  uri: string,
+  text: string,
+  version: number
+): Promise<SnapshotCacheEntry> => {
+  const snapshot = await analyzeDocumentSnapshot(text, {
     version: DEFAULT_VERSION,
     fromUri: uri,
     resolvers: createResolvers(),
   });
+  const entry: SnapshotCacheEntry = {
+    snapshot,
+    semanticTokens: semanticTokensFromSnapshot(snapshot),
+    version,
+  };
+  snapshotCache.set(uri, entry);
+  return entry;
+};
+
+const getCachedSnapshot = async (
+  uri: string,
+  doc: TextDocument
+): Promise<SnapshotCacheEntry> => {
+  const cached = snapshotCache.get(uri);
+  if (cached && cached.version === doc.version) {
+    return cached;
+  }
+  return refreshSnapshot(uri, doc.getText(), doc.version);
+};
+
+const publishFor = async (
+  uri: string,
+  text: string,
+  version: number
+): Promise<void> => {
+  const resolvers = createResolvers();
+  const [diagnostics] = await Promise.all([
+    analyzeOnly(text, {
+      version: DEFAULT_VERSION,
+      fromUri: uri,
+      resolvers,
+    }),
+    refreshSnapshot(uri, text, version),
+  ]);
   connection.sendDiagnostics({ uri, diagnostics });
 };
 
@@ -86,6 +136,11 @@ connection.onInitialize(
   (_params: InitializeParams): InitializeResult => ({
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Full,
+      semanticTokensProvider: {
+        legend: SEMANTIC_TOKENS_LEGEND,
+        full: true,
+        range: false,
+      },
     },
     serverInfo: {
       name: "megacrow-lsp",
@@ -98,7 +153,7 @@ connection.onDidOpenTextDocument((params) => {
   const { uri, languageId, version, text } = params.textDocument;
   const doc = TextDocument.create(uri, languageId, version, text);
   documents.set(uri, doc);
-  void publishFor(uri, text);
+  void publishFor(uri, text, version);
 });
 
 connection.onDidChangeTextDocument((params: DidChangeTextDocumentParams) => {
@@ -116,15 +171,26 @@ connection.onDidChangeTextDocument((params: DidChangeTextDocumentParams) => {
     change.text
   );
   documents.set(uri, doc);
-  void publishFor(uri, change.text);
+  void publishFor(uri, change.text, version);
 });
 
 connection.onDidCloseTextDocument((params) => {
   documents.delete(params.textDocument.uri);
+  snapshotCache.delete(params.textDocument.uri);
   connection.sendDiagnostics({
     uri: params.textDocument.uri,
     diagnostics: [],
   });
+});
+
+connection.languages.semanticTokens.on(async (params) => {
+  const uri = params.textDocument.uri;
+  const doc = documents.get(uri);
+  if (!doc) {
+    return { data: [] };
+  }
+  const entry = await getCachedSnapshot(uri, doc);
+  return { data: entry.semanticTokens };
 });
 
 connection.onRequest(

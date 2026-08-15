@@ -16,6 +16,7 @@ import {
   tryParseDynamicString,
 } from "src/frontend/abstract-syntax-tree/parameters/types/dynamic-string";
 import type { ASTGrenadeCountNode } from "src/frontend/abstract-syntax-tree/parameters/types/grenade-count";
+import type { MegaloEnumDef } from "src/frontend/intermediate-representation/megaloEnum";
 import type { ObjectListType } from "src/frontend/object-lists";
 import {
   type SymbolId,
@@ -59,6 +60,23 @@ export const KeywordParameter = (value: string): KeywordParameter => ({
   kind: "keyword",
   value,
 });
+
+/**
+ * Build an AST keyword-parameter union from a {@link megaloEnum}'s accepted
+ * names (canonical members plus aliases).
+ */
+export const megaloEnumKeywords = <Name extends string>(
+  def: Pick<MegaloEnumDef<Name>, "acceptedNames">,
+  options?: {
+    /** Drop these accepted names (canonical or alias spelling). */
+    exclude?: readonly string[];
+  }
+): KeywordParameter[] => {
+  const excluded = new Set(options?.exclude ?? []);
+  return def.acceptedNames
+    .filter((name) => !excluded.has(name))
+    .map((name) => KeywordParameter(name));
+};
 
 export interface ObjectListParameterSpec {
   readonly kind: "objectList";
@@ -122,20 +140,6 @@ export type ParameterParser = (
   ctx: ParserContext,
   anchor: SourceCodeLocation
 ) => ASTParameterNode[];
-
-/** Parsers from `parameterParserBuilder` expose their signatures for IDE features. */
-export type ParameterParserWithSignatures = ParameterParser & {
-  signatures?: readonly ParameterSignature[];
-};
-
-export const getParameterParserSignatures = (
-  parser: ParameterParser | undefined
-): readonly ParameterSignature[] | undefined => {
-  if (parser === undefined) {
-    return;
-  }
-  return (parser as ParameterParserWithSignatures).signatures;
-};
 
 const isKeywordParameter = (spec: ParameterSpec): spec is KeywordParameter =>
   typeof spec === "object" && "kind" in spec && spec.kind === "keyword";
@@ -786,10 +790,10 @@ export const parameterParserBuilder = (
     return () => [];
   }
 
-  const parser: ParameterParserWithSignatures = (
+  return (
     ctx: ParserContext,
     anchor: SourceCodeLocation
-  ) => {
+  ): ASTParameterNode[] => {
     const parseAnchor = anchor;
 
     for (const signature of signatures) {
@@ -831,6 +835,4 @@ export const parameterParserBuilder = (
 
     return parseSignature(ctx, bestSignature, parseAnchor);
   };
-  parser.signatures = signatures;
-  return parser;
 };

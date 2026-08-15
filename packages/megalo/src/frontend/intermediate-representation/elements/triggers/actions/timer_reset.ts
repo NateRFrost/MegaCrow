@@ -18,7 +18,7 @@ export const lowerTimerReset = (
 ): Action => {
   requireParamCount(parameters, 1, location);
   return {
-    type: ActionType.TimerReset,
+    type: ActionType.timer_reset,
     parameters: {
       timer: resolveCustomTimerReference(
         parameters[0]!,

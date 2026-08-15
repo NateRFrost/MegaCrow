@@ -195,6 +195,7 @@ export const overrideParser = (
 
   return {
     kind: GameOptionEntryKind.OVERRIDE,
+    keywordLocation: keywordToken.location,
     modifiers,
     name,
     value,

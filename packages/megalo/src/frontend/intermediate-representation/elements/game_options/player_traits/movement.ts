@@ -12,18 +12,6 @@ import {
 import { lowerConstantInteger } from "src/frontend/intermediate-representation/parameters";
 import { setField } from "src/frontend/intermediate-representation/setField";
 
-const VEHICLE_USAGE: Record<string, VehicleUsage> = {
-  unchanged: VehicleUsage.Unchanged,
-  none: VehicleUsage.None,
-  full: VehicleUsage.Full,
-  passenger: VehicleUsage.Passenger,
-  not_passenger: VehicleUsage.NotPassenger,
-  driver: VehicleUsage.Driver,
-  gunner: VehicleUsage.Gunner,
-  not_driver: VehicleUsage.NotDriver,
-  not_gunner: VehicleUsage.NotGunner,
-};
-
 /** Returns true if `identifier` was handled as a movement trait. */
 export const lowerMovementOption = (
   identifier: string,
@@ -77,7 +65,7 @@ export const lowerMovementOption = (
           location
         );
       }
-      const value = resolveEnumKeyword(first, VEHICLE_USAGE, "vehicle_usage");
+      const value = resolveEnumKeyword(first, VehicleUsage, "vehicle_usage");
       setField(
         ir.locations,
         diagnostics,

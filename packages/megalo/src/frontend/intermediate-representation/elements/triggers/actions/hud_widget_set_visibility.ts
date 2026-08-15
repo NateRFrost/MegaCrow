@@ -77,7 +77,7 @@ export const lowerHudWidgetSetVisibility = (
 
   const paramCtx = asParameterLoweringContext(ctx);
   return {
-    type: ActionType.HudWidgetSetVisibility,
+    type: ActionType.hud_widget_set_visibility,
     parameters: {
       widgetIndex: resolveHudWidgetIndex(parameters[0]!, ctx, location),
       player: resolvePlayerReference(parameters[1]!, paramCtx),

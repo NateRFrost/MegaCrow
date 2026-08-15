@@ -22,7 +22,7 @@ export const lowerDeviceAnimatePosition = (
   requireParamCount(parameters, 5, location);
   const paramCtx = asParameterLoweringContext(ctx);
   return {
-    type: ActionType.DeviceAnimatePosition,
+    type: ActionType.device_animate_position,
     parameters: {
       object: resolveObjectReference(parameters[0]!, paramCtx),
       animationTargetFraction: resolveCustomVariableReference(

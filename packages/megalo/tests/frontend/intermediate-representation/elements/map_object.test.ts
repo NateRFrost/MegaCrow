@@ -44,7 +44,7 @@ end
     expect(filters).toHaveLength(3);
     expect(filters[0]).toMatchObject({
       label: expect.any(Number),
-      team: ObjectTeamFilter.Each,
+      team: ObjectTeamFilter.each,
     });
     const healthStationIndex =
       objectLists[ObjectListType.Objects]?.indexOf("health_station");

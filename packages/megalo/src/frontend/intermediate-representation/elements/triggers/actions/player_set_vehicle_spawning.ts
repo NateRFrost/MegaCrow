@@ -24,7 +24,7 @@ export const lowerPlayerSetVehicleSpawning = (
   requireParamCount(parameters, 2, location);
 
   return {
-    type: ActionType.PlayerSetVehicleSpawning,
+    type: ActionType.player_set_vehicle_spawning,
 
     parameters: {
       player: resolvePlayerReference(

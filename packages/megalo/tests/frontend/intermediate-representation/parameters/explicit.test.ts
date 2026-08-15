@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { MultiplayerTeamDesignator } from "../../../../src/frontend/intermediate-representation/game/game_engine_default";
 import { ExplicitObject } from "../../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
 import { ExplicitPlayer } from "../../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_player";
 import { ExplicitTeam } from "../../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_team";
@@ -52,7 +53,10 @@ describe("explicit name parsers", () => {
     expect(parseExplicitTeam("neutral")).toBe(ExplicitTeam.neutral);
     expect(parseExplicitTeam("defenders")).toBe(ExplicitTeam.Team0);
     expect(parseExplicitTeam("attackers")).toBe(ExplicitTeam.Team1);
-    expect(TEAM_DESIGNATOR_INDICES.third_party).toBe(2);
+    expect(parseExplicitTeam("third_party")).toBe(ExplicitTeam.Team2);
+    expect(TEAM_DESIGNATOR_INDICES.third_party).toBe(
+      MultiplayerTeamDesignator.third_party
+    );
   });
 
   it("parses qualified temporary compiled names", () => {

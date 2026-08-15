@@ -10,7 +10,7 @@ import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   type Action,
   ActionType,
-  GrenadeType,
+  grenadeType as grenadeTypeEnum,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import {
   resolveCustomVariableReference,
@@ -21,11 +21,6 @@ import {
   type ElementLowerContext,
 } from "src/frontend/intermediate-representation/parameters/context";
 
-const GRENADE_TYPE_BY_NAME: Record<string, GrenadeType> = {
-  frag: GrenadeType.Frag,
-  plasma: GrenadeType.Plasma,
-};
-
 export const lowerAdjustGrenades = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
@@ -33,7 +28,7 @@ export const lowerAdjustGrenades = (
 ): Action => {
   requireParamCount(parameters, 4, location);
   const grenadeName = requireKeyword(parameters[1]!, location).toLowerCase();
-  const grenadeType = GRENADE_TYPE_BY_NAME[grenadeName];
+  const grenadeType = grenadeTypeEnum.parse(grenadeName);
   if (grenadeType === undefined) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType("grenade type", grenadeName),
@@ -42,7 +37,7 @@ export const lowerAdjustGrenades = (
   }
   const paramCtx = asParameterLoweringContext(ctx);
   return {
-    type: ActionType.AdjustGrenades,
+    type: ActionType.adjust_grenades,
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),
       grenadeType,

@@ -196,7 +196,7 @@ export const lowerBegin = (
   };
 
   const beginAction: Action = {
-    type: ActionType.Begin,
+    type: ActionType.begin,
     parameters,
   };
   scopeCtx.appendTarget.appendAction(beginAction);
@@ -256,7 +256,7 @@ const lowerForEach = (
   });
 
   scopeCtx.appendTarget.appendAction({
-    type: ActionType.ForEach,
+    type: ActionType.for_each,
     parameters: { triggerIndex },
   });
 };
@@ -388,10 +388,10 @@ const lowerTemporary = (
     false
   );
   const setAction: Action = {
-    type: ActionType.Set,
+    type: ActionType.set,
     parameters: {
       left,
-      operation: MathOperation.SetTo,
+      operation: MathOperation.set_to,
       right,
     },
   };

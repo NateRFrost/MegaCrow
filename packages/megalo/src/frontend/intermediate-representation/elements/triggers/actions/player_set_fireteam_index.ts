@@ -26,7 +26,7 @@ export const lowerPlayerSetFireteamIndex = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.PlayerSetFireteamIndex,
+    type: ActionType.player_set_fireteam_index,
 
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),

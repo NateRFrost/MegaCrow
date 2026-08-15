@@ -26,7 +26,7 @@ export const lowerPlayerGetPlace = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.PlayerGetPlace,
+    type: ActionType.player_get_place,
 
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),

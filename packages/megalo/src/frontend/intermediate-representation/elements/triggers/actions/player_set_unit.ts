@@ -26,7 +26,7 @@ export const lowerPlayerSetUnit = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.PlayerSetUnit,
+    type: ActionType.player_set_unit,
 
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),

@@ -11,12 +11,16 @@ export interface SourcePosition {
   localOffset: number;
 }
 
-export const BUILT_IN_POSITION: SourcePosition = {
+export const SENTINEL_POSITION: SourcePosition = {
   localOffset: -1,
   absoluteOffset: -1,
   line: -1,
   column: -1,
 };
+
+export const BUILT_IN_POSITION: SourcePosition = SENTINEL_POSITION;
+export const OPEN_ENDED_POSITION: SourcePosition = SENTINEL_POSITION;
+
 
 export enum SourceLocationType {
   SOURCE_CODE = 0,

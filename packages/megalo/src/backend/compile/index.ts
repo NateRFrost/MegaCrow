@@ -3,9 +3,9 @@ import type { Compiler } from "src/backend/compile/compiler";
 import type { SupportedMegaloVersion } from "src/version";
 
 export {
+  type CompiledMegaloMetadata,
   Compiler,
   EngineIcon,
-  type CompiledMegaloMetadata,
 } from "src/backend/compile/compiler";
 
 export const getCompilerForVersion = ({

@@ -26,7 +26,7 @@ export const lowerObjectGetShield = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.ObjectGetShield,
+    type: ActionType.object_get_shield,
 
     parameters: {
       object: resolveObjectReference(parameters[0]!, paramCtx),

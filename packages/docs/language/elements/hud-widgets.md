@@ -16,7 +16,7 @@ hud_widgets
 end
 ```
 
-The first token is either a **built-in widget type** (such as `proximity_warning`, `arming_warning`, `game_state_widget`, `rating_widget`, `stat_widget`, `watermark`) or a **custom name** you choose for generic omni-widgets. The second token is the anchor position.
+The first token is a **custom name** you choose for the widget slot (for example `proximity_warning` or `arming_warning`). The second token is the anchor position.
 
 Common positions include `top_left`, `top_right`, `top_center`, `bottom_center`, `high_left`, `high_right`, `high_center`, `low_center`, and `low_left`.
 

@@ -69,6 +69,7 @@ const parseOptionOverrideShorthand = (
   const value = parseIntegerInitialValue(ctx, targetToken);
   return {
     kind: GameOptionEntryKind.OPTION_OVERRIDE,
+    keywordLocation: keywordToken.location,
     modifiers,
     target,
     value,
@@ -168,6 +169,7 @@ export function parseUserDefinedOption(
     kind: ranged
       ? GameOptionEntryKind.RANGED_OPTION
       : GameOptionEntryKind.OPTION,
+    keywordLocation: keywordToken.location,
     modifiers,
     name,
     displayName,

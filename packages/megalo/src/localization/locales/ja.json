@@ -7,6 +7,7 @@
   "expected_one_of": "{{expected}} が必要ですが、'{{got}}' が見つかりました",
   "numeric_constant_name": "数値定数名",
   "invalid_string_identifier": "無効な string identifier '{{identifier}}'",
+  "invalid_explicit_team": "無効な明示チーム: {{token}}",
   "variable_reference": "変数参照",
   "expected_parameter_type": "{{expected}} パラメータが必要ですが、'{{got}}' が見つかりました",
   "unknown_player_trait": "player trait modifier が必要ですが、'{{got}}' が見つかりました",

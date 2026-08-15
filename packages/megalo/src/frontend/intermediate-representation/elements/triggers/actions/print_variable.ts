@@ -21,7 +21,7 @@ export const lowerPrintVariable = (
     );
   }
   return {
-    type: ActionType.PrintVariable,
+    type: ActionType.print_variable,
     parameters: {
       string: lowerDynamicString(parameters[0], ctx),
     },

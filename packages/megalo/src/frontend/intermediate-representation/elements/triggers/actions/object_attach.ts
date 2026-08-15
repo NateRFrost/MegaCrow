@@ -120,7 +120,7 @@ export const lowerObjectAttach = (
     );
   }
   return {
-    type: ActionType.ObjectAttach,
+    type: ActionType.object_attach,
     parameters: {
       child: resolveObjectReference(parameters[0]!, paramCtx),
       parent: resolveObjectReference(parameters[1]!, paramCtx),

@@ -26,7 +26,7 @@ export const lowerPlayerSetPrimaryRespawnObject = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.PlayerSetPrimaryRespawnObject,
+    type: ActionType.player_set_primary_respawn_object,
 
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),

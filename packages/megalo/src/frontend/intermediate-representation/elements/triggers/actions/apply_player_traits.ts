@@ -43,7 +43,7 @@ export const lowerApplyPlayerTraits = (
 ): Action => {
   requireParamCount(parameters, 2, location);
   return {
-    type: ActionType.ApplyPlayerTraits,
+    type: ActionType.apply_player_traits,
     parameters: {
       player: resolvePlayerReference(
         parameters[0]!,

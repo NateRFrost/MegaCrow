@@ -1,6 +1,7 @@
 import type { MegaloCompilerContext } from "src/context";
 import {
   BUILT_IN_POSITION,
+  OPEN_ENDED_POSITION,
   type Diagnostics,
   type SourceCodeLocation,
   type SourceLocation,
@@ -55,42 +56,40 @@ export interface SymbolTableEntryBase {
 
   /**
    * Lexical scope range.
-   * `start` is the declaration position (built-ins use `BUILT_IN_POSITION`).
+   * `start` is the declaration position (built-ins use {@link BUILT_IN_POSITION}).
    * `end` is the exclusive end of visibility; open-ended symbols (globals, built-ins)
-   * keep `end` as `BUILT_IN_POSITION` until EOF.
+   * keep `end` as {@link OPEN_ENDED_POSITION} until EOF / {@link SymbolTable.setScopeEnd}.
    */
   range: SourceCodeLocation;
 
   references: SourceCodeLocation[];
 }
 
+const openEndedRange = (start: SourcePosition): SourceCodeLocation => ({
+  type: SourceLocationType.SOURCE_CODE,
+  start,
+  end: OPEN_ENDED_POSITION,
+});
+
 const declarationRange = (declaration: SourceLocation): SourceCodeLocation => {
-  if (declaration.type === SourceLocationType.BUILT_IN) {
-    return {
-      type: SourceLocationType.SOURCE_CODE,
-      start: BUILT_IN_POSITION,
-      end: BUILT_IN_POSITION,
-    };
+  switch (declaration.type) {
+    case SourceLocationType.BUILT_IN:
+      return openEndedRange(BUILT_IN_POSITION);
+    case SourceLocationType.OBJECT_LIST:
+      return openEndedRange(declaration.source);
+    case SourceLocationType.INCLUDE:
+      // Prefer the span inside the included file (absolute offsets are rebased
+      // on the unfurled program); the include directive is on `declaration`.
+      return openEndedRange(declaration.source.start);
+    case SourceLocationType.SOURCE_CODE:
+      return openEndedRange(declaration.start);
+    case SourceLocationType.UNKNOWN:
+      return openEndedRange(OPEN_ENDED_POSITION);
+    default: {
+      const _exhaustive: never = declaration;
+      return _exhaustive;
+    }
   }
-  if (declaration.type === SourceLocationType.OBJECT_LIST) {
-    return {
-      type: SourceLocationType.SOURCE_CODE,
-      start: declaration.source,
-      end: BUILT_IN_POSITION,
-    };
-  }
-  if (declaration.type === SourceLocationType.INCLUDE) {
-    return {
-      type: SourceLocationType.SOURCE_CODE,
-      start: declaration.declaration.start,
-      end: BUILT_IN_POSITION,
-    };
-  }
-  return {
-    type: SourceLocationType.SOURCE_CODE,
-    start: declaration.start,
-    end: BUILT_IN_POSITION,
-  };
 };
 
 export type SymbolTableVariableEntry = SymbolTableEntryBase & {

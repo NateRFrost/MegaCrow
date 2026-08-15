@@ -9,7 +9,7 @@ import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   type Action,
   ActionType,
-  ScriptableGameButtons,
+  scriptableGameButtons,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import {
   resolveCustomVariableReference,
@@ -20,23 +20,6 @@ import {
   type ElementLowerContext,
 } from "src/frontend/intermediate-representation/parameters/context";
 
-const SCRIPTABLE_GAME_BUTTON_BY_NAME: Record<string, ScriptableGameButtons> = {
-  jump: ScriptableGameButtons.Jump,
-  grenade: ScriptableGameButtons.Grenade,
-  switch_weapon: ScriptableGameButtons.SwitchWeapon,
-  context_primary: ScriptableGameButtons.ContextPrimary,
-  melee_attack: ScriptableGameButtons.MeleeAttack,
-  equipment: ScriptableGameButtons.Equipment,
-  throw_grenade: ScriptableGameButtons.ThrowGrenade,
-  fire_primary: ScriptableGameButtons.FirePrimary,
-  crouch: ScriptableGameButtons.Crouch,
-  scope_zoom: ScriptableGameButtons.ScopeZoom,
-  night_vision: ScriptableGameButtons.NightVision,
-  fire_secondary: ScriptableGameButtons.FireSecondary,
-  fire_tertiary: ScriptableGameButtons.FireTertiary,
-  vehicle_trick: ScriptableGameButtons.VehicleTrick,
-};
-
 export const lowerGetButtonTime = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
@@ -44,7 +27,7 @@ export const lowerGetButtonTime = (
 ): Action => {
   requireParamCount(parameters, 3, location);
   const buttonName = requireKeyword(parameters[1]!, location).toLowerCase();
-  const button = SCRIPTABLE_GAME_BUTTON_BY_NAME[buttonName];
+  const button = scriptableGameButtons.parse(buttonName);
   if (button === undefined) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType("game button", buttonName),
@@ -53,7 +36,7 @@ export const lowerGetButtonTime = (
   }
   const paramCtx = asParameterLoweringContext(ctx);
   return {
-    type: ActionType.GetButtonTime,
+    type: ActionType.get_button_time,
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),
       button,

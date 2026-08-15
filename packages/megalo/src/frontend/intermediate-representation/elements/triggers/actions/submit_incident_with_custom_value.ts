@@ -52,7 +52,7 @@ export const lowerSubmitIncidentWithCustomValue = (
   }
 
   return {
-    type: ActionType.SubmitIncidentWithCustomValue,
+    type: ActionType.submit_incident_with_custom_value,
     parameters: {
       statIndex,
       cause,

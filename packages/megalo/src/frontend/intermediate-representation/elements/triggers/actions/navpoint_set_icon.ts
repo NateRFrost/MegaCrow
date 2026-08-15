@@ -93,7 +93,7 @@ export const lowerNavpointSetIcon = (
       );
     }
     return {
-      type: ActionType.NavpointSetIcon,
+      type: ActionType.navpoint_set_icon,
       parameters: {
         navpoint: resolveObjectReference(parameters[0]!, paramCtx),
         icon,
@@ -108,7 +108,7 @@ export const lowerNavpointSetIcon = (
     );
   }
   return {
-    type: ActionType.NavpointSetIcon,
+    type: ActionType.navpoint_set_icon,
     parameters: {
       navpoint: resolveObjectReference(parameters[0]!, paramCtx),
       icon,

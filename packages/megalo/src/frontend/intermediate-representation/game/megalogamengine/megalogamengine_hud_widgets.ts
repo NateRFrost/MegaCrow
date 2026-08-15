@@ -1,20 +1,27 @@
-export enum HudWidgetPosition {
-  TopLeft = 0,
-  TopCenter = 1,
-  TopRight = 2,
-  HighLeft = 3,
-  HighCenter = 4,
-  HighRight = 5,
-  LowLeft = 6,
-  LowCenter = 7,
-  LowRight = 8,
-  BottomLeft = 9,
-  BottomCenter = 10,
-  BottomRight = 11,
-}
+import { megaloEnum, type MegaloEnumNames } from "src/frontend/intermediate-representation/megaloEnum";
 
-export enum HUDMeterInputType {
-  None = 0,
-  Number = 1,
-  Timer = 2,
-}
+export const hudWidgetPosition = megaloEnum([
+  "top_left",
+  "top_center",
+  "top_right",
+  "high_left",
+  "high_center",
+  "high_right",
+  "low_left",
+  "low_center",
+  "low_right",
+  "bottom_left",
+  "bottom_center",
+  "bottom_right",
+] as const);
+export const HudWidgetPosition = hudWidgetPosition.enum;
+export type HudWidgetPosition = MegaloEnumNames<typeof hudWidgetPosition>;
+
+export const hudMeterInputType = megaloEnum([
+  "none",
+  { name: "off", aliasOf: "none" },
+  "number",
+  "timer",
+] as const);
+export const HUDMeterInputType = hudMeterInputType.enum;
+export type HUDMeterInputType = MegaloEnumNames<typeof hudMeterInputType>;

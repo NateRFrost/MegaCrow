@@ -26,7 +26,7 @@ export const lowerPlayerPickUpWeapon = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.PlayerPickUpWeapon,
+    type: ActionType.player_pick_up_weapon,
 
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),

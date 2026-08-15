@@ -26,7 +26,7 @@ export const lowerPlayerDeathGetDamageType = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.PlayerDeathGetDamageType,
+    type: ActionType.player_death_get_damage_type,
 
     parameters: {
       deadPlayer: resolvePlayerReference(parameters[0]!, paramCtx),

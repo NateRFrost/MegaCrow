@@ -22,7 +22,7 @@ export const lowerObjectSetInvincibility = (
   requireParamCount(parameters, 2, location);
   const paramCtx = asParameterLoweringContext(ctx);
   return {
-    type: ActionType.ObjectSetInvincibility,
+    type: ActionType.object_set_invincibility,
     parameters: {
       object: resolveObjectReference(parameters[0]!, paramCtx),
       invincible: resolveCustomVariableReference(parameters[1]!, paramCtx),

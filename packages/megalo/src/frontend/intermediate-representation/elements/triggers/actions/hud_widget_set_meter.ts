@@ -84,21 +84,21 @@ export const lowerHudWidgetSetMeter = (
 
   if (second.kind === SyntaxKind.KEYWORD && second.value === "off") {
     return {
-      type: ActionType.HudWidgetSetMeter,
+      type: ActionType.hud_widget_set_meter,
       parameters: {
         widgetIndex,
-        meterInput: { meterType: HUDMeterInputType.None },
+        meterInput: { meterType: HUDMeterInputType.none },
       },
     };
   }
 
   if (parameters.length === 2) {
     return {
-      type: ActionType.HudWidgetSetMeter,
+      type: ActionType.hud_widget_set_meter,
       parameters: {
         widgetIndex,
         meterInput: {
-          meterType: HUDMeterInputType.Timer,
+          meterType: HUDMeterInputType.timer,
           timer: resolveCustomTimerReference(second, paramCtx),
         },
       },
@@ -106,11 +106,11 @@ export const lowerHudWidgetSetMeter = (
   }
 
   return {
-    type: ActionType.HudWidgetSetMeter,
+    type: ActionType.hud_widget_set_meter,
     parameters: {
       widgetIndex,
       meterInput: {
-        meterType: HUDMeterInputType.Number,
+        meterType: HUDMeterInputType.number,
         value: resolveCustomVariableReference(second, paramCtx),
         max: resolveCustomVariableReference(parameters[2]!, paramCtx),
       },

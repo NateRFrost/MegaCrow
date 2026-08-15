@@ -1,4 +1,4 @@
-import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
+import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
 import {
   type ASTErrorNode,
@@ -271,11 +271,7 @@ export const mapObjectParser = (
     properties.push({
       key: key.value,
       value,
-      location: {
-        type: SourceLocationType.SOURCE_CODE,
-        start: key.location.start,
-        end: value.location.end,
-      },
+      location: key.location,
     });
   }
 

@@ -24,7 +24,7 @@ export const lowerPlayerSetCoopSpawning = (
   requireParamCount(parameters, 2, location);
 
   return {
-    type: ActionType.PlayerSetCoopSpawning,
+    type: ActionType.player_set_coop_spawning,
 
     parameters: {
       player: resolvePlayerReference(

@@ -22,7 +22,7 @@ export const lowerNavpointSetVisibleRange = (
   requireParamCount(parameters, 3, location);
   const paramCtx = asParameterLoweringContext(ctx);
   return {
-    type: ActionType.NavpointSetVisibleRange,
+    type: ActionType.navpoint_set_visible_range,
     parameters: {
       navpoint: resolveObjectReference(parameters[0]!, paramCtx),
       minFeet: resolveCustomVariableReference(parameters[1]!, paramCtx),

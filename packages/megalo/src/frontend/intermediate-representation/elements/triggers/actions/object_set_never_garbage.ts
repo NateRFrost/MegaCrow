@@ -26,7 +26,7 @@ export const lowerObjectSetNeverGarbage = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.ObjectSetNeverGarbage,
+    type: ActionType.object_set_never_garbage,
 
     parameters: {
       object: resolveObjectReference(parameters[0]!, paramCtx),

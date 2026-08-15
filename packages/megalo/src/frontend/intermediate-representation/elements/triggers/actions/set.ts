@@ -39,7 +39,7 @@ export const lowerSet = (
   );
 
   return {
-    type: ActionType.Set,
+    type: ActionType.set,
     parameters: {
       left,
       operation: parseMathOperation(operationNode, location),

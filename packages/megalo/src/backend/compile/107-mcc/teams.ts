@@ -81,7 +81,7 @@ export const compileTeams = (
   const irTeams = irTeamOptions.teams;
   const modelOverride =
     irTeams?.some((team) => team.model !== undefined) === true
-      ? TeamOptionsModelOverrideType.SetByTeam
+      ? TeamOptionsModelOverrideType.set_by_team
       : irTeamOptions.model;
   if (modelOverride !== undefined) {
     teamOptions.m_model_override =

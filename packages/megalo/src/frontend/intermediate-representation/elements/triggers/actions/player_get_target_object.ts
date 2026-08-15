@@ -26,7 +26,7 @@ export const lowerPlayerGetTargetObject = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.PlayerGetTargetObject,
+    type: ActionType.player_get_target_object,
 
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),

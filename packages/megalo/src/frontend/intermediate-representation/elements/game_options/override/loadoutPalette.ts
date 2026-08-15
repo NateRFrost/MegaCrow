@@ -1,4 +1,3 @@
-import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
 import {
   type OverrideEntryNode,
@@ -8,24 +7,20 @@ import { assertNotErrorNode } from "src/frontend/intermediate-representation/dia
 import { markCurrentValueUnused } from "src/frontend/intermediate-representation/diagnostics/markCurrentValueUnused";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  LOADOUT_PALETTE_TYPE_BY_NAME,
-  LoadoutPaletteType,
+  type LoadoutPaletteType,
+  loadoutPaletteType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/loadoutPaletteType";
 import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 import { setField } from "src/frontend/intermediate-representation/setField";
 
-const resolveLoadoutPaletteType = (
-  tier: string,
-  location: SourceCodeLocation
-): LoadoutPaletteType => {
-  const type = LOADOUT_PALETTE_TYPE_BY_NAME[tier];
-  if (type === undefined) {
-    throw new LowerError(
-      diagnosticMessages.expectedParameterType("loadout palette tier", tier),
-      location
-    );
-  }
-  return type;
+/** Variant loadout palette slots (excludes `none`). */
+const LOADOUT_PALETTE_SLOT: Partial<Record<LoadoutPaletteType, number>> = {
+  spartan_tier1: 0,
+  elite_tier1: 1,
+  spartan_tier2: 2,
+  elite_tier2: 3,
+  spartan_tier3: 4,
+  elite_tier3: 5,
 };
 
 export const lowerLoadoutPaletteOverride = (
@@ -41,9 +36,18 @@ export const lowerLoadoutPaletteOverride = (
   const { tier, palette } = entry.value;
   assertNotErrorNode(tier);
   assertNotErrorNode(palette);
-  const paletteType = resolveLoadoutPaletteType(tier.value, tier.location);
-  const slotIndex = paletteType - LoadoutPaletteType.spartan_tier1;
-  if (slotIndex < 0) {
+  const paletteType = loadoutPaletteType.parse(tier.value);
+  if (paletteType === undefined) {
+    throw new LowerError(
+      diagnosticMessages.expectedParameterType(
+        "loadout palette tier",
+        tier.value
+      ),
+      tier.location
+    );
+  }
+  const slotIndex = LOADOUT_PALETTE_SLOT[paletteType];
+  if (slotIndex === undefined) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType(
         "loadout palette tier",

@@ -26,7 +26,7 @@ export const lowerPlayerGetVehicle = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.PlayerGetVehicle,
+    type: ActionType.player_get_vehicle,
 
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),

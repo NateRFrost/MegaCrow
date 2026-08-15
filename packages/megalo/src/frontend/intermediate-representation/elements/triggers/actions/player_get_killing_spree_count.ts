@@ -26,7 +26,7 @@ export const lowerPlayerGetKillingSpreeCount = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.PlayerGetKillingSpreeCount,
+    type: ActionType.player_get_killing_spree_count,
 
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),

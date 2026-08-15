@@ -45,7 +45,7 @@ end
       initialPrimaryWeaponAbsoluteIndex: 1,
       initialSecondaryWeaponAbsoluteIndex: 5,
       initialEquipmentAbsoluteIndex: 0,
-      initialGrenadeCountSetting: GrenadeCountSetting.Frag2,
+      initialGrenadeCountSetting: GrenadeCountSetting["2 frag"],
     });
   });
 

@@ -80,7 +80,7 @@ describe("megacrowExtensions.coopSpawning", () => {
     });
     expect(diagnostics.getErrors().map((e) => e.message)).toEqual([]);
     const action = ir.gameVariant.gameEngine.actions.find(
-      (entry) => entry.type === ActionType.NavpointSetIcon
+      (entry) => entry.type === ActionType.navpoint_set_icon
     );
     expect(action?.parameters).toMatchObject({ icon: 27 });
   });
@@ -97,7 +97,7 @@ end
 `);
     expect(diagnostics.getErrors().map((e) => e.message)).toEqual([]);
     const action = ir.gameVariant.gameEngine.actions.find(
-      (entry) => entry.type === ActionType.PlayerSetObjectiveAllegianceIcon
+      (entry) => entry.type === ActionType.player_set_objective_allegiance_icon
     );
     expect(action?.parameters).toMatchObject({ iconIndex: 7 });
   });

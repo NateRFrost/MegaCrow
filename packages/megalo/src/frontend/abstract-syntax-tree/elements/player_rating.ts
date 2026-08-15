@@ -28,6 +28,7 @@ export type PlayerRatingValueNode =
 
 export interface PlayerRatingFieldNode {
   key: string;
+  location: SourceCodeLocation;
   value: PlayerRatingValueNode;
 }
 
@@ -135,6 +136,7 @@ export const playerRatingParser = (
 
     fields.push({
       key: key.value,
+      location: key.location,
       value: parsePlayerRatingValue(ctx, key.location),
     });
   }

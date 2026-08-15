@@ -29,24 +29,24 @@ import { SymbolKind } from "src/frontend/symbol-table";
 const MAX_FIRETEAM_COUNT = 16;
 
 const BLOCK_MODEL_OVERRIDE: Record<string, TeamOptionsModelOverrideType> = {
-  spartan: TeamOptionsModelOverrideType.Spartan,
-  elite: TeamOptionsModelOverrideType.Elite,
-  by_designator: TeamOptionsModelOverrideType.ByDesignator,
+  spartan: TeamOptionsModelOverrideType.spartan,
+  elite: TeamOptionsModelOverrideType.elite,
+  by_designator: TeamOptionsModelOverrideType.by_designator,
 };
 
 const BLOCK_MODEL_OVERRIDE_NAMES = Object.keys(BLOCK_MODEL_OVERRIDE);
 
 const TEAM_MODEL_CHOICE: Record<string, PlayerModelChoice> = {
-  spartan: PlayerModelChoice.Spartan,
-  elite: PlayerModelChoice.Elite,
+  spartan: PlayerModelChoice.spartan,
+  elite: PlayerModelChoice.elite,
 };
 
 const TEAM_MODEL_CHOICE_NAMES = Object.keys(TEAM_MODEL_CHOICE);
 
 const DESIGNATOR_SWITCH_TYPE: Record<string, DesignatorSwitchType> = {
-  none: DesignatorSwitchType.None,
-  random: DesignatorSwitchType.Random,
-  rotate: DesignatorSwitchType.Rotate,
+  none: DesignatorSwitchType.none,
+  random: DesignatorSwitchType.random,
+  rotate: DesignatorSwitchType.rotate,
 };
 
 const DESIGNATOR_SWITCH_TYPE_NAMES = Object.keys(DESIGNATOR_SWITCH_TYPE);
@@ -124,7 +124,7 @@ const lowerTeam = (
           ctx.diagnostics,
           team,
           "designator",
-          TEAM_DESIGNATOR_INDICES[keyword] as MultiplayerTeamDesignator,
+          TEAM_DESIGNATOR_INDICES[keyword],
           property.parameters[0]?.location
         );
         break;

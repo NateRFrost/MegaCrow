@@ -35,6 +35,7 @@ import type { MegaloVersion } from "src/version";
 
 export interface PlayerTraitOptionNode {
   identifier: string;
+  location: SourceCodeLocation;
   parameters: ASTParameterNode[];
 }
 
@@ -64,6 +65,7 @@ export const parsePlayerTraitOptions = (
     if (parser) {
       options.push({
         identifier: optionIdentifier.value,
+        location: optionIdentifier.location,
         parameters: parser(ctx, optionIdentifier.location),
       });
     } else {
@@ -88,6 +90,7 @@ export interface PlayerTraitsElementNode {
   description: ASTStringLiteralOrReference;
   displayName: ASTStringLiteralOrReference;
   kind: GameOptionEntryKind.PLAYER_TRAITS;
+  keywordLocation: SourceCodeLocation;
   location: SourceCodeLocation;
   modifiers: GameOptionModifiers;
   name: { value: string; location: SourceCodeLocation } | ASTErrorNode;
@@ -96,6 +99,7 @@ export interface PlayerTraitsElementNode {
 
 export interface PlayerTraitsOverrideNode {
   kind: GameOptionEntryKind.PLAYER_TRAITS_OVERRIDE;
+  keywordLocation: SourceCodeLocation;
   location: SourceCodeLocation;
   modifiers: GameOptionModifiers;
   options: PlayerTraitOptionNode[];
@@ -126,6 +130,7 @@ const parsePlayerTraitsOverride = (
   const { options, location } = parsePlayerTraitOptions(ctx, keywordToken);
   return {
     kind: GameOptionEntryKind.PLAYER_TRAITS_OVERRIDE,
+    keywordLocation: keywordToken.location,
     modifiers,
     target,
     options,
@@ -159,6 +164,7 @@ export const playerTraitsParser = (
 
   return {
     kind: GameOptionEntryKind.PLAYER_TRAITS,
+    keywordLocation: keywordToken.location,
     modifiers,
     name,
     displayName,

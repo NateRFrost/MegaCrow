@@ -64,18 +64,18 @@ end
       ).toBe("255 0 0".length);
     }
     const teamOptions = ir.gameVariant.baseVariant.teamOptions;
-    expect(teamOptions.model).toBe(TeamOptionsModelOverrideType.ByDesignator);
-    expect(teamOptions.designatorSwitchType).toBe(DesignatorSwitchType.Rotate);
+    expect(teamOptions.model).toBe(TeamOptionsModelOverrideType.by_designator);
+    expect(teamOptions.designatorSwitchType).toBe(DesignatorSwitchType.rotate);
     expect(teamOptions.teams).toHaveLength(2);
     expect(teamOptions.teams?.[0]).toMatchObject({
       name: { english: "Red" },
-      designator: MultiplayerTeamDesignator.Defenders,
-      model: PlayerModelChoice.Spartan,
+      designator: MultiplayerTeamDesignator.defenders,
+      model: PlayerModelChoice.spartan,
       teamColor: { r: 255, g: 0, b: 0 },
       fireteamCount: 2,
     });
     expect(teamOptions.teams?.[1]).toMatchObject({
-      designator: MultiplayerTeamDesignator.Attackers,
+      designator: MultiplayerTeamDesignator.attackers,
       fireteamCount: 3,
     });
   });

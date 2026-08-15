@@ -4,6 +4,7 @@ import type { IR } from "src/frontend/intermediate-representation";
 import type {
   LoadoutPaletteTraits,
   LoadoutTraits,
+  MultiplayerTeamDesignator,
 } from "src/frontend/intermediate-representation/game/game_engine_default";
 import type { CustomVariableReference } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import type { MegaloVariableNetworkState } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variable_metadata";
@@ -11,8 +12,9 @@ import type { VariableSlotMap } from "src/frontend/intermediate-representation/p
 import type { SymbolId, SymbolTable } from "src/frontend/symbol-table";
 
 export interface VariableDeclarationInfo {
-  initial: CustomVariableReference;
   networkState: MegaloVariableNetworkState;
+  initial?: CustomVariableReference;
+  initialTeam?: MultiplayerTeamDesignator;
 }
 
 export interface ElementLowerContext {

@@ -24,7 +24,7 @@ export const lowerTeamSetVehicleSpawning = (
   requireParamCount(parameters, 2, location);
 
   return {
-    type: ActionType.TeamSetVehicleSpawning,
+    type: ActionType.team_set_vehicle_spawning,
 
     parameters: {
       team: resolveTeamReference(

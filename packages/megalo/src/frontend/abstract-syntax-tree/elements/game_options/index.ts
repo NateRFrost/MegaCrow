@@ -50,6 +50,8 @@ export const gameOptionsParser = (
   let endLocation: SourceCodeLocation = elementToken.location;
   let pendingLock = false;
   let pendingHide = false;
+  let pendingLockLocation: SourceCodeLocation | undefined;
+  let pendingHideLocation: SourceCodeLocation | undefined;
 
   while (ctx.hasMore()) {
     const token = ctx.peekToken()!;
@@ -61,23 +63,33 @@ export const gameOptionsParser = (
     }
 
     if (token.kind === TokenKind.Identifier && token.value === "lock") {
-      ctx.getToken();
+      const lockToken = ctx.getToken();
       pendingLock = true;
+      pendingLockLocation = lockToken.location;
       continue;
     }
 
     if (token.kind === TokenKind.Identifier && token.value === "hide") {
-      ctx.getToken();
+      const hideToken = ctx.getToken();
       pendingHide = true;
+      pendingHideLocation = hideToken.location;
       continue;
     }
 
     const modifiers: GameOptionModifiers = {
       lock: pendingLock,
       hide: pendingHide,
+      ...(pendingLockLocation !== undefined
+        ? { lockLocation: pendingLockLocation }
+        : {}),
+      ...(pendingHideLocation !== undefined
+        ? { hideLocation: pendingHideLocation }
+        : {}),
     };
     pendingLock = false;
     pendingHide = false;
+    pendingLockLocation = undefined;
+    pendingHideLocation = undefined;
 
     if (token.kind !== TokenKind.Identifier) {
       ctx.diagnostics.addError(

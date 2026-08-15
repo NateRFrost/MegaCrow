@@ -26,7 +26,7 @@ export const lowerDeviceSetPositionImmediate = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.DeviceSetPositionImmediate,
+    type: ActionType.device_set_position_immediate,
 
     parameters: {
       object: resolveObjectReference(parameters[0]!, paramCtx),

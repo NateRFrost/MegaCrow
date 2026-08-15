@@ -31,10 +31,10 @@ end
 
     expect(diagnostics.getErrors()).toEqual([]);
     expect(ir.gameVariant.gameEngine.hudWidgets).toEqual([
-      HudWidgetPosition.TopLeft,
-      HudWidgetPosition.TopRight,
-      HudWidgetPosition.HighCenter,
-      HudWidgetPosition.BottomCenter,
+      HudWidgetPosition.top_left,
+      HudWidgetPosition.top_right,
+      HudWidgetPosition.high_center,
+      HudWidgetPosition.bottom_center,
     ]);
   });
 
@@ -63,11 +63,11 @@ end
 
     expect(diagnostics.getErrors()).toEqual([]);
     expect(ir.gameVariant.gameEngine.hudWidgets).toEqual([
-      HudWidgetPosition.TopLeft,
-      HudWidgetPosition.TopCenter,
-      HudWidgetPosition.TopRight,
-      HudWidgetPosition.HighLeft,
-      HudWidgetPosition.HighCenter,
+      HudWidgetPosition.top_left,
+      HudWidgetPosition.top_center,
+      HudWidgetPosition.top_right,
+      HudWidgetPosition.high_left,
+      HudWidgetPosition.high_center,
     ]);
   });
 });

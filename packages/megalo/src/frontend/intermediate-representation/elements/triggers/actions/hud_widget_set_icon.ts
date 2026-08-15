@@ -104,7 +104,7 @@ export const lowerHudWidgetSetIcon = (
   }
 
   return {
-    type: ActionType.HudWidgetSetIcon,
+    type: ActionType.hud_widget_set_icon,
     parameters: {
       widgetIndex: resolveHudWidgetIndex(parameters[0]!, ctx, location),
       iconIndex: resolveHudWidgetIconIndex(parameters[1]!, ctx, location),

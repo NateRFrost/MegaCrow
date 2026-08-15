@@ -1,5 +1,4 @@
 import {
-  BUILT_IN_POSITION,
   type Diagnostic,
   Diagnostics,
   isIncludeLocation,
@@ -8,12 +7,7 @@ import {
   type SourceLocation,
   SourceLocationType,
 } from "src/diagnostics/index";
-
-const UNKNOWN_INCLUDE_SOURCE: SourceCodeLocation = {
-  type: SourceLocationType.SOURCE_CODE,
-  start: BUILT_IN_POSITION,
-  end: BUILT_IN_POSITION,
-};
+import { CompilerError } from "src/diagnostics/error";
 
 /**
  * Tags diagnostics from an included file as {@link IncludeLocation}, pointing
@@ -57,13 +51,17 @@ export class IncludeDiagnostics extends Diagnostics {
         declaration: this.declaration,
       };
     }
+    if (!isSourceCodeLocation(location)) {
+      throw new CompilerError(
+        `Include diagnostics require a source-code location (got ${SourceLocationType[location.type] ?? location.type})`,
+        location
+      );
+    }
     return {
       type: SourceLocationType.INCLUDE,
       file: this.file,
       declaration: this.declaration,
-      source: isSourceCodeLocation(location)
-        ? location
-        : UNKNOWN_INCLUDE_SOURCE,
+      source: location,
     };
   }
 }

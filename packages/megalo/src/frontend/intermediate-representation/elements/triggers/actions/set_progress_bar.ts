@@ -65,7 +65,7 @@ export const lowerSetProgressBar = (
   // MegaloEdit: when filter is `no_one`, timer is omitted and the byte stays 0
   if (timerNode === undefined) {
     return {
-      type: ActionType.SetProgressBar,
+      type: ActionType.set_progress_bar,
       parameters: {
         object,
         playerFilterModifier: filter,
@@ -83,7 +83,7 @@ export const lowerSetProgressBar = (
     );
   }
   return {
-    type: ActionType.SetProgressBar,
+    type: ActionType.set_progress_bar,
     parameters: {
       object,
       playerFilterModifier: filter,

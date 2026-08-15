@@ -3,7 +3,11 @@ import { c_game_engine_custom_variant as AlphaCustomVariant } from "@blamnetwork
 import { describe, expect, it } from "vitest";
 import { compileSource } from "../src/compile-source";
 import { MegaloCompilerContext } from "../src/context";
-import { Diagnostics, SourceLocationType } from "../src/diagnostics";
+import {
+  DiagnosticSeverity,
+  Diagnostics,
+  SourceLocationType,
+} from "../src/diagnostics";
 import { Parser } from "../src/frontend/abstract-syntax-tree";
 import { ElementKind } from "../src/frontend/abstract-syntax-tree/elements";
 import { Lexer } from "../src/frontend/tokens";
@@ -229,6 +233,241 @@ base "b.mglo"
     );
     expect(mismatch).toBeDefined();
     expect(result.bytes).toBeUndefined();
+  });
+
+  it("JIT-compiles a sibling .txt when the .mglo is missing", async () => {
+    const files = new Map<string, string>([["base.txt", minimalScript]]);
+    const progress: string[] = [];
+
+    const result = await compileSource(`base "base.mglo"\n${minimalScript}`, {
+      version,
+      megacrowExtensions: { compileMissingBaseFromSource: true },
+      onCompileProgress: (message) => progress.push(message),
+      resolveBaseFile: async () => null,
+      resolveInclude: async (path) => {
+        const text = files.get(path);
+        return text ? { text, uri: path } : null;
+      },
+    });
+
+    expect(progress.some((m) => m.includes("Compiling base file base.txt"))).toBe(
+      true
+    );
+    expect(result.bytes).toBeDefined();
+    expect(
+      result.diagnostics.some(
+        (d) =>
+          d.severity === DiagnosticSeverity.Warning &&
+          d.message ===
+            "No base file was found, base.txt was compiled from source."
+      )
+    ).toBe(true);
+  });
+
+  it("does not JIT-compile a sibling .txt unless the extension is enabled", async () => {
+    const files = new Map<string, string>([["base.txt", minimalScript]]);
+
+    const result = await compileSource(`base "base.mglo"\n${minimalScript}`, {
+      version,
+      resolveBaseFile: async () => null,
+      resolveInclude: async (path) => {
+        const text = files.get(path);
+        return text ? { text, uri: path } : null;
+      },
+    });
+
+    expect(result.bytes).toBeUndefined();
+    expect(
+      result.diagnostics.some(
+        (d) => d.message === 'No base file was found "base.mglo"'
+      )
+    ).toBe(true);
+  });
+
+  it("DX errors when neither .mglo nor sibling .txt exist", async () => {
+    const result = await compileSource(`base "missing.mglo"\n${minimalScript}`, {
+      version,
+      megacrowExtensions: { compileMissingBaseFromSource: true },
+      resolveBaseFile: async () => null,
+      resolveInclude: async () => null,
+    });
+
+    const error = result.diagnostics.find((d) =>
+      d.message.includes('No base file was found "missing.mglo"')
+    );
+    expect(error).toBeDefined();
+    expect(error?.message).not.toContain("could not compile from source");
+    expect(result.bytes).toBeUndefined();
+    if (error?.location.type === SourceLocationType.SOURCE_CODE) {
+      expect(error.location.start.line).toBe(1);
+    }
+  });
+
+  it("DX errors on the base line when JIT .txt compile fails", async () => {
+    const files = new Map<string, string>([
+      ["broken.txt", "this_is_not_a_valid_element\n"],
+    ]);
+
+    const result = await compileSource(`base "broken.mglo"\n${minimalScript}`, {
+      version,
+      megacrowExtensions: { compileMissingBaseFromSource: true },
+      resolveBaseFile: async () => null,
+      resolveInclude: async (path) => {
+        const text = files.get(path);
+        return text ? { text, uri: path } : null;
+      },
+    });
+
+    const error = result.diagnostics.find((d) =>
+      d.message.includes(
+        'No base file was found "broken.mglo" and we could not compile from source'
+      )
+    );
+    expect(error).toBeDefined();
+    expect(result.bytes).toBeUndefined();
+    if (error?.location.type === SourceLocationType.SOURCE_CODE) {
+      expect(error.location.start.line).toBe(1);
+    }
+  });
+
+  it("surfaces a single JIT summary warning on the base directive", async () => {
+    const baseWithEofWarning = `string_table english
+\tname "Custom Game"
+end
+engine_data
+\tname name
+end
+trigger initialization
+\taction set score = 1
+`;
+
+    const files = new Map<string, string>([
+      ["warn_base.txt", baseWithEofWarning],
+    ]);
+
+    const result = await compileSource(
+      `base "warn_base.mglo"\n${minimalScript}`,
+      {
+        version,
+        megacrowExtensions: { compileMissingBaseFromSource: true },
+        resolveBaseFile: async () => null,
+        resolveInclude: async (path) => {
+          const text = files.get(path);
+          return text ? { text, uri: path } : null;
+        },
+      }
+    );
+
+    expect(result.bytes).toBeDefined();
+    const warnings = result.diagnostics.filter(
+      (d) => d.severity === DiagnosticSeverity.Warning
+    );
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]?.message).toMatch(
+      /No base file was found, warn_base\.txt was compiled from source with \d+ warnings?\./
+    );
+    if (warnings[0]?.location.type === SourceLocationType.SOURCE_CODE) {
+      expect(warnings[0].location.start.line).toBe(1);
+      expect(warnings[0].location.start.column).toBe(1);
+      expect(warnings[0].location.end.column).toBeGreaterThan(
+        warnings[0].location.start.column
+      );
+    }
+  });
+
+  it("blames JIT base diagnostics on the base directive span when not on line 1", async () => {
+    const files = new Map<string, string>([["late_base.txt", minimalScript]]);
+
+    const result = await compileSource(
+      `; preamble\nbase "late_base.mglo"\n${minimalScript}`,
+      {
+        version,
+        megacrowExtensions: { compileMissingBaseFromSource: true },
+        resolveBaseFile: async () => null,
+        resolveInclude: async (path) => {
+          const text = files.get(path);
+          return text ? { text, uri: path } : null;
+        },
+      }
+    );
+
+    expect(result.bytes).toBeDefined();
+    const warnings = result.diagnostics.filter(
+      (d) => d.severity === DiagnosticSeverity.Warning
+    );
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]?.location.type).toBe(SourceLocationType.SOURCE_CODE);
+    if (warnings[0]?.location.type === SourceLocationType.SOURCE_CODE) {
+      expect(warnings[0].location.start.line).toBe(2);
+      expect(warnings[0].location.start.column).toBe(1);
+      expect(warnings[0].location.start.localOffset).toBe("; preamble\n".length);
+      expect(warnings[0].location.end.localOffset).toBe(
+        '; preamble\nbase "late_base.mglo"'.length
+      );
+    }
+  });
+
+  it("summarizes clean JIT compiles without a warning count", async () => {
+    const files = new Map<string, string>([["clean_base.txt", minimalScript]]);
+
+    const result = await compileSource(
+      `base "clean_base.mglo"\n${minimalScript}`,
+      {
+        version,
+        megacrowExtensions: { compileMissingBaseFromSource: true },
+        resolveBaseFile: async () => null,
+        resolveInclude: async (path) => {
+          const text = files.get(path);
+          return text ? { text, uri: path } : null;
+        },
+      }
+    );
+
+    expect(result.bytes).toBeDefined();
+    const warnings = result.diagnostics.filter(
+      (d) => d.severity === DiagnosticSeverity.Warning
+    );
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]?.message).toBe(
+      "No base file was found, clean_base.txt was compiled from source."
+    );
+  });
+
+  it("reuses the in-memory JIT base cache for the same .txt", async () => {
+    const { clearCompiledBaseSourceCache } = await import(
+      "../src/compile-source"
+    );
+    clearCompiledBaseSourceCache();
+
+    const files = new Map<string, string>([["shared_base.txt", minimalScript]]);
+    let progressHits = 0;
+
+    const options = {
+      version,
+      megacrowExtensions: { compileMissingBaseFromSource: true },
+      onCompileProgress: () => {
+        progressHits += 1;
+      },
+      resolveBaseFile: async () => null,
+      resolveInclude: async (path: string) => {
+        const text = files.get(path);
+        return text ? { text, uri: path } : null;
+      },
+    };
+
+    const first = await compileSource(
+      `base "shared_base.mglo"\n${minimalScript}`,
+      options
+    );
+    const second = await compileSource(
+      `base "shared_base.mglo"\n${minimalScript}`,
+      options
+    );
+
+    expect(first.bytes).toBeDefined();
+    expect(second.bytes).toBeDefined();
+    // Second hit uses cache — progress only fires for the real compile.
+    expect(progressHits).toBe(1);
   });
 });
 

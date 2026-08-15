@@ -73,7 +73,7 @@ export const lowerSubmitIncident = (
   }
 
   return {
-    type: ActionType.SubmitIncident,
+    type: ActionType.submit_incident,
     parameters: {
       statIndex,
       cause,

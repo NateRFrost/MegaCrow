@@ -26,7 +26,7 @@ export const lowerObjectSetOrientation = (
   }
   const paramCtx = asParameterLoweringContext(ctx);
   return {
-    type: ActionType.ObjectSetOrientation,
+    type: ActionType.object_set_orientation,
     parameters: {
       object: resolveObjectReference(parameters[0]!, paramCtx),
       source: resolveObjectReference(parameters[1]!, paramCtx),

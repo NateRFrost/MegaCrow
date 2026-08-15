@@ -26,7 +26,7 @@ export const lowerObjectGetVelocity = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.ObjectGetVelocity,
+    type: ActionType.object_get_velocity,
 
     parameters: {
       object: resolveObjectReference(parameters[0]!, paramCtx),

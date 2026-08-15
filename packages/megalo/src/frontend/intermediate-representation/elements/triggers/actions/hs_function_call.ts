@@ -42,7 +42,7 @@ export const lowerHsFunctionCall = (
   requireParamCount(parameters, 1, location);
 
   return {
-    type: ActionType.HsFunctionCall,
+    type: ActionType.hs_function_call,
 
     parameters: {
       functionNameIndex: parseFunctionNameIndex(parameters[0]!, location),

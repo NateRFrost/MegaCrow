@@ -2,17 +2,15 @@ import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { ConditionStatementNode } from "src/frontend/abstract-syntax-tree/elements/trigger";
 import type { ASTConditionOperandNode } from "src/frontend/abstract-syntax-tree/elements/trigger/operand";
-import {
-  COMPARISON_OPERATOR_NAMES,
-  type ComparisonOperatorName,
-} from "src/frontend/abstract-syntax-tree/elements/trigger/operand";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   type Condition,
   ConditionType,
-  Disposition,
-  NumericComparison,
+  type Disposition,
+  disposition,
+  type NumericComparison,
+  numericComparison,
   type PlayerDeathKillerTypeFlags,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions";
 import {
@@ -31,37 +29,8 @@ import {
   coerceVariantOperands,
   isBareNoneOperand,
 } from "src/frontend/intermediate-representation/parameters/references/coerce";
-import {
-  DISPOSITION_KEYWORDS,
-  type DispositionKeyword,
-  type KillerTypeKeyword,
-} from "src/frontend/language-configuration/omni/conditions";
+import type { KillerTypeKeyword } from "src/frontend/language-configuration/omni/conditions";
 import { SymbolKind } from "src/frontend/symbol-table";
-
-const COMPARISON_BY_NAME: Record<ComparisonOperatorName, NumericComparison> = {
-  less_than: NumericComparison.LessThan,
-  greater_than: NumericComparison.GreaterThan,
-  equal_to: NumericComparison.EqualTo,
-  less_than_or_equal_to: NumericComparison.LessThanOrEqualTo,
-  greater_than_or_equal_to: NumericComparison.GreaterThanOrEqualTo,
-  not_equal_to: NumericComparison.NotEqualTo,
-};
-
-const COMPARISON_BY_OPERATOR: Record<string, NumericComparison> = {
-  "<": NumericComparison.LessThan,
-  ">": NumericComparison.GreaterThan,
-  "==": NumericComparison.EqualTo,
-  "=": NumericComparison.EqualTo,
-  "<=": NumericComparison.LessThanOrEqualTo,
-  ">=": NumericComparison.GreaterThanOrEqualTo,
-  "!=": NumericComparison.NotEqualTo,
-};
-
-const DISPOSITION_BY_NAME: Record<DispositionKeyword, Disposition> = {
-  neutral: Disposition.Neutral,
-  friendly: Disposition.Friendly,
-  enemy: Disposition.Enemy,
-};
 
 const emptyKillerFlags = (): PlayerDeathKillerTypeFlags => ({
   environment: false,
@@ -117,13 +86,9 @@ const parseComparison = (
   operand: ASTConditionOperandNode
 ): NumericComparison => {
   if (operand.kind === SyntaxKind.KEYWORD) {
-    const name = operand.value;
-    if ((COMPARISON_OPERATOR_NAMES as readonly string[]).includes(name)) {
-      return COMPARISON_BY_NAME[name as ComparisonOperatorName];
-    }
-    const byOp = COMPARISON_BY_OPERATOR[name];
-    if (byOp !== undefined) {
-      return byOp;
+    const comparison = numericComparison.parse(operand.value);
+    if (comparison !== undefined) {
+      return comparison;
     }
   }
   throw new LowerError(
@@ -136,11 +101,11 @@ const parseComparison = (
 };
 
 const parseDisposition = (operand: ASTConditionOperandNode): Disposition => {
-  if (
-    operand.kind === SyntaxKind.KEYWORD &&
-    (DISPOSITION_KEYWORDS as readonly string[]).includes(operand.value)
-  ) {
-    return DISPOSITION_BY_NAME[operand.value as DispositionKeyword];
+  if (operand.kind === SyntaxKind.KEYWORD) {
+    const value = disposition.parse(operand.value);
+    if (value !== undefined) {
+      return value;
+    }
   }
   throw new LowerError(
     diagnosticMessages.expectedParameterType(
@@ -178,7 +143,7 @@ export type ConditionLowerer = (
 
 const lowerGameIsForge: ConditionLowerer = (_statement, _ctx, base) => ({
   ...base,
-  type: ConditionType.GameIsForge,
+  type: ConditionType.game_is_forge,
   parameters: undefined as never,
 });
 
@@ -195,7 +160,7 @@ const lowerIf: ConditionLowerer = (statement, ctx, base) => {
   );
   return {
     ...base,
-    type: ConditionType.If,
+    type: ConditionType.if,
     parameters: {
       left,
       right,
@@ -209,7 +174,7 @@ const lowerObjectInArea: ConditionLowerer = (statement, ctx, base) => {
   const paramCtx = asParameterLoweringContext(ctx);
   return {
     ...base,
-    type: ConditionType.ObjectInArea,
+    type: ConditionType.object_in_area,
     parameters: {
       object: resolveObjectReference(asParam(objectNode), paramCtx),
       area: resolveObjectReference(asParam(areaNode), paramCtx),
@@ -222,7 +187,7 @@ const lowerPlayerDied: ConditionLowerer = (statement, ctx, base) => {
   const paramCtx = asParameterLoweringContext(ctx);
   return {
     ...base,
-    type: ConditionType.PlayerDied,
+    type: ConditionType.player_died,
     parameters: {
       player: resolvePlayerReference(asParam(playerNode), paramCtx),
       killerType: parseKillerType(killerNode),
@@ -235,7 +200,7 @@ const lowerTeamDisposition: ConditionLowerer = (statement, ctx, base) => {
   const paramCtx = asParameterLoweringContext(ctx);
   return {
     ...base,
-    type: ConditionType.TeamDisposition,
+    type: ConditionType.team_disposition,
     parameters: {
       team1: resolveTeamReference(asParam(team1Node), paramCtx),
       team2: resolveTeamReference(asParam(team2Node), paramCtx),
@@ -249,7 +214,7 @@ const lowerTimerExpired: ConditionLowerer = (statement, ctx, base) => {
   const paramCtx = asParameterLoweringContext(ctx);
   return {
     ...base,
-    type: ConditionType.TimerExpired,
+    type: ConditionType.timer_expired,
     parameters: {
       timer: resolveCustomTimerReference(asParam(timerNode), paramCtx),
     },
@@ -261,7 +226,7 @@ const lowerObjectIsType: ConditionLowerer = (statement, ctx, base) => {
   const paramCtx = asParameterLoweringContext(ctx);
   return {
     ...base,
-    type: ConditionType.ObjectIsType,
+    type: ConditionType.object_is_type,
     parameters: {
       object: resolveObjectReference(asParam(objectNode), paramCtx),
       objectType: resolveObjectTypeReference(asParam(typeNode), paramCtx),
@@ -274,7 +239,7 @@ const lowerTeamIsActive: ConditionLowerer = (statement, ctx, base) => {
   const paramCtx = asParameterLoweringContext(ctx);
   return {
     ...base,
-    type: ConditionType.TeamIsActive,
+    type: ConditionType.team_is_active,
     parameters: {
       team: resolveTeamReference(asParam(teamNode), paramCtx),
     },
@@ -286,7 +251,7 @@ const lowerObjectOutOfBounds: ConditionLowerer = (statement, ctx, base) => {
   const paramCtx = asParameterLoweringContext(ctx);
   return {
     ...base,
-    type: ConditionType.ObjectOutOfBounds,
+    type: ConditionType.object_out_of_bounds,
     parameters: {
       object: resolveObjectReference(asParam(objectNode), paramCtx),
     },
@@ -302,7 +267,7 @@ const lowerPlayerIsFireTeamLeader: ConditionLowerer = (
   const paramCtx = asParameterLoweringContext(ctx);
   return {
     ...base,
-    type: ConditionType.PlayerIsFireTeamLeader,
+    type: ConditionType.player_is_fire_team_leader,
     parameters: {
       player: resolvePlayerReference(asParam(playerNode), paramCtx),
     },
@@ -318,7 +283,7 @@ const lowerPlayerAssistedWithKill: ConditionLowerer = (
   const paramCtx = asParameterLoweringContext(ctx);
   return {
     ...base,
-    type: ConditionType.PlayerAssistedWithKill,
+    type: ConditionType.player_assisted_with_kill,
     parameters: {
       player1: resolvePlayerReference(asParam(player1Node), paramCtx),
       player2: resolvePlayerReference(asParam(player2Node), paramCtx),
@@ -344,7 +309,7 @@ const lowerObjectMatchesFilter: ConditionLowerer = (statement, ctx, base) => {
   }
   return {
     ...base,
-    type: ConditionType.ObjectMatchesFilter,
+    type: ConditionType.object_matches_filter,
     parameters: {
       object: resolveObjectReference(asParam(objectNode), paramCtx),
       filterIndex: symbol.index,
@@ -357,7 +322,7 @@ const lowerPlayerIsActive: ConditionLowerer = (statement, ctx, base) => {
   const paramCtx = asParameterLoweringContext(ctx);
   return {
     ...base,
-    type: ConditionType.PlayerIsActive,
+    type: ConditionType.player_is_active,
     parameters: {
       player: resolvePlayerReference(asParam(playerNode), paramCtx),
     },
@@ -369,7 +334,7 @@ const lowerEquipmentIsActive: ConditionLowerer = (statement, ctx, base) => {
   const paramCtx = asParameterLoweringContext(ctx);
   return {
     ...base,
-    type: ConditionType.EquipmentIsActive,
+    type: ConditionType.equipment_is_active,
     parameters: {
       object: resolveObjectReference(asParam(objectNode), paramCtx),
     },
@@ -381,7 +346,7 @@ const lowerPlayerIsSpartan: ConditionLowerer = (statement, ctx, base) => {
   const paramCtx = asParameterLoweringContext(ctx);
   return {
     ...base,
-    type: ConditionType.PlayerIsSpartan,
+    type: ConditionType.player_is_spartan,
     parameters: {
       player: resolvePlayerReference(asParam(playerNode), paramCtx),
     },
@@ -393,7 +358,7 @@ const lowerPlayerIsElite: ConditionLowerer = (statement, ctx, base) => {
   const paramCtx = asParameterLoweringContext(ctx);
   return {
     ...base,
-    type: ConditionType.PlayerIsElite,
+    type: ConditionType.player_is_elite,
     parameters: {
       player: resolvePlayerReference(asParam(playerNode), paramCtx),
     },
@@ -405,7 +370,7 @@ const lowerPlayerIsEditor: ConditionLowerer = (statement, ctx, base) => {
   const paramCtx = asParameterLoweringContext(ctx);
   return {
     ...base,
-    type: ConditionType.PlayerIsEditor,
+    type: ConditionType.player_is_editor,
     parameters: {
       player: resolvePlayerReference(asParam(playerNode), paramCtx),
     },

@@ -19,7 +19,7 @@ export const lowerRandom = (
   requireParamCount(parameters, 2, location);
   const paramCtx = asParameterLoweringContext(ctx);
   return {
-    type: ActionType.Random,
+    type: ActionType.random,
     parameters: {
       range: resolveCustomVariableReference(parameters[0]!, paramCtx),
       valueOut: resolveCustomVariableReference(parameters[1]!, paramCtx),

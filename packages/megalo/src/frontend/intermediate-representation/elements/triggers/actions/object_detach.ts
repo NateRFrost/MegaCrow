@@ -18,7 +18,7 @@ export const lowerObjectDetach = (
 ): Action => {
   requireParamCount(parameters, 1, location);
   return {
-    type: ActionType.ObjectDetach,
+    type: ActionType.object_detach,
     parameters: {
       object: resolveObjectReference(
         parameters[0]!,

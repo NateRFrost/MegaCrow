@@ -26,7 +26,7 @@ export const lowerDeviceSetPower = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.DeviceSetPower,
+    type: ActionType.device_set_power,
 
     parameters: {
       object: resolveObjectReference(parameters[0]!, paramCtx),

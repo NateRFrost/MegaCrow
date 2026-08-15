@@ -96,7 +96,7 @@ export const lowerSetFireteamRespawnFilter = (
   const fireteamFilter = emptyFireteamFilter();
   applyFireteamFilterToken(parameters[1]!, fireteamFilter, location);
   return {
-    type: ActionType.SetFireteamRespawnFilter,
+    type: ActionType.set_fireteam_respawn_filter,
     parameters: {
       object: resolveObjectReference(
         parameters[0]!,

@@ -24,7 +24,7 @@ export const lowerHideObject = (
   requireParamCount(parameters, 2, location);
 
   return {
-    type: ActionType.HideObject,
+    type: ActionType.hide_object,
 
     parameters: {
       object: resolveObjectReference(

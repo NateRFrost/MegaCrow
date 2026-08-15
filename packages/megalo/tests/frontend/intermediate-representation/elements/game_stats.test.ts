@@ -44,23 +44,23 @@ end
     expect(statistics).toHaveLength(4);
     expect(statistics[0]).toMatchObject({
       nameStringIndex: expect.any(Number),
-      format: GameStatisticFormat.Number,
-      grouping: GameStatisticGrouping.Player,
+      format: GameStatisticFormat.number,
+      grouping: GameStatisticGrouping.none,
       sortOrder: GameStatisticSortOrder.Descending,
     });
     expect(statistics[1]).toMatchObject({
-      format: GameStatisticFormat.NumberWithSign,
-      grouping: GameStatisticGrouping.Team,
+      format: GameStatisticFormat.delta,
+      grouping: GameStatisticGrouping.team,
       sortOrder: GameStatisticSortOrder.Ascending,
     });
     expect(statistics[2]).toMatchObject({
-      format: GameStatisticFormat.Percentage,
-      grouping: GameStatisticGrouping.Player,
+      format: GameStatisticFormat.percentage,
+      grouping: GameStatisticGrouping.none,
       sortOrder: GameStatisticSortOrder.None,
     });
     expect(statistics[3]).toMatchObject({
-      format: GameStatisticFormat.Time,
-      grouping: GameStatisticGrouping.Team,
+      format: GameStatisticFormat.timer,
+      grouping: GameStatisticGrouping.team,
       sortOrder: GameStatisticSortOrder.Descending,
     });
   });

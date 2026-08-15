@@ -24,7 +24,7 @@ export const lowerTeamSetCoopSpawning = (
   requireParamCount(parameters, 2, location);
 
   return {
-    type: ActionType.TeamSetCoopSpawning,
+    type: ActionType.team_set_coop_spawning,
 
     parameters: {
       team: resolveTeamReference(

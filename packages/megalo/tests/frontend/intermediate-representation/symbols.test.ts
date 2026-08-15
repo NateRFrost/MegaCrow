@@ -220,7 +220,7 @@ end
     expect(
       ir.gameVariant.gameEngine.variableMetadata.global.numericVariables[0]
         ?.networkState
-    ).toBe(MegaloVariableNetworkState.Local);
+    ).toBe(MegaloVariableNetworkState.local);
   });
 
   it("registers temporary symbols with VariableScope.Temporary", () => {

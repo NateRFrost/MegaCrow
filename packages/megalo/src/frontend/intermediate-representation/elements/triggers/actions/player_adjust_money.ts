@@ -25,7 +25,7 @@ export const lowerPlayerAdjustMoney = (
   requireParamCount(parameters, 3, location);
   const paramCtx = asParameterLoweringContext(ctx);
   return {
-    type: ActionType.PlayerAdjustMoney,
+    type: ActionType.player_adjust_money,
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),
       operation: parseMathOperation(parameters[1]!, location),

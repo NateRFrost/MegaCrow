@@ -1,18 +1,22 @@
 import type { StringTableReference } from "src/frontend/intermediate-representation/game/string_table";
+import { megaloEnum, type MegaloEnumNames } from "src/frontend/intermediate-representation/megaloEnum";
 
-export enum ObjectTeamFilter {
-  None = -1,
-  Team1 = 0,
-  Team2 = 1,
-  Team3 = 2,
-  Team4 = 3,
-  Team5 = 4,
-  Team6 = 5,
-  Team7 = 6,
-  Team8 = 7,
-  Neutral = 8,
-  Each = 9,
-}
+/** Same vocabulary as team designators, plus `each`. */
+export const objectTeamFilter = megaloEnum([
+  "none",
+  "defenders",
+  "attackers",
+  "third_party",
+  "fourth_party",
+  "fifth_party",
+  "sixth_party",
+  "seventh_party",
+  "eighth_party",
+  "neutral",
+  "each",
+] as const);
+export const ObjectTeamFilter = objectTeamFilter.enum;
+export type ObjectTeamFilter = MegaloEnumNames<typeof objectTeamFilter>;
 
 export type ObjectFilter = Partial<{
   label: StringTableReference;

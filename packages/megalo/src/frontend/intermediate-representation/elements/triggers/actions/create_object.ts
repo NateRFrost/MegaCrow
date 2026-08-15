@@ -145,8 +145,8 @@ export const lowerCreateObject = (
 
   const paramCtx = asParameterLoweringContext(ctx);
   let placeAtObject: ReturnType<typeof resolveObjectReference> | undefined;
-  const result: Action & { type: ActionType.CreateObject } = {
-    type: ActionType.CreateObject,
+  const result: Action & { type: typeof ActionType.create_object } = {
+    type: ActionType.create_object,
     parameters: {
       objectType: resolveObjectTypeReference(parameters[0]!, paramCtx),
       // Filled below once `at` is seen; required before return.

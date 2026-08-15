@@ -51,7 +51,7 @@ export const lowerHudPostMessage = (
   }
 
   return {
-    type: ActionType.HudPostMessage,
+    type: ActionType.hud_post_message,
     parameters: {
       target,
       soundIndex: parseSoundIndex(soundNode, ctx, location),

@@ -26,7 +26,7 @@ export const lowerObjectGetHealth = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.ObjectGetHealth,
+    type: ActionType.object_get_health,
 
     parameters: {
       object: resolveObjectReference(parameters[0]!, paramCtx),

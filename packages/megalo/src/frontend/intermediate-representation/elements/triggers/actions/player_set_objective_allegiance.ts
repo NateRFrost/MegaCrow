@@ -29,7 +29,7 @@ export const lowerPlayerSetObjectiveAllegiance = (
   }
 
   return {
-    type: ActionType.PlayerSetObjectiveAllegiance,
+    type: ActionType.player_set_objective_allegiance,
 
     parameters: {
       player: resolvePlayerReference(

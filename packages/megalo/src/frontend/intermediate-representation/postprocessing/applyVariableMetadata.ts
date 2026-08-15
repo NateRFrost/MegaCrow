@@ -1,5 +1,4 @@
 import type { IR } from "src/frontend/intermediate-representation";
-import { MultiplayerTeamDesignator } from "src/frontend/intermediate-representation/game/game_engine_default";
 import {
   type CustomVariableReference,
   CustomVariableType,
@@ -15,6 +14,7 @@ import {
   VariableScope,
   VariableType,
 } from "src/frontend/symbol-table";
+import { MultiplayerTeamDesignator } from "../game/game_engine_default";
 
 const emptyMetadata = (): VariableMetadata => ({
   numericVariables: [],
@@ -92,7 +92,7 @@ export const applyVariableMetadata = (ir: IR, ctx: ElementLowerContext) => {
 
       const declaration = ctx.variableDeclarations.get(symbolId);
       const networkState =
-        declaration?.networkState ?? MegaloVariableNetworkState.Local;
+        declaration?.networkState ?? MegaloVariableNetworkState.local;
       const initial = declaration?.initial ?? defaultInitial();
 
       switch (slot.type) {
@@ -107,10 +107,7 @@ export const applyVariableMetadata = (ir: IR, ctx: ElementLowerContext) => {
           break;
         case VariableType.Team:
           metadata.teamVariables.push({
-            value:
-              initial.type === CustomVariableType.Constant
-                ? (initial.immediateValue as MultiplayerTeamDesignator)
-                : MultiplayerTeamDesignator.Neutral,
+            value: declaration?.initialTeam ?? MultiplayerTeamDesignator.neutral,
             networkState,
           });
           break;

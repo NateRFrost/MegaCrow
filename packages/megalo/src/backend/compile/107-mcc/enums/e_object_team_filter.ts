@@ -1,35 +1,24 @@
 import { e_object_team_filter } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { ObjectTeamFilter } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_map_objects";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
+import {
+  ObjectTeamFilter,
+  type ObjectTeamFilter as ObjectTeamFilterName,
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_map_objects";
+
+const OBJECT_TEAM_FILTER_TO_BLF = {
+  [ObjectTeamFilter.none]: e_object_team_filter.none,
+  [ObjectTeamFilter.defenders]: e_object_team_filter.defenders,
+  [ObjectTeamFilter.attackers]: e_object_team_filter.attackers,
+  [ObjectTeamFilter.third_party]: e_object_team_filter.third_party,
+  [ObjectTeamFilter.fourth_party]: e_object_team_filter.fourth_party,
+  [ObjectTeamFilter.fifth_party]: e_object_team_filter.fifth_party,
+  [ObjectTeamFilter.sixth_party]: e_object_team_filter.sixth_party,
+  [ObjectTeamFilter.seventh_party]: e_object_team_filter.seventh_party,
+  [ObjectTeamFilter.eighth_party]: e_object_team_filter.eighth_party,
+  [ObjectTeamFilter.neutral]: e_object_team_filter.neutral,
+  [ObjectTeamFilter.each]: e_object_team_filter.each,
+} as const satisfies Record<ObjectTeamFilterName, e_object_team_filter>;
 
 export const encodeObjectTeamFilter = (
-  value: ObjectTeamFilter
-): e_object_team_filter => {
-  switch (value) {
-    case ObjectTeamFilter.None:
-      return e_object_team_filter.none;
-    case ObjectTeamFilter.Team1:
-      return e_object_team_filter.team_1;
-    case ObjectTeamFilter.Team2:
-      return e_object_team_filter.team_2;
-    case ObjectTeamFilter.Team3:
-      return e_object_team_filter.team_3;
-    case ObjectTeamFilter.Team4:
-      return e_object_team_filter.team_4;
-    case ObjectTeamFilter.Team5:
-      return e_object_team_filter.team_5;
-    case ObjectTeamFilter.Team6:
-      return e_object_team_filter.team_6;
-    case ObjectTeamFilter.Team7:
-      return e_object_team_filter.team_7;
-    case ObjectTeamFilter.Team8:
-      return e_object_team_filter.team_8;
-    case ObjectTeamFilter.Neutral:
-      return e_object_team_filter.neutral;
-    case ObjectTeamFilter.Each:
-      return e_object_team_filter.each;
-    default: {
-      const _exhaustive: never = value;
-      return _exhaustive;
-    }
-  }
-};
+  value: ObjectTeamFilterName
+): e_object_team_filter => mapMegaloEnum(value, OBJECT_TEAM_FILTER_TO_BLF);

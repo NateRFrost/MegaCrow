@@ -15,10 +15,10 @@ import {
 
 const lowerObjectFilterAction = (
   type:
-    | ActionType.NavpointSetVisible
-    | ActionType.SetPickupFilter
-    | ActionType.SetRespawnFilter
-    | ActionType.BoundarySetVisible,
+    | typeof ActionType.navpoint_set_visible
+    | typeof ActionType.set_pickup_filter
+    | typeof ActionType.set_respawn_filter
+    | typeof ActionType.boundary_set_visible,
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
   location: SourceCodeLocation
@@ -46,7 +46,7 @@ const lowerObjectFilterAction = (
     );
   }
 
-  if (type === ActionType.NavpointSetVisible) {
+  if (type === ActionType.navpoint_set_visible) {
     return {
       type,
       parameters: { navpoint: object, playerFilterModifier: filter },
@@ -64,7 +64,7 @@ export const lowerBoundarySetVisible = (
   location: SourceCodeLocation
 ): Action =>
   lowerObjectFilterAction(
-    ActionType.BoundarySetVisible,
+    ActionType.boundary_set_visible,
     parameters,
     ctx,
     location

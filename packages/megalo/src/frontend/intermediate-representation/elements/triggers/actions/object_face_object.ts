@@ -90,7 +90,7 @@ export const lowerObjectFaceObject = (
     );
   }
   return {
-    type: ActionType.ObjectFaceObject,
+    type: ActionType.object_face_object,
     parameters: {
       object: resolveObjectReference(parameters[0]!, paramCtx),
       target: resolveObjectReference(parameters[1]!, paramCtx),

@@ -22,7 +22,7 @@ export const lowerSavedFilmInsertMarker = (
   requireParamCount(parameters, 2, location);
 
   return {
-    type: ActionType.SavedFilmInsertMarker,
+    type: ActionType.saved_film_insert_marker,
 
     parameters: {
       offsetSeconds: resolveCustomVariableReference(

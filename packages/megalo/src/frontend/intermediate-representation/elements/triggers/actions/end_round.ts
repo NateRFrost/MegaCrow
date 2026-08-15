@@ -20,7 +20,7 @@ export const lowerEndRound = (
     );
   }
   return {
-    type: ActionType.EndRound,
+    type: ActionType.end_round,
     parameters: undefined as never,
   };
 };

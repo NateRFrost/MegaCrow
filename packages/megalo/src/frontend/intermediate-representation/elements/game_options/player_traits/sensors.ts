@@ -11,14 +11,6 @@ import {
 import { lowerConstantInteger } from "src/frontend/intermediate-representation/parameters";
 import { setField } from "src/frontend/intermediate-representation/setField";
 
-const MOTION_TRACKER: Record<string, MotionTrackerMode> = {
-  unchanged: MotionTrackerMode.Unchanged,
-  off: MotionTrackerMode.Off,
-  allies: MotionTrackerMode.Allies,
-  normal: MotionTrackerMode.Normal,
-  enhanced: MotionTrackerMode.Enhanced,
-};
-
 /** Returns true if `identifier` was handled as a sensors trait. */
 export const lowerSensorsOption = (
   identifier: string,
@@ -36,7 +28,7 @@ export const lowerSensorsOption = (
           location
         );
       }
-      const value = resolveEnumKeyword(first, MOTION_TRACKER, "tracker_mode");
+      const value = resolveEnumKeyword(first, MotionTrackerMode, "tracker_mode");
       setField(
         ir.locations,
         diagnostics,

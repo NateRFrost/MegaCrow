@@ -1,223 +1,146 @@
 import { e_action_type } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { ActionType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
+import {
+  ActionType,
+  type ActionType as ActionTypeName,
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 
-export const encodeActionType = (value: ActionType): e_action_type => {
-  switch (value) {
-    case ActionType.SetScore:
-      return e_action_type.set_score;
-    case ActionType.CreateObject:
-      return e_action_type.create_object;
-    case ActionType.DeleteObject:
-      return e_action_type.delete_object;
-    case ActionType.NavpointSetVisible:
-      return e_action_type.navpoint_set_visible;
-    case ActionType.NavpointSetIcon:
-      return e_action_type.navpoint_set_icon;
-    case ActionType.NavpointSetPriority:
-      return e_action_type.navpoint_set_priority;
-    case ActionType.NavpointSetTimer:
-      return e_action_type.navpoint_set_timer;
-    case ActionType.NavpointSetVisibleRange:
-      return e_action_type.navpoint_set_visible_range;
-    case ActionType.Set:
-      return e_action_type.set;
-    case ActionType.SetBoundary:
-      return e_action_type.set_boundary;
-    case ActionType.ApplyPlayerTraits:
-      return e_action_type.apply_player_traits;
-    case ActionType.SetPickupFilter:
-      return e_action_type.set_pickup_filter;
-    case ActionType.SetRespawnFilter:
-      return e_action_type.set_respawn_filter;
-    case ActionType.SetFireteamRespawnFilter:
-      return e_action_type.set_fireteam_respawn_filter;
-    case ActionType.SetProgressBar:
-      return e_action_type.set_progress_bar;
-    case ActionType.HudPostMessage:
-      return e_action_type.hud_post_message;
-    case ActionType.TimerSetRate:
-      return e_action_type.timer_set_rate;
-    case ActionType.PrintVariable:
-      return e_action_type.print_variable;
-    case ActionType.GetPlayerHoldingObject:
-      return e_action_type.get_player_holding_object;
-    case ActionType.ForEach:
-      return e_action_type.for_each;
-    case ActionType.EndRound:
-      return e_action_type.end_round;
-    case ActionType.BoundarySetVisible:
-      return e_action_type.boundary_set_visible;
-    case ActionType.ObjectDestroy:
-      return e_action_type.object_destroy;
-    case ActionType.ObjectSetInvincibility:
-      return e_action_type.object_set_invincibility;
-    case ActionType.Random:
-      return e_action_type.random;
-    case ActionType.BreakIntoDebugger:
-      return e_action_type.break_into_debugger;
-    case ActionType.ObjectGetOrientation:
-      return e_action_type.object_get_orientation;
-    case ActionType.ObjectGetVelocity:
-      return e_action_type.object_get_velocity;
-    case ActionType.PlayerDeathGetKillingPlayer:
-      return e_action_type.player_death_get_killing_player;
-    case ActionType.PlayerDeathGetDamageType:
-      return e_action_type.player_death_get_damage_type;
-    case ActionType.PlayerDeathGetSpecialType:
-      return e_action_type.player_death_get_special_type;
-    case ActionType.DebuggingEnableTracing:
-      return e_action_type.debugging_enable_tracing;
-    case ActionType.ObjectAttach:
-      return e_action_type.object_attach;
-    case ActionType.ObjectDetach:
-      return e_action_type.object_detach;
-    case ActionType.PlayerGetPlace:
-      return e_action_type.player_get_place;
-    case ActionType.TeamGetPlace:
-      return e_action_type.team_get_place;
-    case ActionType.PlayerGetKillingSpreeCount:
-      return e_action_type.player_get_killing_spree_count;
-    case ActionType.PlayerAdjustMoney:
-      return e_action_type.player_adjust_money;
-    case ActionType.PlayerEnablePurchases:
-      return e_action_type.player_enable_purchases;
-    case ActionType.PlayerGetVehicle:
-      return e_action_type.player_get_vehicle;
-    case ActionType.PlayerSetVehicle:
-      return e_action_type.player_set_vehicle;
-    case ActionType.PlayerSetUnit:
-      return e_action_type.player_set_unit;
-    case ActionType.TimerReset:
-      return e_action_type.timer_reset;
-    case ActionType.WeaponSetPickupPriority:
-      return e_action_type.weapon_set_pickup_priority;
-    case ActionType.ObjectBounce:
-      return e_action_type.object_bounce;
-    case ActionType.HudWidgetSetText:
-      return e_action_type.hud_widget_set_text;
-    case ActionType.HudWidgetSetValue:
-      return e_action_type.hud_widget_set_value;
-    case ActionType.HudWidgetSetMeter:
-      return e_action_type.hud_widget_set_meter;
-    case ActionType.HudWidgetSetIcon:
-      return e_action_type.hud_widget_set_icon;
-    case ActionType.HudWidgetSetVisibility:
-      return e_action_type.hud_widget_set_visibility;
-    case ActionType.PlaySound:
-      return e_action_type.play_sound;
-    case ActionType.ObjectSetScale:
-      return e_action_type.object_set_scale;
-    case ActionType.NavpointSetText:
-      return e_action_type.navpoint_set_text;
-    case ActionType.ObjectGetShield:
-      return e_action_type.object_get_shield;
-    case ActionType.ObjectGetHealth:
-      return e_action_type.object_get_health;
-    case ActionType.PlayerSetObjective:
-      return e_action_type.player_set_objective;
-    case ActionType.PlayerSetObjectiveAllegiance:
-      return e_action_type.player_set_objective_allegiance;
-    case ActionType.PlayerSetObjectiveAllegianceIcon:
-      return e_action_type.player_set_objective_allegiance_icon;
-    case ActionType.TeamSetCoopSpawning:
-      return e_action_type.team_set_coop_spawning;
-    case ActionType.TeamSetPrimaryRespawnObject:
-      return e_action_type.team_set_primary_respawn_object;
-    case ActionType.PlayerSetPrimaryRespawnObject:
-      return e_action_type.player_set_primary_respawn_object;
-    case ActionType.PlayerGetFireteamIndex:
-      return e_action_type.player_get_fireteam_index;
-    case ActionType.PlayerSetFireteamIndex:
-      return e_action_type.player_set_fireteam_index;
-    case ActionType.ObjectAdjustShield:
-      return e_action_type.object_adjust_shield;
-    case ActionType.ObjectAdjustHealth:
-      return e_action_type.object_adjust_health;
-    case ActionType.ObjectGetDistance:
-      return e_action_type.object_get_distance;
-    case ActionType.ObjectAdjustMaximumShield:
-      return e_action_type.object_adjust_maximum_shield;
-    case ActionType.ObjectAdjustMaximumHealth:
-      return e_action_type.object_adjust_maximum_health;
-    case ActionType.PlayerSetRequisitionPalette:
-      return e_action_type.player_set_requisition_palette;
-    case ActionType.DeviceSetPower:
-      return e_action_type.device_set_power;
-    case ActionType.DeviceGetPower:
-      return e_action_type.device_get_power;
-    case ActionType.DeviceSetPosition:
-      return e_action_type.device_set_position;
-    case ActionType.DeviceGetPosition:
-      return e_action_type.device_get_position;
-    case ActionType.AdjustGrenades:
-      return e_action_type.adjust_grenades;
-    case ActionType.SubmitIncident:
-      return e_action_type.submit_incident;
-    case ActionType.SubmitIncidentWithCustomValue:
-      return e_action_type.submit_incident_with_custom_value;
-    case ActionType.SetLoadoutPalette:
-      return e_action_type.set_loadout_palette;
-    case ActionType.DeviceSetPositionTrack:
-      return e_action_type.device_set_position_track;
-    case ActionType.DeviceAnimatePosition:
-      return e_action_type.device_animate_position;
-    case ActionType.DeviceSetPositionImmediate:
-      return e_action_type.device_set_position_immediate;
-    case ActionType.SavedFilmInsertMarker:
-      return e_action_type.saved_film_insert_marker;
-    case ActionType.RespawnZoneEnable:
-      return e_action_type.respawn_zone_enable;
-    case ActionType.PlayerGetWeapon:
-      return e_action_type.player_get_weapon;
-    case ActionType.PlayerGetEquipment:
-      return e_action_type.player_get_equipment;
-    case ActionType.ObjectSetNeverGarbage:
-      return e_action_type.object_set_never_garbage;
-    case ActionType.PlayerGetTargetObject:
-      return e_action_type.player_get_target_object;
-    case ActionType.CreateTunnel:
-      return e_action_type.create_tunnel;
-    case ActionType.DebugForcePlayerViewCount:
-      return e_action_type.debug_force_player_view_count;
-    case ActionType.PlayerPickUpWeapon:
-      return e_action_type.player_pick_up_weapon;
-    case ActionType.PlayerSetCoopSpawning:
-      return e_action_type.player_set_coop_spawning;
-    case ActionType.ObjectSetOrientation:
-      return e_action_type.object_set_orientation;
-    case ActionType.ObjectFaceObject:
-      return e_action_type.object_face_object;
-    case ActionType.BipedGiveWeapon:
-      return e_action_type.biped_give_weapon;
-    case ActionType.BipedDropWeapon:
-      return e_action_type.biped_drop_weapon;
-    case ActionType.SetScenarioInterpolatorState:
-      return e_action_type.set_scenario_interpolator_state;
-    case ActionType.GetRandomObject:
-      return e_action_type.get_random_object;
-    case ActionType.GameGriefRecordCustomPenalty:
-      return e_action_type.game_grief_record_custom_penalty;
-    case ActionType.BoundarySetPlayerColor:
-      return e_action_type.boundary_set_player_color;
-    case ActionType.Begin:
-      return e_action_type.begin;
-    case ActionType.HsFunctionCall:
-      return e_action_type.hs_function_call;
-    case ActionType.GetButtonTime:
-      return e_action_type.get_button_time;
-    case ActionType.TeamSetVehicleSpawning:
-      return e_action_type.team_set_vehicle_spawning;
-    case ActionType.PlayerSetVehicleSpawning:
-      return e_action_type.player_set_vehicle_spawning;
-    case ActionType.SetPlayerRespawnVehicle:
-      return e_action_type.set_player_respawn_vehicle;
-    case ActionType.SetTeamRespawnVehicle:
-      return e_action_type.set_team_respawn_vehicle;
-    case ActionType.HideObject:
-      return e_action_type.hide_object;
-    default: {
-      const _exhaustive: never = value;
-      return _exhaustive;
-    }
-  }
-};
+const ACTION_TYPE_TO_BLF = {
+  [ActionType.set_score]: e_action_type.set_score,
+  [ActionType.create_object]: e_action_type.create_object,
+  [ActionType.delete_object]: e_action_type.delete_object,
+  [ActionType.navpoint_set_visible]: e_action_type.navpoint_set_visible,
+  [ActionType.navpoint_set_icon]: e_action_type.navpoint_set_icon,
+  [ActionType.navpoint_set_priority]: e_action_type.navpoint_set_priority,
+  [ActionType.navpoint_set_timer]: e_action_type.navpoint_set_timer,
+  [ActionType.navpoint_set_visible_range]:
+    e_action_type.navpoint_set_visible_range,
+  [ActionType.set]: e_action_type.set,
+  [ActionType.set_boundary]: e_action_type.set_boundary,
+  [ActionType.apply_player_traits]: e_action_type.apply_player_traits,
+  [ActionType.set_pickup_filter]: e_action_type.set_pickup_filter,
+  [ActionType.set_respawn_filter]: e_action_type.set_respawn_filter,
+  [ActionType.set_fireteam_respawn_filter]:
+    e_action_type.set_fireteam_respawn_filter,
+  [ActionType.set_progress_bar]: e_action_type.set_progress_bar,
+  [ActionType.hud_post_message]: e_action_type.hud_post_message,
+  [ActionType.timer_set_rate]: e_action_type.timer_set_rate,
+  [ActionType.print_variable]: e_action_type.print_variable,
+  [ActionType.get_player_holding_object]:
+    e_action_type.get_player_holding_object,
+  [ActionType.for_each]: e_action_type.for_each,
+  [ActionType.end_round]: e_action_type.end_round,
+  [ActionType.boundary_set_visible]: e_action_type.boundary_set_visible,
+  [ActionType.object_destroy]: e_action_type.object_destroy,
+  [ActionType.object_set_invincibility]: e_action_type.object_set_invincibility,
+  [ActionType.random]: e_action_type.random,
+  [ActionType.break_into_debugger]: e_action_type.break_into_debugger,
+  [ActionType.object_get_orientation]: e_action_type.object_get_orientation,
+  [ActionType.object_get_velocity]: e_action_type.object_get_velocity,
+  [ActionType.player_death_get_killing_player]:
+    e_action_type.player_death_get_killing_player,
+  [ActionType.player_death_get_damage_type]:
+    e_action_type.player_death_get_damage_type,
+  [ActionType.player_death_get_special_type]:
+    e_action_type.player_death_get_special_type,
+  [ActionType.debugging_enable_tracing]: e_action_type.debugging_enable_tracing,
+  [ActionType.object_attach]: e_action_type.object_attach,
+  [ActionType.object_detach]: e_action_type.object_detach,
+  [ActionType.player_get_place]: e_action_type.player_get_place,
+  [ActionType.team_get_place]: e_action_type.team_get_place,
+  [ActionType.player_get_killing_spree_count]:
+    e_action_type.player_get_killing_spree_count,
+  [ActionType.player_adjust_money]: e_action_type.player_adjust_money,
+  [ActionType.player_enable_purchases]: e_action_type.player_enable_purchases,
+  [ActionType.player_get_vehicle]: e_action_type.player_get_vehicle,
+  [ActionType.player_set_vehicle]: e_action_type.player_set_vehicle,
+  [ActionType.player_set_unit]: e_action_type.player_set_unit,
+  [ActionType.timer_reset]: e_action_type.timer_reset,
+  [ActionType.weapon_set_pickup_priority]:
+    e_action_type.weapon_set_pickup_priority,
+  [ActionType.object_bounce]: e_action_type.object_bounce,
+  [ActionType.hud_widget_set_text]: e_action_type.hud_widget_set_text,
+  [ActionType.hud_widget_set_value]: e_action_type.hud_widget_set_value,
+  [ActionType.hud_widget_set_meter]: e_action_type.hud_widget_set_meter,
+  [ActionType.hud_widget_set_icon]: e_action_type.hud_widget_set_icon,
+  [ActionType.hud_widget_set_visibility]:
+    e_action_type.hud_widget_set_visibility,
+  [ActionType.play_sound]: e_action_type.play_sound,
+  [ActionType.object_set_scale]: e_action_type.object_set_scale,
+  [ActionType.navpoint_set_text]: e_action_type.navpoint_set_text,
+  [ActionType.object_get_shield]: e_action_type.object_get_shield,
+  [ActionType.object_get_health]: e_action_type.object_get_health,
+  [ActionType.player_set_objective]: e_action_type.player_set_objective,
+  [ActionType.player_set_objective_allegiance]:
+    e_action_type.player_set_objective_allegiance,
+  [ActionType.player_set_objective_allegiance_icon]:
+    e_action_type.player_set_objective_allegiance_icon,
+  [ActionType.team_set_coop_spawning]: e_action_type.team_set_coop_spawning,
+  [ActionType.team_set_primary_respawn_object]:
+    e_action_type.team_set_primary_respawn_object,
+  [ActionType.player_set_primary_respawn_object]:
+    e_action_type.player_set_primary_respawn_object,
+  [ActionType.player_get_fireteam_index]:
+    e_action_type.player_get_fireteam_index,
+  [ActionType.player_set_fireteam_index]:
+    e_action_type.player_set_fireteam_index,
+  [ActionType.object_adjust_shield]: e_action_type.object_adjust_shield,
+  [ActionType.object_adjust_health]: e_action_type.object_adjust_health,
+  [ActionType.object_get_distance]: e_action_type.object_get_distance,
+  [ActionType.object_adjust_maximum_shield]:
+    e_action_type.object_adjust_maximum_shield,
+  [ActionType.object_adjust_maximum_health]:
+    e_action_type.object_adjust_maximum_health,
+  [ActionType.player_set_requisition_palette]:
+    e_action_type.player_set_requisition_palette,
+  [ActionType.device_set_power]: e_action_type.device_set_power,
+  [ActionType.device_get_power]: e_action_type.device_get_power,
+  [ActionType.device_set_position]: e_action_type.device_set_position,
+  [ActionType.device_get_position]: e_action_type.device_get_position,
+  [ActionType.adjust_grenades]: e_action_type.adjust_grenades,
+  [ActionType.submit_incident]: e_action_type.submit_incident,
+  [ActionType.submit_incident_with_custom_value]:
+    e_action_type.submit_incident_with_custom_value,
+  [ActionType.set_loadout_palette]: e_action_type.set_loadout_palette,
+  [ActionType.device_set_position_track]:
+    e_action_type.device_set_position_track,
+  [ActionType.device_animate_position]: e_action_type.device_animate_position,
+  [ActionType.device_set_position_immediate]:
+    e_action_type.device_set_position_immediate,
+  [ActionType.saved_film_insert_marker]: e_action_type.saved_film_insert_marker,
+  [ActionType.respawn_zone_enable]: e_action_type.respawn_zone_enable,
+  [ActionType.player_get_weapon]: e_action_type.player_get_weapon,
+  [ActionType.player_get_equipment]: e_action_type.player_get_equipment,
+  [ActionType.object_set_never_garbage]: e_action_type.object_set_never_garbage,
+  [ActionType.player_get_target_object]: e_action_type.player_get_target_object,
+  [ActionType.create_tunnel]: e_action_type.create_tunnel,
+  [ActionType.debug_force_player_view_count]:
+    e_action_type.debug_force_player_view_count,
+  [ActionType.player_pick_up_weapon]: e_action_type.player_pick_up_weapon,
+  [ActionType.player_set_coop_spawning]: e_action_type.player_set_coop_spawning,
+  [ActionType.object_set_orientation]: e_action_type.object_set_orientation,
+  [ActionType.object_face_object]: e_action_type.object_face_object,
+  [ActionType.biped_give_weapon]: e_action_type.biped_give_weapon,
+  [ActionType.biped_drop_weapon]: e_action_type.biped_drop_weapon,
+  [ActionType.set_scenario_interpolator_state]:
+    e_action_type.set_scenario_interpolator_state,
+  [ActionType.get_random_object]: e_action_type.get_random_object,
+  [ActionType.game_grief_record_custom_penalty]:
+    e_action_type.game_grief_record_custom_penalty,
+  [ActionType.boundary_set_player_color]:
+    e_action_type.boundary_set_player_color,
+  [ActionType.begin]: e_action_type.begin,
+  [ActionType.hs_function_call]: e_action_type.hs_function_call,
+  [ActionType.get_button_time]: e_action_type.get_button_time,
+  [ActionType.team_set_vehicle_spawning]:
+    e_action_type.team_set_vehicle_spawning,
+  [ActionType.player_set_vehicle_spawning]:
+    e_action_type.player_set_vehicle_spawning,
+  [ActionType.set_player_respawn_vehicle]:
+    e_action_type.set_player_respawn_vehicle,
+  [ActionType.set_team_respawn_vehicle]: e_action_type.set_team_respawn_vehicle,
+  [ActionType.hide_object]: e_action_type.hide_object,
+} as const satisfies Record<ActionTypeName, e_action_type>;
+
+export const encodeActionType = (value: ActionTypeName): e_action_type =>
+  mapMegaloEnum(value, ACTION_TYPE_TO_BLF);

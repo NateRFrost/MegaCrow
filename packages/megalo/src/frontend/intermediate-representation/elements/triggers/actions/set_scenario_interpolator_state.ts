@@ -19,7 +19,7 @@ export const lowerSetScenarioInterpolatorState = (
   requireParamCount(parameters, 2, location);
   const paramCtx = asParameterLoweringContext(ctx);
   return {
-    type: ActionType.SetScenarioInterpolatorState,
+    type: ActionType.set_scenario_interpolator_state,
     parameters: {
       interpolatorIndex: resolveCustomVariableReference(
         parameters[0]!,

@@ -82,6 +82,7 @@ const parseEngineCategoryParameter: ParameterParser = (
 
 export interface EngineDataPropertyNode {
   identifier: EngineDataPropertyKey;
+  location: SourceCodeLocation;
   parameters: ASTParameterNode[];
 }
 
@@ -153,6 +154,7 @@ export const engineDataParser = (
     if (parser) {
       properties.push({
         identifier: propertyIdentifier.value as EngineDataPropertyKey,
+        location: propertyIdentifier.location,
         parameters: parser(ctx, propertyIdentifier.location),
       });
     } else {

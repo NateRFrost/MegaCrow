@@ -5,9 +5,8 @@ import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/paramet
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   type MegaloSound,
-  megaloSoundFromName,
+  megaloSound,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_sounds";
-import { parseIndexSuffix } from "src/frontend/intermediate-representation/parameters";
 import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 
 export const parseSoundIndex = (
@@ -36,18 +35,9 @@ export const parseSoundIndex = (
     );
   }
 
-  const fromName = megaloSoundFromName(name);
-  if (fromName !== undefined) {
-    return fromName;
-  }
-
-  const fromSuffix = parseIndexSuffix(name, "sound");
-  if (fromSuffix !== undefined) {
-    return fromSuffix as MegaloSound;
-  }
-
-  if (/^\d+$/.test(name)) {
-    return Number(name) as MegaloSound;
+  const sound = megaloSound.parse(name.toLowerCase());
+  if (sound !== undefined) {
+    return sound;
   }
 
   throw new LowerError(

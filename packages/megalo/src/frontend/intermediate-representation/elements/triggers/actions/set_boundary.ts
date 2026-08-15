@@ -8,6 +8,7 @@ import {
   type Action,
   ActionType,
   BoundaryShape,
+  boundaryShape,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import type { CustomVariableReference } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import {
@@ -22,23 +23,16 @@ import {
 const parseBoundaryShape = (
   node: ASTParameterNode,
   location: SourceCodeLocation
-): BoundaryShape | "none" => {
+): BoundaryShape => {
   const name = requireKeyword(node, location).toLowerCase();
-  switch (name) {
-    case "sphere":
-      return BoundaryShape.Sphere;
-    case "box":
-      return BoundaryShape.Box;
-    case "cylinder":
-      return BoundaryShape.Cylinder;
-    case "none":
-      return "none";
-    default:
-      throw new LowerError(
-        diagnosticMessages.expectedParameterType("boundary shape", name),
-        node.location
-      );
+  const shape = boundaryShape.parse(name);
+  if (shape === undefined) {
+    throw new LowerError(
+      diagnosticMessages.expectedParameterType("boundary shape", name),
+      node.location
+    );
   }
+  return shape;
 };
 
 const isDimensionKeyword = (value: string): boolean =>
@@ -107,12 +101,12 @@ export const lowerSetBoundary = (
   const object = resolveObjectReference(parameters[0]!, paramCtx);
   const shape = parseBoundaryShape(parameters[1]!, location);
 
-  if (shape === "none") {
+  if (shape === BoundaryShape.none) {
     return {
-      type: ActionType.SetBoundary,
+      type: ActionType.set_boundary,
       parameters: {
         object,
-        shape: BoundaryShape.None,
+        shape: BoundaryShape.none,
       },
     };
   }
@@ -125,7 +119,7 @@ export const lowerSetBoundary = (
   );
 
   switch (shape) {
-    case BoundaryShape.Sphere: {
+    case BoundaryShape.sphere: {
       const radius = byKeyword.get("radius") ?? positional[0];
       if (radius === undefined) {
         throw new LowerError(
@@ -134,11 +128,11 @@ export const lowerSetBoundary = (
         );
       }
       return {
-        type: ActionType.SetBoundary,
+        type: ActionType.set_boundary,
         parameters: { object, shape, radius },
       };
     }
-    case BoundaryShape.Box: {
+    case BoundaryShape.box: {
       const width = byKeyword.get("width") ?? positional[0];
       const depth =
         byKeyword.get("length") ?? byKeyword.get("depth") ?? positional[1];
@@ -163,7 +157,7 @@ export const lowerSetBoundary = (
         );
       }
       return {
-        type: ActionType.SetBoundary,
+        type: ActionType.set_boundary,
         parameters: {
           object,
           shape,
@@ -174,7 +168,7 @@ export const lowerSetBoundary = (
         },
       };
     }
-    case BoundaryShape.Cylinder: {
+    case BoundaryShape.cylinder: {
       const radius = byKeyword.get("radius") ?? positional[0];
       const negHeight = byKeyword.get("neg_height") ?? positional[1];
       const posHeight =
@@ -196,7 +190,7 @@ export const lowerSetBoundary = (
         );
       }
       return {
-        type: ActionType.SetBoundary,
+        type: ActionType.set_boundary,
         parameters: {
           object,
           shape,
@@ -206,13 +200,5 @@ export const lowerSetBoundary = (
         },
       };
     }
-    case BoundaryShape.None:
-      return {
-        type: ActionType.SetBoundary,
-        parameters: {
-          object,
-          shape: BoundaryShape.None,
-        },
-      };
   }
 };

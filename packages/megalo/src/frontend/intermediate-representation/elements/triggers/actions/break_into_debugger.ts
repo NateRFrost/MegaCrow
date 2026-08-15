@@ -14,7 +14,7 @@ export const lowerBreakIntoDebugger = (
 ): Action => {
   requireParamCount(parameters, 0, location);
   return {
-    type: ActionType.BreakIntoDebugger,
+    type: ActionType.break_into_debugger,
     parameters: undefined as never,
   };
 };

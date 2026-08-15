@@ -48,7 +48,7 @@ export const lowerBoundarySetPlayerColor = (
   const paramCtx = asParameterLoweringContext(ctx);
   const player = resolvePlayerReference(parameters[1]!, paramCtx);
   return {
-    type: ActionType.BoundarySetPlayerColor,
+    type: ActionType.boundary_set_player_color,
     parameters: {
       object: resolveObjectReference(parameters[0]!, paramCtx),
       playerIndex: extractBoundaryPlayerColorIndex(player),

@@ -21,7 +21,7 @@ export const lowerDebugForcePlayerViewCount = (
   requireParamCount(parameters, 1, location);
 
   return {
-    type: ActionType.DebugForcePlayerViewCount,
+    type: ActionType.debug_force_player_view_count,
 
     parameters: {
       viewCount: resolveCustomVariableReference(

@@ -54,7 +54,7 @@ export const lowerNavpointSetTimer = (
 ): Action => {
   requireParamCount(parameters, 2, location);
   return {
-    type: ActionType.NavpointSetTimer,
+    type: ActionType.navpoint_set_timer,
     parameters: {
       navpoint: resolveObjectReference(
         parameters[0]!,

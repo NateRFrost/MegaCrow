@@ -19,9 +19,7 @@ import {
   type e_explicit_object_type,
   type e_explicit_player_type,
   type e_explicit_team_type,
-  e_megalogamengine_hud_meter_input_type,
   e_object_reference_type,
-  type e_player_filter_type,
   e_player_purchase_mode_flags,
   e_player_reference_type,
   e_replaceable_token_type,
@@ -31,6 +29,10 @@ import {
   s_team_or_player_target,
   s_variant_variable,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
+import {
+  encodeHUDMeterInputType,
+  encodePlayerFilterType,
+} from "src/backend/compile/107-mcc/enums";
 import {
   BoundaryShape,
   type CreateObjectParameters,
@@ -356,8 +358,8 @@ export const encodePlayerFilterModifier = (
   value: PlayerFilterModifier
 ): c_player_filter_modifier => {
   const target = new c_player_filter_modifier();
-  target.m_type = value.type as unknown as e_player_filter_type;
-  if (value.type === PlayerFilterType.SpecificPlayer) {
+  target.m_type = encodePlayerFilterType(value.type);
+  if (value.type === PlayerFilterType.player) {
     target.m_player = encodePlayerReference(value.player);
     target.m_variable = encodeCustomVariableReference(value.visible);
   }
@@ -412,15 +414,15 @@ export const encodeTeamOrPlayerTarget = (
 ): s_team_or_player_target => {
   const target = new s_team_or_player_target();
   switch (value.type) {
-    case TeamOrPlayerTargetKind.Team:
+    case TeamOrPlayerTargetKind.team:
       target.m_target = e_action_team_or_player_target.team;
       target.m_team = encodeTeamReference(value.team);
       break;
-    case TeamOrPlayerTargetKind.Player:
+    case TeamOrPlayerTargetKind.player:
       target.m_target = e_action_team_or_player_target.player;
       target.m_player = encodePlayerReference(value.player);
       break;
-    case TeamOrPlayerTargetKind.Everyone:
+    case TeamOrPlayerTargetKind.everyone:
       target.m_target = e_action_team_or_player_target.everyone;
       break;
     default: {
@@ -464,16 +466,15 @@ export const encodePlayerPurchaseModeFlags = (
   return flags;
 };
 
-/** BLF `e_boundary_shape`: none=0, sphere=1, cylinder=2, box=3. */
 export const encodeBoundaryShape = (value: BoundaryShape): number => {
   switch (value) {
-    case BoundaryShape.None:
+    case BoundaryShape.none:
       return 0;
-    case BoundaryShape.Sphere:
+    case BoundaryShape.sphere:
       return 1;
-    case BoundaryShape.Cylinder:
+    case BoundaryShape.cylinder:
       return 2;
-    case BoundaryShape.Box:
+    case BoundaryShape.box:
       return 3;
     default: {
       const _exhaustive: never = value;
@@ -486,20 +487,18 @@ export const encodeHudMeterInput = (
   value: HUDMeterInput
 ): c_megalogamengine_hud_meter_input => {
   const target = new c_megalogamengine_hud_meter_input();
+  target.m_type = encodeHUDMeterInputType(value.meterType);
   switch (value.meterType) {
-    case HUDMeterInputType.Number: {
-      target.m_type = e_megalogamengine_hud_meter_input_type.number;
+    case HUDMeterInputType.number: {
       target.m_variable_1 = encodeCustomVariableReference(value.value);
       target.m_variable_2 = encodeCustomVariableReference(value.max);
       break;
     }
-    case HUDMeterInputType.Timer: {
-      target.m_type = e_megalogamengine_hud_meter_input_type.timer;
+    case HUDMeterInputType.timer: {
       target.m_timer = encodeCustomTimerReference(value.timer);
       break;
     }
-    case HUDMeterInputType.None:
-      target.m_type = e_megalogamengine_hud_meter_input_type.none;
+    case HUDMeterInputType.none:
       break;
     default: {
       const _exhaustive: never = value;

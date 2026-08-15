@@ -125,7 +125,7 @@ export const lowerPlayerEnablePurchases = (
     );
   }
   return {
-    type: ActionType.PlayerEnablePurchases,
+    type: ActionType.player_enable_purchases,
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),
       selectedModes,

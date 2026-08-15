@@ -26,7 +26,7 @@ export const lowerTeamSetPrimaryRespawnObject = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.TeamSetPrimaryRespawnObject,
+    type: ActionType.team_set_primary_respawn_object,
 
     parameters: {
       team: resolveTeamReference(parameters[0]!, paramCtx),

@@ -17,11 +17,14 @@ import { getLabel, MEGALO_VERSIONS } from "../../../../src/version";
 
 /** Minimal compiler stub — avoids pulling @blamnetwork/blf into this test. */
 class TestCompiler extends Compiler {
-  dryRun(): void {
-    // no-op stub
+  dryRun() {
+    return { metadata: {} };
   }
-  writeMegaloFile(): Uint8Array {
-    return new Uint8Array();
+  writeMegaloFile() {
+    return {
+      data: new Uint8Array(),
+      metadata: {},
+    };
   }
   getCapabilities() {
     return CAPABILITES_107_MCC;

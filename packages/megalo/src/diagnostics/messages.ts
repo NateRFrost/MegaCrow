@@ -118,6 +118,11 @@ export const diagnosticMessages = {
     return translate("invalid_string_identifier", { identifier });
   },
 
+  invalidExplicitTeam(token: string): string {
+    // MegaloEdit.exe: Invalid explicit team: {0}
+    return translate("invalid_explicit_team", { token });
+  },
+
   expectedVariableReference(got: string): string {
     return expectedOneOf([translate("variable_reference")], got);
   },

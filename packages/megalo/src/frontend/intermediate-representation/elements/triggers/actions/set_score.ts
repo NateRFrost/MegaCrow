@@ -43,7 +43,7 @@ export const lowerSetScore = (
   }
 
   return {
-    type: ActionType.SetScore,
+    type: ActionType.set_score,
     parameters: {
       operation: parseMathOperation(parameters[0]!, location),
       variable: resolveCustomVariableReference(parameters[1]!, paramCtx),

@@ -30,7 +30,9 @@ import type { MegaloVersion } from "src/version";
 
 export type ConditionStatementNode = ASTNode<SyntaxKind.CONDITION> & {
   negated: boolean;
+  notLocation?: SourceCodeLocation;
   unionOr: boolean;
+  orLocation?: SourceCodeLocation;
   name: { value: string; location: SourceCodeLocation };
   operands: ASTConditionOperandNode[];
 };
@@ -68,33 +70,34 @@ const parseConditionName = (
   };
 };
 
-const consumeTrailingOr = (ctx: ParserContext): boolean => {
+const consumeTrailingOr = (
+  ctx: ParserContext
+): SourceCodeLocation | undefined => {
   const token = ctx.peekToken();
   if (token?.kind === TokenKind.Identifier && token.value === "or") {
-    ctx.getToken();
-    return true;
+    return ctx.getToken().location;
   }
 
-  return false;
+  return undefined;
 };
 
 export const parseCondition = (
   ctx: ParserContext,
   conditionToken: Token
 ): ConditionStatementNode => {
-  let negated = false;
+  let notLocation: SourceCodeLocation | undefined;
 
   const maybeNot = ctx.peekToken();
   if (maybeNot?.kind === TokenKind.Identifier && maybeNot.value === "not") {
-    ctx.getToken();
-    negated = true;
+    notLocation = ctx.getToken().location;
   }
 
   const name = parseConditionName(ctx, conditionToken);
   if (name === undefined) {
     return {
       kind: SyntaxKind.CONDITION,
-      negated,
+      negated: notLocation !== undefined,
+      notLocation,
       unionOr: false,
       name: {
         value: "",
@@ -116,18 +119,21 @@ export const parseCondition = (
     );
   }
 
-  const unionOr = consumeTrailingOr(ctx);
+  const orLocation = consumeTrailingOr(ctx);
 
   const lastOperand = operands.at(-1);
   const endLocation =
-    lastOperand !== undefined && lastOperand.kind !== SyntaxKind.INVALID
+    orLocation ??
+    (lastOperand !== undefined && lastOperand.kind !== SyntaxKind.INVALID
       ? lastOperand.location
-      : name.location;
+      : name.location);
 
   return {
     kind: SyntaxKind.CONDITION,
-    negated,
-    unionOr,
+    negated: notLocation !== undefined,
+    notLocation,
+    unionOr: orLocation !== undefined,
+    orLocation,
     name,
     operands,
     location: locationSpan(conditionToken.location, endLocation),
@@ -166,10 +172,9 @@ const parseIfConditionOperands = (
   return [left, comparison, right];
 };
 
-const asConditionParser =
-  (parser: ParameterParser): ConditionOperandParser =>
-  (ctx, anchor) =>
-    parser(ctx, anchor);
+const asConditionParser = (
+  parser: ParameterParser
+): ConditionOperandParser => (ctx, anchor) => parser(ctx, anchor);
 
 const keywordUnion = (...values: readonly string[]) =>
   values.map((value) => KeywordParameter(value));

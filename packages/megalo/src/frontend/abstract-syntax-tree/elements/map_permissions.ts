@@ -28,6 +28,7 @@ export type MapPermissionsValueNode =
 
 export interface MapPermissionsEntryNode {
   key: string;
+  location: SourceCodeLocation;
   value: MapPermissionsValueNode;
 }
 
@@ -135,6 +136,7 @@ export const mapPermissionsParser = (
 
     entries.push({
       key: key.value,
+      location: key.location,
       value: parseMapPermissionsValue(ctx, key.location),
     });
   }

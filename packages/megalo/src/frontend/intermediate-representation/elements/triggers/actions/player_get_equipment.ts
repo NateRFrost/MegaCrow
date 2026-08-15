@@ -26,7 +26,7 @@ export const lowerPlayerGetEquipment = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.PlayerGetEquipment,
+    type: ActionType.player_get_equipment,
 
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),

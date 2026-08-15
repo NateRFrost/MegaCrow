@@ -6,27 +6,28 @@ import {
 import { encodeMultiplayerTeamDesignator } from "src/backend/compile/107-mcc/enums/e_multiplayer_team_designator";
 import { encodeCustomVariableReference } from "src/backend/compile/107-mcc/references";
 import type { IR } from "src/frontend/intermediate-representation";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   MegaloVariableNetworkState,
+  type MegaloVariableNetworkState as MegaloVariableNetworkStateName,
   type VariableMetadata,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variable_metadata";
 
+const NETWORK_STATE_TO_BLF = {
+  [MegaloVariableNetworkState.local]: e_megalo_variable_network_state.local,
+  [MegaloVariableNetworkState.networked]:
+    e_megalo_variable_network_state.networked,
+  [MegaloVariableNetworkState.networked_high]:
+    e_megalo_variable_network_state.networked_high,
+} as const satisfies Record<
+  MegaloVariableNetworkStateName,
+  e_megalo_variable_network_state
+>;
+
 const encodeNetworkState = (
-  value: MegaloVariableNetworkState
-): e_megalo_variable_network_state => {
-  switch (value) {
-    case MegaloVariableNetworkState.Local:
-      return e_megalo_variable_network_state.local;
-    case MegaloVariableNetworkState.Networked:
-      return e_megalo_variable_network_state.networked;
-    case MegaloVariableNetworkState.NetworkedHigh:
-      return e_megalo_variable_network_state.networked_high;
-    default: {
-      const _exhaustive: never = value;
-      return _exhaustive;
-    }
-  }
-};
+  value: MegaloVariableNetworkStateName
+): e_megalo_variable_network_state =>
+  mapMegaloEnum(value, NETWORK_STATE_TO_BLF);
 
 const populateMetadata = (
   target: s_variable_metadata,

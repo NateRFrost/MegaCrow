@@ -7,6 +7,7 @@
   "expected_one_of": "Expected {{expected}} but got '{{got}}'",
   "numeric_constant_name": "numeric constant name",
   "invalid_string_identifier": "Invalid string identifier '{{identifier}}'",
+  "invalid_explicit_team": "Invalid explicit team: {{token}}",
   "variable_reference": "variable reference",
   "expected_parameter_type": "Expected {{expected}} parameter but got '{{got}}'",
   "unknown_player_trait": "Expected player trait modifier, got '{{got}}'",

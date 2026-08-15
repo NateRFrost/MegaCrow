@@ -15,8 +15,8 @@ import {
 import {
   type ASTParameterNode,
   parameterParserBuilder as buildParameterParser,
-  getParameterParserSignatures,
   KeywordParameter,
+  megaloEnumKeywords,
   ObjectListParameter,
   OptionalParameter,
   type ParameterParser,
@@ -28,6 +28,22 @@ import {
 import { ObjectListType } from "src/frontend/object-lists";
 import { type Token, TokenKind } from "src/frontend/tokens";
 import type { MegaloVersion } from "src/version";
+import { loadoutPaletteType } from "src/frontend/intermediate-representation/game/megalogamengine/loadoutPaletteType";
+import {
+  bipedGiveWeaponMode,
+  BoundaryShape,
+  boundaryShape,
+  fireteamFilterPreset,
+  grenadeType,
+  navpointPriority,
+  PlayerFilterType,
+  playerFilterType,
+  purchaseCategory,
+  purchaseLifeState,
+  TeamOrPlayerTargetKind,
+  weaponPickupPriority,
+  weaponSlot,
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 
 export type ActionStatementNode = ASTNode<SyntaxKind.ACTION> & {
   name: { value: string; location: SourceCodeLocation };
@@ -131,84 +147,40 @@ const ANY_VARIABLE = [
   ParameterType.Object,
 ] as const;
 
-const VISIBILITY_KEYWORDS = [
-  KeywordParameter("no_one"),
-  KeywordParameter("everyone"),
-  KeywordParameter("allies"),
-  KeywordParameter("enemies"),
-] as const;
+/** Visibility filter keywords (`player` is a separate multi-arg signature). */
+const VISIBILITY_KEYWORDS = megaloEnumKeywords(playerFilterType, {
+  exclude: [PlayerFilterType.player],
+});
 
-const BOUNDARY_SHAPE_KEYWORDS = [
-  KeywordParameter("none"),
-  KeywordParameter("sphere"),
-  KeywordParameter("cylinder"),
-  KeywordParameter("box"),
-] as const;
+const BOUNDARY_SHAPE_KEYWORDS = megaloEnumKeywords(boundaryShape);
 
 /** MegaloEdit: `none` | `all` | integer 0–3. */
 const FIRETEAM_FILTER_SLOT = [
-  KeywordParameter("none"),
-  KeywordParameter("all"),
+  ...megaloEnumKeywords(fireteamFilterPreset),
   ParameterType.Integer,
 ] as const;
 
 /** MegaloEdit `ReadLoadoutPaletteType` enum names. */
-const LOADOUT_PALETTE_TYPE_SLOT = [
-  KeywordParameter("none"),
-  KeywordParameter("spartan_tier1"),
-  KeywordParameter("elite_tier1"),
-  KeywordParameter("spartan_tier2"),
-  KeywordParameter("elite_tier2"),
-  KeywordParameter("spartan_tier3"),
-  KeywordParameter("elite_tier3"),
-] as const;
+const LOADOUT_PALETTE_TYPE_SLOT = megaloEnumKeywords(loadoutPaletteType);
 
-const GRENADE_TYPE_KEYWORDS = [
-  KeywordParameter("frag"),
-  KeywordParameter("plasma"),
-] as const;
+const GRENADE_TYPE_KEYWORDS = megaloEnumKeywords(grenadeType);
 
-const PURCHASE_STATE_KEYWORDS = [
-  KeywordParameter("alive"),
-  KeywordParameter("dead"),
-  KeywordParameter("both"),
-] as const;
+const PURCHASE_STATE_KEYWORDS = megaloEnumKeywords(purchaseLifeState);
 
-const PURCHASE_CATEGORY_KEYWORDS = [
-  KeywordParameter("weapons"),
-  KeywordParameter("equipment"),
-  KeywordParameter("vehicles"),
-  KeywordParameter("all"),
-] as const;
+const PURCHASE_CATEGORY_KEYWORDS = megaloEnumKeywords(purchaseCategory);
 
-const NAVPOINT_PRIORITY_KEYWORDS = [
-  KeywordParameter("low"),
-  KeywordParameter("normal"),
-  KeywordParameter("high"),
-  KeywordParameter("blink"),
-] as const;
+const NAVPOINT_PRIORITY_KEYWORDS = megaloEnumKeywords(navpointPriority);
 
-const WEAPON_PICKUP_PRIORITY_KEYWORDS = [
-  KeywordParameter("normal"),
-  KeywordParameter("special"),
-  KeywordParameter("auto"),
-] as const;
+const WEAPON_PICKUP_PRIORITY_KEYWORDS = megaloEnumKeywords(weaponPickupPriority);
 
-const WEAPON_SLOT_KEYWORDS = [
-  KeywordParameter("primary"),
-  KeywordParameter("secondary"),
-] as const;
+const WEAPON_SLOT_KEYWORDS = megaloEnumKeywords(weaponSlot);
 
-const BIPED_WEAPON_SLOT_KEYWORDS = [
-  KeywordParameter("primary"),
-  KeywordParameter("secondary"),
-  KeywordParameter("force"),
-] as const;
+const BIPED_WEAPON_SLOT_KEYWORDS = megaloEnumKeywords(bipedGiveWeaponMode);
 
 const teamOrPlayerTargetSuffixes: ParameterSignature[] = [
-  [KeywordParameter("everyone")],
-  [KeywordParameter("player"), ParameterType.Player],
-  [KeywordParameter("team"), ParameterType.Team],
+  [KeywordParameter(TeamOrPlayerTargetKind.everyone)],
+  [KeywordParameter(TeamOrPlayerTargetKind.player), ParameterType.Player],
+  [KeywordParameter(TeamOrPlayerTargetKind.team), ParameterType.Team],
 ];
 
 const appendSignatures = (
@@ -227,7 +199,7 @@ const visibilityFilterSignatures = (
   [...prefix, VISIBILITY_KEYWORDS, ...suffix],
   [
     ...prefix,
-    KeywordParameter("player"),
+    KeywordParameter(PlayerFilterType.player),
     ParameterType.Player,
     BOOLEAN,
     ...suffix,
@@ -349,16 +321,41 @@ const parseCreateObjectV73: ParameterParser = (ctx, anchor) => {
           parseParameterValue(ctx, keywordToken.location, ParameterType.Integer)
         );
         break;
-      case "variant":
-        parameters.push(
-          parseParameterValue(
-            ctx,
-            keywordToken.location,
-            ParameterType.Keyword,
-            ParameterType.QuotedString
-          )
-        );
+      case "variant": {
+        const variantPeek = ctx.peekToken();
+        if (variantPeek?.kind === TokenKind.QuotedString) {
+          const consumed = ctx.getToken();
+          const symbolId = ctx.symbolParser.lookupObjectListItem(
+            ObjectListType.Strings,
+            consumed.value
+          );
+          if (symbolId === undefined) {
+            parameters.push({
+              kind: SyntaxKind.QUOTED_STRING,
+              value: consumed.value,
+              location: consumed.location,
+            });
+          } else {
+            ctx.symbolParser.recordReference(symbolId, consumed.location);
+            parameters.push({
+              kind: SyntaxKind.REFERENCE,
+              identifier: consumed.value,
+              symbolId,
+              location: consumed.location,
+            });
+          }
+        } else {
+          parameters.push(
+            parseParameterValue(
+              ctx,
+              keywordToken.location,
+              ObjectListParameter(ObjectListType.Strings),
+              ParameterType.Keyword
+            )
+          );
+        }
         break;
+      }
       default:
         break;
     }
@@ -369,18 +366,18 @@ const parseCreateObjectV73: ParameterParser = (ctx, anchor) => {
 
 /** MegaloEdit: positional custom-variable dimensions after shape (no keywords). */
 const setBoundarySignatures: ParameterSignature[] = [
-  [ParameterType.Object, KeywordParameter("none")],
-  [ParameterType.Object, KeywordParameter("sphere"), ParameterType.Integer],
+  [ParameterType.Object, KeywordParameter(BoundaryShape.none)],
+  [ParameterType.Object, KeywordParameter(BoundaryShape.sphere), ParameterType.Integer],
   [
     ParameterType.Object,
-    KeywordParameter("cylinder"),
+    KeywordParameter(BoundaryShape.cylinder),
     ParameterType.Integer,
     ParameterType.Integer,
     ParameterType.Integer,
   ],
   [
     ParameterType.Object,
-    KeywordParameter("box"),
+    KeywordParameter(BoundaryShape.box),
     ParameterType.Integer,
     ParameterType.Integer,
     ParameterType.Integer,
@@ -541,7 +538,7 @@ export class ActionParserRepository {
     this.registerParser(
       "set_progress_bar",
       buildParameterParser(
-        [ParameterType.Object, KeywordParameter("no_one")],
+        [ParameterType.Object, KeywordParameter(PlayerFilterType.no_one)],
         ...visibilityFilterSignatures(
           [ParameterType.Object],
           [ParameterType.Timer]
@@ -945,12 +942,12 @@ export class ActionParserRepository {
       "set_loadout_palette",
       buildParameterParser(
         [
-          KeywordParameter("player"),
+          KeywordParameter(TeamOrPlayerTargetKind.player),
           ParameterType.Player,
           LOADOUT_PALETTE_TYPE_SLOT,
         ],
         [
-          KeywordParameter("team"),
+          KeywordParameter(TeamOrPlayerTargetKind.team),
           ParameterType.Team,
           LOADOUT_PALETTE_TYPE_SLOT,
         ]
@@ -1046,7 +1043,7 @@ export class ActionParserRepository {
       "object_set_orientation",
       buildParameterParser([
         ParameterType.Object,
-        ParameterType.Keyword,
+        ParameterType.Object,
         OptionalParameter("absolute_orientation"),
       ])
     );
@@ -1157,11 +1154,5 @@ export class ActionParserRepository {
 
   public getParser(name: string): ParameterParser | undefined {
     return this.parsers.get(name);
-  }
-
-  public getSignatures(
-    name: string
-  ): readonly ParameterSignature[] | undefined {
-    return getParameterParserSignatures(this.parsers.get(name));
   }
 }

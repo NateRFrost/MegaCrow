@@ -38,7 +38,7 @@ export const lowerPlayerSetObjectiveAllegianceIcon = (
     );
   }
   return {
-    type: ActionType.PlayerSetObjectiveAllegianceIcon,
+    type: ActionType.player_set_objective_allegiance_icon,
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),
       iconIndex,

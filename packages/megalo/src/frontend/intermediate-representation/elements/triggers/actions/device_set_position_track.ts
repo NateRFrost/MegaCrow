@@ -66,7 +66,7 @@ export const lowerDeviceSetPositionTrack = (
   requireParamCount(parameters, 3, location);
   const paramCtx = asParameterLoweringContext(ctx);
   return {
-    type: ActionType.DeviceSetPositionTrack,
+    type: ActionType.device_set_position_track,
     parameters: {
       object: resolveObjectReference(parameters[0]!, paramCtx),
       animationNameIndex: resolveDeviceAnimationNameIndex(

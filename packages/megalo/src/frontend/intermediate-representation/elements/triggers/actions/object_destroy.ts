@@ -25,7 +25,7 @@ export const lowerObjectDestroy = (
     );
   }
   return {
-    type: ActionType.ObjectDestroy,
+    type: ActionType.object_destroy,
     parameters: {
       object: resolveObjectReference(
         parameters[0]!,

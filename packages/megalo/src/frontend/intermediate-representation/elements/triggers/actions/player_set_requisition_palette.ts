@@ -68,7 +68,7 @@ export const lowerPlayerSetRequisitionPalette = (
 ): Action => {
   requireParamCount(parameters, 2, location);
   return {
-    type: ActionType.PlayerSetRequisitionPalette,
+    type: ActionType.player_set_requisition_palette,
     parameters: {
       player: resolvePlayerReference(
         parameters[0]!,

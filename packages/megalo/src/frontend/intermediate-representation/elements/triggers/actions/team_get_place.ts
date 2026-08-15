@@ -26,7 +26,7 @@ export const lowerTeamGetPlace = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.TeamGetPlace,
+    type: ActionType.team_get_place,
 
     parameters: {
       team: resolveTeamReference(parameters[0]!, paramCtx),

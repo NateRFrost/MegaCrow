@@ -214,6 +214,8 @@ export class Parser {
             element.elementKind === ElementKind.INCLUDE ||
             element.elementKind === ElementKind.LOCALIZED_INCLUDE
           ) {
+            // expanded include stays in AST for syntax highlighting
+            elements.push(element);
             const expanded = await this.expandInclude(
               element,
               diagnostics,

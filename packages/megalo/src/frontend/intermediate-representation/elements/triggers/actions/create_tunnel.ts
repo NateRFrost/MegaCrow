@@ -85,7 +85,7 @@ export const lowerCreateTunnel = (
 
   const paramCtx = asParameterLoweringContext(ctx);
   return {
-    type: ActionType.CreateTunnel,
+    type: ActionType.create_tunnel,
     parameters: {
       from: resolveObjectReference(parameters[0]!, paramCtx),
       to: resolveObjectReference(parameters[1]!, paramCtx),

@@ -26,7 +26,7 @@ export const lowerObjectGetDistance = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.ObjectGetDistance,
+    type: ActionType.object_get_distance,
 
     parameters: {
       from: resolveObjectReference(parameters[0]!, paramCtx),

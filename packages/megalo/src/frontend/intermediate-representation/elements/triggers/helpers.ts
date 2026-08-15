@@ -4,9 +4,11 @@ import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  MathOperation,
+  type MathOperation,
+  mathOperation,
   type PlayerFilterModifier,
   PlayerFilterType,
+  playerFilterType,
   type TeamOrPlayerTarget,
   TeamOrPlayerTargetKind,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
@@ -108,12 +110,12 @@ export const parseTeamOrPlayerTarget = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   switch (first.value) {
-    case "everyone":
+    case TeamOrPlayerTargetKind.everyone:
       return {
-        target: { type: TeamOrPlayerTargetKind.Everyone },
+        target: { type: TeamOrPlayerTargetKind.everyone },
         nextIndex: startIndex + 1,
       };
-    case "player": {
+    case TeamOrPlayerTargetKind.player: {
       const playerNode = parameters[startIndex + 1];
       if (playerNode === undefined) {
         throw new LowerError(
@@ -126,13 +128,13 @@ export const parseTeamOrPlayerTarget = (
       }
       return {
         target: {
-          type: TeamOrPlayerTargetKind.Player,
+          type: TeamOrPlayerTargetKind.player,
           player: resolvePlayerReference(playerNode, paramCtx),
         },
         nextIndex: startIndex + 2,
       };
     }
-    case "team": {
+    case TeamOrPlayerTargetKind.team: {
       const teamNode = parameters[startIndex + 1];
       if (teamNode === undefined) {
         throw new LowerError(
@@ -145,7 +147,7 @@ export const parseTeamOrPlayerTarget = (
       }
       return {
         target: {
-          type: TeamOrPlayerTargetKind.Team,
+          type: TeamOrPlayerTargetKind.team,
           team: resolveTeamReference(teamNode, paramCtx),
         },
         nextIndex: startIndex + 2,
@@ -162,50 +164,12 @@ export const parseTeamOrPlayerTarget = (
   }
 };
 
-const MATH_OPERATION_BY_NAME: Record<string, MathOperation> = {
-  add: MathOperation.Add,
-  "+": MathOperation.Add,
-  "+=": MathOperation.Add,
-  subtract: MathOperation.Subtract,
-  "-": MathOperation.Subtract,
-  "-=": MathOperation.Subtract,
-  multiply: MathOperation.Multiply,
-  "*": MathOperation.Multiply,
-  "*=": MathOperation.Multiply,
-  divide: MathOperation.Divide,
-  "/": MathOperation.Divide,
-  "/=": MathOperation.Divide,
-  set_to: MathOperation.SetTo,
-  "=": MathOperation.SetTo,
-  modulo: MathOperation.Modulo,
-  "%": MathOperation.Modulo,
-  "%=": MathOperation.Modulo,
-  and: MathOperation.And,
-  "&": MathOperation.And,
-  "&=": MathOperation.And,
-  or: MathOperation.Or,
-  "|": MathOperation.Or,
-  "|=": MathOperation.Or,
-  xor: MathOperation.Xor,
-  "^": MathOperation.Xor,
-  "^=": MathOperation.Xor,
-  not: MathOperation.Not,
-  "~": MathOperation.Not,
-  lshift: MathOperation.LShift,
-  "<<": MathOperation.LShift,
-  "<<=": MathOperation.LShift,
-  rshift: MathOperation.RShift,
-  ">>": MathOperation.RShift,
-  ">>=": MathOperation.RShift,
-  abs: MathOperation.Abs,
-};
-
 export const parseMathOperation = (
   node: ASTParameterNode,
   location: SourceCodeLocation
 ): MathOperation => {
   const name = requireKeyword(node, location).toLowerCase();
-  const operation = MATH_OPERATION_BY_NAME[name];
+  const operation = mathOperation.parse(name);
   if (operation === undefined) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType("math operation", name),
@@ -215,17 +179,9 @@ export const parseMathOperation = (
   return operation;
 };
 
-const FILTER_KEYWORDS: Record<string, PlayerFilterType> = {
-  no_one: PlayerFilterType.NoOne,
-  everyone: PlayerFilterType.Everyone,
-  allies: PlayerFilterType.Allies,
-  enemies: PlayerFilterType.Enemies,
-  normal: PlayerFilterType.Normal,
-};
-
 /**
  * Parse trailing visibility-filter args after the object:
- * `no_one` | `everyone` | `allies` | `enemies` | `normal`
+ * `no_one` | `everyone` | `allies` | `enemies` | `all`
  * or `player <player> <boolean>`.
  */
 export const parsePlayerFilterModifier = (
@@ -257,7 +213,7 @@ export const parsePlayerFilterModifier = (
     const paramCtx = asParameterLoweringContext(ctx);
     return {
       filter: {
-        type: PlayerFilterType.SpecificPlayer,
+        type: PlayerFilterType.player,
         player: resolvePlayerReference(playerNode, paramCtx),
         visible: resolveCustomVariableReference(visibleNode, paramCtx),
       },
@@ -266,18 +222,15 @@ export const parsePlayerFilterModifier = (
   }
 
   const name = requireKeyword(first, location).toLowerCase();
-  const type = FILTER_KEYWORDS[name];
-  if (type === undefined) {
+  const type = playerFilterType.parse(name);
+  if (type === undefined || type === PlayerFilterType.player) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType("player filter", name),
       first.location
     );
   }
   return {
-    filter: { type } as Exclude<
-      PlayerFilterModifier,
-      { type: PlayerFilterType.SpecificPlayer }
-    >,
+    filter: { type },
     nextIndex: startIndex + 1,
   };
 };

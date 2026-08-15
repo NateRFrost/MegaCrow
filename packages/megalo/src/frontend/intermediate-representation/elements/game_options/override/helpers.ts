@@ -12,7 +12,10 @@ import {
 } from "src/frontend/intermediate-representation";
 import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
 import { LowerError } from "src/frontend/intermediate-representation/error";
-import { TeamScoringMethod } from "src/frontend/intermediate-representation/game/game_engine_default";
+import {
+  teamScoringMethod,
+  type TeamScoringMethod,
+} from "src/frontend/intermediate-representation/game/game_engine_default";
 import type { BuiltInGameOptionFlags } from "src/frontend/intermediate-representation/game/parameters";
 import { lowerConstantNumber } from "src/frontend/intermediate-representation/parameters/constantNumber";
 import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
@@ -60,12 +63,6 @@ export const BUILTIN_LOCK_FLAG = new Map<
   ["yellow_powerup_duration", "gameMapYellowPowerupDuration"],
 ]);
 
-export const TEAM_SCORING_METHOD: Record<string, TeamScoringMethod> = {
-  sum: TeamScoringMethod.Sum,
-  minimum: TeamScoringMethod.Minimum,
-  maximum: TeamScoringMethod.Maximum,
-};
-
 export const resolveSimpleNumber = (
   node: OverrideEntryNode["value"],
   ctx: ElementLowerContext
@@ -102,7 +99,7 @@ export const resolveTeamScoringMode = (
     );
   }
   assertSyntaxKind(node.value, [SyntaxKind.KEYWORD]);
-  const method = TEAM_SCORING_METHOD[node.value.value];
+  const method = teamScoringMethod.parse(node.value.value);
   if (method === undefined) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType(

@@ -24,6 +24,7 @@ import type { MegaloVersion } from "src/version";
 
 export interface LoadoutItemNode {
   identifier: string;
+  location: SourceCodeLocation;
   parameters: ASTParameterNode[];
 }
 
@@ -142,6 +143,7 @@ export const loadoutParser = (
     if (parser) {
       items.push({
         identifier: itemIdentifier.value,
+        location: itemIdentifier.location,
         parameters: parser(ctx, itemIdentifier.location),
       });
     } else {

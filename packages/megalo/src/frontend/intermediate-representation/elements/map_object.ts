@@ -8,28 +8,12 @@ import type { ElementLowerer } from "src/frontend/intermediate-representation/el
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   type ObjectFilter,
-  ObjectTeamFilter,
+  objectTeamFilter,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_map_objects";
 import { asParameterLoweringContext } from "src/frontend/intermediate-representation/parameters/context";
 import { resolveObjectTypeReference } from "src/frontend/intermediate-representation/parameters/references";
 import { resolveScriptStringTableReference } from "src/frontend/intermediate-representation/parameters/resolveScriptStringTableReference";
 import { setField } from "src/frontend/intermediate-representation/setField";
-
-const OBJECT_TEAM_FILTERS: Record<string, ObjectTeamFilter> = {
-  none: ObjectTeamFilter.None,
-  defenders: ObjectTeamFilter.Team1,
-  attackers: ObjectTeamFilter.Team2,
-  third_party: ObjectTeamFilter.Team3,
-  fourth_party: ObjectTeamFilter.Team4,
-  fifth_party: ObjectTeamFilter.Team5,
-  sixth_party: ObjectTeamFilter.Team6,
-  seventh_party: ObjectTeamFilter.Team7,
-  eighth_party: ObjectTeamFilter.Team8,
-  neutral: ObjectTeamFilter.Neutral,
-  each: ObjectTeamFilter.Each,
-};
-
-const OBJECT_TEAM_FILTER_NAMES = Object.keys(OBJECT_TEAM_FILTERS);
 
 export const mapObjectLowerer: ElementLowerer<MapObjectElementNode> = (
   element,
@@ -81,11 +65,11 @@ export const mapObjectLowerer: ElementLowerer<MapObjectElementNode> = (
         }
         case "team": {
           assertSyntaxKind(property.value, SyntaxKind.KEYWORD);
-          const team = OBJECT_TEAM_FILTERS[property.value.value];
+          const team = objectTeamFilter.parse(property.value.value);
           if (team === undefined) {
             throw new LowerError(
               diagnosticMessages.expectedOneOf(
-                OBJECT_TEAM_FILTER_NAMES.map((name) => `'${name}'`),
+                objectTeamFilter.names.map((name) => `'${name}'`),
                 property.value.value
               ),
               property.value.location

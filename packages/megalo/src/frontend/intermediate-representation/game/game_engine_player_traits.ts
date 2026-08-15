@@ -1,3 +1,4 @@
+import { megaloEnum, type MegaloEnumNames } from "src/frontend/intermediate-representation/megaloEnum";
 export type DamageResistance = "invulnerable" | number;
 export type DamageModifier = "fatality" | number;
 
@@ -13,23 +14,24 @@ export type PlayerTraitShieldVitality = Partial<{
   deathless: boolean;
 }>;
 
-export enum GrenadeCountSetting {
-  None = 0,
-  Default = 1,
-  Zero = 2,
-  Frag1 = 3,
-  Frag2 = 4,
-  Frag3 = 5,
-  Frag4 = 6,
-  Plasma1 = 7,
-  Plasma2 = 8,
-  Plasma3 = 9,
-  Plasma4 = 10,
-  Each1 = 11,
-  Each2 = 12,
-  Each3 = 13,
-  Each4 = 14,
-}
+export const grenadeCountSetting = megaloEnum([
+  "none",
+  "default",
+  "1 frag",
+  "2 frag",
+  "3 frag",
+  "4 frag",
+  "1 plasma",
+  "2 plasma",
+  "3 plasma",
+  "4 plasma",
+  "1 each",
+  "2 each",
+  "3 each",
+  "4 each",
+] as const);
+export const GrenadeCountSetting = grenadeCountSetting.enum;
+export type GrenadeCountSetting = MegaloEnumNames<typeof grenadeCountSetting>;
 
 export enum InfiniteAmmoSetting {
   Unchanged = 0,
@@ -53,17 +55,19 @@ export type PlayerTraitWeapons = Partial<{
   initialEquipmentAbsoluteIndex: number; // object_lists/equipment.txt
 }>;
 
-export enum VehicleUsage {
-  Unchanged = 0,
-  None = 1,
-  Passenger = 2,
-  Driver = 3,
-  Gunner = 4,
-  NotPassenger = 5,
-  NotDriver = 6,
-  NotGunner = 7,
-  Full = 8,
-}
+export const vehicleUsage = megaloEnum([
+  "unchanged",
+  "none",
+  "passenger",
+  "driver",
+  "gunner",
+  "not_passenger",
+  "not_driver",
+  "not_gunner",
+  "full",
+] as const);
+export const VehicleUsage = vehicleUsage.enum;
+export type VehicleUsage = MegaloEnumNames<typeof vehicleUsage>;
 
 export type PlayerTraitMovement = Partial<{
   speedPercentage: number;
@@ -73,38 +77,44 @@ export type PlayerTraitMovement = Partial<{
   sprinting: boolean;
 }>;
 
-export enum ActiveCamo {
-  Off = 0,
-  On = 1,
-  Poor = 2,
-  Good = 3,
-  Excellent = 4,
-  Invisible = 5,
-}
+export const activeCamo = megaloEnum([
+  "off",
+  "on",
+  "poor",
+  "good",
+  "excellent",
+  "invisible",
+] as const);
+export const ActiveCamo = activeCamo.enum;
+export type ActiveCamo = MegaloEnumNames<typeof activeCamo>;
 
-export enum WaypointVisibility {
-  Unchanged = 0,
-  Off = 1,
-  Allies = 2,
-  All = 3,
-}
+export const waypointVisibility = megaloEnum([
+  "unchanged",
+  "off",
+  "allies",
+  "all",
+] as const);
+export const WaypointVisibility = waypointVisibility.enum;
+export type WaypointVisibility = MegaloEnumNames<typeof waypointVisibility>;
 
-export enum ForcedChangeColor {
-  Unchanged = 0,
-  Off = 1,
-  Red = 2,
-  Blue = 3,
-  Green = 4,
-  Yellow = 5,
-  Purple = 6,
-  Orange = 7,
-  Brown = 8,
-  Pink = 9,
-  White = 10,
-  Black = 11,
-  Zombie = 12,
-  Extra4 = 13,
-}
+export const forcedChangeColor = megaloEnum([
+  "unchanged",
+  "off",
+  "red",
+  "blue",
+  "green",
+  "yellow",
+  "purple",
+  "orange",
+  "brown",
+  "pink",
+  "white",
+  "black",
+  "zombie",
+  "extra4",
+] as const);
+export const ForcedChangeColor = forcedChangeColor.enum;
+export type ForcedChangeColor = MegaloEnumNames<typeof forcedChangeColor>;
 
 export type PlayerTraitAppearance = Partial<{
   activeCamo: ActiveCamo;
@@ -113,13 +123,15 @@ export type PlayerTraitAppearance = Partial<{
   forcedChangeColor: ForcedChangeColor;
 }>;
 
-export enum MotionTrackerMode {
-  Unchanged = 0,
-  Off = 1,
-  Allies = 2,
-  Normal = 3,
-  Enhanced = 4,
-}
+export const motionTrackerMode = megaloEnum([
+  "unchanged",
+  "off",
+  "allies",
+  "normal",
+  "enhanced",
+] as const);
+export const MotionTrackerMode = motionTrackerMode.enum;
+export type MotionTrackerMode = MegaloEnumNames<typeof motionTrackerMode>;
 
 export type PlayerTraitSensors = Partial<{
   motionTrackerMode: MotionTrackerMode;

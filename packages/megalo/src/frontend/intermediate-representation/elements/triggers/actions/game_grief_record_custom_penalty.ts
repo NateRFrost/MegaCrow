@@ -26,7 +26,7 @@ export const lowerGameGriefRecordCustomPenalty = (
   const paramCtx = asParameterLoweringContext(ctx);
 
   return {
-    type: ActionType.GameGriefRecordCustomPenalty,
+    type: ActionType.game_grief_record_custom_penalty,
 
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),

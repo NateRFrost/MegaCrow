@@ -31,7 +31,7 @@ export const resolveKeyword = (
   return;
 };
 
-export const resolveEnumKeyword = <T extends number>(
+export const resolveEnumKeyword = <T extends string>(
   node: ASTParameterNode,
   mapping: Record<string, T>,
   expected: string

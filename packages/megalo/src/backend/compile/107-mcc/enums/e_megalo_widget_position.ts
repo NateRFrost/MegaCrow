@@ -1,37 +1,26 @@
 import { e_megalo_widget_position } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { HudWidgetPosition } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_hud_widgets";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
+import {
+  HudWidgetPosition,
+  type HudWidgetPosition as HudWidgetPositionName,
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_hud_widgets";
+
+const HUD_WIDGET_POSITION_TO_BLF = {
+  [HudWidgetPosition.top_left]: e_megalo_widget_position.top_left,
+  [HudWidgetPosition.top_center]: e_megalo_widget_position.top_center,
+  [HudWidgetPosition.top_right]: e_megalo_widget_position.top_right,
+  [HudWidgetPosition.high_left]: e_megalo_widget_position.high_left,
+  [HudWidgetPosition.high_center]: e_megalo_widget_position.high_center,
+  [HudWidgetPosition.high_right]: e_megalo_widget_position.high_right,
+  [HudWidgetPosition.low_left]: e_megalo_widget_position.low_left,
+  [HudWidgetPosition.low_center]: e_megalo_widget_position.low_center,
+  [HudWidgetPosition.low_right]: e_megalo_widget_position.low_right,
+  [HudWidgetPosition.bottom_left]: e_megalo_widget_position.bottom_left,
+  [HudWidgetPosition.bottom_center]: e_megalo_widget_position.bottom_center,
+  [HudWidgetPosition.bottom_right]: e_megalo_widget_position.bottom_right,
+} as const satisfies Record<HudWidgetPositionName, e_megalo_widget_position>;
 
 export const encodeHudWidgetPosition = (
-  value: HudWidgetPosition
-): e_megalo_widget_position => {
-  switch (value) {
-    case HudWidgetPosition.TopLeft:
-      return e_megalo_widget_position.top_left;
-    case HudWidgetPosition.TopCenter:
-      return e_megalo_widget_position.top_center;
-    case HudWidgetPosition.TopRight:
-      return e_megalo_widget_position.top_right;
-    case HudWidgetPosition.HighLeft:
-      return e_megalo_widget_position.high_left;
-    case HudWidgetPosition.HighCenter:
-      return e_megalo_widget_position.high_center;
-    case HudWidgetPosition.HighRight:
-      return e_megalo_widget_position.high_right;
-    case HudWidgetPosition.LowLeft:
-      return e_megalo_widget_position.low_left;
-    case HudWidgetPosition.LowCenter:
-      return e_megalo_widget_position.low_center;
-    case HudWidgetPosition.LowRight:
-      return e_megalo_widget_position.low_right;
-    case HudWidgetPosition.BottomLeft:
-      return e_megalo_widget_position.bottom_left;
-    case HudWidgetPosition.BottomCenter:
-      return e_megalo_widget_position.bottom_center;
-    case HudWidgetPosition.BottomRight:
-      return e_megalo_widget_position.bottom_right;
-    default: {
-      const _exhaustive: never = value;
-      return _exhaustive;
-    }
-  }
-};
+  value: HudWidgetPositionName
+): e_megalo_widget_position =>
+  mapMegaloEnum(value, HUD_WIDGET_POSITION_TO_BLF);

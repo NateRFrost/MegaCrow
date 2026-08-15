@@ -17,7 +17,7 @@ export const lowerDebuggingEnableTracing = (
 ): Action => {
   requireParamCount(parameters, 1, location);
   return {
-    type: ActionType.DebuggingEnableTracing,
+    type: ActionType.debugging_enable_tracing,
     parameters: {
       tracingEnabled: parseBooleanLiteral(parameters[0]!, ctx, location),
     },

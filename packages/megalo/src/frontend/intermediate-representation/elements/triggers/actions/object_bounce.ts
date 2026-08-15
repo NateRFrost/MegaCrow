@@ -18,7 +18,7 @@ export const lowerObjectBounce = (
 ): Action => {
   requireParamCount(parameters, 1, location);
   return {
-    type: ActionType.ObjectBounce,
+    type: ActionType.object_bounce,
     parameters: {
       object: resolveObjectReference(
         parameters[0]!,

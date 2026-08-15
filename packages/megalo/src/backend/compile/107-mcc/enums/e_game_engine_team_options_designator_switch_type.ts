@@ -5,11 +5,11 @@ export const encodeDesignatorSwitchType = (
   value: DesignatorSwitchType
 ): e_game_engine_team_options_designator_switch_type => {
   switch (value) {
-    case DesignatorSwitchType.None:
+    case DesignatorSwitchType.none:
       return e_game_engine_team_options_designator_switch_type.none;
-    case DesignatorSwitchType.Random:
+    case DesignatorSwitchType.random:
       return e_game_engine_team_options_designator_switch_type.random;
-    case DesignatorSwitchType.Rotate:
+    case DesignatorSwitchType.rotate:
       return e_game_engine_team_options_designator_switch_type.rotate;
     default: {
       const _exhaustive: never = value;

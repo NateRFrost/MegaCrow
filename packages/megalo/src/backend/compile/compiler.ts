@@ -1,7 +1,7 @@
 import type { CompilerCapabilities } from "src/backend/compile/diagnostics/assertCompatibleIR";
 import type { Diagnostics } from "src/diagnostics";
 import type { IR } from "src/frontend/intermediate-representation";
-import { StringTableLanguage } from "src/frontend/language-configuration/omni/strings";
+import type { StringTableLanguage } from "src/frontend/language-configuration/omni/strings";
 import type { SupportedMegaloVersion } from "src/version";
 
 export enum EngineIcon {

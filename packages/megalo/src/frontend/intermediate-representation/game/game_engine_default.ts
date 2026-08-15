@@ -7,6 +7,7 @@ import type {
   StringTableReference,
 } from "src/frontend/intermediate-representation/game/string_table";
 import type { ContentItemMetadata } from "src/frontend/intermediate-representation/saved_games/saved_game_files";
+import { megaloEnum, type MegaloEnumNames } from "src/frontend/intermediate-representation/megaloEnum";
 
 export type GameEngineMiscellaneousOptions = Partial<{
   teamsEnabled: boolean;
@@ -36,11 +37,13 @@ export type GameEngineRespawnOptions = Partial<{
   respawnPlayerTraits: PlayerTraits[];
 }>;
 
-export enum TeamScoringMethod {
-  Sum = 0,
-  Minimum = 1,
-  Maximum = 2,
-}
+export const teamScoringMethod = megaloEnum([
+  "sum",
+  "minimum",
+  "maximum",
+] as const);
+export const TeamScoringMethod = teamScoringMethod.enum;
+export type TeamScoringMethod = MegaloEnumNames<typeof teamScoringMethod>;
 
 export type GameEngineSocialOptions = Partial<{
   friendlyFireEnabled: number;
@@ -71,31 +74,38 @@ export type GameEngineMapOverrideOptions = Partial<{
   yellowPowerupDurationSeconds: number;
 }>;
 
-export enum MultiplayerTeamDesignator {
-  None = -1,
-  Defenders = 0,
-  Attackers = 1,
-  ThirdParty = 2,
-  FourthParty = 3,
-  FifthParty = 4,
-  SixthParty = 5,
-  SeventhParty = 6,
-  EighthParty = 7,
-  Neutral = 8,
-}
+export const multiplayerTeamDesignator = megaloEnum([
+  "none",
+  "defenders",
+  "attackers",
+  "third_party",
+  "fourth_party",
+  "fifth_party",
+  "sixth_party",
+  "seventh_party",
+  "eighth_party",
+  "neutral",
+] as const);
+export const MultiplayerTeamDesignator = multiplayerTeamDesignator.enum;
+export type MultiplayerTeamDesignator = MegaloEnumNames<
+  typeof multiplayerTeamDesignator
+>;
 
-export enum PlayerModelChoice {
-  Spartan = 0,
-  Elite = 1,
-}
+export const playerModelChoice = megaloEnum(["spartan", "elite"] as const);
+export const PlayerModelChoice = playerModelChoice.enum;
+export type PlayerModelChoice = MegaloEnumNames<typeof playerModelChoice>;
 
-export enum TeamOptionsModelOverrideType {
-  None = 0,
-  Spartan = 1,
-  Elite = 2,
-  SetByTeam = 3,
-  ByDesignator = 4,
-}
+export const teamOptionsModelOverrideType = megaloEnum([
+  "none",
+  "spartan",
+  "elite",
+  "set_by_team",
+  "by_designator",
+] as const);
+export const TeamOptionsModelOverrideType = teamOptionsModelOverrideType.enum;
+export type TeamOptionsModelOverrideType = MegaloEnumNames<
+  typeof teamOptionsModelOverrideType
+>;
 
 export interface Color {
   b: number;
@@ -111,11 +121,13 @@ export type GameEngineTeamOptionsTeam = Partial<{
   fireteamCount: number;
 }>;
 
-export enum DesignatorSwitchType {
-  None = 0,
-  Random = 1,
-  Rotate = 2,
-}
+export const designatorSwitchType = megaloEnum([
+  "none",
+  "random",
+  "rotate",
+] as const);
+export const DesignatorSwitchType = designatorSwitchType.enum;
+export type DesignatorSwitchType = MegaloEnumNames<typeof designatorSwitchType>;
 
 export type GameEngineTeamOptions = Partial<{
   model: TeamOptionsModelOverrideType;

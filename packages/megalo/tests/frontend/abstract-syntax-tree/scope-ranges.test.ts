@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MegaloCompilerContext } from "../../../src/context";
-import { Diagnostics } from "../../../src/diagnostics";
+import { Diagnostics, OPEN_ENDED_POSITION } from "../../../src/diagnostics";
 import { Parser, SyntaxKind } from "../../../src/frontend/abstract-syntax-tree";
 import { ElementKind } from "../../../src/frontend/abstract-syntax-tree/elements";
 import { SymbolKind, VariableType } from "../../../src/frontend/symbol-table";
@@ -15,6 +15,9 @@ const parse = (source: string) => {
   const ast = new Parser(frontend).parse(tokens, diagnostics);
   return { ast, symbolTable: ast.symbolTable.toArray(), diagnostics };
 };
+
+const isOpenEnded = (entry: { range: { end: { localOffset: number } } }) =>
+  entry.range.end.localOffset === OPEN_ENDED_POSITION.localOffset;
 
 describe("symbol scope ranges and symbolId stamping", () => {
   it("records from/to on temporaries and leaves globals open-ended", () => {
@@ -40,12 +43,9 @@ describe("symbol scope ranges and symbolId stamping", () => {
 
     const globalScore = scores.find(
       (entry) =>
-        entry.range.end.localOffset === -1 &&
-        entry.range.start.localOffset !== -1
+        isOpenEnded(entry) && entry.range.start.localOffset !== -1
     );
-    const temporaryScore = scores.find(
-      (entry) => entry.range.end.localOffset !== -1
-    );
+    const temporaryScore = scores.find((entry) => !isOpenEnded(entry));
 
     expect(globalScore).toBeDefined();
     expect(temporaryScore).toBeDefined();
@@ -76,7 +76,7 @@ describe("symbol scope ranges and symbolId stamping", () => {
         entry.name === "score" &&
         entry.type === VariableType.Number &&
         entry.range.start.localOffset !== -1 &&
-        entry.range.end.localOffset === -1
+        isOpenEnded(entry)
     );
     expect(score).toBeDefined();
     expect(score?.references.length).toBeGreaterThanOrEqual(1);

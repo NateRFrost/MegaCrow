@@ -6,36 +6,46 @@ import type {
   TeamReference,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import type { VariantVariable } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variant_variable";
+import { megaloEnum, type MegaloEnumNames } from "src/frontend/intermediate-representation/megaloEnum";
 
-export enum NumericComparison {
-  LessThan = 0,
-  GreaterThan = 1,
-  EqualTo = 2,
-  LessThanOrEqualTo = 3,
-  GreaterThanOrEqualTo = 4,
-  NotEqualTo = 5,
-}
+export const numericComparison = megaloEnum([
+  "less_than",
+  { name: "<", aliasOf: "less_than" },
+  "greater_than",
+  { name: ">", aliasOf: "greater_than" },
+  "equal_to",
+  { name: "==", aliasOf: "equal_to" },
+  "less_than_or_equal_to",
+  { name: "<=", aliasOf: "less_than_or_equal_to" },
+  "greater_than_or_equal_to",
+  { name: ">=", aliasOf: "greater_than_or_equal_to" },
+  "not_equal_to",
+  { name: "!=", aliasOf: "not_equal_to" },
+] as const);
+export const NumericComparison = numericComparison.enum;
+export type NumericComparison = MegaloEnumNames<typeof numericComparison>;
 
-export enum ConditionType {
-  None = 0,
-  If = 1,
-  ObjectInArea = 2,
-  PlayerDied = 3,
-  TeamDisposition = 4,
-  TimerExpired = 5,
-  ObjectIsType = 6,
-  TeamIsActive = 7,
-  ObjectOutOfBounds = 8,
-  PlayerIsFireTeamLeader = 9,
-  PlayerAssistedWithKill = 10,
-  ObjectMatchesFilter = 11,
-  PlayerIsActive = 12,
-  EquipmentIsActive = 13,
-  PlayerIsSpartan = 14,
-  PlayerIsElite = 15,
-  PlayerIsEditor = 16,
-  GameIsForge = 17,
-}
+export const conditionType = megaloEnum([
+  "if",
+  "object_in_area",
+  "player_died",
+  "team_disposition",
+  "timer_expired",
+  "object_is_type",
+  "team_is_active",
+  "object_out_of_bounds",
+  "player_is_fire_team_leader",
+  "player_assisted_with_kill",
+  "object_matches_filter",
+  "player_is_active",
+  "equipment_is_active",
+  "player_is_spartan",
+  "player_is_elite",
+  "player_is_editor",
+  "game_is_forge",
+] as const);
+export const ConditionType = conditionType.enum;
+export type ConditionType = MegaloEnumNames<typeof conditionType>;
 
 export interface ConditionIfParameters {
   comparison: NumericComparison;
@@ -69,11 +79,13 @@ export interface ConditionPlayerDiedParameters {
   player: PlayerReference;
 }
 
-export enum Disposition {
-  Neutral = 0,
-  Friendly = 1,
-  Enemy = 2,
-}
+export const disposition = megaloEnum([
+  "neutral",
+  "friendly",
+  "enemy",
+] as const);
+export const Disposition = disposition.enum;
+export type Disposition = MegaloEnumNames<typeof disposition>;
 
 export interface ConditionTeamDispositionParameters {
   disposition: Disposition;
@@ -147,69 +159,36 @@ interface ConditionParameters<T extends ConditionType, P> {
 
 export type Condition = ConditionBase &
   (
-    | ConditionParameters<ConditionType.If, ConditionIfParameters>
+    | ConditionParameters<"if", ConditionIfParameters>
+    | ConditionParameters<"object_in_area", ConditionObjectInAreaParameters>
+    | ConditionParameters<"player_died", ConditionPlayerDiedParameters>
+    | ConditionParameters<"team_disposition", ConditionTeamDispositionParameters>
+    | ConditionParameters<"timer_expired", ConditionTimerExpiredParameters>
+    | ConditionParameters<"object_is_type", ConditionObjectIsTypeParameters>
+    | ConditionParameters<"team_is_active", ConditionTeamIsActiveParameters>
     | ConditionParameters<
-        ConditionType.ObjectInArea,
-        ConditionObjectInAreaParameters
-      >
-    | ConditionParameters<
-        ConditionType.PlayerDied,
-        ConditionPlayerDiedParameters
-      >
-    | ConditionParameters<
-        ConditionType.TeamDisposition,
-        ConditionTeamDispositionParameters
-      >
-    | ConditionParameters<
-        ConditionType.TimerExpired,
-        ConditionTimerExpiredParameters
-      >
-    | ConditionParameters<
-        ConditionType.ObjectIsType,
-        ConditionObjectIsTypeParameters
-      >
-    | ConditionParameters<
-        ConditionType.TeamIsActive,
-        ConditionTeamIsActiveParameters
-      >
-    | ConditionParameters<
-        ConditionType.ObjectOutOfBounds,
+        "object_out_of_bounds",
         ConditionObjectOutOfBoundsParameters
       >
     | ConditionParameters<
-        ConditionType.PlayerIsFireTeamLeader,
+        "player_is_fire_team_leader",
         ConditionPlayerIsFireTeamLeaderParameters
       >
     | ConditionParameters<
-        ConditionType.PlayerAssistedWithKill,
+        "player_assisted_with_kill",
         ConditionPlayerAssistedWithKillParameters
       >
     | ConditionParameters<
-        ConditionType.ObjectMatchesFilter,
+        "object_matches_filter",
         ConditionObjectMatchesFilterParameters
       >
+    | ConditionParameters<"player_is_active", ConditionPlayerIsActiveParameters>
     | ConditionParameters<
-        ConditionType.PlayerIsActive,
-        ConditionPlayerIsActiveParameters
-      >
-    | ConditionParameters<
-        ConditionType.EquipmentIsActive,
+        "equipment_is_active",
         ConditionEquipmentIsActiveParameters
       >
-    | ConditionParameters<
-        ConditionType.PlayerIsSpartan,
-        ConditionPlayerIsSpartanParameters
-      >
-    | ConditionParameters<
-        ConditionType.PlayerIsElite,
-        ConditionPlayerIsEliteParameters
-      >
-    | ConditionParameters<
-        ConditionType.PlayerIsEditor,
-        ConditionPlayerIsEditorParameters
-      >
-    | ConditionParameters<
-        ConditionType.GameIsForge,
-        ConditionGameIsForgeParameters
-      >
+    | ConditionParameters<"player_is_spartan", ConditionPlayerIsSpartanParameters>
+    | ConditionParameters<"player_is_elite", ConditionPlayerIsEliteParameters>
+    | ConditionParameters<"player_is_editor", ConditionPlayerIsEditorParameters>
+    | ConditionParameters<"game_is_forge", ConditionGameIsForgeParameters>
   );

@@ -36,7 +36,7 @@ export const lowerBipedDropWeapon = (
     );
   }
   return {
-    type: ActionType.BipedDropWeapon,
+    type: ActionType.biped_drop_weapon,
     parameters: {
       biped: resolveObjectReference(
         parameters[0]!,
