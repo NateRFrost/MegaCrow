@@ -781,4 +781,30 @@ end
     expect(teamKind).toBeDefined();
     expect(initKind).toBeDefined();
   });
+
+  it("highlights quoted object-list names as enumMember", async () => {
+    const source = `variables global
+\tlocal object created_object none
+end
+map_object invasion_stuff
+\ttype "warthog"
+end
+trigger initialization
+\taction create_object "warthog" at current_player never_garbage
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    const tokens = getSemanticTokens(snapshot);
+    const quoted = tokens.filter(
+      (token) =>
+        token.type === "enumMember" && token.length === '"warthog"'.length
+    );
+    expect(quoted.length).toBeGreaterThanOrEqual(2);
+    expect(
+      tokens.some(
+        (token) =>
+          token.type === "string" && token.length === '"warthog"'.length
+      )
+    ).toBe(false);
+  });
 });

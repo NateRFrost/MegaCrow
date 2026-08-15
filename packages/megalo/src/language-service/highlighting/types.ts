@@ -47,6 +47,10 @@ export const MODIFIER_INDEX = Object.fromEntries(
 export const TYPE_PRIORITY: Record<SemanticTokenType, number> = {
   comment: 100,
   regexp: 110,
+  // Object-list names are often written in quotes (`create_object "warthog"`,
+  // `map_object` type, …). Those resolve to enumMember; that must beat the
+  // lexical string span that covers the same quotes.
+  enumMember: 105,
   string: 100,
   number: 100,
   operator: 100,
@@ -55,7 +59,6 @@ export const TYPE_PRIORITY: Record<SemanticTokenType, number> = {
   property: 80,
   class: 80,
   type: 80,
-  enumMember: 80,
   modifier: 70,
   variable: 60,
   keyword: 40,
