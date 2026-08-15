@@ -1,9 +1,9 @@
 import { e_action_type } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   ActionType,
   type ActionType as ActionTypeName,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 const ACTION_TYPE_TO_BLF = {
   [ActionType.set_score]: e_action_type.set_score,

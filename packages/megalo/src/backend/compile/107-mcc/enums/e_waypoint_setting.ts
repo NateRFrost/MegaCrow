@@ -1,9 +1,9 @@
 import { e_waypoint_setting } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   WaypointVisibility,
   type WaypointVisibility as WaypointVisibilityName,
 } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 const WAYPOINT_VISIBILITY_TO_BLF = {
   [WaypointVisibility.unchanged]: e_waypoint_setting.unchanged,

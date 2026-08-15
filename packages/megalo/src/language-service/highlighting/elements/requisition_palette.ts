@@ -1,6 +1,6 @@
 import type { RequisitionPaletteElementNode } from "src/frontend/abstract-syntax-tree/elements/requisition_palette";
-import { highlightEnumKeyword } from "src/language-service/highlighting/helpers";
 import { emitElementKeyword } from "src/language-service/highlighting/emit";
+import { highlightEnumKeyword } from "src/language-service/highlighting/helpers";
 import type { SemanticToken } from "src/language-service/highlighting/types";
 
 const REQUISITION_BASELINE_KEYWORDS = ["enabled", "disabled"] as const;

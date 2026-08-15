@@ -101,8 +101,7 @@ end
         token.line > 0
     );
     const defaultValue = tokens.find(
-      (token) =>
-        token.type === "enumMember" && token.length === "false".length
+      (token) => token.type === "enumMember" && token.length === "false".length
     );
     expect(parameters).toHaveLength(1);
     expect(parameters[0]?.length).toBe("default".length);
@@ -134,8 +133,7 @@ end
     );
     const modelValue = tokens.find(
       (token) =>
-        token.type === "enumMember" &&
-        token.length === "by_designator".length
+        token.type === "enumMember" && token.length === "by_designator".length
     );
     expect(parameters.map((token) => token.length)).toEqual([
       "model".length,
@@ -169,13 +167,10 @@ end
     const tokens = getSemanticTokens(snapshot);
     const types = tokens.filter((token) => token.type === "type");
     const variables = tokens.filter(
-      (token) =>
-        token.type === "variable" && token.length > "number".length
+      (token) => token.type === "variable" && token.length > "number".length
     );
     expect(types).toHaveLength(3);
-    expect(types.every((token) => token.length === "number".length)).toBe(
-      true
-    );
+    expect(types.every((token) => token.length === "number".length)).toBe(true);
     expect(variables.map((token) => token.length)).toEqual([
       "k_gametype_ctf".length,
       "k_gametype_assault".length,
@@ -228,8 +223,7 @@ end
         token.line > 0
     );
     const traitValue = tokens.find(
-      (token) =>
-        token.type === "enumMember" && token.length === "off".length
+      (token) => token.type === "enumMember" && token.length === "off".length
     );
     expect(overrideKeyword).toBeDefined();
     expect(overrideName).toBeDefined();
@@ -288,8 +282,7 @@ end
     const tokens = getSemanticTokens(snapshot);
     const rangedOptionKeyword = tokens.find(
       (token) =>
-        token.type === "keyword" &&
-        token.length === "ranged_option".length
+        token.type === "keyword" && token.length === "ranged_option".length
     );
     expect(rangedOptionKeyword).toBeDefined();
   });
@@ -312,21 +305,18 @@ end
     const tokens = getSemanticTokens(snapshot);
     const playerTraitsKeyword = tokens.find(
       (token) =>
-        token.type === "keyword" &&
-        token.length === "player_traits".length
+        token.type === "keyword" && token.length === "player_traits".length
     );
     const vehicleUsageParameter = tokens.find(
       (token) =>
-        token.type === "parameter" &&
-        token.length === "vehicle_usage".length
+        token.type === "parameter" && token.length === "vehicle_usage".length
     );
     const passengerValue = tokens.find(
       (token) =>
         token.type === "enumMember" && token.length === "passenger".length
     );
     const alliesValue = tokens.find(
-      (token) =>
-        token.type === "enumMember" && token.length === "allies".length
+      (token) => token.type === "enumMember" && token.length === "allies".length
     );
     expect(playerTraitsKeyword).toBeDefined();
     expect(vehicleUsageParameter).toBeDefined();
@@ -353,12 +343,10 @@ end
         token.length === "team".length
     );
     const objectType = tokens.find(
-      (token) =>
-        token.type === "type" && token.length === "object".length
+      (token) => token.type === "type" && token.length === "object".length
     );
     const timerType = tokens.find(
-      (token) =>
-        token.type === "type" && token.length === "timer".length
+      (token) => token.type === "type" && token.length === "timer".length
     );
     const globalScope = tokens.find(
       (token) =>
@@ -367,16 +355,14 @@ end
         token.line > 0
     );
     const numberType = tokens.find(
-      (token) =>
-        token.type === "type" && token.length === "number".length
+      (token) => token.type === "type" && token.length === "number".length
     );
     const networkedModifier = tokens.find(
       (token) =>
         token.type === "modifier" && token.length === "networked".length
     );
     const localModifier = tokens.find(
-      (token) =>
-        token.type === "modifier" && token.length === "local".length
+      (token) => token.type === "modifier" && token.length === "local".length
     );
 
     expect(teamScope).toBeDefined();
@@ -401,12 +387,10 @@ end
     const tokens = getSemanticTokens(snapshot);
 
     const allies = tokens.find(
-      (token) =>
-        token.type === "enumMember" && token.length === "allies".length
+      (token) => token.type === "enumMember" && token.length === "allies".length
     );
     const sphere = tokens.find(
-      (token) =>
-        token.type === "enumMember" && token.length === "sphere".length
+      (token) => token.type === "enumMember" && token.length === "sphere".length
     );
     const navpoint = tokens.find(
       (token) =>
@@ -429,8 +413,7 @@ end
     const snapshot = await analyzeDocument(source, { version });
     const tokens = getSemanticTokens(snapshot);
     const fuck = tokens.find(
-      (token) =>
-        token.type === "enumMember" && token.length === "fuck".length
+      (token) => token.type === "enumMember" && token.length === "fuck".length
     );
     expect(fuck).toBeUndefined();
   });
@@ -477,8 +460,7 @@ end
     const tokens = getSemanticTokens(snapshot);
     const member = tokens.find(
       (token) =>
-        token.type === "property" &&
-        token.length === "temp_state_0".length
+        token.type === "property" && token.length === "temp_state_0".length
     );
     expect(member).toBeDefined();
   });
@@ -495,9 +477,7 @@ end
     const tokens = getSemanticTokens(snapshot);
     const equals = tokens.find(
       (token) =>
-        token.type === "operator" &&
-        token.length === 1 &&
-        token.line === 4
+        token.type === "operator" && token.length === 1 && token.line === 4
     );
     expect(equals).toBeDefined();
   });
@@ -516,8 +496,7 @@ end
     const snapshot = await analyzeDocument(source, { version });
     const tokens = getSemanticTokens(snapshot);
     const setTo = tokens.find(
-      (token) =>
-        token.type === "keyword" && token.length === "set_to".length
+      (token) => token.type === "keyword" && token.length === "set_to".length
     );
     expect(setTo).toBeDefined();
   });
@@ -533,23 +512,19 @@ end
 
     const proximityWarning = tokens.find(
       (token) =>
-        token.type === "variable" &&
-        token.length === "proximity_warning".length
+        token.type === "variable" && token.length === "proximity_warning".length
     );
     const armingWarning = tokens.find(
       (token) =>
-        token.type === "variable" &&
-        token.length === "arming_warning".length
+        token.type === "variable" && token.length === "arming_warning".length
     );
     const highCenter = tokens.find(
       (token) =>
-        token.type === "enumMember" &&
-        token.length === "high_center".length
+        token.type === "enumMember" && token.length === "high_center".length
     );
     const lowCenter = tokens.find(
       (token) =>
-        token.type === "enumMember" &&
-        token.length === "low_center".length
+        token.type === "enumMember" && token.length === "low_center".length
     );
 
     expect(proximityWarning).toBeDefined();
@@ -568,8 +543,7 @@ end
     const tokens = getSemanticTokens(snapshot);
     const primaryWeapon = tokens.find(
       (token) =>
-        token.type === "parameter" &&
-        token.length === "primary_weapon".length
+        token.type === "parameter" && token.length === "primary_weapon".length
     );
     expect(primaryWeapon).toBeDefined();
   });
@@ -585,16 +559,13 @@ end
     const snapshot = await analyzeDocument(source, { version });
     const tokens = getSemanticTokens(snapshot);
     const name = tokens.find(
-      (token) =>
-        token.type === "variable" && token.length === "kills".length
+      (token) => token.type === "variable" && token.length === "kills".length
     );
     const type = tokens.find(
-      (token) =>
-        token.type === "type" && token.length === "number".length
+      (token) => token.type === "type" && token.length === "number".length
     );
     const grouping = tokens.find(
-      (token) =>
-        token.type === "enumMember" && token.length === "none".length
+      (token) => token.type === "enumMember" && token.length === "none".length
     );
     expect(name).toBeDefined();
     expect(type).toBeDefined();

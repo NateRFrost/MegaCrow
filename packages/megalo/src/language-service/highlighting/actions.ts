@@ -190,7 +190,8 @@ const ACTION_PARAMETER_HIGHLIGHTERS: Record<
   player_set_fireteam_index: highlightPlayerSetFireteamIndex,
   player_set_objective: highlightPlayerSetObjective,
   player_set_objective_allegiance: highlightPlayerSetObjectiveAllegiance,
-  player_set_objective_allegiance_icon: highlightPlayerSetObjectiveAllegianceIcon,
+  player_set_objective_allegiance_icon:
+    highlightPlayerSetObjectiveAllegianceIcon,
   player_set_primary_respawn_object: highlightPlayerSetPrimaryRespawnObject,
   player_set_requisition_palette: highlightPlayerSetRequisitionPalette,
   player_set_unit: highlightPlayerSetUnit,

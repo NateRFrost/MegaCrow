@@ -1,9 +1,9 @@
 import { e_active_camo_setting } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   ActiveCamo,
   type ActiveCamo as ActiveCamoName,
 } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 const ACTIVE_CAMO_TO_BLF = {
   [ActiveCamo.off]: e_active_camo_setting.off,

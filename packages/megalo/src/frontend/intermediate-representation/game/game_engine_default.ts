@@ -6,8 +6,11 @@ import type {
   StringTableEntry,
   StringTableReference,
 } from "src/frontend/intermediate-representation/game/string_table";
+import {
+  type MegaloEnumNames,
+  megaloEnum,
+} from "src/frontend/intermediate-representation/megaloEnum";
 import type { ContentItemMetadata } from "src/frontend/intermediate-representation/saved_games/saved_game_files";
-import { megaloEnum, type MegaloEnumNames } from "src/frontend/intermediate-representation/megaloEnum";
 
 export type GameEngineMiscellaneousOptions = Partial<{
   teamsEnabled: boolean;

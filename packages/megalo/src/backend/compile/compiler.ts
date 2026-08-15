@@ -38,11 +38,11 @@ export enum EngineIcon {
   Attack = 30,
 }
 
-export type CompiledMegaloMetadata = {
-  name?: Record<StringTableLanguage, string>;
+export interface CompiledMegaloMetadata {
   description?: Record<StringTableLanguage, string>;
   engineIcon?: EngineIcon;
-};
+  name?: Record<StringTableLanguage, string>;
+}
 
 export abstract class Compiler {
   public abstract dryRun(

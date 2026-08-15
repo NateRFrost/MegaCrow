@@ -1,8 +1,8 @@
 import {
   GameOptionEntryKind,
-  OverrideValueKind,
   type GameOptionsElementNode,
   type OverrideNameNode,
+  OverrideValueKind,
 } from "src/frontend/abstract-syntax-tree/elements/game_options";
 import type { PlayerTraitOptionNode } from "src/frontend/abstract-syntax-tree/elements/game_options/player_traits";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
@@ -15,26 +15,21 @@ import {
 } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 import { loadoutPaletteType } from "src/frontend/intermediate-representation/game/megalogamengine/loadoutPaletteType";
 import {
+  emitElementKeyword,
+  emitLocation,
+} from "src/language-service/highlighting/emit";
+import {
   type EnumKeywordAllowed,
   highlightClosedValueParameters,
   highlightEnumKeyword,
   highlightStructural,
 } from "src/language-service/highlighting/helpers";
-import {
-  emitElementKeyword,
-  emitLocation,
-} from "src/language-service/highlighting/emit";
 import type { SemanticToken } from "src/language-service/highlighting/types";
 
 const BOOLEAN_KEYWORDS = ["true", "false"] as const;
 
 const OBJECT_LIST_SENTINELS = ["none", "default", "random"] as const;
-const EQUIPMENT_USAGE_KEYWORDS = [
-  "on",
-  "enabled",
-  "off",
-  "disabled",
-] as const;
+const EQUIPMENT_USAGE_KEYWORDS = ["on", "enabled", "off", "disabled"] as const;
 
 /** Per trait-option closed keyword vocabs (integers / refs / grenade_count use structural). */
 const PLAYER_TRAIT_VALUE_BY_OPTION: Record<string, EnumKeywordAllowed> = {

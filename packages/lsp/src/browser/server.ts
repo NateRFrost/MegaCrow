@@ -9,6 +9,7 @@ import {
   TextDocumentSyncKind,
 } from "vscode-languageserver/browser";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import type { AnalysisSnapshot } from "../core";
 import {
   analyzeAndCompile,
   analyzeDocumentSnapshot,
@@ -26,7 +27,6 @@ import {
   SEMANTIC_TOKENS_LEGEND,
   semanticTokensFromSnapshot,
 } from "../core";
-import type { AnalysisSnapshot } from "../core";
 
 const DEFAULT_VERSION = MEGALO_VERSIONS["107-mcc"];
 
@@ -36,11 +36,11 @@ const connection = createConnection(reader, writer);
 
 const documents = new Map<string, TextDocument>();
 
-type SnapshotCacheEntry = {
-  snapshot: AnalysisSnapshot;
+interface SnapshotCacheEntry {
   semanticTokens: number[];
+  snapshot: AnalysisSnapshot;
   version: number;
-};
+}
 
 const snapshotCache = new Map<string, SnapshotCacheEntry>();
 
@@ -112,7 +112,7 @@ const getCachedSnapshot = async (
   if (cached && cached.version === doc.version) {
     return cached;
   }
-  return refreshSnapshot(uri, doc.getText(), doc.version);
+  return await refreshSnapshot(uri, doc.getText(), doc.version);
 };
 
 const publishFor = async (

@@ -1,9 +1,9 @@
 import { e_weapon_pickup_priority } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   WeaponPickupPriority,
   type WeaponPickupPriority as WeaponPickupPriorityName,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 const WEAPON_PICKUP_PRIORITY_TO_BLF = {
   [WeaponPickupPriority.normal]: e_weapon_pickup_priority.normal,

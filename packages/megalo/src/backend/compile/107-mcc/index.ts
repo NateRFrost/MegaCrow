@@ -233,7 +233,7 @@ export class Compiler107MCC extends Compiler {
     return gametype;
   }
 
-  private mapEngineIcon = (icon: number): EngineIcon | undefined => {
+  private readonly mapEngineIcon = (icon: number): EngineIcon | undefined => {
     switch (icon) {
       case 0:
         return EngineIcon.CaptureTheFlag;

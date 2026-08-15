@@ -10,7 +10,7 @@ export const highlightHudPostMessage = (
   statement: ActionStatementNode
 ): void => {
   const p = statement.parameters;
-  let i = highlightTeamOrPlayerTarget(out, p, 0);
+  const i = highlightTeamOrPlayerTarget(out, p, 0);
   highlightStructural(out, p[i]);
   highlightStructural(out, p[i + 1]);
 };

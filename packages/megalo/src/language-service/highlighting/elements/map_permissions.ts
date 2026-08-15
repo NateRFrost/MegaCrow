@@ -1,10 +1,10 @@
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
 import type { MapPermissionsElementNode } from "src/frontend/abstract-syntax-tree/elements/map_permissions";
-import { highlightEnumKeyword } from "src/language-service/highlighting/helpers";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
 import {
   emitElementKeyword,
   emitLocation,
 } from "src/language-service/highlighting/emit";
+import { highlightEnumKeyword } from "src/language-service/highlighting/helpers";
 import type { SemanticToken } from "src/language-service/highlighting/types";
 
 const BOOLEAN_KEYWORDS = ["true", "false"] as const;

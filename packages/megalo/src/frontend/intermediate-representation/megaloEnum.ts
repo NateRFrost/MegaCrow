@@ -1,16 +1,16 @@
-export type MegaloEnumMemberOptions = {
-  name: string;
-  /** Parsed & highlighted, but warn and hide from autocomplete. */
-  deprecated?: boolean;
+export interface MegaloEnumMemberOptions {
   /** Accept this name when parsing, but resolve to the canonical `aliasOf` member. */
   aliasOf?: string;
-};
-
-type NormalizedMember = {
+  /** Parsed & highlighted, but warn and hide from autocomplete. */
+  deprecated?: boolean;
   name: string;
-  deprecated: boolean;
+}
+
+interface NormalizedMember {
   aliasOf?: string;
-};
+  deprecated: boolean;
+  name: string;
+}
 
 /** Canonical member names only (excludes `aliasOf` entries). */
 type CanonicalMemberName<T> = T extends string
@@ -24,9 +24,7 @@ type CanonicalMemberName<T> = T extends string
 export type MegaloEnumNames<T extends { readonly names: readonly string[] }> =
   T["names"][number];
 
-export type MegaloEnumDef<Name extends string> = {
-  /** Canonical member names (parse / highlight). Aliases excluded. */
-  readonly names: readonly Name[];
+export interface MegaloEnumDef<Name extends string> {
   /**
    * All names accepted by {@link MegaloEnumDef.parse} (canonical first, then
    * aliases in definition order). Useful for AST keyword parameter slots.
@@ -34,12 +32,14 @@ export type MegaloEnumDef<Name extends string> = {
   readonly acceptedNames: readonly string[];
   /** Identity map (`Foo.Bar === "Bar"`), like `z.enum(...).enum`. */
   readonly enum: { readonly [K in Name]: K };
-  /** Accepts canonical names and aliases; returns the canonical name. */
-  readonly parse: (name: string) => Name | undefined;
   /** True for canonical names and aliases. */
   readonly has: (name: string) => boolean;
   readonly isDeprecated: (name: string) => boolean;
-};
+  /** Canonical member names (parse / highlight). Aliases excluded. */
+  readonly names: readonly Name[];
+  /** Accepts canonical names and aliases; returns the canonical name. */
+  readonly parse: (name: string) => Name | undefined;
+}
 
 const normalizeMember = (
   member: string | MegaloEnumMemberOptions

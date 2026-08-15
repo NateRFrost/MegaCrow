@@ -11,6 +11,6 @@ export const highlightSubmitIncident = (
 ): void => {
   const p = statement.parameters;
   highlightStructural(out, p[0]);
-  let i = highlightTeamOrPlayerTarget(out, p, 1);
+  const i = highlightTeamOrPlayerTarget(out, p, 1);
   highlightTeamOrPlayerTarget(out, p, i);
 };

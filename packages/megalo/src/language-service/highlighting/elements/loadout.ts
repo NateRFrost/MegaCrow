@@ -1,10 +1,10 @@
 import { isAstErrorNode } from "src/frontend/abstract-syntax-tree";
 import type { LoadoutElementNode } from "src/frontend/abstract-syntax-tree/elements/loadout";
-import { highlightClosedValueParameters } from "src/language-service/highlighting/helpers";
 import {
   emitElementKeyword,
   emitLocation,
 } from "src/language-service/highlighting/emit";
+import { highlightClosedValueParameters } from "src/language-service/highlighting/helpers";
 import type { SemanticToken } from "src/language-service/highlighting/types";
 
 export const highlightLoadout = (

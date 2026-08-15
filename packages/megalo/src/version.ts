@@ -30,13 +30,14 @@ export const MEGALO_VERSIONS = {
   //"32": version(32),                // December 2009 - Digsite Leak - ctf-2flag.mglo
 };
 
-export type MegaloVersionId = `${Exclude<keyof typeof MEGALO_VERSIONS, symbol>}`;
+export type MegaloVersionId =
+  `${Exclude<keyof typeof MEGALO_VERSIONS, symbol>}`;
 
 export type SupportedMegaloVersion =
   (typeof MEGALO_VERSIONS)[keyof typeof MEGALO_VERSIONS];
 
 export function isMegaloVersionId(value: string): value is MegaloVersionId {
-  return Object.prototype.hasOwnProperty.call(MEGALO_VERSIONS, value);
+  return Object.hasOwn(MEGALO_VERSIONS, value);
 }
 
 /** Localized human-readable label for a supported Megalo version. */

@@ -1,9 +1,9 @@
 import { e_object_team_filter } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   ObjectTeamFilter,
   type ObjectTeamFilter as ObjectTeamFilterName,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_map_objects";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 const OBJECT_TEAM_FILTER_TO_BLF = {
   [ObjectTeamFilter.none]: e_object_team_filter.none,

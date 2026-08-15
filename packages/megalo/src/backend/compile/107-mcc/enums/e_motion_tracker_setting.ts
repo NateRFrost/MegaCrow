@@ -1,9 +1,9 @@
 import { e_motion_tracker_setting } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   MotionTrackerMode,
   type MotionTrackerMode as MotionTrackerModeName,
 } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 const MOTION_TRACKER_MODE_TO_BLF = {
   [MotionTrackerMode.unchanged]: e_motion_tracker_setting.unchanged,

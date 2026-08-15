@@ -1,3 +1,4 @@
+import { CompilerError } from "src/diagnostics/error";
 import {
   type Diagnostic,
   Diagnostics,
@@ -7,7 +8,6 @@ import {
   type SourceLocation,
   SourceLocationType,
 } from "src/diagnostics/index";
-import { CompilerError } from "src/diagnostics/error";
 
 /**
  * Tags diagnostics from an included file as {@link IncludeLocation}, pointing

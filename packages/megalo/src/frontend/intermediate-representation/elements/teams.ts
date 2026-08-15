@@ -14,7 +14,6 @@ import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   DesignatorSwitchType,
   type GameEngineTeamOptionsTeam,
-  type MultiplayerTeamDesignator,
   PlayerModelChoice,
   TeamOptionsModelOverrideType,
 } from "src/frontend/intermediate-representation/game/game_engine_default";

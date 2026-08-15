@@ -1,8 +1,8 @@
 import { TokenKind } from "src/frontend/tokens";
-import type { AnalysisSnapshot } from "src/language-service/snapshot";
-import { isRootDocumentLocation } from "src/language-service/position";
 import { emitLocation } from "src/language-service/highlighting/emit";
 import type { SemanticToken } from "src/language-service/highlighting/types";
+import { isRootDocumentLocation } from "src/language-service/position";
+import type { AnalysisSnapshot } from "src/language-service/snapshot";
 
 /** Lexical token highlighting (comments, strings, numbers, operators, `end`). */
 export const highlightLexicalTokens = (

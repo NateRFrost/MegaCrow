@@ -6,16 +6,16 @@ import { dxAssertionScope } from "src/frontend/intermediate-representation/diagn
 import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  multiplayerTeamDesignator,
   type MultiplayerTeamDesignator,
+  multiplayerTeamDesignator,
 } from "src/frontend/intermediate-representation/game/game_engine_default";
 import {
   type CustomVariableReference,
   CustomVariableType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import {
-  megaloVariableNetworkState,
   type MegaloVariableNetworkState,
+  megaloVariableNetworkState,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variable_metadata";
 import type {
   ElementLowerContext,

@@ -6,17 +6,17 @@ import {
 } from "src/frontend/abstract-syntax-tree";
 import type { ObjectLists } from "src/frontend/object-lists";
 import { Lexer } from "src/frontend/tokens";
-import type { AnalysisSnapshot } from "src/language-service/snapshot";
 import { computeLineStarts } from "src/language-service/position";
+import type { AnalysisSnapshot } from "src/language-service/snapshot";
 import { loadObjectListsForVersion } from "src/load-object-lists";
 import { ALL_MEGACROW_EXTENSIONS } from "src/megacrow-extensions";
 import type { SupportedMegaloVersion } from "src/version";
 
 export interface AnalyzeDocumentOptions {
-  version: SupportedMegaloVersion;
   fromUri?: string;
   objectLists?: ObjectLists;
   resolveInclude?: ResolveIncludeFn;
+  version: SupportedMegaloVersion;
 }
 
 /**
@@ -31,8 +31,7 @@ export const analyzeDocument = async (
   const { version } = options;
   const frontend = new MegaloCompilerContext(version, ALL_MEGACROW_EXTENSIONS);
   const diagnostics = new Diagnostics();
-  const objectLists =
-    options.objectLists ?? loadObjectListsForVersion(version);
+  const objectLists = options.objectLists ?? loadObjectListsForVersion(version);
 
   const tokens = new Lexer(frontend).lex(source, diagnostics);
   const parser = new Parser(frontend);

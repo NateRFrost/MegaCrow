@@ -70,8 +70,7 @@ const CUSTOM_VARIABLE_TYPE_TO_BLF = {
     e_custom_variable_type.yellow_powerup_duration,
   [CustomVariableType.ObjectDeathDamageType]:
     e_custom_variable_type.object_death_damage_type,
-  [CustomVariableType.TemporaryNumber]:
-    e_custom_variable_type.temporary_number,
+  [CustomVariableType.TemporaryNumber]: e_custom_variable_type.temporary_number,
 } as const satisfies Record<CustomVariableType, e_custom_variable_type>;
 
 export const encodeCustomVariableType = (

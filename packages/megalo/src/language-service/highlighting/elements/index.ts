@@ -1,25 +1,25 @@
 import {
-  ElementKind,
   type ASTElementNode,
+  ElementKind,
 } from "src/frontend/abstract-syntax-tree/elements";
 import { highlightBase } from "src/language-service/highlighting/elements/base";
-import { highlightInclude } from "src/language-service/highlighting/elements/include";
-import { highlightLocalizedInclude } from "src/language-service/highlighting/elements/localized_include";
-import { highlightStringTable } from "src/language-service/highlighting/elements/string_table";
 import { highlightConstants } from "src/language-service/highlighting/elements/constants";
-import { highlightVariables } from "src/language-service/highlighting/elements/variables";
+import { highlightEngineData } from "src/language-service/highlighting/elements/engine_data";
 import { highlightGameOptions } from "src/language-service/highlighting/elements/game_options";
+import { highlightGameStats } from "src/language-service/highlighting/elements/game_stats";
 import { highlightHudWidgets } from "src/language-service/highlighting/elements/hud_widgets";
+import { highlightInclude } from "src/language-service/highlighting/elements/include";
 import { highlightLoadout } from "src/language-service/highlighting/elements/loadout";
 import { highlightLoadoutPalette } from "src/language-service/highlighting/elements/loadout_palette";
-import { highlightTeams } from "src/language-service/highlighting/elements/teams";
-import { highlightEngineData } from "src/language-service/highlighting/elements/engine_data";
-import { highlightPlayerRating } from "src/language-service/highlighting/elements/player_rating";
-import { highlightMapPermissions } from "src/language-service/highlighting/elements/map_permissions";
-import { highlightGameStats } from "src/language-service/highlighting/elements/game_stats";
+import { highlightLocalizedInclude } from "src/language-service/highlighting/elements/localized_include";
 import { highlightMapObject } from "src/language-service/highlighting/elements/map_object";
+import { highlightMapPermissions } from "src/language-service/highlighting/elements/map_permissions";
+import { highlightPlayerRating } from "src/language-service/highlighting/elements/player_rating";
 import { highlightRequisitionPalette } from "src/language-service/highlighting/elements/requisition_palette";
+import { highlightStringTable } from "src/language-service/highlighting/elements/string_table";
+import { highlightTeams } from "src/language-service/highlighting/elements/teams";
 import { highlightTrigger } from "src/language-service/highlighting/elements/trigger";
+import { highlightVariables } from "src/language-service/highlighting/elements/variables";
 import type { SemanticToken } from "src/language-service/highlighting/types";
 
 /** Dispatch highlighting for a top-level AST element. */
@@ -84,7 +84,7 @@ export const highlightElement = (
       break;
     default: {
       const _exhaustive: never = element;
-      return _exhaustive;
+      void _exhaustive;
     }
   }
 };

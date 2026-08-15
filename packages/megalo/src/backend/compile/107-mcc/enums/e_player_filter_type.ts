@@ -1,9 +1,9 @@
 import { e_player_filter_type } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   PlayerFilterType,
   type PlayerFilterType as PlayerFilterTypeName,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 const PLAYER_FILTER_TYPE_TO_BLF = {
   [PlayerFilterType.no_one]: e_player_filter_type.no_one,

@@ -6,7 +6,10 @@ import type {
   TeamReference,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import type { VariantVariable } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variant_variable";
-import { megaloEnum, type MegaloEnumNames } from "src/frontend/intermediate-representation/megaloEnum";
+import {
+  type MegaloEnumNames,
+  megaloEnum,
+} from "src/frontend/intermediate-representation/megaloEnum";
 
 export const numericComparison = megaloEnum([
   "less_than",
@@ -162,7 +165,10 @@ export type Condition = ConditionBase &
     | ConditionParameters<"if", ConditionIfParameters>
     | ConditionParameters<"object_in_area", ConditionObjectInAreaParameters>
     | ConditionParameters<"player_died", ConditionPlayerDiedParameters>
-    | ConditionParameters<"team_disposition", ConditionTeamDispositionParameters>
+    | ConditionParameters<
+        "team_disposition",
+        ConditionTeamDispositionParameters
+      >
     | ConditionParameters<"timer_expired", ConditionTimerExpiredParameters>
     | ConditionParameters<"object_is_type", ConditionObjectIsTypeParameters>
     | ConditionParameters<"team_is_active", ConditionTeamIsActiveParameters>
@@ -187,7 +193,10 @@ export type Condition = ConditionBase &
         "equipment_is_active",
         ConditionEquipmentIsActiveParameters
       >
-    | ConditionParameters<"player_is_spartan", ConditionPlayerIsSpartanParameters>
+    | ConditionParameters<
+        "player_is_spartan",
+        ConditionPlayerIsSpartanParameters
+      >
     | ConditionParameters<"player_is_elite", ConditionPlayerIsEliteParameters>
     | ConditionParameters<"player_is_editor", ConditionPlayerIsEditorParameters>
     | ConditionParameters<"game_is_forge", ConditionGameIsForgeParameters>

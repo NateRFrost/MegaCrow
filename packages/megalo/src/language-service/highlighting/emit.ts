@@ -1,13 +1,13 @@
 import type { SourceCodeLocation } from "src/diagnostics";
-import {
-  isRootDocumentLocation,
-  singleLineSpanLength,
-} from "src/language-service/position";
 import type {
   SemanticToken,
   SemanticTokenModifier,
   SemanticTokenType,
 } from "src/language-service/highlighting/types";
+import {
+  isRootDocumentLocation,
+  singleLineSpanLength,
+} from "src/language-service/position";
 
 export const emitLocation = (
   out: SemanticToken[],
@@ -37,7 +37,7 @@ export const emitKeywordRange = (
   from: SourceCodeLocation,
   until: SourceCodeLocation
 ): void => {
-  if (!isRootDocumentLocation(from) || !isRootDocumentLocation(until)) {
+  if (!(isRootDocumentLocation(from) && isRootDocumentLocation(until))) {
     return;
   }
   if (from.start.line !== until.start.line) {

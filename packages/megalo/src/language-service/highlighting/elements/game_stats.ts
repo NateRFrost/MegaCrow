@@ -1,11 +1,11 @@
 import { isAstErrorNode } from "src/frontend/abstract-syntax-tree";
 import type { GameStatsElementNode } from "src/frontend/abstract-syntax-tree/elements/game_stats";
 import { gameStatisticGrouping } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_statistics";
-import { highlightEnumKeyword } from "src/language-service/highlighting/helpers";
 import {
   emitElementKeyword,
   emitLocation,
 } from "src/language-service/highlighting/emit";
+import { highlightEnumKeyword } from "src/language-service/highlighting/helpers";
 import type { SemanticToken } from "src/language-service/highlighting/types";
 
 export const highlightGameStats = (

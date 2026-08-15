@@ -1,9 +1,9 @@
 import { e_grenade_count_setting } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   GrenadeCountSetting,
   type GrenadeCountSetting as GrenadeCountSettingName,
 } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 /** Script `none` → BLF `none`; omit the IR field for BLF `unchanged`. */
 const GRENADE_COUNT_SETTING_TO_BLF = {

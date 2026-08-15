@@ -1,7 +1,4 @@
-import type {
-  SourceCodeLocation,
-  SourcePosition,
-} from "src/diagnostics";
+import type { SourceCodeLocation, SourcePosition } from "src/diagnostics";
 import { SourceLocationType } from "src/diagnostics";
 import type { AnalysisSnapshot } from "src/language-service/snapshot";
 
@@ -52,9 +49,7 @@ export const positionToOffset = (
   return Math.min(next, start + Math.max(0, character));
 };
 
-export const isRootDocumentLocation = (
-  location: SourceCodeLocation
-): boolean =>
+export const isRootDocumentLocation = (location: SourceCodeLocation): boolean =>
   location.type === SourceLocationType.SOURCE_CODE &&
   location.start.line > 0 &&
   location.start.absoluteOffset === location.start.localOffset;

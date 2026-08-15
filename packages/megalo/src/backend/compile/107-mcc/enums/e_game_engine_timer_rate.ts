@@ -66,7 +66,7 @@ export const encodeGameEngineTimerRate = (
   diagnostics?: Diagnostics,
   location: SourceLocation = BUILT_IN_LOCATION
 ): e_game_engine_timer_rate => {
-  let pct = -multiplier * 100;
+  const pct = -multiplier * 100;
   if (pct === 0) {
     return e_game_engine_timer_rate.zero;
   }

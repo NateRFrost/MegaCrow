@@ -1,9 +1,9 @@
 import { e_vehicle_usage_setting } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   VehicleUsage,
   type VehicleUsage as VehicleUsageName,
 } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 const VEHICLE_USAGE_TO_BLF = {
   [VehicleUsage.unchanged]: e_vehicle_usage_setting.unchanged,

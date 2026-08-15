@@ -1,9 +1,9 @@
 import { e_condition_type } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   ConditionType,
   type ConditionType as ConditionTypeName,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 const CONDITION_TYPE_TO_BLF = {
   [ConditionType.if]: e_condition_type.if,

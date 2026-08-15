@@ -1,9 +1,9 @@
 import { e_megalo_sound } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   MegaloSound,
   type MegaloSound as MegaloSoundName,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_sounds";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 const MEGALO_SOUND_TO_BLF = {
   [MegaloSound.none]: e_megalo_sound.none,

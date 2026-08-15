@@ -6,8 +6,8 @@ import {
 } from "src/frontend/intermediate-representation";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  grenadeCountSetting,
   type GrenadeCountSetting,
+  grenadeCountSetting,
 } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
 
 export const lowerGrenadeCount = (

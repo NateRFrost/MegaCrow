@@ -1,9 +1,9 @@
 import { e_math_operation } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   MathOperation,
   type MathOperation as MathOperationName,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 const MATH_OPERATION_TO_BLF = {
   [MathOperation.add]: e_math_operation.add,

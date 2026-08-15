@@ -1,11 +1,11 @@
 import type { ActionStatementNode } from "src/frontend/abstract-syntax-tree/elements/trigger/action";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import { emitLocation } from "src/language-service/highlighting/emit";
 import {
   highlightOptionalEnum,
   highlightStructural,
   highlightTeamOrPlayerTarget,
 } from "src/language-service/highlighting/helpers";
-import { emitLocation } from "src/language-service/highlighting/emit";
 import type { SemanticToken } from "src/language-service/highlighting/types";
 
 /** `play_sound [everyone|player …|team …] [immediate] <sound>` */
@@ -17,7 +17,7 @@ export const highlightPlaySound = (
   if (p.length === 0) {
     return;
   }
-  const sound = p[p.length - 1];
+  const sound = p.at(-1);
   let i = 0;
   const first = p[0];
   if (

@@ -1,8 +1,8 @@
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   LoadoutPaletteType,
   type LoadoutPaletteType as LoadoutPaletteTypeName,
 } from "src/frontend/intermediate-representation/game/megalogamengine/loadoutPaletteType";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 /** Compile-time `m_loadout_palette_index` values (includes `none`). */
 const LOADOUT_PALETTE_INDEX = {

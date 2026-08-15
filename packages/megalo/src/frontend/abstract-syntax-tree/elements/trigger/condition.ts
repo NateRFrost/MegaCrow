@@ -78,7 +78,7 @@ const consumeTrailingOr = (
     return ctx.getToken().location;
   }
 
-  return undefined;
+  return;
 };
 
 export const parseCondition = (
@@ -172,9 +172,10 @@ const parseIfConditionOperands = (
   return [left, comparison, right];
 };
 
-const asConditionParser = (
-  parser: ParameterParser
-): ConditionOperandParser => (ctx, anchor) => parser(ctx, anchor);
+const asConditionParser =
+  (parser: ParameterParser): ConditionOperandParser =>
+  (ctx, anchor) =>
+    parser(ctx, anchor);
 
 const keywordUnion = (...values: readonly string[]) =>
   values.map((value) => KeywordParameter(value));

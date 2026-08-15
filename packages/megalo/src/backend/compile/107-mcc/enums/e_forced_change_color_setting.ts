@@ -1,9 +1,9 @@
 import { e_forced_change_color_setting } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   ForcedChangeColor,
   type ForcedChangeColor as ForcedChangeColorName,
 } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 const FORCED_CHANGE_COLOR_TO_BLF = {
   [ForcedChangeColor.unchanged]: e_forced_change_color_setting.unchanged,

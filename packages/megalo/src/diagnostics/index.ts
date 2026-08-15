@@ -21,7 +21,6 @@ export const SENTINEL_POSITION: SourcePosition = {
 export const BUILT_IN_POSITION: SourcePosition = SENTINEL_POSITION;
 export const OPEN_ENDED_POSITION: SourcePosition = SENTINEL_POSITION;
 
-
 export enum SourceLocationType {
   SOURCE_CODE = 0,
   INCLUDE = 1,

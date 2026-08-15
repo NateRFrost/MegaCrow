@@ -43,18 +43,16 @@ export const clipTokensToSource = (
   tokens: SemanticToken[]
 ): SemanticToken[] => {
   const lines = source.split(/\r?\n/);
-  return tokens
-    .map((token) => {
-      const lineText = lines[token.line];
-      if (lineText === undefined) {
-        return undefined;
-      }
-      const maxLen = Math.max(0, lineText.length - token.startChar);
-      const length = Math.min(token.length, maxLen);
-      if (length <= 0 || token.startChar < 0) {
-        return undefined;
-      }
-      return { ...token, length };
-    })
-    .filter((token): token is SemanticToken => token !== undefined);
+  return tokens.flatMap((token) => {
+    const lineText = lines[token.line];
+    if (lineText === undefined) {
+      return [];
+    }
+    const maxLen = Math.max(0, lineText.length - token.startChar);
+    const length = Math.min(token.length, maxLen);
+    if (length <= 0 || token.startChar < 0) {
+      return [];
+    }
+    return [{ ...token, length }];
+  });
 };

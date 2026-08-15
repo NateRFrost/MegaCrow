@@ -6,12 +6,12 @@ import {
 import { encodeMultiplayerTeamDesignator } from "src/backend/compile/107-mcc/enums/e_multiplayer_team_designator";
 import { encodeCustomVariableReference } from "src/backend/compile/107-mcc/references";
 import type { IR } from "src/frontend/intermediate-representation";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   MegaloVariableNetworkState,
   type MegaloVariableNetworkState as MegaloVariableNetworkStateName,
   type VariableMetadata,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variable_metadata";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 const NETWORK_STATE_TO_BLF = {
   [MegaloVariableNetworkState.local]: e_megalo_variable_network_state.local,

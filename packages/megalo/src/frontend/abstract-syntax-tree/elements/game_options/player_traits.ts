@@ -89,8 +89,8 @@ export const parsePlayerTraitOptions = (
 export interface PlayerTraitsElementNode {
   description: ASTStringLiteralOrReference;
   displayName: ASTStringLiteralOrReference;
-  kind: GameOptionEntryKind.PLAYER_TRAITS;
   keywordLocation: SourceCodeLocation;
+  kind: GameOptionEntryKind.PLAYER_TRAITS;
   location: SourceCodeLocation;
   modifiers: GameOptionModifiers;
   name: { value: string; location: SourceCodeLocation } | ASTErrorNode;
@@ -98,8 +98,8 @@ export interface PlayerTraitsElementNode {
 }
 
 export interface PlayerTraitsOverrideNode {
-  kind: GameOptionEntryKind.PLAYER_TRAITS_OVERRIDE;
   keywordLocation: SourceCodeLocation;
+  kind: GameOptionEntryKind.PLAYER_TRAITS_OVERRIDE;
   location: SourceCodeLocation;
   modifiers: GameOptionModifiers;
   options: PlayerTraitOptionNode[];

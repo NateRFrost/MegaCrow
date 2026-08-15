@@ -1,9 +1,9 @@
 import { e_navpoint_priority } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   NavpointPriority,
   type NavpointPriority as NavpointPriorityName,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 const NAVPOINT_PRIORITY_TO_BLF = {
   [NavpointPriority.low]: e_navpoint_priority.low,

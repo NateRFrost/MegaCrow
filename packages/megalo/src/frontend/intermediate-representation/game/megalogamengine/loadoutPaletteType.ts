@@ -1,6 +1,6 @@
 import {
-  megaloEnum,
   type MegaloEnumNames,
+  megaloEnum,
 } from "src/frontend/intermediate-representation/megaloEnum";
 
 /** MegaloEdit `LoadoutPaletteType` names — wire indexes assigned at compile. */

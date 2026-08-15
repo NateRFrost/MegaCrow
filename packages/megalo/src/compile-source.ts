@@ -4,8 +4,8 @@ import type { CompilerSettings } from "src/compiler-settings";
 import { MegaloCompilerContext } from "src/context";
 import {
   type Diagnostic,
-  Diagnostics,
   DiagnosticSeverity,
+  Diagnostics,
   UNKNOWN_LOCATION,
 } from "src/diagnostics";
 import { CompilerError } from "src/diagnostics/error";
@@ -82,11 +82,11 @@ export type ResolveBaseMgloResult =
       diagnostics: Diagnostic[];
     };
 
-type CachedBaseCompile = {
+interface CachedBaseCompile {
   bytes: Uint8Array;
   contentHash: string;
   warningCount: number;
-};
+}
 
 /** In-memory compiled base `.mglo` bytes keyed by resolved `.txt` URI. */
 const compiledBaseSourceCache = new Map<string, CachedBaseCompile>();
@@ -263,7 +263,7 @@ const resolveAndAttachBase = async (
 
   const location = ir.locations.get(ir, "baseFilePath") ?? UNKNOWN_LOCATION;
 
-  if (!options.resolveBaseFile && !options.resolveInclude) {
+  if (!(options.resolveBaseFile || options.resolveInclude)) {
     diagnostics.addError(baseFileNotFoundMessage(ir.baseFilePath), location);
     return;
   }

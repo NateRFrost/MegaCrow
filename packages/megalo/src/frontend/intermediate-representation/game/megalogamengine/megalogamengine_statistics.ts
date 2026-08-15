@@ -1,5 +1,8 @@
 import type { StringTableReference } from "src/frontend/intermediate-representation/game/string_table";
-import { megaloEnum, type MegaloEnumNames } from "src/frontend/intermediate-representation/megaloEnum";
+import {
+  type MegaloEnumNames,
+  megaloEnum,
+} from "src/frontend/intermediate-representation/megaloEnum";
 
 export const gameStatisticFormat = megaloEnum([
   "number",
@@ -16,12 +19,11 @@ export enum GameStatisticSortOrder {
   Descending = 1,
 }
 
-export const gameStatisticGrouping = megaloEnum([
-  "none",
-  "team",
-] as const);
+export const gameStatisticGrouping = megaloEnum(["none", "team"] as const);
 export const GameStatisticGrouping = gameStatisticGrouping.enum;
-export type GameStatisticGrouping = MegaloEnumNames<typeof gameStatisticGrouping>;
+export type GameStatisticGrouping = MegaloEnumNames<
+  typeof gameStatisticGrouping
+>;
 
 export interface MegaloGameStatistic {
   format: GameStatisticFormat;

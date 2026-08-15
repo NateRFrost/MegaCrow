@@ -1,8 +1,8 @@
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   TeamOptionsModelOverrideType,
   type TeamOptionsModelOverrideType as TeamOptionsModelOverrideTypeName,
 } from "src/frontend/intermediate-representation/game/game_engine_default";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 /** Block-level model override is a 3-bit integer in the BLF layout (not a typed enum). */
 const TEAM_OPTIONS_MODEL_OVERRIDE_TYPE_TO_BLF = {

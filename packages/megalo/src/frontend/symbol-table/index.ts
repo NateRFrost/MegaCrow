@@ -1,8 +1,8 @@
 import type { MegaloCompilerContext } from "src/context";
 import {
   BUILT_IN_POSITION,
-  OPEN_ENDED_POSITION,
   type Diagnostics,
+  OPEN_ENDED_POSITION,
   type SourceCodeLocation,
   type SourceLocation,
   SourceLocationType,

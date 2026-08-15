@@ -1,4 +1,7 @@
-import { megaloEnum, type MegaloEnumNames } from "src/frontend/intermediate-representation/megaloEnum";
+import {
+  type MegaloEnumNames,
+  megaloEnum,
+} from "src/frontend/intermediate-representation/megaloEnum";
 export type DamageResistance = "invulnerable" | number;
 export type DamageModifier = "fatality" | number;
 

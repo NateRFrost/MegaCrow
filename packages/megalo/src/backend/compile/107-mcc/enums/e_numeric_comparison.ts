@@ -1,9 +1,9 @@
 import { e_numeric_comparison } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   NumericComparison,
   type NumericComparison as NumericComparisonName,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 const NUMERIC_COMPARISON_TO_BLF = {
   [NumericComparison.less_than]: e_numeric_comparison.less_than,

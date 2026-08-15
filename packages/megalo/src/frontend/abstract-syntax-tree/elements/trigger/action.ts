@@ -25,13 +25,10 @@ import {
   ParameterType,
   parseParameterValue,
 } from "src/frontend/abstract-syntax-tree/parameters";
-import { ObjectListType } from "src/frontend/object-lists";
-import { type Token, TokenKind } from "src/frontend/tokens";
-import type { MegaloVersion } from "src/version";
 import { loadoutPaletteType } from "src/frontend/intermediate-representation/game/megalogamengine/loadoutPaletteType";
 import {
-  bipedGiveWeaponMode,
   BoundaryShape,
+  bipedGiveWeaponMode,
   boundaryShape,
   fireteamFilterPreset,
   grenadeType,
@@ -44,6 +41,9 @@ import {
   weaponPickupPriority,
   weaponSlot,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { ObjectListType } from "src/frontend/object-lists";
+import { type Token, TokenKind } from "src/frontend/tokens";
+import type { MegaloVersion } from "src/version";
 
 export type ActionStatementNode = ASTNode<SyntaxKind.ACTION> & {
   name: { value: string; location: SourceCodeLocation };
@@ -171,7 +171,8 @@ const PURCHASE_CATEGORY_KEYWORDS = megaloEnumKeywords(purchaseCategory);
 
 const NAVPOINT_PRIORITY_KEYWORDS = megaloEnumKeywords(navpointPriority);
 
-const WEAPON_PICKUP_PRIORITY_KEYWORDS = megaloEnumKeywords(weaponPickupPriority);
+const WEAPON_PICKUP_PRIORITY_KEYWORDS =
+  megaloEnumKeywords(weaponPickupPriority);
 
 const WEAPON_SLOT_KEYWORDS = megaloEnumKeywords(weaponSlot);
 
@@ -367,7 +368,11 @@ const parseCreateObjectV73: ParameterParser = (ctx, anchor) => {
 /** MegaloEdit: positional custom-variable dimensions after shape (no keywords). */
 const setBoundarySignatures: ParameterSignature[] = [
   [ParameterType.Object, KeywordParameter(BoundaryShape.none)],
-  [ParameterType.Object, KeywordParameter(BoundaryShape.sphere), ParameterType.Integer],
+  [
+    ParameterType.Object,
+    KeywordParameter(BoundaryShape.sphere),
+    ParameterType.Integer,
+  ],
   [
     ParameterType.Object,
     KeywordParameter(BoundaryShape.cylinder),

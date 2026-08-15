@@ -12,9 +12,9 @@ import type { VariableSlotMap } from "src/frontend/intermediate-representation/p
 import type { SymbolId, SymbolTable } from "src/frontend/symbol-table";
 
 export interface VariableDeclarationInfo {
-  networkState: MegaloVariableNetworkState;
   initial?: CustomVariableReference;
   initialTeam?: MultiplayerTeamDesignator;
+  networkState: MegaloVariableNetworkState;
 }
 
 export interface ElementLowerContext {

@@ -1,9 +1,9 @@
 import { e_megalo_widget_position } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   HudWidgetPosition,
   type HudWidgetPosition as HudWidgetPositionName,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_hud_widgets";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 const HUD_WIDGET_POSITION_TO_BLF = {
   [HudWidgetPosition.top_left]: e_megalo_widget_position.top_left,
@@ -22,5 +22,4 @@ const HUD_WIDGET_POSITION_TO_BLF = {
 
 export const encodeHudWidgetPosition = (
   value: HudWidgetPositionName
-): e_megalo_widget_position =>
-  mapMegaloEnum(value, HUD_WIDGET_POSITION_TO_BLF);
+): e_megalo_widget_position => mapMegaloEnum(value, HUD_WIDGET_POSITION_TO_BLF);

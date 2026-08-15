@@ -7,9 +7,9 @@ import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagn
 import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
+  GameStatisticSortOrder,
   gameStatisticFormat,
   gameStatisticGrouping,
-  GameStatisticSortOrder,
   type MegaloGameStatistic,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_statistics";
 import { resolveScriptStringTableReference } from "src/frontend/intermediate-representation/parameters/resolveScriptStringTableReference";

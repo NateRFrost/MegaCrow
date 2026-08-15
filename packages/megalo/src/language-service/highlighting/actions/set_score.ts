@@ -12,7 +12,7 @@ export const highlightSetScore = (
 ): void => {
   const p = statement.parameters;
   // Parser order: target, operation, value
-  let i = highlightTeamOrPlayerTarget(out, p, 0);
+  const i = highlightTeamOrPlayerTarget(out, p, 0);
   highlightOperatorKeyword(out, p[i]);
   highlightStructural(out, p[i + 1]);
 };

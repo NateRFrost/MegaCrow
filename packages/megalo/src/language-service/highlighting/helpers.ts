@@ -1,5 +1,5 @@
-import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
 import { isComparisonOperatorName } from "src/frontend/abstract-syntax-tree/elements/trigger/operand";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import {
   playerFilterType,
@@ -143,10 +143,7 @@ export const highlightOperand = (
     return;
   }
   if (node.kind === SyntaxKind.KEYWORD) {
-    if (
-      /^[=!<>]+$/.test(node.value) ||
-      isComparisonOperatorName(node.value)
-    ) {
+    if (/^[=!<>]+$/.test(node.value) || isComparisonOperatorName(node.value)) {
       highlightOperatorKeyword(out, node);
       return;
     }

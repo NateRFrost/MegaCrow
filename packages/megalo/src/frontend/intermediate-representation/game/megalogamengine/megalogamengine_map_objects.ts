@@ -1,5 +1,8 @@
 import type { StringTableReference } from "src/frontend/intermediate-representation/game/string_table";
-import { megaloEnum, type MegaloEnumNames } from "src/frontend/intermediate-representation/megaloEnum";
+import {
+  type MegaloEnumNames,
+  megaloEnum,
+} from "src/frontend/intermediate-representation/megaloEnum";
 
 /** Same vocabulary as team designators, plus `each`. */
 export const objectTeamFilter = megaloEnum([

@@ -243,16 +243,16 @@ base "b.mglo"
       version,
       megacrowExtensions: { compileMissingBaseFromSource: true },
       onCompileProgress: (message) => progress.push(message),
-      resolveBaseFile: async () => null,
-      resolveInclude: async (path) => {
+      resolveBaseFile: () => null,
+      resolveInclude: (path) => {
         const text = files.get(path);
         return text ? { text, uri: path } : null;
       },
     });
 
-    expect(progress.some((m) => m.includes("Compiling base file base.txt"))).toBe(
-      true
-    );
+    expect(
+      progress.some((m) => m.includes("Compiling base file base.txt"))
+    ).toBe(true);
     expect(result.bytes).toBeDefined();
     expect(
       result.diagnostics.some(
@@ -269,8 +269,8 @@ base "b.mglo"
 
     const result = await compileSource(`base "base.mglo"\n${minimalScript}`, {
       version,
-      resolveBaseFile: async () => null,
-      resolveInclude: async (path) => {
+      resolveBaseFile: () => null,
+      resolveInclude: (path) => {
         const text = files.get(path);
         return text ? { text, uri: path } : null;
       },
@@ -285,12 +285,15 @@ base "b.mglo"
   });
 
   it("DX errors when neither .mglo nor sibling .txt exist", async () => {
-    const result = await compileSource(`base "missing.mglo"\n${minimalScript}`, {
-      version,
-      megacrowExtensions: { compileMissingBaseFromSource: true },
-      resolveBaseFile: async () => null,
-      resolveInclude: async () => null,
-    });
+    const result = await compileSource(
+      `base "missing.mglo"\n${minimalScript}`,
+      {
+        version,
+        megacrowExtensions: { compileMissingBaseFromSource: true },
+        resolveBaseFile: () => null,
+        resolveInclude: () => null,
+      }
+    );
 
     const error = result.diagnostics.find((d) =>
       d.message.includes('No base file was found "missing.mglo"')
@@ -311,8 +314,8 @@ base "b.mglo"
     const result = await compileSource(`base "broken.mglo"\n${minimalScript}`, {
       version,
       megacrowExtensions: { compileMissingBaseFromSource: true },
-      resolveBaseFile: async () => null,
-      resolveInclude: async (path) => {
+      resolveBaseFile: () => null,
+      resolveInclude: (path) => {
         const text = files.get(path);
         return text ? { text, uri: path } : null;
       },
@@ -350,8 +353,8 @@ trigger initialization
       {
         version,
         megacrowExtensions: { compileMissingBaseFromSource: true },
-        resolveBaseFile: async () => null,
-        resolveInclude: async (path) => {
+        resolveBaseFile: () => null,
+        resolveInclude: (path) => {
           const text = files.get(path);
           return text ? { text, uri: path } : null;
         },
@@ -383,8 +386,8 @@ trigger initialization
       {
         version,
         megacrowExtensions: { compileMissingBaseFromSource: true },
-        resolveBaseFile: async () => null,
-        resolveInclude: async (path) => {
+        resolveBaseFile: () => null,
+        resolveInclude: (path) => {
           const text = files.get(path);
           return text ? { text, uri: path } : null;
         },
@@ -400,7 +403,9 @@ trigger initialization
     if (warnings[0]?.location.type === SourceLocationType.SOURCE_CODE) {
       expect(warnings[0].location.start.line).toBe(2);
       expect(warnings[0].location.start.column).toBe(1);
-      expect(warnings[0].location.start.localOffset).toBe("; preamble\n".length);
+      expect(warnings[0].location.start.localOffset).toBe(
+        "; preamble\n".length
+      );
       expect(warnings[0].location.end.localOffset).toBe(
         '; preamble\nbase "late_base.mglo"'.length
       );
@@ -415,8 +420,8 @@ trigger initialization
       {
         version,
         megacrowExtensions: { compileMissingBaseFromSource: true },
-        resolveBaseFile: async () => null,
-        resolveInclude: async (path) => {
+        resolveBaseFile: () => null,
+        resolveInclude: (path) => {
           const text = files.get(path);
           return text ? { text, uri: path } : null;
         },
@@ -448,8 +453,8 @@ trigger initialization
       onCompileProgress: () => {
         progressHits += 1;
       },
-      resolveBaseFile: async () => null,
-      resolveInclude: async (path: string) => {
+      resolveBaseFile: () => null,
+      resolveInclude: (path: string) => {
         const text = files.get(path);
         return text ? { text, uri: path } : null;
       },

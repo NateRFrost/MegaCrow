@@ -6,13 +6,13 @@ import {
   teamOptionsModelOverrideType,
 } from "src/frontend/intermediate-representation/game/game_engine_default";
 import {
-  type EnumKeywordAllowed,
-  highlightClosedValueParameters,
-} from "src/language-service/highlighting/helpers";
-import {
   emitElementKeyword,
   emitLocation,
 } from "src/language-service/highlighting/emit";
+import {
+  type EnumKeywordAllowed,
+  highlightClosedValueParameters,
+} from "src/language-service/highlighting/helpers";
 import type { SemanticToken } from "src/language-service/highlighting/types";
 
 const allowedForBlockProperty = (key: string): EnumKeywordAllowed => {

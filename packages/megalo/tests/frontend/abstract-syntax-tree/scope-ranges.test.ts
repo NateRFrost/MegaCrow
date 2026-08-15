@@ -42,8 +42,7 @@ describe("symbol scope ranges and symbolId stamping", () => {
     expect(scores.length).toBeGreaterThanOrEqual(2);
 
     const globalScore = scores.find(
-      (entry) =>
-        isOpenEnded(entry) && entry.range.start.localOffset !== -1
+      (entry) => isOpenEnded(entry) && entry.range.start.localOffset !== -1
     );
     const temporaryScore = scores.find((entry) => !isOpenEnded(entry));
 

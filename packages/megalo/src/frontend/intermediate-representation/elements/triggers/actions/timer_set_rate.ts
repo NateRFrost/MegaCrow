@@ -23,12 +23,8 @@ export const lowerTimerSetRate = (
     type: ActionType.timer_set_rate,
     parameters: {
       timer: resolveCustomTimerReference(parameters[0]!, paramCtx),
-      rate: lowerFloatParam(
-        parameters[1]!,
-        paramCtx,
-        "timer rate",
-        location
-      ).value,
+      rate: lowerFloatParam(parameters[1]!, paramCtx, "timer rate", location)
+        .value,
     },
   };
 };

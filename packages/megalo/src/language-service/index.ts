@@ -1,16 +1,7 @@
 export {
-  analyzeDocument,
   type AnalyzeDocumentOptions,
+  analyzeDocument,
 } from "src/language-service/analyze";
-export {
-  computeLineStarts,
-  isRootDocumentLocation,
-  locationContainsOffset,
-  offsetToPosition,
-  positionAtOffset,
-  positionToOffset,
-  singleLineSpanLength,
-} from "src/language-service/position";
 export {
   encodeSemanticTokens,
   getSemanticTokens,
@@ -20,4 +11,13 @@ export {
   type SemanticTokenModifier,
   type SemanticTokenType,
 } from "src/language-service/highlighting";
+export {
+  computeLineStarts,
+  isRootDocumentLocation,
+  locationContainsOffset,
+  offsetToPosition,
+  positionAtOffset,
+  positionToOffset,
+  singleLineSpanLength,
+} from "src/language-service/position";
 export type { AnalysisSnapshot } from "src/language-service/snapshot";

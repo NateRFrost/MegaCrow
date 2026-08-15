@@ -1,4 +1,3 @@
-import type { AnalysisSnapshot } from "src/language-service/snapshot";
 import { highlightElement } from "src/language-service/highlighting/elements";
 import { highlightLexicalTokens } from "src/language-service/highlighting/lexical";
 import {
@@ -8,9 +7,10 @@ import {
 import { highlightSymbol } from "src/language-service/highlighting/symbols";
 import {
   MODIFIER_INDEX,
-  TYPE_INDEX,
   type SemanticToken,
+  TYPE_INDEX,
 } from "src/language-service/highlighting/types";
+import type { AnalysisSnapshot } from "src/language-service/snapshot";
 
 export {
   SEMANTIC_TOKEN_MODIFIERS,

@@ -1,6 +1,6 @@
 import {
-  megaloEnum,
   type MegaloEnumNames,
+  megaloEnum,
 } from "src/frontend/intermediate-representation/megaloEnum";
 
 /** Sound keywords as written in Megalo scripts / SoundTable. */

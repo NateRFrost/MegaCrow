@@ -1,9 +1,9 @@
 import { e_team_scoring_method } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 import {
   TeamScoringMethod,
   type TeamScoringMethod as TeamScoringMethodName,
 } from "src/frontend/intermediate-representation/game/game_engine_default";
+import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 const TEAM_SCORING_METHOD_TO_BLF = {
   [TeamScoringMethod.sum]: e_team_scoring_method.sum,

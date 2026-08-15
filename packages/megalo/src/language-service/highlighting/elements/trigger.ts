@@ -8,6 +8,7 @@ import type { ActionStatementNode } from "src/frontend/abstract-syntax-tree/elem
 import type { ConditionStatementNode } from "src/frontend/abstract-syntax-tree/elements/trigger/condition";
 import type { TemporaryStatementNode } from "src/frontend/abstract-syntax-tree/elements/trigger/temporary";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import { highlightActionParameters } from "src/language-service/highlighting/actions";
 import { highlightConditionParameters } from "src/language-service/highlighting/conditions";
 import {
@@ -18,7 +19,6 @@ import {
 import { highlightOperand } from "src/language-service/highlighting/helpers";
 import type { SemanticToken } from "src/language-service/highlighting/types";
 import { isRootDocumentLocation } from "src/language-service/position";
-import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 
 const highlightAction = (
   out: SemanticToken[],
@@ -124,7 +124,7 @@ export const highlightTrigger = (
     emitLocation(
       out,
       element.name.location,
-      element.name.symbolId !== undefined ? "variable" : "enumMember"
+      element.name.symbolId === undefined ? "enumMember" : "variable"
     );
   }
   highlightTriggerStatements(out, element.statements);

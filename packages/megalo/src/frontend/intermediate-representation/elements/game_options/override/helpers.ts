@@ -13,8 +13,8 @@ import {
 import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  teamScoringMethod,
   type TeamScoringMethod,
+  teamScoringMethod,
 } from "src/frontend/intermediate-representation/game/game_engine_default";
 import type { BuiltInGameOptionFlags } from "src/frontend/intermediate-representation/game/parameters";
 import { lowerConstantNumber } from "src/frontend/intermediate-representation/parameters/constantNumber";

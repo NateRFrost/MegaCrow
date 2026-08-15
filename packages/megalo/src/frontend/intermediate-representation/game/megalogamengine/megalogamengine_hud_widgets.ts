@@ -1,4 +1,7 @@
-import { megaloEnum, type MegaloEnumNames } from "src/frontend/intermediate-representation/megaloEnum";
+import {
+  type MegaloEnumNames,
+  megaloEnum,
+} from "src/frontend/intermediate-representation/megaloEnum";
 
 export const hudWidgetPosition = megaloEnum([
   "top_left",

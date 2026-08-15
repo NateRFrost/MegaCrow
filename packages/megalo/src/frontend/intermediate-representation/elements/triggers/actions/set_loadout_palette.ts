@@ -5,8 +5,8 @@ import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/paramet
 import { parseTeamOrPlayerTarget } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
-  loadoutPaletteType,
   type LoadoutPaletteType,
+  loadoutPaletteType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/loadoutPaletteType";
 import {
   type Action,

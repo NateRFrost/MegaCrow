@@ -1,9 +1,9 @@
 import type { EngineDataElementNode } from "src/frontend/abstract-syntax-tree/elements/engine_data";
-import { highlightClosedValueParameters } from "src/language-service/highlighting/helpers";
 import {
   emitElementKeyword,
   emitLocation,
 } from "src/language-service/highlighting/emit";
+import { highlightClosedValueParameters } from "src/language-service/highlighting/helpers";
 import type { SemanticToken } from "src/language-service/highlighting/types";
 
 export const highlightEngineData = (

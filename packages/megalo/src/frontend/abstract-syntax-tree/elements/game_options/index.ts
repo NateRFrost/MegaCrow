@@ -79,12 +79,12 @@ export const gameOptionsParser = (
     const modifiers: GameOptionModifiers = {
       lock: pendingLock,
       hide: pendingHide,
-      ...(pendingLockLocation !== undefined
-        ? { lockLocation: pendingLockLocation }
-        : {}),
-      ...(pendingHideLocation !== undefined
-        ? { hideLocation: pendingHideLocation }
-        : {}),
+      ...(pendingLockLocation === undefined
+        ? {}
+        : { lockLocation: pendingLockLocation }),
+      ...(pendingHideLocation === undefined
+        ? {}
+        : { hideLocation: pendingHideLocation }),
     };
     pendingLock = false;
     pendingHide = false;

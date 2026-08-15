@@ -26,13 +26,13 @@ export const SEMANTIC_TOKEN_MODIFIERS = [
 export type SemanticTokenModifier = (typeof SEMANTIC_TOKEN_MODIFIERS)[number];
 
 export interface SemanticToken {
+  length: number;
   /** 0-based line */
   line: number;
+  modifiers: SemanticTokenModifier[];
   /** 0-based UTF-16 start character */
   startChar: number;
-  length: number;
   type: SemanticTokenType;
-  modifiers: SemanticTokenModifier[];
 }
 
 export const TYPE_INDEX = Object.fromEntries(

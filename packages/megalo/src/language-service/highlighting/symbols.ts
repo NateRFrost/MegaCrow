@@ -1,9 +1,9 @@
 import type { SourceCodeLocation, SourceLocation } from "src/diagnostics";
 import { SourceLocationType } from "src/diagnostics";
 import {
-  type SymbolTableEntry,
-  SymbolKind,
   isBuiltInVariable,
+  SymbolKind,
+  type SymbolTableEntry,
 } from "src/frontend/symbol-table";
 import { emitLocation } from "src/language-service/highlighting/emit";
 import type {

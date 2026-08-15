@@ -28,7 +28,11 @@ export const lowerSensorsOption = (
           location
         );
       }
-      const value = resolveEnumKeyword(first, MotionTrackerMode, "tracker_mode");
+      const value = resolveEnumKeyword(
+        first,
+        MotionTrackerMode,
+        "tracker_mode"
+      );
       setField(
         ir.locations,
         diagnostics,

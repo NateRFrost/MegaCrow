@@ -1,5 +1,5 @@
-import type { MapObjectElementNode } from "src/frontend/abstract-syntax-tree/elements/map_object";
 import { isAstErrorNode } from "src/frontend/abstract-syntax-tree";
+import type { MapObjectElementNode } from "src/frontend/abstract-syntax-tree/elements/map_object";
 import {
   emitElementKeyword,
   emitLocation,

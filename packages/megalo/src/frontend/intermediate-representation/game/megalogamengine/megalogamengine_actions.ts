@@ -1,5 +1,5 @@
 import type { LoadoutPaletteType } from "src/frontend/intermediate-representation/game/megalogamengine/loadoutPaletteType";
-import { HUDMeterInputType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_hud_widgets";
+import type { HUDMeterInputType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_hud_widgets";
 import type {
   CustomTimerReference,
   CustomVariableReference,
@@ -12,7 +12,10 @@ import type { MegaloSound } from "src/frontend/intermediate-representation/game/
 import type { DynamicString } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_text";
 import type { VariantVariable } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variant_variable";
 import type { StringTableReference } from "src/frontend/intermediate-representation/game/string_table";
-import { megaloEnum, type MegaloEnumNames } from "src/frontend/intermediate-representation/megaloEnum";
+import {
+  type MegaloEnumNames,
+  megaloEnum,
+} from "src/frontend/intermediate-representation/megaloEnum";
 
 export const actionType = megaloEnum([
   "set_score",
@@ -145,29 +148,29 @@ export type TeamOrPlayerTarget =
 
 export const mathOperation = megaloEnum([
   "add",
-  {"name": "+=", aliasOf: "add"},
+  { name: "+=", aliasOf: "add" },
   "subtract",
-  {"name": "-=", aliasOf: "subtract"},
+  { name: "-=", aliasOf: "subtract" },
   "multiply",
-  {"name": "*=", aliasOf: "multiply"},
+  { name: "*=", aliasOf: "multiply" },
   "divide",
-  {"name": "/=", aliasOf: "divide"},
+  { name: "/=", aliasOf: "divide" },
   "set_to",
-  {"name": "=", aliasOf: "set_to"},
+  { name: "=", aliasOf: "set_to" },
   "modulo",
-  {"name": "%=", aliasOf: "modulo"},
+  { name: "%=", aliasOf: "modulo" },
   "and",
-  {"name": "&=", aliasOf: "and"},
+  { name: "&=", aliasOf: "and" },
   "or",
-  {"name": "|=", aliasOf: "or"},
+  { name: "|=", aliasOf: "or" },
   "xor",
-  {"name": "^=", aliasOf: "xor"},
+  { name: "^=", aliasOf: "xor" },
   "not",
-  {"name": "~=", aliasOf: "not"},
+  { name: "~=", aliasOf: "not" },
   "lshift",
-  {"name": "<<", aliasOf: "lshift"},
+  { name: "<<", aliasOf: "lshift" },
   "rshift",
-  {"name": ">>", aliasOf: "rshift"},
+  { name: ">>", aliasOf: "rshift" },
   "abs", // no alias?
 ] as const);
 export const MathOperation = mathOperation.enum;
@@ -377,11 +380,7 @@ export interface PlayerPurchaseMode {
   deadWeapons: boolean;
 }
 
-export const purchaseLifeState = megaloEnum([
-  "alive",
-  "dead",
-  "both",
-] as const);
+export const purchaseLifeState = megaloEnum(["alive", "dead", "both"] as const);
 export const PurchaseLifeState = purchaseLifeState.enum;
 export type PurchaseLifeState = MegaloEnumNames<typeof purchaseLifeState>;
 
@@ -932,102 +931,207 @@ export type Action =
   | ActionParameters<"navpoint_set_icon", NavpointSetIconParameters>
   | ActionParameters<"navpoint_set_priority", NavpointSetPriorityParameters>
   | ActionParameters<"navpoint_set_timer", NavpointSetTimerParameters>
-  | ActionParameters<"navpoint_set_visible_range", NavpointSetVisibleRangeParameters>
+  | ActionParameters<
+      "navpoint_set_visible_range",
+      NavpointSetVisibleRangeParameters
+    >
   | ActionParameters<"set", SetParameters>
   | ActionParameters<"set_boundary", SetBoundaryParameters>
   | ActionParameters<"apply_player_traits", ApplyPlayerTraitsParameters>
   | ActionParameters<"set_pickup_filter", SetPickupFilterParameters>
   | ActionParameters<"set_respawn_filter", SetRespawnFilterParameters>
-  | ActionParameters<"set_fireteam_respawn_filter", SetFireteamRespawnFilterParameters>
+  | ActionParameters<
+      "set_fireteam_respawn_filter",
+      SetFireteamRespawnFilterParameters
+    >
   | ActionParameters<"set_progress_bar", SetProgressBarParameters>
   | ActionParameters<"hud_post_message", HudPostMessageParameters>
   | ActionParameters<"timer_set_rate", TimerSetRateParameters>
   | ActionParameters<"print_variable", PrintVariableParameters>
-  | ActionParameters<"get_player_holding_object", GetPlayerHoldingObjectParameters>
+  | ActionParameters<
+      "get_player_holding_object",
+      GetPlayerHoldingObjectParameters
+    >
   | ActionParameters<"for_each", ForEachParameters>
   | ActionParameters<"end_round", EndRoundParameters>
   | ActionParameters<"boundary_set_visible", BoundarySetVisibleParameters>
   | ActionParameters<"object_destroy", ObjectDestroyParameters>
-  | ActionParameters<"object_set_invincibility", ObjectSetInvincibilityParameters>
+  | ActionParameters<
+      "object_set_invincibility",
+      ObjectSetInvincibilityParameters
+    >
   | ActionParameters<"random", RandomParameters>
   | ActionParameters<"break_into_debugger", BreakIntoDebuggerParameters>
   | ActionParameters<"object_get_orientation", ObjectGetOrientationParameters>
   | ActionParameters<"object_get_velocity", ObjectGetVelocityParameters>
-  | ActionParameters<"player_death_get_killing_player", PlayerDeathGetKillingPlayerParameters>
-  | ActionParameters<"player_death_get_damage_type", PlayerDeathGetDamageTypeParameters>
-  | ActionParameters<"player_death_get_special_type", PlayerDeathGetSpecialTypeParameters>
-  | ActionParameters<"debugging_enable_tracing", DebuggingEnableTracingParameters>
+  | ActionParameters<
+      "player_death_get_killing_player",
+      PlayerDeathGetKillingPlayerParameters
+    >
+  | ActionParameters<
+      "player_death_get_damage_type",
+      PlayerDeathGetDamageTypeParameters
+    >
+  | ActionParameters<
+      "player_death_get_special_type",
+      PlayerDeathGetSpecialTypeParameters
+    >
+  | ActionParameters<
+      "debugging_enable_tracing",
+      DebuggingEnableTracingParameters
+    >
   | ActionParameters<"object_attach", ObjectAttachParameters>
   | ActionParameters<"object_detach", ObjectDetachParameters>
   | ActionParameters<"player_get_place", PlayerGetPlaceParameters>
   | ActionParameters<"team_get_place", TeamGetPlaceParameters>
-  | ActionParameters<"player_get_killing_spree_count", PlayerGetKillingSpreeCountParameters>
+  | ActionParameters<
+      "player_get_killing_spree_count",
+      PlayerGetKillingSpreeCountParameters
+    >
   | ActionParameters<"player_adjust_money", PlayerAdjustMoneyParameters>
   | ActionParameters<"player_enable_purchases", PlayerEnablePurchasesParameters>
   | ActionParameters<"player_get_vehicle", PlayerGetVehicleParameters>
   | ActionParameters<"player_set_vehicle", PlayerSetVehicleParameters>
   | ActionParameters<"player_set_unit", PlayerSetUnitParameters>
   | ActionParameters<"timer_reset", TimerResetParameters>
-  | ActionParameters<"weapon_set_pickup_priority", WeaponSetPickupPriorityParameters>
+  | ActionParameters<
+      "weapon_set_pickup_priority",
+      WeaponSetPickupPriorityParameters
+    >
   | ActionParameters<"object_bounce", ObjectBounceParameters>
   | ActionParameters<"hud_widget_set_text", HUDWidgetSetTextParameters>
   | ActionParameters<"hud_widget_set_value", HUDWidgetSetValueParameters>
   | ActionParameters<"hud_widget_set_meter", HUDWidgetSetMeterParameters>
   | ActionParameters<"hud_widget_set_icon", HUDWidgetSetIconParameters>
-  | ActionParameters<"hud_widget_set_visibility", HUDWidgetSetVisibilityParameters>
+  | ActionParameters<
+      "hud_widget_set_visibility",
+      HUDWidgetSetVisibilityParameters
+    >
   | ActionParameters<"play_sound", PlaySoundParameters>
   | ActionParameters<"object_set_scale", ObjectSetScaleParameters>
   | ActionParameters<"navpoint_set_text", NavpointSetTextParameters>
   | ActionParameters<"object_get_shield", ObjectGetShieldParameters>
   | ActionParameters<"object_get_health", ObjectGetHealthParameters>
   | ActionParameters<"player_set_objective", PlayerSetObjectiveParameters>
-  | ActionParameters<"player_set_objective_allegiance", PlayerSetObjectiveAllegianceParameters>
-  | ActionParameters<"player_set_objective_allegiance_icon", PlayerSetObjectiveAllegianceIconParameters>
+  | ActionParameters<
+      "player_set_objective_allegiance",
+      PlayerSetObjectiveAllegianceParameters
+    >
+  | ActionParameters<
+      "player_set_objective_allegiance_icon",
+      PlayerSetObjectiveAllegianceIconParameters
+    >
   | ActionParameters<"team_set_coop_spawning", TeamSetCoopSpawningParameters>
-  | ActionParameters<"team_set_primary_respawn_object", TeamSetPrimaryRespawnObjectParameters>
-  | ActionParameters<"player_set_primary_respawn_object", PlayerSetPrimaryRespawnObjectParameters>
-  | ActionParameters<"player_get_fireteam_index", PlayerGetFireteamIndexParameters>
-  | ActionParameters<"player_set_fireteam_index", PlayerSetFireteamIndexParameters>
+  | ActionParameters<
+      "team_set_primary_respawn_object",
+      TeamSetPrimaryRespawnObjectParameters
+    >
+  | ActionParameters<
+      "player_set_primary_respawn_object",
+      PlayerSetPrimaryRespawnObjectParameters
+    >
+  | ActionParameters<
+      "player_get_fireteam_index",
+      PlayerGetFireteamIndexParameters
+    >
+  | ActionParameters<
+      "player_set_fireteam_index",
+      PlayerSetFireteamIndexParameters
+    >
   | ActionParameters<"object_adjust_shield", ObjectAdjustShieldParameters>
   | ActionParameters<"object_adjust_health", ObjectAdjustHealthParameters>
   | ActionParameters<"object_get_distance", ObjectGetDistanceParameters>
-  | ActionParameters<"object_adjust_maximum_shield", ObjectAdjustMaximumShieldParameters>
-  | ActionParameters<"object_adjust_maximum_health", ObjectAdjustMaximumHealthParameters>
-  | ActionParameters<"player_set_requisition_palette", PlayerSetRequisitionPaletteParameters>
+  | ActionParameters<
+      "object_adjust_maximum_shield",
+      ObjectAdjustMaximumShieldParameters
+    >
+  | ActionParameters<
+      "object_adjust_maximum_health",
+      ObjectAdjustMaximumHealthParameters
+    >
+  | ActionParameters<
+      "player_set_requisition_palette",
+      PlayerSetRequisitionPaletteParameters
+    >
   | ActionParameters<"device_set_power", DeviceSetPowerParameters>
   | ActionParameters<"device_get_power", DeviceGetPowerParameters>
   | ActionParameters<"device_set_position", DeviceSetPositionParameters>
   | ActionParameters<"device_get_position", DeviceGetPositionParameters>
   | ActionParameters<"adjust_grenades", AdjustGrenadesParameters>
   | ActionParameters<"submit_incident", SubmitIncidentParameters>
-  | ActionParameters<"submit_incident_with_custom_value", SubmitIncidentWithCustomValueParameters>
+  | ActionParameters<
+      "submit_incident_with_custom_value",
+      SubmitIncidentWithCustomValueParameters
+    >
   | ActionParameters<"set_loadout_palette", SetLoadoutPaletteParameters>
-  | ActionParameters<"device_set_position_track", DeviceSetPositionTrackParameters>
+  | ActionParameters<
+      "device_set_position_track",
+      DeviceSetPositionTrackParameters
+    >
   | ActionParameters<"device_animate_position", DeviceAnimatePositionParameters>
-  | ActionParameters<"device_set_position_immediate", DeviceSetPositionImmediateParameters>
-  | ActionParameters<"saved_film_insert_marker", SavedFilmInsertMarkerParameters>
+  | ActionParameters<
+      "device_set_position_immediate",
+      DeviceSetPositionImmediateParameters
+    >
+  | ActionParameters<
+      "saved_film_insert_marker",
+      SavedFilmInsertMarkerParameters
+    >
   | ActionParameters<"respawn_zone_enable", RespawnZoneEnableParameters>
   | ActionParameters<"player_get_weapon", PlayerGetWeaponParameters>
   | ActionParameters<"player_get_equipment", PlayerGetEquipmentParameters>
-  | ActionParameters<"object_set_never_garbage", ObjectSetNeverGarbageParameters>
-  | ActionParameters<"player_get_target_object", PlayerGetTargetObjectParameters>
+  | ActionParameters<
+      "object_set_never_garbage",
+      ObjectSetNeverGarbageParameters
+    >
+  | ActionParameters<
+      "player_get_target_object",
+      PlayerGetTargetObjectParameters
+    >
   | ActionParameters<"create_tunnel", CreateTunnelParameters>
-  | ActionParameters<"debug_force_player_view_count", DebugForcePlayerViewCountParameters>
+  | ActionParameters<
+      "debug_force_player_view_count",
+      DebugForcePlayerViewCountParameters
+    >
   | ActionParameters<"player_pick_up_weapon", PlayerPickUpWeaponParameters>
-  | ActionParameters<"player_set_coop_spawning", PlayerSetCoopSpawningParameters>
+  | ActionParameters<
+      "player_set_coop_spawning",
+      PlayerSetCoopSpawningParameters
+    >
   | ActionParameters<"object_set_orientation", ObjectSetOrientationParameters>
   | ActionParameters<"object_face_object", ObjectFaceObjectParameters>
   | ActionParameters<"biped_give_weapon", BipedGiveWeaponParameters>
   | ActionParameters<"biped_drop_weapon", BipedDropWeaponParameters>
-  | ActionParameters<"set_scenario_interpolator_state", SetScenarioInterpolatorStateParameters>
+  | ActionParameters<
+      "set_scenario_interpolator_state",
+      SetScenarioInterpolatorStateParameters
+    >
   | ActionParameters<"get_random_object", GetRandomObjectParameters>
-  | ActionParameters<"game_grief_record_custom_penalty", GameGriefRecordCustomPenaltyParameters>
-  | ActionParameters<"boundary_set_player_color", BoundarySetPlayerColorParameters>
+  | ActionParameters<
+      "game_grief_record_custom_penalty",
+      GameGriefRecordCustomPenaltyParameters
+    >
+  | ActionParameters<
+      "boundary_set_player_color",
+      BoundarySetPlayerColorParameters
+    >
   | ActionParameters<"begin", BeginParameters>
   | ActionParameters<"hs_function_call", HsFunctionCallParameters>
   | ActionParameters<"get_button_time", GetButtonTimeParameters>
-  | ActionParameters<"team_set_vehicle_spawning", TeamSetVehicleSpawningParameters>
-  | ActionParameters<"player_set_vehicle_spawning", PlayerSetVehicleSpawningParameters>
-  | ActionParameters<"set_player_respawn_vehicle", SetPlayerRespawnVehicleParameters>
-  | ActionParameters<"set_team_respawn_vehicle", SetTeamRespawnVehicleParameters>
+  | ActionParameters<
+      "team_set_vehicle_spawning",
+      TeamSetVehicleSpawningParameters
+    >
+  | ActionParameters<
+      "player_set_vehicle_spawning",
+      PlayerSetVehicleSpawningParameters
+    >
+  | ActionParameters<
+      "set_player_respawn_vehicle",
+      SetPlayerRespawnVehicleParameters
+    >
+  | ActionParameters<
+      "set_team_respawn_vehicle",
+      SetTeamRespawnVehicleParameters
+    >
   | ActionParameters<"hide_object", HideObjectParameters>;

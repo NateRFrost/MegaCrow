@@ -3,12 +3,12 @@ export {
   EngineIcon,
 } from "src/backend/compile/compiler";
 export {
+  baseFileCompiledFromSourceMessage,
+  baseFileCompileFailedMessage,
+  baseFileNotFoundMessage,
   type CompileProgressFn,
   type CompileSourceOptions,
   type CompileSourceResult,
-  baseFileCompileFailedMessage,
-  baseFileCompiledFromSourceMessage,
-  baseFileNotFoundMessage,
   clearCompiledBaseSourceCache,
   compileSource,
   type ResolveBaseFileFn,
@@ -29,10 +29,11 @@ export {
   UNKNOWN_LOCATION,
 } from "src/diagnostics";
 export type { ResolveIncludeFn } from "src/frontend/abstract-syntax-tree";
+export type { ObjectLists } from "src/frontend/object-lists";
 export {
-  analyzeDocument,
-  type AnalyzeDocumentOptions,
   type AnalysisSnapshot,
+  type AnalyzeDocumentOptions,
+  analyzeDocument,
   encodeSemanticTokens,
   getSemanticTokens,
   SEMANTIC_TOKEN_MODIFIERS,
@@ -41,7 +42,6 @@ export {
   type SemanticTokenModifier,
   type SemanticTokenType,
 } from "src/language-service";
-export type { ObjectLists } from "src/frontend/object-lists";
 export { loadObjectListsForVersion } from "src/load-object-lists";
 export {
   ALL_MEGACROW_EXTENSIONS,
@@ -54,9 +54,9 @@ export {
   MegaloCompilerContext,
 } from "src/megalo-compiler";
 export {
-  MEGALO_VERSIONS,
   getLabel,
   isMegaloVersionId,
+  MEGALO_VERSIONS,
   type MegaloVersionId,
   type SupportedMegaloVersion,
 } from "src/version";
