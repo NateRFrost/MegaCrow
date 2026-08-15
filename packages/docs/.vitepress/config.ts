@@ -3,6 +3,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import type MarkdownIt from "markdown-it";
 import { defineConfig } from "vitepress";
 import type { DefaultTheme } from "vitepress/theme";
+import { MEGACROW_BUILD_STRING } from "../../megalo/src/build-info";
 import languageActions from "./language-actions.json";
 import languageVersions from "./language-versions.json";
 import {
@@ -322,7 +323,7 @@ export default defineConfig(async () => {
         },
       ],
       footer: {
-        message: "MIT Licensed",
+        message: `MegaCrow ${MEGACROW_BUILD_STRING}`,
         copyright:
           'Copyright © <a href="https://discord.gg/77ZAgXv8a6" target="_blank" rel="noopener noreferrer">Blam Network</a>',
       },

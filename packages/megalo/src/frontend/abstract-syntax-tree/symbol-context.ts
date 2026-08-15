@@ -26,6 +26,7 @@ import {
 import {
   addBuiltInConstants,
   addBuiltInGameOptions,
+  addBuiltInStrings,
   addBuiltInVariables,
 } from "src/frontend/symbol-table/built-in";
 import {
@@ -80,6 +81,7 @@ export class ParserSymbolContext {
     addBuiltInConstants(this.frontend.megaloVersion, this);
     addBuiltInVariables(this.frontend, this);
     addBuiltInGameOptions(this.frontend.megaloVersion, this);
+    addBuiltInStrings(this.frontend, this);
   }
 
   private registerObjectListItems(

@@ -3,6 +3,11 @@ export {
   EngineIcon,
 } from "src/backend/compile/compiler";
 export {
+  MEGACROW_BUILD_STRING,
+  MEGACROW_PACKAGE_VERSION,
+  MEGACROW_SHOW_WATERMARK,
+} from "src/build-info";
+export {
   baseFileCompiledFromSourceMessage,
   baseFileCompileFailedMessage,
   baseFileNotFoundMessage,

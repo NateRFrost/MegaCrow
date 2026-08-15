@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { MEGACROW_BUILD_STRING } from "../../../src/build-info";
 import { MegaloCompilerContext } from "../../../src/context";
 import { Diagnostics } from "../../../src/diagnostics";
 import { Parser } from "../../../src/frontend/abstract-syntax-tree";
+import { ParserSymbolContext } from "../../../src/frontend/abstract-syntax-tree/symbol-context";
 import { Lowerer } from "../../../src/frontend/intermediate-representation";
 import { ActionType } from "../../../src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import { SymbolBinder } from "../../../src/frontend/symbol-table";
 import { Lexer } from "../../../src/frontend/tokens";
 import type { MegacrowExtensions } from "../../../src/megacrow-extensions";
 import { MEGALO_VERSIONS } from "../../../src/version";
@@ -83,6 +86,29 @@ describe("megacrowExtensions.coopSpawning", () => {
       (entry) => entry.type === ActionType.navpoint_set_icon
     );
     expect(action?.parameters).toMatchObject({ icon: 27 });
+  });
+});
+
+describe("megacrowExtensions.megacrowVersionString", () => {
+  it("does not seed mc_version without the extension", () => {
+    const diagnostics = new Diagnostics();
+    const frontend = new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"]);
+    const binder = new SymbolBinder(frontend, diagnostics);
+    const parser = new ParserSymbolContext(frontend, diagnostics, binder);
+    expect(parser.lookupString("mc_version")).toBeUndefined();
+  });
+
+  it("seeds mc_version with the build string when enabled", () => {
+    const diagnostics = new Diagnostics();
+    const frontend = new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"], {
+      megacrowVersionString: true,
+    });
+    const binder = new SymbolBinder(frontend, diagnostics);
+    const parser = new ParserSymbolContext(frontend, diagnostics, binder);
+    expect(parser.lookupString("mc_version")).toBeDefined();
+    expect(parser.lookupStringContent("mc_version")).toBe(
+      MEGACROW_BUILD_STRING
+    );
   });
 });
 

@@ -26,11 +26,16 @@
         "useNumericSeparators": "off",
         // Parsers and IR lowering rely on definite assignment / assertions.
         "noNonNullAssertion": "off",
-        // Match existing Blam/engine-facing naming (e_*, snake_case, camelCase).
+        // Match Blam/engine naming plus React PascalCase components.
         "useFilenamingConvention": {
           "level": "error",
           "options": {
-            "filenameCases": ["kebab-case", "snake_case", "camelCase"],
+            "filenameCases": [
+              "kebab-case",
+              "snake_case",
+              "camelCase",
+              "PascalCase"
+            ],
             "requireAscii": true,
             "strictCase": false
           }
@@ -47,6 +52,10 @@
       "suspicious": {
         // Bit packing / MGLO encoding.
         "noBitwiseOperators": "off"
+      },
+      "nursery": {
+        // Strips intentional leading spaces in `base${cond ? " mod" : ""}` classNames.
+        "useSortedClasses": "off"
       }
     }
   },
@@ -72,6 +81,35 @@
           },
           "suspicious": {
             "noAlert": "off"
+          }
+        }
+      }
+    },
+    {
+      // Desktop IDE UI: custom chrome, async FS adapters, CSS cascade.
+      "includes": ["packages/ide/**"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noNoninteractiveElementInteractions": "off",
+            "noStaticElementInteractions": "off",
+            "noSvgWithoutTitle": "off",
+            "useFocusableInteractive": "off",
+            "useSemanticElements": "off"
+          },
+          "correctness": {
+            "useExhaustiveDependencies": "off",
+            "useImageSize": "off"
+          },
+          "style": {
+            "noDescendingSpecificity": "off"
+          },
+          "suspicious": {
+            "noAlert": "off",
+            "noArrayIndexKey": "off",
+            "noDuplicateProperties": "off",
+            "noEmptyBlockStatements": "off",
+            "useAwait": "off"
           }
         }
       }

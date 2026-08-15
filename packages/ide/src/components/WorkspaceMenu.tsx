@@ -1,0 +1,308 @@
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import type { StoredWorkspace } from "../lib/megacrowSettings";
+import { getVersionInfo, type MegaloVersionId } from "../lib/megaloShim";
+import type { Workspace } from "../lib/workspace";
+
+const PANEL_WIDTH = 380;
+
+interface Props {
+  onAddWorkspace: () => void;
+  onDeleteWorkspace: (id: string) => void;
+  onEditWorkspace: (workspace: StoredWorkspace) => void;
+  onSelectWorkspace: (id: string) => void;
+  workspace: Workspace | null;
+  workspaces: StoredWorkspace[];
+}
+
+/** Reach is the only supported game/version today. */
+function gameIconSrc(_version: MegaloVersionId): string {
+  return "/img/icons/game-reach.png";
+}
+
+function WorkspaceVersionLabel({
+  name,
+  megaloVersion,
+}: {
+  name: string;
+  megaloVersion: MegaloVersionId;
+}) {
+  const version = getVersionInfo(megaloVersion);
+  return (
+    <>
+      <span className="workspace-menu-name">{name}</span>
+      <span className="workspace-menu-version-group">
+        <img
+          alt=""
+          className="workspace-menu-game-icon"
+          src={gameIconSrc(megaloVersion)}
+          title={version.label}
+        />
+        <span className="workspace-menu-version">{version.label}</span>
+      </span>
+    </>
+  );
+}
+
+function EditIcon() {
+  return (
+    <svg aria-hidden="true" height="14" viewBox="0 0 16 16" width="14">
+      <path
+        d="M11.13 2.37a1.25 1.25 0 0 1 1.77 0l.73.73a1.25 1.25 0 0 1 0 1.77L6.2 12.27 3 13l.73-3.2z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="1.25"
+      />
+    </svg>
+  );
+}
+
+function DeleteIcon() {
+  return (
+    <svg aria-hidden="true" height="14" viewBox="0 0 16 16" width="14">
+      <path
+        d="M3.5 4.5h9M6 4.5V3.25h4V4.5M5.25 4.5l.6 8.25h4.3l.6-8.25"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.25"
+      />
+    </svg>
+  );
+}
+
+export function WorkspaceMenu({
+  workspace,
+  workspaces,
+  onSelectWorkspace,
+  onAddWorkspace,
+  onEditWorkspace,
+  onDeleteWorkspace,
+}: Props) {
+  const [open, setOpen] = useState(false);
+  const [panelPos, setPanelPos] = useState<{ top: number; left: number }>({
+    top: 0,
+    left: 0,
+  });
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const updatePanelPosition = () => {
+    const trigger = triggerRef.current;
+    if (!trigger) {
+      return;
+    }
+    const rect = trigger.getBoundingClientRect();
+    const left = Math.min(
+      rect.left,
+      Math.max(8, window.innerWidth - PANEL_WIDTH - 8)
+    );
+    setPanelPos({
+      top: rect.bottom + 4,
+      left,
+    });
+  };
+
+  useLayoutEffect(() => {
+    if (!open) {
+      return;
+    }
+    updatePanelPosition();
+  }, [open, updatePanelPosition]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const onPointerDown = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        rootRef.current?.contains(target) ||
+        panelRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setOpen(false);
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    const onReposition = () => {
+      updatePanelPosition();
+    };
+
+    window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", onReposition);
+    window.addEventListener("scroll", onReposition, true);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("resize", onReposition);
+      window.removeEventListener("scroll", onReposition, true);
+    };
+  }, [open, updatePanelPosition]);
+
+  return (
+    <div className="workspace-menu" ref={rootRef}>
+      <button
+        aria-expanded={open}
+        aria-haspopup="menu"
+        className="workspace-menu-trigger"
+        onClick={() => setOpen((value) => !value)}
+        ref={triggerRef}
+        title={workspace?.inputPath ?? "Select a workspace"}
+        type="button"
+      >
+        <span className="workspace-menu-label">
+          {workspace ? (
+            <WorkspaceVersionLabel
+              megaloVersion={workspace.megaloVersion}
+              name={workspace.name}
+            />
+          ) : (
+            "No workspace"
+          )}
+        </span>
+        <svg
+          aria-hidden="true"
+          className="workspace-menu-chevron"
+          viewBox="0 0 12 12"
+        >
+          <path
+            d="M3 4.5 6 8l3-3.5"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.4"
+          />
+        </svg>
+      </button>
+
+      {open
+        ? createPortal(
+            <div
+              aria-label="Workspaces"
+              className="workspace-menu-panel"
+              ref={panelRef}
+              role="menu"
+              style={{
+                top: panelPos.top,
+                left: panelPos.left,
+                width: PANEL_WIDTH,
+              }}
+            >
+              {workspaces.length === 0 ? (
+                <>
+                  <p className="workspace-menu-title">Workspaces</p>
+                  <p className="workspace-menu-empty">
+                    No workspaces configured
+                  </p>
+                </>
+              ) : (
+                <div className="workspace-menu-table">
+                  <div aria-hidden="true" className="workspace-menu-columns">
+                    <span>Workspaces</span>
+                    <span className="workspace-menu-columns-actions">
+                      Actions
+                    </span>
+                  </div>
+                  <ul className="workspace-menu-list">
+                    {workspaces.map((entry) => {
+                      const active = workspace?.id === entry.id;
+                      const version = getVersionInfo(entry.megaloVersion);
+                      return (
+                        <li
+                          className={`workspace-menu-row${active ? " workspace-menu-row--active" : ""}`}
+                          key={entry.id}
+                        >
+                          <button
+                            aria-checked={active}
+                            className={`workspace-menu-item${active ? " workspace-menu-item--active" : ""}`}
+                            onClick={() => {
+                              setOpen(false);
+                              onSelectWorkspace(entry.id);
+                            }}
+                            role="menuitemradio"
+                            title={entry.inputPath}
+                            type="button"
+                          >
+                            {active ? (
+                              <span className="workspace-menu-item-active-label">
+                                Active
+                              </span>
+                            ) : null}
+                            <span className="workspace-menu-item-name">
+                              {entry.name}
+                            </span>
+                            <span className="workspace-menu-item-version">
+                              <img
+                                alt=""
+                                className="workspace-menu-game-icon"
+                                src={gameIconSrc(entry.megaloVersion)}
+                              />
+                              <span>{version.label}</span>
+                            </span>
+                            <span className="workspace-menu-item-path">
+                              {entry.inputPath}
+                            </span>
+                          </button>
+                          <div className="workspace-menu-item-actions">
+                            <button
+                              aria-label={`Edit ${entry.name}`}
+                              className="workspace-menu-item-action"
+                              onClick={() => {
+                                setOpen(false);
+                                onEditWorkspace(entry);
+                              }}
+                              title={`Edit ${entry.name}`}
+                              type="button"
+                            >
+                              <EditIcon />
+                            </button>
+                            <button
+                              aria-label={`Delete ${entry.name}`}
+                              className="workspace-menu-item-action workspace-menu-item-action--danger"
+                              onClick={() => {
+                                setOpen(false);
+                                onDeleteWorkspace(entry.id);
+                              }}
+                              title={`Delete ${entry.name}`}
+                              type="button"
+                            >
+                              <DeleteIcon />
+                            </button>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+              <button
+                className="workspace-menu-add"
+                onClick={() => {
+                  setOpen(false);
+                  onAddWorkspace();
+                }}
+                role="menuitem"
+                type="button"
+              >
+                Add workspace…
+              </button>
+            </div>,
+            document.body
+          )
+        : null}
+    </div>
+  );
+}

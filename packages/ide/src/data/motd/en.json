@@ -1,0 +1,11 @@
+{
+  "title_index_identifier": 1,
+  "button_key_wait_time_ms": 5,
+  "title": "Welcome to Omaha!",
+  "header": "",
+  "button_key": "Lets give it a shot!",
+  "button_key_wait": "Transferring...",
+  "message": "*Best case scenario I'll be managing a Cinnabon in Omaha!*<br/>Welcome to the MegaCrow Alpha! This is a work in progress and is not yet ready for public use. During the Alpha things will be broken and changing rapidly. Please report any issues you find via the Waywo thread on the Halo Mods Discord.",
+  "offer_id": 0,
+  "view_count": 3
+}

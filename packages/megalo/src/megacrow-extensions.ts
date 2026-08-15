@@ -7,6 +7,10 @@ export interface MegacrowExtensions {
   compileMissingBaseFromSource: boolean;
   // Solve Megalo Headache #3
   coopSpawningWaypointIcon: boolean;
+  /**
+   * Seed undocumented builtin string `mc_version` with the MegaCrow build string.
+   */
+  megacrowVersionString: boolean;
   // Built-in gametypes are not labelled built-in.
   notBuiltIn: boolean;
   // Solve Megalo Headache #2
@@ -18,6 +22,7 @@ export const DEFAULT_MEGACROW_EXTENSIONS: MegacrowExtensions = {
   coopSpawningWaypointIcon: false,
   notBuiltIn: false,
   compileMissingBaseFromSource: false,
+  megacrowVersionString: false,
 };
 
 /** IDE / LSP: enable every MegaCrow extension. */
@@ -26,6 +31,7 @@ export const ALL_MEGACROW_EXTENSIONS: MegacrowExtensions = {
   coopSpawningWaypointIcon: true,
   notBuiltIn: true,
   compileMissingBaseFromSource: true,
+  megacrowVersionString: true,
 };
 
 export const resolveMegacrowExtensions = (

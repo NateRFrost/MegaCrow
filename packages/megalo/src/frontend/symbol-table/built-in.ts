@@ -1,7 +1,9 @@
+import { MEGACROW_BUILD_STRING } from "src/build-info";
 import type { MegaloCompilerContext } from "src/context";
 import { BUILT_IN_LOCATION } from "src/diagnostics";
 import type { ParserSymbolContext } from "src/frontend/abstract-syntax-tree/symbol-context";
 import type { BuiltInGameOptionName } from "src/frontend/language-configuration/omni/game_options";
+import { STRING_TABLE_LANGUAGES } from "src/frontend/language-configuration/omni/strings";
 import { VariableScope, VariableType } from "src/frontend/symbol-table";
 import type { MegaloVersion } from "src/version";
 
@@ -147,5 +149,24 @@ export const addBuiltInGameOptions = (
     addBuiltInGameOption("tu1_active_camo_override_energy_curve_max");
     addBuiltInGameOption("tu1_magnum_damage_multiplier");
     addBuiltInGameOption("tu1_magnum_fire_recovery_time_multiplier");
+  }
+};
+
+/** Undocumented MegaCrow builtin string carrying the app build identity. */
+export const addBuiltInStrings = (
+  frontend: MegaloCompilerContext,
+  symbolParser: ParserSymbolContext
+): void => {
+  if (!frontend.megacrowExtensions.megacrowVersionString) {
+    return;
+  }
+
+  for (const language of STRING_TABLE_LANGUAGES) {
+    symbolParser.addStringToScope({
+      name: "mc_version",
+      language,
+      content: MEGACROW_BUILD_STRING,
+      declaration: BUILT_IN_LOCATION,
+    });
   }
 };

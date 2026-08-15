@@ -1,0 +1,167 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - "**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    name: Prepare build string
+    runs-on: ubuntu-latest
+    outputs:
+      build_string: ${{ steps.compute.outputs.build_string }}
+      build_info_json: ${{ steps.compute.outputs.build_info_json }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Compute build string
+        id: compute
+        shell: bash
+        env:
+          MEGACROW_BRANCH: ${{ github.ref_name }}
+        run: |
+          INFO=$(node scripts/compute-build-string.mjs)
+          {
+            echo "build_info_json<<EOF"
+            echo "$INFO"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          BUILD_STRING=$(node -e "process.stdout.write(JSON.parse(process.argv[1]).buildString)" "$INFO")
+          echo "build_string=$BUILD_STRING" >> "$GITHUB_OUTPUT"
+          echo "Computed build string: $BUILD_STRING"
+
+  web:
+    name: Web bundle
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Write build info
+        run: node scripts/write-build-info.mjs --from-json '${{ needs.prepare.outputs.build_info_json }}'
+
+      - name: Install
+        run: npm install
+
+      - name: Build web
+        run: npm run build:web --workspace=@megacrow/ide
+
+      - name: Upload web artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: megacrow-web
+          path: packages/ide/dist
+
+  tauri:
+    name: Tauri (${{ matrix.platform }})
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-latest
+          - platform: macos-latest
+          - platform: ubuntu-22.04
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xdg-utils
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: packages/ide/src-tauri -> target
+
+      - name: Write build info
+        shell: bash
+        run: node scripts/write-build-info.mjs --from-json '${{ needs.prepare.outputs.build_info_json }}'
+
+      - name: Install
+        run: npm install
+
+      - name: Build Tauri
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: packages/ide
+          uploadUpdaterJson: false
+
+      - name: Upload Tauri artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: megacrow-tauri-${{ matrix.platform }}
+          path: |
+            packages/ide/src-tauri/target/release/bundle
+            packages/ide/src-tauri/target/release/*.exe
+            packages/ide/src-tauri/target/release/*.app
+          if-no-files-found: warn
+
+  tag:
+    name: Tag build
+    needs: [prepare, web, tauri]
+    if: success() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create build tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          TAG='${{ needs.prepare.outputs.build_string }}'
+          SHA='${{ github.sha }}'
+          if [[ -z "$TAG" || "$TAG" == "untracked version" ]]; then
+            echo "Refusing to tag untracked build"
+            exit 1
+          fi
+
+          if gh api "repos/${{ github.repository }}/git/ref/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists"
+            exit 0
+          fi
+
+          TAG_OBJECT=$(gh api "repos/${{ github.repository }}/git/tags" \
+            -f tag="$TAG" \
+            -f message="Build $TAG" \
+            -f object="$SHA" \
+            -f type=commit)
+          TAG_SHA=$(printf '%s' "$TAG_OBJECT" | jq -r .sha)
+
+          gh api "repos/${{ github.repository }}/git/refs" \
+            -f ref="refs/tags/${TAG}" \
+            -f sha="$TAG_SHA"

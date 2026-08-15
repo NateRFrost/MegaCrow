@@ -1,0 +1,91 @@
+import type { SourceAnalysis } from "../lib/analyzeSource";
+import type { MegaloDiagnostic } from "../lib/diagnostics";
+import type { MegaloIncludeFileCache } from "../lib/includeDiagnostics";
+import type { MegaCrowCompilerSettings } from "../lib/megaloCompilerSettings";
+import type {
+  CompletionItem,
+  GametypeSaveFormat,
+  MegaloProgram,
+} from "../lib/megaloShim";
+import type { WorkspaceContext } from "../lib/workspace";
+
+interface BaseResolveFields {
+  baseJitDiagnostics?: MegaloDiagnostic[];
+  includeCache?: MegaloIncludeFileCache;
+  resolvedBaseCustomVariant?: import("@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352").c_game_engine_custom_variant;
+  resolvedBaseCustomVariantMgloBytes?: Uint8Array;
+  resolvedBaseProgram?: MegaloProgram | null;
+}
+
+export type MegaloWorkerRequest =
+  | {
+      kind: "init";
+      originalBytes: Uint8Array | null;
+      baseProgram: MegaloProgram | null;
+      baselineSource: string | null;
+    }
+  | {
+      kind: "setWorkspace";
+      workspace: WorkspaceContext | null;
+    }
+  | {
+      kind: "setCompilerSettings";
+      compilerSettings: MegaCrowCompilerSettings;
+    }
+  | {
+      kind: "decompile";
+      id: number;
+      bytes: Uint8Array;
+      fileName: string;
+      editorVersion: string;
+    }
+  | ({
+      kind: "compile";
+      id: number;
+      source: string;
+    } & BaseResolveFields)
+  | ({
+      kind: "parse";
+      id: number;
+      source: string;
+    } & BaseResolveFields)
+  | {
+      kind: "completions";
+      id: number;
+      source: string;
+      line: number;
+      column: number;
+    }
+  | ({
+      kind: "compileDownload";
+      id: number;
+      source: string;
+      format: GametypeSaveFormat;
+    } & BaseResolveFields);
+
+export type MegaloWorkerResponse =
+  | {
+      kind: "decompile";
+      id: number;
+      program: MegaloProgram;
+      source: string;
+      analysis: SourceAnalysis;
+    }
+  | { kind: "compile"; id: number; source: string; analysis: SourceAnalysis }
+  | {
+      kind: "completions";
+      id: number;
+      items: CompletionItem[];
+    }
+  | {
+      kind: "parse";
+      id: number;
+      program: MegaloProgram | null;
+      analysis: SourceAnalysis;
+    }
+  | {
+      kind: "compileDownload";
+      id: number;
+      output: Uint8Array | null;
+      analysis: SourceAnalysis;
+    };
