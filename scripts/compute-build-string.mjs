@@ -1,14 +1,18 @@
 #!/usr/bin/env node
 /**
- * Compute the next MegaCrow build string from git tags.
+ * Compute the MegaCrow build string.
  *
  * Format: {seq}.{yy}.{mm}.{dd}.{hhmm}.{branch}
- * Example: 36735.13.12.02.1953.alpha
+ * Example: 00042.26.08.15.0534.alpha
+ *
+ * Seq comes from MEGACROW_SEQ / GITHUB_RUN_NUMBER (CI run number) when set.
+ * Otherwise falls back to max matching git tag + 1 (local convenience).
  *
  * Prints JSON: { buildString, packageVersion, showWatermark, seq, branch, stamp }
  *
  * Env:
  *   MEGACROW_BRANCH — override branch name (default: git rev-parse --abbrev-ref HEAD)
+ *   MEGACROW_SEQ / GITHUB_RUN_NUMBER — build sequence (GitHub Actions run number)
  *   MEGACROW_UNTRACKED=1 — force untracked version
  */
 import { execSync } from "node:child_process";
@@ -52,24 +56,35 @@ if (forceUntracked || branchRaw === "HEAD") {
 }
 
 const branch = sanitizeBranch(branchRaw);
-const tags = git("tag --list")
-  .split(/\r?\n/)
-  .map((t) => t.trim())
-  .filter(Boolean);
 
-let maxSeq = 0;
-for (const tag of tags) {
-  const match = BUILD_TAG_RE.exec(tag);
-  if (!match) {
-    continue;
+const seqFromEnv = Number.parseInt(
+  process.env.MEGACROW_SEQ || process.env.GITHUB_RUN_NUMBER || "",
+  10
+);
+
+let seq;
+if (Number.isFinite(seqFromEnv) && seqFromEnv > 0) {
+  seq = seqFromEnv;
+} else {
+  const tags = git("tag --list")
+    .split(/\r?\n/)
+    .map((t) => t.trim())
+    .filter(Boolean);
+
+  let maxSeq = 0;
+  for (const tag of tags) {
+    const match = BUILD_TAG_RE.exec(tag);
+    if (!match) {
+      continue;
+    }
+    const tagSeq = Number.parseInt(match[1], 10);
+    if (Number.isFinite(tagSeq) && tagSeq > maxSeq) {
+      maxSeq = tagSeq;
+    }
   }
-  const seq = Number.parseInt(match[1], 10);
-  if (Number.isFinite(seq) && seq > maxSeq) {
-    maxSeq = seq;
-  }
+  seq = maxSeq + 1;
 }
 
-const seq = maxSeq + 1;
 const seqPadded = String(seq).padStart(5, "0");
 const now = new Date();
 const stamp = `${pad2(now.getUTCFullYear() % 100)}.${pad2(now.getUTCMonth() + 1)}.${pad2(now.getUTCDate())}.${pad2(now.getUTCHours())}${pad2(now.getUTCMinutes())}`;

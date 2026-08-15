@@ -77,6 +77,25 @@ jobs:
       - name: Install
         run: npm install
 
+      # npm optional-deps bug: Windows lockfiles omit foreign platform binaries.
+      - name: Ensure Tauri CLI native binding
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${{ matrix.platform }}" in
+            macos-latest) BINDING="@tauri-apps/cli-darwin-arm64" ;;
+            ubuntu-22.04) BINDING="@tauri-apps/cli-linux-x64-gnu" ;;
+            windows-latest) BINDING="@tauri-apps/cli-win32-x64-msvc" ;;
+            *)
+              echo "Unhandled platform: ${{ matrix.platform }}"
+              exit 1
+              ;;
+          esac
+          npm install "@tauri-apps/cli@2.11.2" "${BINDING}@2.11.2" --no-save --force
+          node -e "require('@tauri-apps/cli')"
+          npm run tauri --workspace=@megacrow/ide -- --version
+          echo "Tauri CLI native binding OK (${BINDING})"
+
       - name: Build Tauri
         uses: tauri-apps/tauri-action@v1
         env:

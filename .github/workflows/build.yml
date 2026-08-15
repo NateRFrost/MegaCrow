@@ -22,8 +22,6 @@ jobs:
       build_info_json: ${{ steps.compute.outputs.build_info_json }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -34,6 +32,7 @@ jobs:
         shell: bash
         env:
           MEGACROW_BRANCH: ${{ github.ref_name }}
+          MEGACROW_SEQ: ${{ github.run_number }}
         run: |
           INFO=$(node scripts/compute-build-string.mjs)
           {
@@ -114,6 +113,25 @@ jobs:
       - name: Install
         run: npm install
 
+      # npm optional-deps bug: Windows lockfiles omit foreign platform binaries.
+      - name: Ensure Tauri CLI native binding
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${{ matrix.platform }}" in
+            macos-latest) BINDING="@tauri-apps/cli-darwin-arm64" ;;
+            ubuntu-22.04) BINDING="@tauri-apps/cli-linux-x64-gnu" ;;
+            windows-latest) BINDING="@tauri-apps/cli-win32-x64-msvc" ;;
+            *)
+              echo "Unhandled platform: ${{ matrix.platform }}"
+              exit 1
+              ;;
+          esac
+          npm install "@tauri-apps/cli@2.11.2" "${BINDING}@2.11.2" --no-save --force
+          node -e "require('@tauri-apps/cli')"
+          npm run tauri --workspace=@megacrow/ide -- --version
+          echo "Tauri CLI native binding OK (${BINDING})"
+
       - name: Build Tauri
         uses: tauri-apps/tauri-action@v1
         env:
@@ -135,7 +153,8 @@ jobs:
   tag:
     name: Tag build
     needs: [prepare, web, tauri]
-    if: success() && github.event_name != 'pull_request'
+    # Tag even when web/tauri fail — seq is github.run_number and must advance.
+    if: always() && needs.prepare.result == 'success' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Create build tag
