@@ -18,7 +18,7 @@ export const highlightMapPermissions = (
     if (entry.key === "default") {
       emitLocation(out, entry.location, "parameter");
     } else if (entry.key === "exception") {
-      emitLocation(out, entry.location, "keyword");
+      emitLocation(out, entry.location, "parameter");
     }
     if (entry.value.kind === SyntaxKind.KEYWORD) {
       highlightEnumKeyword(out, entry.value, BOOLEAN_KEYWORDS);

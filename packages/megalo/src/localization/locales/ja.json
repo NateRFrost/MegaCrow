@@ -28,6 +28,8 @@
   "object_filter_user_data_out_of_range": "object filter の user_data が範囲外です（-0x8000～0x7fff）",
   "object_filter_min_out_of_range": "object filter の min が範囲外です（0～0x7f）",
   "object_type_index_out_of_range": "object type index {{index}} はワイヤ bitset の有効範囲 0～{{max}} の外です",
+  "object_list_exceeds_objects_limit": "オブジェクトリストのエントリ数は {{count}} ですが、上限は {{max}} です",
+  "object_list_duplicate_entry": "オブジェクトリストに '{{name}}' が既にあります（先の行: {{previousLine}}、重複行: {{duplicateLine}}）",
   "icon_index_out_of_range": "icon index が範囲外です",
   "fireteam_count_out_of_range": "fireteam_count {{value}} は有効範囲 0～{{max}} の外です",
   "value_out_of_range_ignored": "{{name}} {{value}} は範囲 {{min}}～{{max}} の外のため無視されます",

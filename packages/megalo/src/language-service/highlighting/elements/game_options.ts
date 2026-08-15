@@ -73,6 +73,10 @@ const highlightOverrideName = (
   if (name.kind === SyntaxKind.INVALID) {
     return;
   }
+  if (name.kind === "loadout_palette") {
+    emitLocation(out, name.location, "type");
+    return;
+  }
   emitLocation(out, name.location, "variable");
 };
 

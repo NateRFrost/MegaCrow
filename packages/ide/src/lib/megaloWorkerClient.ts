@@ -4,6 +4,7 @@ import type {
 } from "../workers/megaloWorkerTypes";
 import type { SourceAnalysis } from "./analyzeSource";
 import { analyzeMegaloSource } from "./analyzeSource";
+import { encodeGvarBlfFromMglo } from "./encodeGvarBlfFromMglo";
 import type { MegaloIncludeFileCache } from "./includeDiagnostics";
 import { megaloCompileOptionsFromCache } from "./includeDiagnostics";
 import {
@@ -38,6 +39,16 @@ function gametypeSaveFormatLabel(format: GametypeSaveFormat): string {
     case "asq":
       return "Autosave Queue";
   }
+}
+
+function gametypeBytesForFormat(
+  mgloBytes: Uint8Array,
+  format: GametypeSaveFormat
+): Uint8Array {
+  if (format === "gvar") {
+    return encodeGvarBlfFromMglo(mgloBytes);
+  }
+  return mgloBytes;
 }
 
 type Listener = (response: MegaloWorkerResponse) => void;
@@ -159,6 +170,16 @@ export function syncMegaloCompilerSettings(
   postMegaloWorker({
     kind: "setCompilerSettings",
     compilerSettings,
+  });
+}
+
+/** Sync workspace object lists into the legacy compile worker (`null` → defaults). */
+export function setMegaloWorkerObjectLists(
+  objectLists: import("@megacrow/megalo").ObjectLists | null
+): void {
+  postMegaloWorker({
+    kind: "setObjectLists",
+    objectLists,
   });
 }
 
@@ -412,7 +433,7 @@ async function compileDownloadFallback(
     };
   }
   try {
-    const output = compileGametypeForSave(
+    const compiled = compileGametypeForSave(
       source,
       format,
       originalBytes,
@@ -424,6 +445,8 @@ async function compileDownloadFallback(
         currentCompilerSettings
       )
     );
+    const output =
+      format === "gvar" ? encodeGvarBlfFromMglo(compiled) : compiled;
     const identical =
       format !== "mglo" &&
       format !== "asq" &&
@@ -502,8 +525,9 @@ export async function requestCompileDownloadInWorker(
         },
       };
     }
+    const output = gametypeBytesForFormat(result.bytes, format);
     return {
-      output: result.bytes,
+      output,
       analysis: {
         compileState: diagnostics.some((d) => d.severity === "warning")
           ? "warn"
@@ -512,7 +536,7 @@ export async function requestCompileDownloadInWorker(
         message: formatMegaloCompileTiming(timing),
         byteIdentical: null,
         byteDiffCount: null,
-        compiledByteLength: result.bytes.length,
+        compiledByteLength: output.length,
         mgloBytes: result.bytes,
         compiledMetadata: result.metadata ?? null,
         compileTiming: timing,
@@ -545,9 +569,24 @@ export async function requestCompileDownloadInWorker(
       compileContext?.includeCache
     );
   }
-  return new Promise((resolve) => {
+  const result = await new Promise<{
+    output: Uint8Array | null;
+    analysis: SourceAnalysis;
+  }>((resolve) => {
     pendingCompileDownloads.set(id, { resolve });
   });
+  if (!result.output) {
+    return result;
+  }
+  const output = gametypeBytesForFormat(result.output, format);
+  return {
+    output,
+    analysis: {
+      ...result.analysis,
+      compiledByteLength: output.length,
+      mgloBytes: result.analysis.mgloBytes ?? result.output,
+    },
+  };
 }
 
 let completionRequestId = 0;

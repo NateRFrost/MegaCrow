@@ -1,6 +1,8 @@
 export interface MegaloDiagnostic {
   column: number;
   endColumn?: number;
+  /** Inclusive end line (1-based). Defaults to `line` when omitted. */
+  endLine?: number;
   length?: number;
   line: number;
   message: string;

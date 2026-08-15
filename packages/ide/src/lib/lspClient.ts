@@ -18,6 +18,12 @@ export const MEGACROW_COMPILE_METHOD = "megacrow/compile";
 export const MEGACROW_REQUEST_ARTIFACTS_METHOD = "megacrow/requestArtifacts";
 export const MEGACROW_RESOLVE_INCLUDE_METHOD = "megacrow/resolveInclude";
 export const MEGACROW_RESOLVE_BASE_FILE_METHOD = "megacrow/resolveBaseFile";
+export const MEGACROW_VERSION_CONFIGURATION_METHOD =
+  "megacrow/versionConfiguration";
+export const MEGACROW_ANALYZE_OBJECT_LIST_METHOD = "megacrow/analyzeObjectList";
+export const MEGACROW_SET_OBJECT_LISTS_METHOD = "megacrow/setObjectLists";
+export const MEGACROW_SET_RESOLVE_BASE_FILE_METHOD =
+  "megacrow/setResolveBaseFile";
 
 export type MegacrowArtifactKind = "semanticTokens" | "diagnostics" | "mglo";
 
@@ -161,6 +167,7 @@ function resolveSearchDirs(fromUri: string | undefined): string[] {
     add(parentDirectory(activeFilePath));
   }
   const workspace = configuredWorkspace ?? getActiveWorkspace();
+  add(workspace?.outputPath);
   add(workspace?.inputPath);
 
   return dirs.length > 0 ? dirs : ["."];
@@ -175,6 +182,12 @@ export function lspConfigureResolveContext(options: {
 
   if (options.workspace !== undefined) {
     configuredWorkspace = options.workspace;
+    const enabled = !!options.workspace?.outputPath?.trim();
+    void getConnection().then((connection) => {
+      connection.sendNotification(MEGACROW_SET_RESOLVE_BASE_FILE_METHOD, {
+        enabled,
+      });
+    });
   }
   if (options.filePath !== undefined) {
     const nextPath = options.filePath;
@@ -221,6 +234,11 @@ async function handleResolveBaseFile(
   params: ResolveBaseFileParams
 ): Promise<ResolveBaseFileResult> {
   const workspace = configuredWorkspace ?? getActiveWorkspace();
+  if (!workspace?.outputPath?.trim()) {
+    return {
+      error: "Base file resolution disabled (no workspace output folder)",
+    };
+  }
   const fileProvider = createPlatformFileProvider(workspace);
   if (!fileProvider) {
     return { error: "No file provider available for base file resolution" };
@@ -432,6 +450,76 @@ export async function lspHover(
   } | null;
 }
 
+export interface LspDefinitionLocation {
+  range: {
+    start: { line: number; character: number };
+    end: { line: number; character: number };
+  };
+  uri: string;
+}
+
+/** Resolve go-to-definition (Ctrl+click) via the Megalo LSP. */
+export async function lspDefinition(
+  text: string,
+  position: { line: number; character: number }
+): Promise<LspDefinitionLocation[]> {
+  const connection = await getConnection();
+  await lspSyncDocument(text);
+  const result = await connection.sendRequest("textDocument/definition", {
+    textDocument: { uri: documentUri },
+    position,
+  });
+
+  const asLocation = (value: unknown): LspDefinitionLocation | null => {
+    if (!(value && typeof value === "object")) {
+      return null;
+    }
+    const record = value as Record<string, unknown>;
+    if (
+      typeof record.uri === "string" &&
+      record.range &&
+      typeof record.range === "object"
+    ) {
+      const range = record.range as LspDefinitionLocation["range"];
+      return { uri: record.uri, range };
+    }
+    if (
+      typeof record.targetUri === "string" &&
+      record.targetSelectionRange &&
+      typeof record.targetSelectionRange === "object"
+    ) {
+      return {
+        uri: record.targetUri,
+        range: record.targetSelectionRange as LspDefinitionLocation["range"],
+      };
+    }
+    if (
+      typeof record.targetUri === "string" &&
+      record.targetRange &&
+      typeof record.targetRange === "object"
+    ) {
+      return {
+        uri: record.targetUri,
+        range: record.targetRange as LspDefinitionLocation["range"],
+      };
+    }
+    return null;
+  };
+
+  if (result === null || result === undefined) {
+    return [];
+  }
+  if (Array.isArray(result)) {
+    return result
+      .map(asLocation)
+      .filter(
+        (location): location is LspDefinitionLocation => location !== null
+      );
+  }
+  const single = asLocation(result);
+  return single ? [single] : [];
+}
+
 export async function lspCompletions(
   text: string,
   position: { line: number; character: number }
@@ -473,4 +561,33 @@ export async function lspCompletions(
 
 export function lspDocumentUri(): string {
   return documentUri;
+}
+
+export async function lspVersionConfiguration(): Promise<{
+  objectListNames: readonly string[];
+}> {
+  const connection = await getConnection();
+  return (await connection.sendRequest(
+    MEGACROW_VERSION_CONFIGURATION_METHOD,
+    {}
+  )) as { objectListNames: readonly string[] };
+}
+
+export async function lspAnalyzeObjectList(text: string): Promise<{
+  diagnostics: Diagnostic[];
+}> {
+  const connection = await getConnection();
+  return (await connection.sendRequest(MEGACROW_ANALYZE_OBJECT_LIST_METHOD, {
+    text,
+  })) as { diagnostics: Diagnostic[] };
+}
+
+/** Sync workspace object lists into the LSP (null/omit → bundled defaults). */
+export async function lspSetObjectLists(
+  objectLists: import("@megacrow/megalo").ObjectLists | null
+): Promise<void> {
+  const connection = await getConnection();
+  connection.sendNotification(MEGACROW_SET_OBJECT_LISTS_METHOD, {
+    objectLists,
+  });
 }

@@ -38,6 +38,8 @@ function megaloMonarchRules(base: MonacoThemeData): ThemeRule[] {
     { token: "identifier", foreground: fg },
     { token: "delimiter", foreground: fg },
     { token: "source", foreground: fg },
+    // Escapes / %n placeholders — match VS-style regexp accent when theme omits it.
+    { token: "string.escape", foreground: "D16969" },
   ];
 }
 

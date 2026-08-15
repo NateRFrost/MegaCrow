@@ -9,7 +9,7 @@
 
 ## Syntax
 
-```megalo
+```
 action <name> [arg1] [arg2] ...
 ```
 

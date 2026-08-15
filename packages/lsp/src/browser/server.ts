@@ -1,3 +1,4 @@
+import type { ObjectLists } from "@megacrow/megalo";
 import { MEGALO_VERSIONS } from "@megacrow/megalo";
 import {
   BrowserMessageReader,
@@ -13,11 +14,19 @@ import type { AnalysisSnapshot } from "../core";
 import {
   analyzeAndCompile,
   analyzeDocumentSnapshot,
+  analyzeObjectListFor,
   type CompileResolvers,
+  definitionFromSnapshot,
+  MEGACROW_ANALYZE_OBJECT_LIST_METHOD,
   MEGACROW_COMPILE_METHOD,
   MEGACROW_REQUEST_ARTIFACTS_METHOD,
   MEGACROW_RESOLVE_BASE_FILE_METHOD,
   MEGACROW_RESOLVE_INCLUDE_METHOD,
+  MEGACROW_SET_OBJECT_LISTS_METHOD,
+  MEGACROW_SET_RESOLVE_BASE_FILE_METHOD,
+  MEGACROW_VERSION_CONFIGURATION_METHOD,
+  type MegacrowAnalyzeObjectListParams,
+  type MegacrowAnalyzeObjectListResult,
   type MegacrowCompileParams,
   type MegacrowCompileResult,
   type MegacrowRequestArtifactsParams,
@@ -26,10 +35,14 @@ import {
   type MegacrowResolveBaseFileResult,
   type MegacrowResolveIncludeParams,
   type MegacrowResolveIncludeResult,
+  type MegacrowSetObjectListsParams,
+  type MegacrowSetResolveBaseFileParams,
+  type MegacrowVersionConfigurationResult,
   parseDiagnosticsFromSnapshot,
   requestArtifactsFromSnapshot,
   SEMANTIC_TOKENS_LEGEND,
   semanticTokensFromSnapshot,
+  versionConfigurationFor,
 } from "../core";
 
 const DEFAULT_VERSION = MEGALO_VERSIONS["107-mcc"];
@@ -39,6 +52,15 @@ const writer = new BrowserMessageWriter(self as DedicatedWorkerGlobalScope);
 const connection = createConnection(reader, writer);
 
 const documents = new Map<string, TextDocument>();
+
+/** Workspace object lists from the IDE; `undefined` → bundled defaults. */
+let workspaceObjectLists: ObjectLists | undefined;
+
+/**
+ * When false (no workspace output folder), omit `resolveBaseFile` so sibling
+ * `.txt` JIT runs without a "compiled from source" warning.
+ */
+let resolveBaseFileEnabled = true;
 
 interface SnapshotCacheEntry {
   semanticTokens: number[];
@@ -80,40 +102,52 @@ const decodeBase64 = (dataBase64: string): Uint8Array => {
   return bytes;
 };
 
-const createResolvers = (): CompileResolvers => ({
-  resolveInclude: async (
-    path: string,
-    ctx: { kind: "include" | "localized_include"; fromUri?: string }
-  ) => {
-    const result = (await connection.sendRequest(
-      MEGACROW_RESOLVE_INCLUDE_METHOD,
-      {
-        path,
-        kind: ctx.kind,
-        fromUri: ctx.fromUri,
-      } satisfies MegacrowResolveIncludeParams
-    )) as MegacrowResolveIncludeResult;
+const createResolvers = (): CompileResolvers => {
+  const resolvers: CompileResolvers = {
+    resolveInclude: async (
+      path: string,
+      ctx: { kind: "include" | "localized_include"; fromUri?: string }
+    ) => {
+      const result = (await connection.sendRequest(
+        MEGACROW_RESOLVE_INCLUDE_METHOD,
+        {
+          path,
+          kind: ctx.kind,
+          fromUri: ctx.fromUri,
+        } satisfies MegacrowResolveIncludeParams
+      )) as MegacrowResolveIncludeResult;
 
-    if ("error" in result) {
-      throw new Error(result.error);
-    }
-    return { text: result.text, uri: result.uri };
-  },
-  resolveBaseFile: async (path: string, ctx: { fromUri?: string }) => {
-    const result = (await connection.sendRequest(
-      MEGACROW_RESOLVE_BASE_FILE_METHOD,
-      {
-        path,
-        fromUri: ctx.fromUri,
-      } satisfies MegacrowResolveBaseFileParams
-    )) as MegacrowResolveBaseFileResult;
+      if ("error" in result) {
+        // Missing files return null so callers can fall back / emit DX.
+        return null;
+      }
+      return { text: result.text, uri: result.uri };
+    },
+  };
 
-    if ("error" in result) {
-      throw new Error(result.error);
-    }
-    return decodeBase64(result.dataBase64);
-  },
-});
+  if (resolveBaseFileEnabled) {
+    resolvers.resolveBaseFile = async (
+      path: string,
+      ctx: { fromUri?: string }
+    ) => {
+      const result = (await connection.sendRequest(
+        MEGACROW_RESOLVE_BASE_FILE_METHOD,
+        {
+          path,
+          fromUri: ctx.fromUri,
+        } satisfies MegacrowResolveBaseFileParams
+      )) as MegacrowResolveBaseFileResult;
+
+      if ("error" in result) {
+        // Missing .mglo must be null so JIT can compile the sibling .txt.
+        return null;
+      }
+      return decodeBase64(result.dataBase64);
+    };
+  }
+
+  return resolvers;
+};
 
 const refreshSnapshot = (
   uri: string,
@@ -134,6 +168,7 @@ const refreshSnapshot = (
   const promise = (async () => {
     const snapshot = await analyzeDocumentSnapshot(text, {
       version: DEFAULT_VERSION,
+      objectLists: workspaceObjectLists,
       fromUri: uri,
       resolvers: createResolvers(),
     });
@@ -238,7 +273,7 @@ const runRequestArtifacts = async (
     artifacts: params.artifacts,
     documentVersion: entry.version,
     fromUri: uri,
-    objectLists: params.objectLists,
+    objectLists: params.objectLists ?? workspaceObjectLists,
     resolvers: createResolvers(),
   });
 
@@ -320,6 +355,7 @@ connection.onInitialize(
   (_params: InitializeParams): InitializeResult => ({
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Full,
+      definitionProvider: true,
       semanticTokensProvider: {
         legend: SEMANTIC_TOKENS_LEGEND,
         full: true,
@@ -377,11 +413,33 @@ connection.languages.semanticTokens.on(async (params) => {
   return { data: entry.semanticTokens };
 });
 
+connection.onDefinition(async (params) => {
+  const uri = params.textDocument.uri;
+  const doc = documents.get(uri);
+  if (!doc) {
+    return null;
+  }
+  const entry = await getCachedSnapshot(uri, doc);
+  return definitionFromSnapshot(entry.snapshot, uri, params.position);
+});
+
 connection.onRequest(
   MEGACROW_REQUEST_ARTIFACTS_METHOD,
   (
     params: MegacrowRequestArtifactsParams
   ): Promise<MegacrowRequestArtifactsResult> => enqueueRequestArtifacts(params)
+);
+
+connection.onRequest(
+  MEGACROW_VERSION_CONFIGURATION_METHOD,
+  (): MegacrowVersionConfigurationResult =>
+    versionConfigurationFor(DEFAULT_VERSION)
+);
+
+connection.onRequest(
+  MEGACROW_ANALYZE_OBJECT_LIST_METHOD,
+  (params: MegacrowAnalyzeObjectListParams): MegacrowAnalyzeObjectListResult =>
+    analyzeObjectListFor(params.text, DEFAULT_VERSION)
 );
 
 connection.onRequest(
@@ -391,6 +449,7 @@ connection.onRequest(
     const text = params.text ?? documents.get(uri)?.getText() ?? "";
     const existing = documents.get(uri);
     const version = existing?.version ?? 0;
+    const objectLists = params.objectLists ?? workspaceObjectLists;
 
     // Prefer shared snapshot cache when text matches the synced document.
     const cached = snapshotCache.get(uri);
@@ -403,7 +462,7 @@ connection.onRequest(
         artifacts: ["diagnostics", "mglo"],
         documentVersion: version,
         fromUri: uri,
-        objectLists: params.objectLists,
+        objectLists,
         resolvers: createResolvers(),
       });
       connection.sendDiagnostics({
@@ -421,7 +480,7 @@ connection.onRequest(
 
     const result = await analyzeAndCompile(text, {
       version: DEFAULT_VERSION,
-      objectLists: params.objectLists,
+      objectLists,
       fromUri: uri,
       resolvers: createResolvers(),
     });
@@ -430,6 +489,34 @@ connection.onRequest(
       diagnostics: result.diagnostics,
     });
     return result;
+  }
+);
+
+connection.onNotification(
+  MEGACROW_SET_OBJECT_LISTS_METHOD,
+  (params: MegacrowSetObjectListsParams) => {
+    workspaceObjectLists = params.objectLists ?? undefined;
+    snapshotCache.clear();
+    snapshotInflight.clear();
+    for (const [uri, doc] of documents) {
+      schedulePublish(uri, doc.getText(), doc.version);
+    }
+  }
+);
+
+connection.onNotification(
+  MEGACROW_SET_RESOLVE_BASE_FILE_METHOD,
+  (params: MegacrowSetResolveBaseFileParams) => {
+    const next = params.enabled;
+    if (resolveBaseFileEnabled === next) {
+      return;
+    }
+    resolveBaseFileEnabled = next;
+    snapshotCache.clear();
+    snapshotInflight.clear();
+    for (const [uri, doc] of documents) {
+      schedulePublish(uri, doc.getText(), doc.version);
+    }
   }
 );
 

@@ -1,9 +1,14 @@
 import {
-  classifySourceTokens,
-  type MegaloSyntaxItemType,
-  type SourceTokenSpan,
-} from "../../src/highlight";
-import { MEGALO_DEFAULT_CLASS, MEGALO_TOKEN_CLASS } from "./megalo-edit-colors";
+  analyzeDocumentSync,
+  getSemanticTokens,
+  type SemanticToken,
+  type SemanticTokenType,
+} from "../../megalo/src/language-service";
+import { MEGALO_VERSIONS } from "../../megalo/src/version";
+
+const MEGALO_DEFAULT_CLASS = "megalo-text";
+
+const tokenClass = (type: SemanticTokenType): string => `megalo-${type}`;
 
 function escapeHtml(text: string): string {
   return text
@@ -13,54 +18,53 @@ function escapeHtml(text: string): string {
     .replaceAll('"', "&quot;");
 }
 
-function lineBreakOffsets(source: string): number[] {
-  const breaks = [0];
-  for (let i = 0; i < source.length; i++) {
-    if (source[i] === "\n") {
-      breaks.push(i + 1);
-    } else if (source[i] === "\r") {
-      if (source[i + 1] === "\n") {
-        breaks.push(i + 2);
-        i++;
-      } else {
-        breaks.push(i + 1);
-      }
-    }
-  }
-  return breaks;
-}
+type LineSpan = {
+  length: number;
+  offset: number;
+  type: SemanticTokenType;
+};
 
-function spansForLine(
+const spansForLine = (
+  lineIndex: number,
   lineStart: number,
   lineEnd: number,
-  spans: SourceTokenSpan[]
-): SourceTokenSpan[] {
-  return spans
-    .filter(
-      (span) => span.offset < lineEnd && span.offset + span.length > lineStart
-    )
-    .map((span) => ({
-      ...span,
-      offset: Math.max(span.offset, lineStart),
-      length:
-        Math.min(span.offset + span.length, lineEnd) -
-        Math.max(span.offset, lineStart),
-    }))
-    .filter((span) => span.length > 0);
-}
-
-function spanClass(type: MegaloSyntaxItemType): string {
-  return MEGALO_TOKEN_CLASS[type] ?? MEGALO_DEFAULT_CLASS;
-}
+  tokens: readonly SemanticToken[],
+  source: string
+): LineSpan[] => {
+  const spans: LineSpan[] = [];
+  for (const token of tokens) {
+    if (token.line !== lineIndex) {
+      continue;
+    }
+    const offset = lineStart + token.startChar;
+    const end = Math.min(offset + token.length, lineEnd);
+    if (offset >= lineEnd || end <= lineStart) {
+      continue;
+    }
+    const length = end - Math.max(offset, lineStart);
+    if (length <= 0) {
+      continue;
+    }
+    // Guard against tokens that extend past the actual line text.
+    if (Math.max(offset, lineStart) >= source.length) {
+      continue;
+    }
+    spans.push({
+      offset: Math.max(offset, lineStart),
+      length,
+      type: token.type,
+    });
+  }
+  return spans.sort((a, b) => a.offset - b.offset);
+};
 
 function renderLine(
   source: string,
   lineStart: number,
   lineEnd: number,
-  spans: SourceTokenSpan[]
+  spans: LineSpan[]
 ): string {
-  const lineSpans = spansForLine(lineStart, lineEnd, spans);
-  if (lineSpans.length === 0) {
+  if (spans.length === 0) {
     const text = source.slice(lineStart, lineEnd);
     return text.length === 0
       ? "<wbr>"
@@ -70,12 +74,12 @@ function renderLine(
   let cursor = lineStart;
   let html = "";
 
-  for (const span of lineSpans) {
+  for (const span of spans) {
     if (span.offset > cursor) {
       html += `<span class="${MEGALO_DEFAULT_CLASS}">${escapeHtml(source.slice(cursor, span.offset))}</span>`;
     }
     const text = source.slice(span.offset, span.offset + span.length);
-    html += `<span class="${spanClass(span.type)}">${escapeHtml(text)}</span>`;
+    html += `<span class="${tokenClass(span.type)}">${escapeHtml(text)}</span>`;
     cursor = span.offset + span.length;
   }
 
@@ -86,17 +90,36 @@ function renderLine(
   return html.length === 0 ? "<wbr>" : html;
 }
 
-/** Context-aware Megalo highlighting using MegaloEdit color roles. */
+/** Strip trailing `; [!code hide]` (and optional trailing comment text after it). */
+const HIDE_MARKER = /;\s*\[!code hide\]\s*$/;
+
+const isHiddenLine = (source: string, lineStart: number, lineEnd: number): boolean =>
+  HIDE_MARKER.test(source.slice(lineStart, lineEnd));
+
+/**
+ * Semantic-token Megalo highlighting (same classifier as the IDE / LSP).
+ *
+ * Docs fences should be complete enough to analyze. Surrounding context that
+ * readers should not see can be marked with a trailing `; [!code hide]` — those
+ * lines are still analyzed, but omitted from the rendered HTML.
+ */
 export function megaloCodeToHtml(source: string): string {
   const normalized = source.replace(/\r\n/g, "\n").trimEnd();
-  const spans = classifySourceTokens(normalized);
-  const lineStarts = lineBreakOffsets(normalized);
+  const snapshot = analyzeDocumentSync(normalized, {
+    version: MEGALO_VERSIONS["107-mcc"],
+  });
+  const tokens = getSemanticTokens(snapshot);
+  const lineStarts = snapshot.lineStarts;
   const lines: string[] = [];
 
   for (let i = 0; i < lineStarts.length; i++) {
     const lineStart = lineStarts[i]!;
     const lineEnd =
       i + 1 < lineStarts.length ? lineStarts[i + 1]! - 1 : normalized.length;
+    if (isHiddenLine(normalized, lineStart, lineEnd)) {
+      continue;
+    }
+    const spans = spansForLine(i, lineStart, lineEnd, tokens, normalized);
     lines.push(
       `<span class="line">${renderLine(normalized, lineStart, lineEnd, spans)}</span>`
     );

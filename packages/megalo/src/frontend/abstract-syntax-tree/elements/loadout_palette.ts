@@ -21,10 +21,16 @@ import {
 import { type Token, TokenKind } from "src/frontend/tokens";
 import type { MegaloVersion } from "src/version";
 
+export interface LoadoutPaletteItemNode {
+  identifier: string;
+  location: SourceCodeLocation;
+  parameters: ASTParameterNode[];
+}
+
 export type LoadoutPaletteElementNode =
   ASTElementBase<ElementKind.LOADOUT_PALETTE> & {
     name: { value: string; location: SourceCodeLocation } | ASTErrorNode;
-    items: ASTParameterNode[];
+    items: LoadoutPaletteItemNode[];
   };
 
 const parseIdentifier = (
@@ -103,7 +109,7 @@ export const loadoutPaletteParser = (
     };
   }
 
-  const items: ASTParameterNode[] = [];
+  const items: LoadoutPaletteItemNode[] = [];
 
   while (ctx.hasMore()) {
     const itemIdentifier = parseIdentifier(ctx, elementToken);
@@ -127,7 +133,11 @@ export const loadoutPaletteParser = (
       itemIdentifier.value
     );
     if (parser) {
-      items.push(...parser(ctx, itemIdentifier.location));
+      items.push({
+        identifier: itemIdentifier.value,
+        location: itemIdentifier.location,
+        parameters: parser(ctx, itemIdentifier.location),
+      });
     } else {
       ctx.diagnostics.addError(
         diagnosticMessages.expectedLoadoutPaletteItemOrEnd(

@@ -29,6 +29,8 @@
   "object_filter_min_out_of_range": "object filter min out of range (0, 0x7f)",
   "icon_index_out_of_range": "icon index out of range",
   "object_type_index_out_of_range": "Object type index {{index}} is outside the wire bitset range of 0 to {{max}}",
+  "object_list_exceeds_objects_limit": "Object list has {{count}} entries; maximum is {{max}}",
+  "object_list_duplicate_entry": "Object list already contains entry for '{{name}}' (previous line: {{previousLine}}, duplicate line: {{duplicateLine}})",
   "fireteam_count_out_of_range": "Fireteam count of {{value}} is outside the valid range of 0 to {{max}}",
   "value_out_of_range_ignored": "{{name}} {{value}} is out of range {{min}} to {{max}} and will be ignored",
   "unsupported_field": "'{{fieldPath}}' is not supported by {{versionLabel}}.",

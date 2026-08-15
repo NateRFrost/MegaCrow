@@ -14,3 +14,12 @@ export function isObjectListsPath(
 export function isObjectListsDirectoryName(name: string): boolean {
   return name.toLowerCase() === "object_lists";
 }
+
+/** True when `fileName` is a version-recognized object list (e.g. `objects.txt`). */
+export function isRecognizedObjectListName(
+  fileName: string,
+  objectListNames: readonly string[]
+): boolean {
+  const lower = fileName.toLowerCase();
+  return objectListNames.some((name) => name.toLowerCase() === lower);
+}

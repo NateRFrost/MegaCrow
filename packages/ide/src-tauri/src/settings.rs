@@ -12,7 +12,9 @@ pub struct StoredWorkspace {
   pub name: String,
   pub megalo_version: String,
   pub input_path: String,
-  pub output_path: String,
+  /// Empty / omitted when Build output is unused. Matches the TS `string | null`.
+  #[serde(default)]
+  pub output_path: Option<String>,
   #[serde(default)]
   pub last_open_file_path: Option<String>,
 }
@@ -136,10 +138,14 @@ mod tests {
       settings.workspaces[0].last_open_file_path.as_deref(),
       Some("C:/HREK/data/multiplayer/megalo/foo.txt")
     );
+    assert_eq!(
+      settings.workspaces[0].output_path.as_deref(),
+      Some("C:/HREK/maps/megalo")
+    );
   }
 
   #[test]
-  fn workspace_last_open_file_path_defaults_missing() {
+  fn workspace_optional_paths_default_missing() {
     let raw = r#"{
       "version": 3,
       "activeWorkspaceId": "ws-1",
@@ -147,8 +153,7 @@ mod tests {
         "id": "ws-1",
         "name": "HREK",
         "megaloVersion": "107-mcc",
-        "inputPath": "C:/HREK/data/multiplayer/megalo",
-        "outputPath": "C:/HREK/maps/megalo"
+        "inputPath": "C:/HREK/data/multiplayer/megalo"
       }],
       "discordRichPresence": true,
       "mccHotReload": true,
@@ -159,5 +164,30 @@ mod tests {
     }"#;
     let settings: MegacrowSettings = serde_json::from_str(raw).expect("deserialize");
     assert!(settings.workspaces[0].last_open_file_path.is_none());
+    assert!(settings.workspaces[0].output_path.is_none());
+  }
+
+  #[test]
+  fn deserializes_null_output_path() {
+    let raw = r#"{
+      "version": 3,
+      "activeWorkspaceId": "ws-1",
+      "workspaces": [{
+        "id": "ws-1",
+        "name": "Scripts",
+        "megaloVersion": "107-mcc",
+        "inputPath": "C:/scripts",
+        "outputPath": null,
+        "lastOpenFilePath": null
+      }],
+      "discordRichPresence": true,
+      "mccHotReload": true,
+      "gamertag": "",
+      "compilerStrictness": false,
+      "editorTheme": "megacrow-dark",
+      "skippedUpdateVersion": null
+    }"#;
+    let settings: MegacrowSettings = serde_json::from_str(raw).expect("deserialize");
+    assert!(settings.workspaces[0].output_path.is_none());
   }
 }

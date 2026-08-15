@@ -2,10 +2,12 @@ import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { isTauriRuntime } from "./tauriRuntime";
 
 const DOCS_LABEL = "docs";
-const DOCS_APP_URL = "docs/index.html";
+/** Frameless shell with window chrome; VitePress loads in an iframe. */
+const DOCS_APP_URL = "docs-window.html";
 
 export async function openDocs(): Promise<void> {
   if (!isTauriRuntime()) {
+    // Browser chrome already provides Back / Forward.
     window.open(`${import.meta.env.BASE_URL}docs/`, "megacrow-docs");
     return;
   }
@@ -25,7 +27,7 @@ export async function openDocs(): Promise<void> {
     minHeight: 480,
     center: true,
     focus: true,
-    decorations: true,
+    decorations: false,
     resizable: true,
   });
 

@@ -16,7 +16,7 @@ Scripts spell the all-players kind as `everyone`. The blf enum name is `all_play
 
 ## Syntax
 
-```megalo
+```
 team <team_ref>
 player <player_ref>
 everyone

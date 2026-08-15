@@ -16,6 +16,7 @@
     "core:window:allow-unmaximize",
     "core:window:allow-toggle-maximize",
     "core:window:allow-set-focus",
+    "core:window:allow-set-title",
     "core:window:allow-start-dragging",
     "dialog:default",
     "opener:default",
@@ -45,6 +46,10 @@
       "allow": [{ "path": "**" }]
     },
     {
+      "identifier": "fs:allow-stat",
+      "allow": [{ "path": "**" }]
+    },
+    {
       "identifier": "fs:allow-write-file",
       "allow": [{ "path": "**" }]
     },
@@ -66,6 +71,14 @@
     },
     {
       "identifier": "fs:allow-copy-file",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-watch",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-unwatch",
       "allow": [{ "path": "**" }]
     }
   ]

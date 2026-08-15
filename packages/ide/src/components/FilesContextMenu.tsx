@@ -1,12 +1,15 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { fileManagerRevealLabel } from "../lib/revealInFileManager";
 
 export type FilesContextTarget =
   | { type: "file"; path: string[] }
   | { type: "directory"; path: string[] };
 
+export type FilesContextSource = "local" | "opfs" | "builds";
+
 export interface FilesContextMenuState {
-  source: "local" | "opfs";
+  source: FilesContextSource;
   target: FilesContextTarget;
   x: number;
   y: number;
@@ -16,12 +19,16 @@ interface Props {
   canPaste: boolean;
   menu: FilesContextMenuState | null;
   onClose: () => void;
-  onCopy: (path: string[], source: "local" | "opfs") => void;
-  onCopyPath: (path: string[], source: "local" | "opfs") => void;
-  onDelete: (path: string[], source: "local" | "opfs") => void;
-  onNewFile: (parentPath: string[], source: "local" | "opfs") => void;
-  onPaste: (target: FilesContextTarget, source: "local" | "opfs") => void;
-  onRename: (path: string[], source: "local" | "opfs") => void;
+  onCopy: (path: string[], source: FilesContextSource) => void;
+  onCopyPath: (path: string[], source: FilesContextSource) => void;
+  /** Opens delete confirmation (does not delete immediately). */
+  onDelete: (target: FilesContextTarget, source: FilesContextSource) => void;
+  onNewFile: (parentPath: string[], source: FilesContextSource) => void;
+  onNewFolder?: (parentPath: string[], source: FilesContextSource) => void;
+  onPaste: (target: FilesContextTarget, source: FilesContextSource) => void;
+  onRename: (path: string[], source: FilesContextSource) => void;
+  /** When set, show Reveal for local/builds paths (Tauri). */
+  onReveal?: (path: string[], source: FilesContextSource) => void;
 }
 
 const MENU_MIN_WIDTH = 160;
@@ -31,18 +38,16 @@ export function FilesContextMenu({
   canPaste,
   onClose,
   onNewFile,
+  onNewFolder,
   onRename,
   onDelete,
   onCopy,
   onPaste,
   onCopyPath,
+  onReveal,
 }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-
-  useEffect(() => {
-    setConfirmDelete(false);
-  }, []);
+  const revealLabel = fileManagerRevealLabel();
 
   useLayoutEffect(() => {
     if (!(menu && panelRef.current)) {
@@ -70,14 +75,9 @@ export function FilesContextMenu({
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") {
-        return;
+      if (event.key === "Escape") {
+        onClose();
       }
-      if (confirmDelete) {
-        setConfirmDelete(false);
-        return;
-      }
-      onClose();
     };
 
     const onScroll = () => {
@@ -94,7 +94,7 @@ export function FilesContextMenu({
       window.removeEventListener("scroll", onScroll, true);
       window.removeEventListener("resize", onClose);
     };
-  }, [menu, onClose, confirmDelete]);
+  }, [menu, onClose]);
 
   if (!menu) {
     return null;
@@ -102,7 +102,11 @@ export function FilesContextMenu({
 
   const isFile = menu.target.type === "file";
   const { source } = menu;
-  const fileName = menu.target.path.at(-1) ?? "file";
+  const canReveal =
+    onReveal !== undefined && (source === "local" || source === "builds");
+  const canRename = source !== "builds" && (isFile || source === "local");
+  const canDelete = isFile || source === "local" || source === "builds";
+  const showNewActions = menu.target.type === "directory" && source === "local";
 
   return createPortal(
     <div
@@ -116,20 +120,35 @@ export function FilesContextMenu({
         minWidth: MENU_MIN_WIDTH,
       }}
     >
-      {menu.target.type === "directory" ? (
-        <button
-          className="files-context-menu-item"
-          onClick={() => {
-            onNewFile(menu.target.path, source);
-            onClose();
-          }}
-          role="menuitem"
-          type="button"
-        >
-          New File
-        </button>
+      {showNewActions ? (
+        <>
+          <button
+            className="files-context-menu-item"
+            onClick={() => {
+              onNewFile(menu.target.path, source);
+              onClose();
+            }}
+            role="menuitem"
+            type="button"
+          >
+            New File
+          </button>
+          {onNewFolder ? (
+            <button
+              className="files-context-menu-item"
+              onClick={() => {
+                onNewFolder(menu.target.path, source);
+                onClose();
+              }}
+              role="menuitem"
+              type="button"
+            >
+              New Folder
+            </button>
+          ) : null}
+        </>
       ) : null}
-      {isFile ? (
+      {isFile && source !== "builds" ? (
         <button
           className="files-context-menu-item"
           onClick={() => {
@@ -142,7 +161,7 @@ export function FilesContextMenu({
           Copy
         </button>
       ) : null}
-      {canPaste ? (
+      {canPaste && source !== "builds" ? (
         <button
           className="files-context-menu-item"
           onClick={() => {
@@ -155,7 +174,7 @@ export function FilesContextMenu({
           Paste
         </button>
       ) : null}
-      {isFile ? (
+      {canRename ? (
         <button
           className="files-context-menu-item"
           onClick={() => {
@@ -179,46 +198,31 @@ export function FilesContextMenu({
       >
         Copy Path
       </button>
-      {isFile ? (
-        confirmDelete ? (
-          <div
-            aria-label={`Confirm delete ${fileName}`}
-            className="files-context-menu-confirm"
-            role="group"
-          >
-            <p className="files-context-menu-confirm-text">
-              Delete &ldquo;{fileName}&rdquo;?
-            </p>
-            <div className="files-context-menu-confirm-actions">
-              <button
-                className="files-context-menu-confirm-btn"
-                onClick={() => setConfirmDelete(false)}
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                className="files-context-menu-confirm-btn files-context-menu-confirm-btn--danger"
-                onClick={() => {
-                  onDelete(menu.target.path, source);
-                  onClose();
-                }}
-                type="button"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            className="files-context-menu-item files-context-menu-item--danger"
-            onClick={() => setConfirmDelete(true)}
-            role="menuitem"
-            type="button"
-          >
-            Delete
-          </button>
-        )
+      {canReveal ? (
+        <button
+          className="files-context-menu-item"
+          onClick={() => {
+            onReveal(menu.target.path, source);
+            onClose();
+          }}
+          role="menuitem"
+          type="button"
+        >
+          {revealLabel}
+        </button>
+      ) : null}
+      {canDelete ? (
+        <button
+          className="files-context-menu-item files-context-menu-item--danger"
+          onClick={() => {
+            onDelete(menu.target, source);
+            onClose();
+          }}
+          role="menuitem"
+          type="button"
+        >
+          Delete
+        </button>
       ) : null}
     </div>,
     document.body

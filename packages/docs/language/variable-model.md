@@ -9,13 +9,12 @@ Custom variables are declared in `variables` blocks at the top level of a script
 ### Declaration syntax
 
 ```megalo
-variables <scope>
-	<network_state> <type> <name> <initial_value>
-	...
+variables global
+	local number special_death_type 0
 end
 ```
 
-Each line has four parts:
+Each entry line has four parts (scope is on the `variables` line itself):
 
 | Part | Values |
 |------|--------|

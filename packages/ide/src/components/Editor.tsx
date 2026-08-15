@@ -7,7 +7,6 @@ import {
 } from "../lib/editorFont";
 import { lspSyncDocument, subscribeLspDiagnostics } from "../lib/lspClient";
 import {
-  foldStringTables,
   MEGALO_LANGUAGE_ID,
   type MegaloDiagnostic,
   type MegaloHoverContext,
@@ -29,8 +28,6 @@ interface Props {
   editorTheme?: string;
   /** Wrap long lines when true; horizontal scroll when false. */
   editorWordWrap?: boolean;
-  /** Changes when a new file is loaded; remounts the editor. */
-  foldKey?: string | null;
   hoverContext?: MegaloHoverContext;
   onCompileDebounced?: (source: string) => void;
   onCursorChange?: (line: number, column: number) => void;
@@ -59,7 +56,6 @@ export const MegaloEditor = memo(function MegaloEditor({
   diagnostics = [],
   onCursorChange,
   onRegisterNavigate,
-  foldKey,
   hoverContext,
   plainText = false,
   editorTheme = DEFAULT_EDITOR_THEME_ID,
@@ -76,8 +72,6 @@ export const MegaloEditor = memo(function MegaloEditor({
   editorWordWrapRef.current = editorWordWrap;
   const onEditorWordWrapChangeRef = useRef(onEditorWordWrapChange);
   onEditorWordWrapChangeRef.current = onEditorWordWrapChange;
-  const foldedForKeyRef = useRef<string | null>(null);
-  const foldRunRef = useRef(0);
   const outlineSyncTimerRef = useRef<number | null>(null);
   const compileSyncTimerRef = useRef<number | null>(null);
   const cursorTimerRef = useRef<number | null>(null);
@@ -133,48 +127,6 @@ export const MegaloEditor = memo(function MegaloEditor({
     }, COMPILE_DEBOUNCE_MS);
   }, []);
 
-  const scheduleFoldStringTables = useCallback(() => {
-    if (
-      plainTextRef.current ||
-      !foldKey ||
-      foldedForKeyRef.current === foldKey
-    ) {
-      return;
-    }
-
-    const editor = editorRef.current;
-    if (!editor) {
-      return;
-    }
-
-    const runId = ++foldRunRef.current;
-    const attemptFold = async () => {
-      const currentEditor = editorRef.current;
-      const currentModel = currentEditor?.getModel();
-      if (
-        runId !== foldRunRef.current ||
-        foldedForKeyRef.current === foldKey ||
-        !currentModel?.getValue().includes("string_table")
-      ) {
-        return;
-      }
-      const folded = await foldStringTables(currentEditor!);
-      if (folded && runId === foldRunRef.current) {
-        foldedForKeyRef.current = foldKey;
-      }
-    };
-
-    const runWhenIdle = () => {
-      void attemptFold();
-    };
-
-    const schedule =
-      typeof window.requestIdleCallback === "function"
-        ? () => window.requestIdleCallback(runWhenIdle, { timeout: 2500 })
-        : () => setTimeout(runWhenIdle, 800);
-    schedule();
-  }, [foldKey]);
-
   useEffect(() => {
     setMegaloHoverContext(
       hoverContext ?? { baseProgram: null, baselineSource: null }
@@ -222,11 +174,6 @@ export const MegaloEditor = memo(function MegaloEditor({
   }, [clearPendingSyncTimers]);
 
   useEffect(() => {
-    foldedForKeyRef.current = null;
-    foldRunRef.current += 1;
-  }, [foldKey]);
-
-  useEffect(() => {
     const monaco = monacoRef.current;
     const editor = editorRef.current;
     const model = editor?.getModel();
@@ -238,28 +185,7 @@ export const MegaloEditor = memo(function MegaloEditor({
     if (model.getLanguageId() !== languageId) {
       monaco.editor.setModelLanguage(model, languageId);
     }
-
-    if (plainText) {
-      monaco.editor.setModelMarkers(model, "megalo", []);
-    }
   }, [plainText]);
-
-  useEffect(() => {
-    if (plainText) {
-      return;
-    }
-    if (foldKey == null) {
-      foldedForKeyRef.current = null;
-      return;
-    }
-    if (foldedForKeyRef.current === foldKey) {
-      return;
-    }
-    if (!documentContent.includes("string_table")) {
-      return;
-    }
-    scheduleFoldStringTables();
-  }, [documentContent, foldKey, plainText, scheduleFoldStringTables]);
 
   useEffect(() => {
     applyDocumentToModel();
@@ -273,10 +199,6 @@ export const MegaloEditor = memo(function MegaloEditor({
     const monaco = monacoRef.current;
     const model = editor?.getModel();
     if (!(editor && monaco && model)) {
-      return;
-    }
-    if (plainTextRef.current) {
-      monaco.editor.setModelMarkers(model, "megalo", []);
       return;
     }
     setMegaloDiagnostics(monaco, model, diagnosticsRef.current);

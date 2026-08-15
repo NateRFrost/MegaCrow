@@ -659,7 +659,7 @@ html.dark body {
   border-radius: 2px;
 }
 
-/* Megalo syntax highlighting — MegaloEdit roles, tuned for dark code blocks.
+/* Megalo syntax highlighting — semantic token roles (IDE classifier).
    Specificity must beat VitePress `.dark .vp-code span { color: var(--shiki-dark) }`. */
 .dark .vp-doc .language-megalo pre.megalo-edit {
   background-color: #121816;
@@ -684,8 +684,7 @@ html.dark body {
   color: #8ec8ff;
 }
 
-.dark .vp-doc .language-megalo pre.megalo-edit code span.megalo-action,
-.dark .vp-doc .language-megalo pre.megalo-edit code span.megalo-condition {
+.dark .vp-doc .language-megalo pre.megalo-edit code span.megalo-function {
   color: #e8c4a0;
 }
 
@@ -694,24 +693,37 @@ html.dark body {
 }
 
 .dark .vp-doc .language-megalo pre.megalo-edit code span.megalo-string {
-  color: #b8c2cc;
+  color: #ce9178;
 }
 
-.dark .vp-doc .language-megalo pre.megalo-edit code span.megalo-type {
-  color: #ebc96a;
+.dark .vp-doc .language-megalo pre.megalo-edit code span.megalo-regexp {
+  color: #d7ba7d;
 }
 
-.dark .vp-doc .language-megalo pre.megalo-edit code span.megalo-constant {
-  color: #d9b8ff;
+.dark .vp-doc .language-megalo pre.megalo-edit code span.megalo-operator {
+  color: #dce3e8;
 }
 
-.dark .vp-doc .language-megalo pre.megalo-edit code span.megalo-option,
+.dark .vp-doc .language-megalo pre.megalo-edit code span.megalo-type,
+.dark .vp-doc .language-megalo pre.megalo-edit code span.megalo-class {
+  color: #4ec9b0;
+}
+
+.dark .vp-doc .language-megalo pre.megalo-edit code span.megalo-variable {
+  color: #9cdcfe;
+}
+
+.dark .vp-doc .language-megalo pre.megalo-edit code span.megalo-parameter,
 .dark .vp-doc .language-megalo pre.megalo-edit code span.megalo-property {
-  color: #6de0e8;
+  color: #d7ba7d;
 }
 
-.dark .vp-doc .language-megalo pre.megalo-edit code span.megalo-override {
-  color: #f5a04a;
+.dark .vp-doc .language-megalo pre.megalo-edit code span.megalo-enumMember {
+  color: #c586c0;
+}
+
+.dark .vp-doc .language-megalo pre.megalo-edit code span.megalo-modifier {
+  color: #8ec8ff;
 }
 
 /* Availability card — sit tight under page title when lead element */

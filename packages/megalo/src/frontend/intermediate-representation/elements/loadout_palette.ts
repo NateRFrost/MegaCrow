@@ -16,18 +16,19 @@ export const loadoutPaletteLowerer = (
     const paletteName = element.name.value;
     const palette: LoadoutPaletteTraits = { loadouts: [] };
     for (const item of element.items) {
+      const param = item.parameters[0];
       const name =
-        item.kind === SyntaxKind.REFERENCE
-          ? item.identifier
-          : item.kind === SyntaxKind.KEYWORD
-            ? item.value
+        param?.kind === SyntaxKind.REFERENCE
+          ? param.identifier
+          : param?.kind === SyntaxKind.KEYWORD
+            ? param.value
             : undefined;
       const loadout =
         name === undefined ? undefined : ctx.loadoutsByName.get(name);
       if (loadout === undefined) {
         throw new LowerError(
           diagnosticMessages.expectedParameterType("loadout", name ?? ""),
-          item.location
+          param?.location ?? item.location
         );
       }
       palette.loadouts?.push(loadout);

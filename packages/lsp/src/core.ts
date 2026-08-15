@@ -2,10 +2,14 @@ import {
   ALL_MEGACROW_EXTENSIONS,
   type AnalysisSnapshot,
   analyzeDocument,
+  analyzeObjectListSource,
   type CompiledMegaloMetadata,
   type CompileSourceOptions,
   compileFromSnapshot,
+  type DefinitionTarget,
+  definitionAtPosition,
   encodeSemanticTokens,
+  getConfigurationForVersion,
   getSemanticTokens,
   type Diagnostic as MegaloDiagnostic,
   DiagnosticSeverity as MegaloSeverity,
@@ -19,6 +23,7 @@ import {
 import {
   type Diagnostic,
   DiagnosticSeverity,
+  type LocationLink,
   type SemanticTokensLegend,
 } from "vscode-languageserver/browser";
 
@@ -26,6 +31,12 @@ export const MEGACROW_COMPILE_METHOD = "megacrow/compile";
 export const MEGACROW_REQUEST_ARTIFACTS_METHOD = "megacrow/requestArtifacts";
 export const MEGACROW_RESOLVE_INCLUDE_METHOD = "megacrow/resolveInclude";
 export const MEGACROW_RESOLVE_BASE_FILE_METHOD = "megacrow/resolveBaseFile";
+export const MEGACROW_VERSION_CONFIGURATION_METHOD =
+  "megacrow/versionConfiguration";
+export const MEGACROW_ANALYZE_OBJECT_LIST_METHOD = "megacrow/analyzeObjectList";
+export const MEGACROW_SET_OBJECT_LISTS_METHOD = "megacrow/setObjectLists";
+export const MEGACROW_SET_RESOLVE_BASE_FILE_METHOD =
+  "megacrow/setResolveBaseFile";
 
 export const SEMANTIC_TOKENS_LEGEND: SemanticTokensLegend = {
   tokenTypes: [...SEMANTIC_TOKEN_TYPES],
@@ -90,10 +101,48 @@ export type MegacrowResolveBaseFileResult =
   | { dataBase64: string }
   | { error: string };
 
+export interface MegacrowVersionConfigurationResult {
+  objectListNames: readonly string[];
+}
+
+export interface MegacrowAnalyzeObjectListParams {
+  text: string;
+}
+
+export interface MegacrowAnalyzeObjectListResult {
+  diagnostics: Diagnostic[];
+}
+
+export interface MegacrowSetObjectListsParams {
+  /** Workspace object lists, or omit/`null` to use bundled defaults. */
+  objectLists?: ObjectLists | null;
+}
+
+export interface MegacrowSetResolveBaseFileParams {
+  /** When false, compile omits `resolveBaseFile` (silent sibling-source JIT). */
+  enabled: boolean;
+}
+
 export type CompileResolvers = Pick<
   CompileSourceOptions,
   "resolveInclude" | "resolveBaseFile"
 >;
+
+export const versionConfigurationFor = (
+  version: SupportedMegaloVersion
+): MegacrowVersionConfigurationResult => {
+  const configuration = getConfigurationForVersion(version);
+  return {
+    objectListNames: [...configuration.objectListNames],
+  };
+};
+
+export const analyzeObjectListFor = (
+  source: string,
+  version: SupportedMegaloVersion
+): MegacrowAnalyzeObjectListResult => ({
+  diagnostics: toLspDiagnostics(analyzeObjectListSource(source, { version })),
+});
 
 export const toLspDiagnostics = (
   diagnostics: MegaloDiagnostic[],
@@ -340,4 +389,42 @@ export const classifySemanticTokens = async (
   return encodeSemanticTokens(getSemanticTokens(snapshot));
 };
 
-export type { AnalysisSnapshot };
+/** URI scheme for definitions that live in another Megalo source file. */
+export const MEGACROW_DEFINITION_SCHEME = "megacrow-definition";
+
+export const definitionFromSnapshot = (
+  snapshot: AnalysisSnapshot,
+  documentUri: string,
+  position: { line: number; character: number }
+): LocationLink[] => {
+  const target = definitionAtPosition(snapshot, position);
+  if (!target) {
+    return [];
+  }
+
+  if (target.kind === "current") {
+    return [
+      {
+        targetUri: documentUri,
+        targetRange: target.range,
+        targetSelectionRange: target.range,
+      },
+    ];
+  }
+
+  const query = new URLSearchParams({
+    file: target.file,
+    line: String(target.range.start.line),
+    character: String(target.range.start.character),
+  });
+  const targetUri = `${MEGACROW_DEFINITION_SCHEME}:/goto?${query.toString()}`;
+  return [
+    {
+      targetUri,
+      targetRange: target.range,
+      targetSelectionRange: target.range,
+    },
+  ];
+};
+
+export type { AnalysisSnapshot, DefinitionTarget };

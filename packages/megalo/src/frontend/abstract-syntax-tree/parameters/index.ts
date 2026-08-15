@@ -268,6 +268,11 @@ export const parseMemberReference = (
     };
   }
 
+  const memberSymbolId = ctx.symbolParser.lookupSymbol(memberToken.value);
+  if (memberSymbolId !== undefined) {
+    ctx.symbolParser.recordReference(memberSymbolId, memberToken.location);
+  }
+
   return {
     kind: SyntaxKind.MEMBER_REFERENCE,
     root: rootToken.value,

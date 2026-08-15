@@ -141,10 +141,14 @@ export const baseFileCompiledFromSourceMessage = (
 /**
  * Resolve a `base "….mglo"` path to encoded bytes.
  *
- * 1. Ask `resolveBaseFile` for the `.mglo`.
+ * 1. Ask `resolveBaseFile` for the `.mglo` when provided.
  * 2. If missing and {@link MegacrowExtensions.compileMissingBaseFromSource} is
  *    enabled, load the sibling `.txt` via `resolveInclude`, compile it
  *    (recursively resolving nested bases), and cache the bytes in memory.
+ *    A "compiled from source" warning is only emitted when `resolveBaseFile`
+ *    was provided and returned null (expected a built `.mglo` but fell back).
+ *    When no `resolveBaseFile` callback is supplied, sibling source is used
+ *    silently.
  */
 export const resolveBaseMgloBytes = async (
   baseMgloPath: string,
@@ -177,6 +181,9 @@ export const resolveBaseMgloBytes = async (
     return { ok: false, reason: "not_found", diagnostics: [] };
   }
 
+  /** DX only when a `.mglo` lookup was attempted and missed. */
+  const warnCompiledFromSource = options.resolveBaseFile !== undefined;
+
   const key = cacheKeyForUri(resolved.uri);
   if (compilingBaseSources.has(key)) {
     return {
@@ -198,10 +205,12 @@ export const resolveBaseMgloBytes = async (
     return {
       ok: true,
       bytes: cached.bytes,
-      compiledFromSource: {
-        sourceUri: resolved.uri,
-        warningCount: cached.warningCount,
-      },
+      compiledFromSource: warnCompiledFromSource
+        ? {
+            sourceUri: resolved.uri,
+            warningCount: cached.warningCount,
+          }
+        : undefined,
     };
   }
 
@@ -239,10 +248,12 @@ export const resolveBaseMgloBytes = async (
     return {
       ok: true,
       bytes: nested.bytes,
-      compiledFromSource: {
-        sourceUri: resolved.uri,
-        warningCount,
-      },
+      compiledFromSource: warnCompiledFromSource
+        ? {
+            sourceUri: resolved.uri,
+            warningCount,
+          }
+        : undefined,
     };
   } finally {
     compilingBaseSources.delete(key);
@@ -394,7 +405,9 @@ export const compileFromSnapshot = async (
  *
  * When a `base "….mglo"` cannot be read but a sibling `.txt` can, and
  * `megacrowExtensions.compileMissingBaseFromSource` is enabled, that source is
- * compiled just-in-time (cached in memory; not written to disk).
+ * compiled just-in-time (cached in memory; not written to disk). A warning is
+ * reported only when `resolveBaseFile` was provided and missed; omitting the
+ * callback uses sibling source without that DX.
  */
 export const compileSource = async (
   source: string,

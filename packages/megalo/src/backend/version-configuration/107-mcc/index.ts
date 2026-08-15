@@ -6,6 +6,21 @@ import {
 import { VariableScope, VariableType } from "src/frontend/symbol-table";
 
 export class VersionConfiguration107MCC extends VersionConfiguration {
+  /** Reach MCC object list tables under `object_lists/`. */
+  private static readonly OBJECT_LIST_NAMES: readonly string[] = [
+    "objects.txt",
+    "weapons.txt",
+    "vehicles.txt",
+    "equipment.txt",
+    "grenades.txt",
+    "incidents.txt",
+    "loadouts.txt",
+    "hud_widget_icons.txt",
+    "weapon_sets.txt",
+    "vehicle_sets.txt",
+    "strings.txt",
+  ];
+
   private static readonly VARIABLE_LIMITS: VariableLimits = {
     [VariableScope.Global]: {
       [VariableType.Number]: 12,
@@ -52,5 +67,9 @@ export class VersionConfiguration107MCC extends VersionConfiguration {
       actions: 1024,
       userDefinedOptions: 16,
     };
+  }
+
+  public get objectListNames(): readonly string[] {
+    return VersionConfiguration107MCC.OBJECT_LIST_NAMES;
   }
 }

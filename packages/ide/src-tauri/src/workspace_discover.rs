@@ -88,6 +88,42 @@ fn hrek_paths_from_install_root(root: &Path) -> Option<(PathBuf, PathBuf)> {
   }
 }
 
+/// Read `displayName` from `<HREK>/project.xml` when present.
+fn read_project_display_name(root: &Path) -> Option<String> {
+  let text = std::fs::read_to_string(root.join("project.xml")).ok()?;
+  // Prefer displayName="…"; fall back to name="…" if displayName is absent.
+  for attr in ["displayName", "name"] {
+    let needle = format!("{attr}=\"");
+    if let Some(start) = text.find(&needle) {
+      let value_start = start + needle.len();
+      if let Some(rel_end) = text[value_start..].find('"') {
+        let value = text[value_start..value_start + rel_end].trim();
+        if !value.is_empty() {
+          return Some(value.to_string());
+        }
+      }
+    }
+  }
+  None
+}
+
+fn workspace_name_for_root(root: &Path, used_names: &mut HashSet<String>) -> String {
+  let base = read_project_display_name(root).unwrap_or_else(|| "HREK".to_string());
+  let key = base.to_ascii_lowercase();
+  if used_names.insert(key.clone()) {
+    return base;
+  }
+  let mut n = 2;
+  loop {
+    let candidate = format!("{base} ({n})");
+    let candidate_key = candidate.to_ascii_lowercase();
+    if used_names.insert(candidate_key) {
+      return candidate;
+    }
+    n += 1;
+  }
+}
+
 fn find_hrek_root(start: &Path) -> Option<PathBuf> {
   let mut current = if start.is_file() {
     start.parent().map(|p| p.to_path_buf())
@@ -174,16 +210,12 @@ fn collect_roots_from_steam(roots: &mut Vec<PathBuf>, seen: &mut HashSet<String>
 }
 
 fn workspaces_from_roots(roots: Vec<PathBuf>) -> Vec<DiscoveredWorkspace> {
+  let mut used_names: HashSet<String> = HashSet::new();
   roots
     .into_iter()
-    .enumerate()
-    .filter_map(|(index, root)| {
+    .filter_map(|root| {
       let (input, output) = hrek_paths_from_install_root(&root)?;
-      let name = if index == 0 {
-        "HREK".to_string()
-      } else {
-        format!("HREK ({})", index + 1)
-      };
+      let name = workspace_name_for_root(&root, &mut used_names);
       Some(DiscoveredWorkspace {
         name,
         megalo_version: "107-mcc".to_string(),
@@ -246,5 +278,54 @@ mod tests {
       r"C:\Program Files (x86)\Steam\steamapps\common\HREK\MegaloEdit.exe.FriendlyAppName"
     ));
     assert!(label_matches_hrek_tool("HR MegaloEdit"));
+  }
+
+  #[test]
+  fn reads_display_name_from_project_xml() {
+    let dir = std::env::temp_dir().join(format!(
+      "megacrow_project_xml_{}",
+      std::process::id()
+    ));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("temp dir");
+    std::fs::write(
+      dir.join("project.xml"),
+      r#"<?xml version="1.0" encoding="utf-8" ?>
+<project
+	name="Bulgogi"
+	displayName="Omaha"
+	>
+</project>
+"#,
+    )
+    .expect("write project.xml");
+
+    assert_eq!(
+      read_project_display_name(&dir).as_deref(),
+      Some("Omaha")
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+  }
+
+  #[test]
+  fn workspace_names_dedupe_display_names() {
+    let mut used = HashSet::new();
+    let dir = std::env::temp_dir().join(format!(
+      "megacrow_project_xml_dedupe_{}",
+      std::process::id()
+    ));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("temp dir");
+    std::fs::write(
+      dir.join("project.xml"),
+      r#"<project name="Bulgogi" displayName="Omaha"></project>"#,
+    )
+    .expect("write project.xml");
+
+    assert_eq!(workspace_name_for_root(&dir, &mut used), "Omaha");
+    assert_eq!(workspace_name_for_root(&dir, &mut used), "Omaha (2)");
+
+    let _ = std::fs::remove_dir_all(&dir);
   }
 }

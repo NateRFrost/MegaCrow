@@ -11,7 +11,7 @@ Compile-time limits including trigger count are listed under **Limits** on each 
 
 ## Syntax
 
-```megalo
+```
 trigger <kind> [<name>]
 	[<conditions and actions>]
 end

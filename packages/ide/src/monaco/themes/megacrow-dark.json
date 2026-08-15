@@ -4,8 +4,9 @@
   "rules": [
     { "token": "comment", "foreground": "6A9955", "fontStyle": "italic" },
     { "token": "string", "foreground": "CE9178" },
+    { "token": "string.escape", "foreground": "D7BA7D" },
     { "token": "number", "foreground": "B5CEA8" },
-    { "token": "regexp", "foreground": "D16969" },
+    { "token": "regexp", "foreground": "D7BA7D" },
     { "token": "operator", "foreground": "D4D4D4" },
     { "token": "keyword", "foreground": "569CD6" },
     { "token": "keyword.section", "foreground": "569CD6", "fontStyle": "bold" },

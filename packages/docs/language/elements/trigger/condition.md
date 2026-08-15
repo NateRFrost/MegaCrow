@@ -13,7 +13,7 @@ Condition names match `e_condition_type` in [@blamnetwork/blf](https://github.co
 
 ## Syntax
 
-```megalo
+```
 condition [not] <name> [arg1] [arg2] ... [or]
 ```
 

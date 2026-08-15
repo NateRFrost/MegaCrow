@@ -101,22 +101,6 @@ export function SettingsMenu({ settings, onChange }: Props) {
 
               <label className="settings-toggle">
                 <input
-                  checked={settings.editorWordWrap}
-                  onChange={(event) =>
-                    onChange({ editorWordWrap: event.target.checked })
-                  }
-                  type="checkbox"
-                />
-                <span className="settings-toggle-text">
-                  <span className="settings-toggle-label">Word wrap</span>
-                  <span className="settings-toggle-hint">
-                    Wrap long lines instead of horizontal scrolling (Alt+Z)
-                  </span>
-                </span>
-              </label>
-
-              <label className="settings-toggle">
-                <input
                   checked={settings.discordRichPresence}
                   onChange={(event) =>
                     onChange({ discordRichPresence: event.target.checked })

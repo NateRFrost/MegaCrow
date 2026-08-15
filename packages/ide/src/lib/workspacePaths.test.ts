@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { isPathInWorkspaceInput } from "./workspacePaths";
+import {
+  isPathInWorkspaceInput,
+  parseProjectXmlDisplayName,
+} from "./workspacePaths";
 
 describe("isPathInWorkspaceInput", () => {
   it("accepts files under the workspace input root", () => {
@@ -30,5 +33,22 @@ describe("isPathInWorkspaceInput", () => {
         "C:\\HREK\\data\\multiplayer\\megalo"
       )
     ).toBe(false);
+  });
+});
+
+describe("parseProjectXmlDisplayName", () => {
+  it("prefers displayName over name", () => {
+    expect(
+      parseProjectXmlDisplayName(`<project
+	name="Bulgogi"
+	displayName="Omaha"
+	>`)
+    ).toBe("Omaha");
+  });
+
+  it("falls back to name when displayName is missing", () => {
+    expect(parseProjectXmlDisplayName(`<project name="Bulgogi">`)).toBe(
+      "Bulgogi"
+    );
   });
 });

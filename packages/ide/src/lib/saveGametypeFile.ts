@@ -1,6 +1,7 @@
 import { join } from "@tauri-apps/api/path";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
+import { encodeGvarBlfFromMglo } from "./encodeGvarBlfFromMglo";
 import type { GametypeSaveFormat } from "./megaloShim";
 import { autosaveQueueFileName } from "./megaloShim";
 import { isTauriRuntime } from "./tauriRuntime";
@@ -57,22 +58,34 @@ export async function saveGametypeBytes(
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = suggestedName;
+  anchor.rel = "noopener";
+  anchor.style.display = "none";
+  document.body.appendChild(anchor);
   anchor.click();
-  URL.revokeObjectURL(url);
+  anchor.remove();
+  // Delay revoke so the browser can start the download before the blob URL is invalidated.
+  window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
   return { saved: true, path: null };
 }
 
-/** Write a compiled `.mglo` to the workspace output folder, overwriting if present. */
-export async function writeMgloToWorkspaceOutput(
+/** Write compiled `.mglo` and gvar `.bin` to the workspace output folder. */
+export async function writeBuildOutputsToWorkspace(
   workspace: Workspace,
   fileName: string | null,
-  bytes: Uint8Array
-): Promise<string> {
+  mgloBytes: Uint8Array
+): Promise<{ mgloPath: string; binPath: string }> {
   if (workspace.type !== "tauri") {
     throw new Error("Build requires the desktop app with an active workspace.");
   }
-  const outputName = gametypeSaveFileName(fileName, "mglo");
-  const outputPath = await join(workspace.outputPath, outputName);
-  await writeFile(outputPath, bytes);
-  return outputPath;
+  if (!workspace.outputPath?.trim()) {
+    throw new Error("This workspace has no output folder configured.");
+  }
+  const mgloName = gametypeSaveFileName(fileName, "mglo");
+  const binName = gametypeSaveFileName(fileName, "gvar");
+  const mgloPath = await join(workspace.outputPath, mgloName);
+  const binPath = await join(workspace.outputPath, binName);
+  const gvarBytes = encodeGvarBlfFromMglo(mgloBytes);
+  await writeFile(mgloPath, mgloBytes);
+  await writeFile(binPath, gvarBytes);
+  return { mgloPath, binPath };
 }

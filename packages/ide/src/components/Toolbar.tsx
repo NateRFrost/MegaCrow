@@ -226,7 +226,9 @@ export function Toolbar({
               title={
                 canBuild
                   ? "Compile and write .mglo to the workspace output folder"
-                  : "Open a script in the workspace to build"
+                  : workspace?.outputPath?.trim()
+                    ? "Open a script in the workspace to build"
+                    : "Set a workspace output folder to enable Build"
               }
               type="button"
             >

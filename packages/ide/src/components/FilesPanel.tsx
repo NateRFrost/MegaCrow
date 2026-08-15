@@ -1,4 +1,10 @@
-import { type MouseEvent, useCallback, useEffect, useState } from "react";
+import {
+  type MouseEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { writeClipboardText } from "../lib/clipboard";
 import { readTextFileBlob } from "../lib/decodeTextFile";
 import {
@@ -21,33 +27,54 @@ import {
   readOpfsGametypeSource,
   renameOpfsGametype,
 } from "../lib/opfsStorage";
+import { revealInFileManager } from "../lib/revealInFileManager";
 import {
+  createSystemMegaloDirectory,
   createSystemMegaloTextFile,
   deleteSystemMegaloFile,
   duplicateSystemMegaloFile,
   isSystemFolderSupported,
   type LocalDiskRoot,
+  listSystemBuildOutputs,
   listSystemMegaloTree,
+  moveSystemMegaloEntry,
   readSystemMegaloFile,
   renameSystemMegaloFile,
   resolveSystemMegaloFilePath,
   systemFolderLabel,
-  systemFolderTitle,
 } from "../lib/systemFiles";
+import type { BuildOutputEntry } from "../lib/tauriDisk";
 import { isTauriRuntime } from "../lib/tauriRuntime";
+import {
+  BUILDS_PANE_MAX_HEIGHT,
+  BUILDS_PANE_MIN_HEIGHT,
+  useBuildsPaneHeight,
+} from "../lib/useBuildsPaneHeight";
+import { watchWorkspaceInput } from "../lib/watchWorkspaceInput";
 import type { Workspace } from "../lib/workspace";
+import {
+  loadWorkspaceObjectLists,
+  objectListsFolderIsEmpty,
+} from "../lib/workspaceObjectLists";
+import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
 import {
   FilesContextMenu,
   type FilesContextMenuState,
+  type FilesContextSource,
+  type FilesContextTarget,
 } from "./FilesContextMenu";
 import { FilesRenameInput } from "./FilesRenameInput";
-import { LocalDiskTree } from "./LocalDiskTree";
+import { LocalDiskTree, MEGACROW_TREE_PATH_MIME } from "./LocalDiskTree";
 import { WorkspaceMenu } from "./WorkspaceMenu";
 
 interface Props {
   activeFileName: string | null;
   localDiskRevision: number;
+  /** Filenames recognized under object_lists/ for the active Megalo version. */
+  objectListNames?: readonly string[];
   onAddWorkspace?: () => void;
+  /** Clear the editor back to the empty “Open a file” state. */
+  onClearEditor?: () => void;
   onDeleteWorkspace?: (id: string) => void;
   onEditWorkspace?: (workspace: StoredWorkspace) => void;
   onFileDeleted: (name: string) => void;
@@ -62,6 +89,10 @@ interface Props {
     includeRoot?: MegaloIncludeRoot
   ) => void;
   onSelectWorkspace?: (id: string) => void;
+  /** Workspace object lists loaded from disk (`null` → use bundled defaults). */
+  onWorkspaceObjectListsChange?: (
+    lists: import("@megacrow/megalo").ObjectLists | null
+  ) => void;
   opfsRevision: number;
   workspace: Workspace | null;
   workspaceSwitcher?: boolean;
@@ -70,7 +101,11 @@ interface Props {
 
 function FileGlyph() {
   return (
-    <svg aria-hidden="true" className="files-glyph" viewBox="0 0 16 16">
+    <svg
+      aria-hidden="true"
+      className="files-glyph files-glyph--source"
+      viewBox="0 0 16 16"
+    >
       <path
         d="M3.5 1.5h6l3 3V14.5h-9z"
         fill="none"
@@ -84,6 +119,71 @@ function FileGlyph() {
         stroke="currentColor"
         strokeLinejoin="round"
         strokeWidth="1.2"
+      />
+      <path
+        d="M5.5 7.5h5M5.5 9.5h5M5.5 11.5h3.5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.1"
+      />
+    </svg>
+  );
+}
+
+/** Compiled .mglo / .bin / .blf — document with binary blocks. */
+function BuiltGametypeGlyph() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="files-glyph files-glyph--built"
+      viewBox="0 0 16 16"
+    >
+      <path
+        d="M3.5 1.5h6l3 3V14.5h-9z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="1.2"
+      />
+      <path
+        d="M9.5 1.5V4.5H12.5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="1.2"
+      />
+      <rect
+        fill="currentColor"
+        height="2"
+        rx="0.3"
+        width="2"
+        x="5.25"
+        y="7.25"
+      />
+      <rect
+        fill="currentColor"
+        height="2"
+        rx="0.3"
+        width="2"
+        x="8.25"
+        y="7.25"
+      />
+      <rect
+        fill="currentColor"
+        height="2"
+        rx="0.3"
+        width="2"
+        x="5.25"
+        y="10.25"
+      />
+      <rect
+        fill="currentColor"
+        height="2"
+        rx="0.3"
+        width="2"
+        x="8.25"
+        y="10.25"
       />
     </svg>
   );
@@ -117,6 +217,27 @@ function NewFileGlyph() {
   );
 }
 
+function NewFolderGlyph() {
+  return (
+    <svg aria-hidden="true" height="14" viewBox="0 0 16 16" width="14">
+      <path
+        d="M1.5 3.5h4l1.2 1.2H14.5v8.3H1.5z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="1.2"
+      />
+      <path
+        d="M8 7.25v4M6 9.25h4"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.2"
+      />
+    </svg>
+  );
+}
+
 export function FilesPanel({
   workspace,
   workspaces = [],
@@ -129,32 +250,59 @@ export function FilesPanel({
   onFileDeleted,
   onFileRenamed,
   activeFileName,
+  objectListNames = [],
+  onWorkspaceObjectListsChange,
+  onClearEditor,
   opfsRevision,
   localDiskRevision,
 }: Props) {
   const [opfsFiles, setOpfsFiles] = useState<OpfsGametypeEntry[]>([]);
   const [opfsError, setOpfsError] = useState<string | null>(null);
-  const [localRoot, setLocalRoot] = useState<LocalDiskRoot | null>(() =>
-    workspace?.type === "tauri" ? { path: workspace.inputPath } : null
-  );
   const [localTree, setLocalTree] = useState<
     Awaited<ReturnType<typeof listSystemMegaloTree>>
   >([]);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [buildOutputs, setBuildOutputs] = useState<BuildOutputEntry[]>([]);
+  const [buildsError, setBuildsError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [contextMenu, setContextMenu] = useState<FilesContextMenuState | null>(
     null
   );
+  const [pendingDelete, setPendingDelete] = useState<{
+    path: string[];
+    source: FilesContextSource;
+    target: FilesContextTarget;
+  } | null>(null);
   const [renamingPathKey, setRenamingPathKey] = useState<string | null>(null);
   const [renamingOpfsName, setRenamingOpfsName] = useState<string | null>(null);
   const [ensureExpandedKeys, setEnsureExpandedKeys] = useState<string[]>([]);
   const [pastePayload, setPastePayload] = useState<FileClipboardPayload | null>(
     null
   );
+  const lastObjectListsJsonRef = useRef<string>("");
+  /** Guards async tree loads from applying after a workspace switch. */
+  const localRootPathRef = useRef<string | null>(null);
+
+  const localRootPath =
+    workspace?.type === "tauri" ? workspace.inputPath : null;
+  const localRoot: LocalDiskRoot | null = localRootPath
+    ? { path: localRootPath }
+    : null;
+  localRootPathRef.current = localRootPath;
+  const {
+    height: buildsHeight,
+    open: buildsOpen,
+    onResizeStart: onBuildsResizeStart,
+    toggleOpen: toggleBuildsOpen,
+  } = useBuildsPaneHeight();
 
   const opfsAvailable = isOpfsSupported() && !isTauriRuntime();
   const tauriAvailable = isTauriRuntime();
   const localDiskAvailable = isSystemFolderSupported();
+  const outputPath =
+    workspace?.type === "tauri" && workspace.outputPath?.trim()
+      ? workspace.outputPath.trim()
+      : null;
 
   const refreshOpfs = useCallback(async () => {
     if (!opfsAvailable) {
@@ -171,28 +319,73 @@ export function FilesPanel({
   }, [opfsAvailable]);
 
   const refreshLocal = useCallback(async () => {
-    if (!localRoot) {
+    const rootPath = localRootPathRef.current;
+    if (!rootPath) {
       setLocalTree([]);
+      onWorkspaceObjectListsChange?.(null);
+      lastObjectListsJsonRef.current = "";
       return;
     }
+    const root: LocalDiskRoot = { path: rootPath };
     try {
       setLocalError(null);
-      setLocalTree(await listSystemMegaloTree(localRoot));
+      const tree = await listSystemMegaloTree(root);
+      if (localRootPathRef.current !== rootPath) {
+        return;
+      }
+      setLocalTree(tree);
+      if (objectListsFolderIsEmpty(tree)) {
+        setEnsureExpandedKeys((keys) =>
+          keys.includes("object_lists") ? keys : [...keys, "object_lists"]
+        );
+      }
+      const lists = await loadWorkspaceObjectLists(rootPath, objectListNames);
+      if (localRootPathRef.current !== rootPath) {
+        return;
+      }
+      const listsJson = JSON.stringify(lists);
+      if (listsJson !== lastObjectListsJsonRef.current) {
+        lastObjectListsJsonRef.current = listsJson;
+        onWorkspaceObjectListsChange?.(lists);
+      }
     } catch (error) {
+      if (localRootPathRef.current !== rootPath) {
+        return;
+      }
       setLocalError(String(error));
       setLocalTree([]);
     }
-  }, [localRoot]);
+  }, [objectListNames, onWorkspaceObjectListsChange]);
 
-  useEffect(() => {
-    if (workspace?.type === "tauri") {
-      setLocalRoot({ path: workspace.inputPath });
+  const refreshBuilds = useCallback(async () => {
+    if (!outputPath) {
+      setBuildOutputs([]);
+      setBuildsError(null);
       return;
     }
-    setLocalRoot(null);
+    try {
+      setBuildsError(null);
+      setBuildOutputs(await listSystemBuildOutputs(outputPath));
+    } catch (error) {
+      setBuildsError(String(error));
+      setBuildOutputs([]);
+    }
+  }, [outputPath]);
+
+  // Drop stale tree UI immediately when the workspace root changes.
+  useEffect(() => {
     setLocalTree([]);
     setLocalError(null);
-  }, [workspace]);
+    setEnsureExpandedKeys([]);
+    setRenamingPathKey(null);
+    setContextMenu(null);
+    setPendingDelete(null);
+    setPastePayload(null);
+    lastObjectListsJsonRef.current = "";
+    if (!localRootPath) {
+      onWorkspaceObjectListsChange?.(null);
+    }
+  }, [localRootPath, onWorkspaceObjectListsChange]);
 
   useEffect(() => {
     void refreshOpfs();
@@ -200,7 +393,71 @@ export function FilesPanel({
 
   useEffect(() => {
     void refreshLocal();
-  }, [refreshLocal, localDiskRevision]);
+  }, [refreshLocal, localDiskRevision, localRootPath]);
+
+  useEffect(() => {
+    void refreshBuilds();
+  }, [refreshBuilds, localDiskRevision]);
+
+  useEffect(() => {
+    if (!(tauriAvailable && localRoot)) {
+      return;
+    }
+
+    let disposed = false;
+    let unwatch: (() => void) | null = null;
+
+    void (async () => {
+      try {
+        const stop = await watchWorkspaceInput(localRoot.path, () => {
+          void refreshLocal();
+        });
+        unwatch = stop;
+        if (disposed) {
+          unwatch?.();
+          unwatch = null;
+        }
+      } catch (error) {
+        console.error("Failed to watch workspace input folder:", error);
+      }
+    })();
+
+    return () => {
+      disposed = true;
+      unwatch?.();
+      unwatch = null;
+    };
+  }, [tauriAvailable, localRoot, refreshLocal]);
+
+  useEffect(() => {
+    if (!(tauriAvailable && outputPath)) {
+      return;
+    }
+
+    let disposed = false;
+    let unwatch: (() => void) | null = null;
+
+    void (async () => {
+      try {
+        const stop = await watchWorkspaceInput(outputPath, () => {
+          void refreshBuilds();
+        });
+        unwatch = stop;
+        if (disposed) {
+          unwatch?.();
+          unwatch = null;
+        }
+      } catch (error) {
+        console.error("Failed to watch workspace output folder:", error);
+      }
+    })();
+
+    return () => {
+      disposed = true;
+      unwatch?.();
+      unwatch = null;
+    };
+  }, [tauriAvailable, outputPath, refreshBuilds]);
 
   const rejectBrowserMegaloSource = useCallback(
     (name: string): boolean => {
@@ -397,6 +654,33 @@ export function FilesPanel({
     [localRoot, openLocalFile, refreshLocal]
   );
 
+  const createLocalFolder = useCallback(
+    async (parentSegments: string[] = []) => {
+      if (!localRoot) {
+        return;
+      }
+      try {
+        setLocalError(null);
+        const createdPath = await createSystemMegaloDirectory(
+          localRoot,
+          parentSegments
+        );
+        const expandKeys = [
+          ...parentSegments.map((_, index) =>
+            pathKey(parentSegments.slice(0, index + 1))
+          ),
+          pathKey(createdPath),
+        ];
+        setEnsureExpandedKeys(expandKeys);
+        await refreshLocal();
+        setRenamingPathKey(pathKey(createdPath));
+      } catch (error) {
+        setLocalError(String(error));
+      }
+    },
+    [localRoot, refreshLocal]
+  );
+
   const commitRename = useCallback(
     async (fromPath: string[], newName: string) => {
       if (!localRoot) {
@@ -429,6 +713,58 @@ export function FilesPanel({
     [localRoot, onFileRenamed, refreshLocal]
   );
 
+  const moveLocalEntry = useCallback(
+    async (fromPath: string[], toParentPath: string[]) => {
+      if (!localRoot) {
+        return;
+      }
+      const oldDisplay = formatLocalDiskPath(fromPath);
+      try {
+        setLocalError(null);
+        let result = await moveSystemMegaloEntry(
+          localRoot,
+          fromPath,
+          toParentPath
+        );
+        if (result.status === "needs_replace") {
+          if (
+            !window.confirm(
+              `"${result.displayName}" already exists in the destination. Replace it?`
+            )
+          ) {
+            return;
+          }
+          result = await moveSystemMegaloEntry(
+            localRoot,
+            fromPath,
+            toParentPath,
+            { replace: true }
+          );
+        }
+        if (result.status === "noop") {
+          return;
+        }
+        const toPath = result.path;
+        const expandKeys = toParentPath.map((_, index) =>
+          pathKey(toParentPath.slice(0, index + 1))
+        );
+        setEnsureExpandedKeys(expandKeys);
+        await refreshLocal();
+        const newDisplay = formatLocalDiskPath(toPath);
+        if (oldDisplay !== newDisplay) {
+          const absoluteFilePath = await resolveSystemMegaloFilePath(
+            localRoot,
+            toPath
+          );
+          onFileRenamed(oldDisplay, newDisplay, absoluteFilePath);
+        }
+      } catch (error) {
+        setLocalError(String(error));
+      }
+    },
+    [localRoot, onFileRenamed, refreshLocal]
+  );
+
   const deleteLocalFile = useCallback(
     async (path: string[], options?: { skipConfirm?: boolean }) => {
       if (!localRoot) {
@@ -454,22 +790,6 @@ export function FilesPanel({
       }
     },
     [localRoot, onFileDeleted, refreshLocal]
-  );
-
-  const copyLocalPath = useCallback(
-    async (path: string[]) => {
-      if (!localRoot) {
-        return;
-      }
-      try {
-        setLocalError(null);
-        const absolute = await resolveSystemMegaloFilePath(localRoot, path);
-        await writeClipboardText(absolute);
-      } catch (error) {
-        setLocalError(String(error));
-      }
-    },
-    [localRoot]
   );
 
   const pasteLocalFile = useCallback(
@@ -534,6 +854,39 @@ export function FilesPanel({
     [refreshPasteFromClipboard]
   );
 
+  const onBuildsContextMenu = useCallback((event: MouseEvent, name: string) => {
+    event.preventDefault();
+    setPastePayload(null);
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      source: "builds",
+      target: { type: "file", path: [name] },
+    });
+  }, []);
+
+  const resolveContextAbsolutePath = useCallback(
+    async (
+      path: string[],
+      source: FilesContextSource
+    ): Promise<string | null> => {
+      if (source === "builds") {
+        if (!outputPath) {
+          return null;
+        }
+        return resolveSystemMegaloFilePath({ path: outputPath }, path);
+      }
+      if (source === "local") {
+        if (!localRoot) {
+          return null;
+        }
+        return resolveSystemMegaloFilePath(localRoot, path);
+      }
+      return null;
+    },
+    [localRoot, outputPath]
+  );
+
   const isActive = (name: string) =>
     activeFileName !== null &&
     activeFileName.localeCompare(name, undefined, { sensitivity: "accent" }) ===
@@ -543,12 +896,29 @@ export function FilesPanel({
     <section
       aria-label="Files"
       className={`files-panel${dragActive ? " files-panel--drag" : ""}`}
-      onDragLeave={() => setDragActive(false)}
+      onDragLeave={(event) => {
+        if (
+          Array.from(event.dataTransfer.types).includes(MEGACROW_TREE_PATH_MIME)
+        ) {
+          return;
+        }
+        setDragActive(false);
+      }}
       onDragOver={(event) => {
+        if (
+          Array.from(event.dataTransfer.types).includes(MEGACROW_TREE_PATH_MIME)
+        ) {
+          return;
+        }
         event.preventDefault();
         setDragActive(true);
       }}
       onDrop={(event) => {
+        if (
+          Array.from(event.dataTransfer.types).includes(MEGACROW_TREE_PATH_MIME)
+        ) {
+          return;
+        }
         event.preventDefault();
         setDragActive(false);
         handleDroppedFiles(event.dataTransfer.files);
@@ -682,7 +1052,7 @@ export function FilesPanel({
         ) : null}
 
         {localDiskAvailable ? (
-          <div className="files-section">
+          <div className="files-section files-section--scripts">
             {localRoot ? (
               <div className="files-section-label">
                 <span>{`${systemFolderLabel(localRoot)}/`}</span>
@@ -700,6 +1070,15 @@ export function FilesPanel({
                     type="button"
                   >
                     <NewFileGlyph />
+                  </button>
+                  <button
+                    aria-label="New Folder"
+                    className="files-panel-icon-action"
+                    onClick={() => void createLocalFolder([])}
+                    title="New Folder"
+                    type="button"
+                  >
+                    <NewFolderGlyph />
                   </button>
                 </div>
               </div>
@@ -720,8 +1099,9 @@ export function FilesPanel({
                     <LocalDiskTree
                       activeFileName={activeFileName}
                       ensureExpandedKeys={ensureExpandedKeys}
-                      key={systemFolderTitle(localRoot)}
+                      key={workspace?.id ?? localRootPath ?? "local"}
                       nodes={localTree}
+                      objectListNames={objectListNames}
                       onBeginRename={(path) =>
                         setRenamingPathKey(pathKey(path))
                       }
@@ -730,6 +1110,9 @@ export function FilesPanel({
                         void commitRename(path, name)
                       }
                       onContextMenu={onTreeContextMenu}
+                      onMoveEntry={(fromPath, toParentPath) =>
+                        void moveLocalEntry(fromPath, toParentPath)
+                      }
                       onOpenFile={(path) => void openLocalFile(path)}
                       renamingPathKey={renamingPathKey}
                     />
@@ -746,6 +1129,97 @@ export function FilesPanel({
                 </div>
               )}
             </div>
+          </div>
+        ) : null}
+
+        {outputPath ? (
+          <div
+            className={`files-builds${buildsOpen ? " files-builds--open" : ""}`}
+          >
+            <button
+              aria-expanded={buildsOpen}
+              className="files-builds-header"
+              onClick={toggleBuildsOpen}
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                className={`files-builds-chevron${buildsOpen ? " files-builds-chevron--open" : ""}`}
+                height="12"
+                viewBox="0 0 16 16"
+                width="12"
+              >
+                <path
+                  d="M6 4l4 4-4 4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.4"
+                />
+              </svg>
+              <span className="files-builds-title">Built gametypes</span>
+              {buildOutputs.length > 0 ? (
+                <span className="files-section-count">
+                  {buildOutputs.length}
+                </span>
+              ) : null}
+            </button>
+            {buildsOpen ? (
+              <>
+                <div
+                  aria-label="Resize built gametypes pane"
+                  aria-orientation="horizontal"
+                  aria-valuemax={BUILDS_PANE_MAX_HEIGHT}
+                  aria-valuemin={BUILDS_PANE_MIN_HEIGHT}
+                  aria-valuenow={buildsHeight}
+                  className="files-builds-resizer"
+                  onPointerDown={onBuildsResizeStart}
+                  role="separator"
+                />
+                <div
+                  className="files-builds-body"
+                  style={{ height: buildsHeight }}
+                >
+                  {buildsError ? (
+                    <p className="files-hint files-hint--error">
+                      {buildsError}
+                    </p>
+                  ) : null}
+                  {buildOutputs.length === 0 && !buildsError ? (
+                    <div className="files-empty files-empty--compact">
+                      <p>No built gametypes yet</p>
+                      <span>Use Build to write .mglo files here</span>
+                    </div>
+                  ) : (
+                    <ul className="files-tree">
+                      {buildOutputs.map((entry) => (
+                        <li className="files-tree-node" key={entry.name}>
+                          <button
+                            className="files-row-btn files-row-btn--built"
+                            onClick={() => onClearEditor?.()}
+                            onContextMenu={(event) =>
+                              onBuildsContextMenu(event, entry.name)
+                            }
+                            title={`${entry.name} — clears the editor`}
+                            type="button"
+                          >
+                            <span
+                              aria-hidden="true"
+                              className="files-chevron-spacer"
+                            />
+                            <BuiltGametypeGlyph />
+                            <span className="files-row-label">
+                              {entry.name}
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </>
+            ) : null}
           </div>
         ) : null}
 
@@ -782,6 +1256,9 @@ export function FilesPanel({
                 setPastePayload(payload);
                 return;
               }
+              if (source === "builds") {
+                return;
+              }
               if (!localRoot) {
                 return;
               }
@@ -800,6 +1277,8 @@ export function FilesPanel({
             } catch (error) {
               if (source === "opfs") {
                 setOpfsError(String(error));
+              } else if (source === "builds") {
+                setBuildsError(String(error));
               } else {
                 setLocalError(String(error));
               }
@@ -814,21 +1293,37 @@ export function FilesPanel({
             }
             return;
           }
-          void copyLocalPath(path);
-        }}
-        onDelete={(path, source) => {
-          if (source === "opfs") {
-            const name = path[0];
-            if (name) {
-              void deleteOpfsFile(name, { skipConfirm: true });
+          void (async () => {
+            try {
+              const absolute = await resolveContextAbsolutePath(path, source);
+              if (!absolute) {
+                return;
+              }
+              await writeClipboardText(absolute);
+            } catch (error) {
+              if (source === "builds") {
+                setBuildsError(String(error));
+              } else {
+                setLocalError(String(error));
+              }
             }
-            return;
-          }
-          void deleteLocalFile(path, { skipConfirm: true });
+          })();
+        }}
+        onDelete={(target, source) => {
+          setPendingDelete({
+            path: target.path,
+            source,
+            target,
+          });
         }}
         onNewFile={(parentPath, source) => {
           if (source === "local") {
             void createLocalFile(parentPath);
+          }
+        }}
+        onNewFolder={(parentPath, source) => {
+          if (source === "local") {
+            void createLocalFolder(parentPath);
           }
         }}
         onPaste={(target, source) => {
@@ -856,8 +1351,82 @@ export function FilesPanel({
             }
             return;
           }
+          if (source === "builds") {
+            return;
+          }
           setRenamingPathKey(pathKey(path));
         }}
+        onReveal={
+          tauriAvailable
+            ? (path, source) => {
+                void (async () => {
+                  try {
+                    const absolute = await resolveContextAbsolutePath(
+                      path,
+                      source
+                    );
+                    if (!absolute) {
+                      return;
+                    }
+                    await revealInFileManager(absolute);
+                  } catch (error) {
+                    if (source === "builds") {
+                      setBuildsError(String(error));
+                    } else {
+                      setLocalError(String(error));
+                    }
+                  }
+                })();
+              }
+            : undefined
+        }
+      />
+
+      <ConfirmDeleteDialog
+        name={
+          pendingDelete
+            ? (pendingDelete.path.at(-1) ??
+              formatLocalDiskPath(pendingDelete.path))
+            : ""
+        }
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (!pendingDelete) {
+            return;
+          }
+          const { path, source } = pendingDelete;
+          setPendingDelete(null);
+          if (source === "opfs") {
+            const name = path[0];
+            if (name) {
+              void deleteOpfsFile(name, { skipConfirm: true });
+            }
+            return;
+          }
+          if (source === "builds") {
+            void (async () => {
+              if (!outputPath) {
+                return;
+              }
+              const name = path[0] ?? formatLocalDiskPath(path);
+              try {
+                setBuildsError(null);
+                await deleteSystemMegaloFile({ path: outputPath }, path);
+                await refreshBuilds();
+              } catch (error) {
+                setBuildsError(String(error));
+                console.error(
+                  `Failed to delete built gametype ${name}:`,
+                  error
+                );
+              }
+            })();
+            return;
+          }
+          void deleteLocalFile(path, { skipConfirm: true });
+        }}
+        open={pendingDelete !== null}
+        targetKind={pendingDelete?.target.type ?? "file"}
       />
     </section>
   );

@@ -227,6 +227,25 @@ export const diagnosticMessages = {
     });
   },
 
+  objectListExceedsObjectsLimit(count: number, max: number): string {
+    return translate("object_list_exceeds_objects_limit", {
+      count: String(count),
+      max: String(max),
+    });
+  },
+
+  objectListDuplicateEntry(
+    name: string,
+    previousLine: number,
+    duplicateLine: number
+  ): string {
+    return translate("object_list_duplicate_entry", {
+      name,
+      previousLine: String(previousLine),
+      duplicateLine: String(duplicateLine),
+    });
+  },
+
   fireteamCountOutOfRange(value: number, max: number): string {
     return translate("fireteam_count_out_of_range", {
       value: String(value),

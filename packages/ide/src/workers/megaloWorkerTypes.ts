@@ -32,6 +32,10 @@ export type MegaloWorkerRequest =
       kind: "setCompilerSettings";
       compilerSettings: MegaCrowCompilerSettings;
     }
+  | {
+      kind: "setObjectLists";
+      objectLists: import("@megacrow/megalo").ObjectLists | null;
+    }
   | ({
       kind: "compile";
       id: number;

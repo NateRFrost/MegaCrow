@@ -6,6 +6,7 @@ import {
   compileSource,
   DiagnosticSeverity,
   MEGALO_VERSIONS,
+  type ObjectLists,
   SourceLocationType,
   summarizeIncludeDiagnostics,
 } from "@megacrow/megalo";
@@ -28,6 +29,7 @@ let originalBytes: Uint8Array | null = null;
 let baseProgram: MegaloProgram | null = null;
 let baselineSource: string | null = null;
 let _workspaceContext: WorkspaceContext | null = null;
+let workspaceObjectLists: ObjectLists | undefined;
 let _compilerSettings: MegaCrowCompilerSettings = {
   creatorGamertag: "",
   strictStringLiterals: false,
@@ -74,15 +76,16 @@ async function compileToBytes(
   const result = await compileSource(source, {
     version: MEGALO_VERSIONS["107-mcc"],
     megacrowExtensions: ALL_MEGACROW_EXTENSIONS,
+    objectLists: workspaceObjectLists,
     fromUri: includeCache?.sourceDir
       ? `${includeCache.sourceDir.replace(/\\/g, "/")}/.`
       : undefined,
     resolveInclude: includeCache
       ? resolveIncludeFromCache(includeCache)
       : undefined,
-    resolveBaseFile: baseBytes?.length
-      ? async () => baseBytes
-      : async () => null,
+    // Prefer pre-resolved base bytes; otherwise omit so sibling `.txt` JIT
+    // runs without a "compiled from source" DX (no output-folder lookup).
+    resolveBaseFile: baseBytes?.length ? async () => baseBytes : undefined,
   });
   const totalMs = performance.now() - started;
   const timing = {
@@ -152,6 +155,10 @@ async function handleMessage(message: MegaloWorkerRequest): Promise<void> {
 
     case "setCompilerSettings":
       _compilerSettings = message.compilerSettings;
+      break;
+
+    case "setObjectLists":
+      workspaceObjectLists = message.objectLists ?? undefined;
       break;
 
     case "compile":

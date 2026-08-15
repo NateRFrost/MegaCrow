@@ -1,7 +1,19 @@
 export {
   type AnalyzeDocumentOptions,
+  type AnalyzeDocumentSyncOptions,
   analyzeDocument,
+  analyzeDocumentSync,
 } from "src/language-service/analyze";
+export {
+  type AnalyzeObjectListOptions,
+  analyzeObjectListSource,
+  objectListEntryCount,
+} from "src/language-service/analyze-object-list";
+export {
+  type DefinitionRange,
+  type DefinitionTarget,
+  definitionAtPosition,
+} from "src/language-service/definition";
 export {
   encodeSemanticTokens,
   getSemanticTokens,

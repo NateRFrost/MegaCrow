@@ -358,6 +358,28 @@ base "b.mglo"
     ).toBe(true);
   });
 
+  it("JIT-compiles sibling .txt silently when resolveBaseFile is omitted", async () => {
+    const files = new Map<string, string>([["base.txt", minimalScript]]);
+
+    const result = await compileSource(`base "base.mglo"\n${minimalScript}`, {
+      version,
+      megacrowExtensions: { compileMissingBaseFromSource: true },
+      resolveInclude: (path) => {
+        const text = files.get(path);
+        return text ? { text, uri: path } : null;
+      },
+    });
+
+    expect(result.bytes).toBeDefined();
+    expect(
+      result.diagnostics.some(
+        (d) =>
+          d.severity === DiagnosticSeverity.Warning &&
+          d.message.includes("was compiled from source")
+      )
+    ).toBe(false);
+  });
+
   it("does not JIT-compile a sibling .txt unless the extension is enabled", async () => {
     const files = new Map<string, string>([["base.txt", minimalScript]]);
 

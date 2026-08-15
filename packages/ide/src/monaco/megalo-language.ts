@@ -3,7 +3,12 @@ import {
   SEMANTIC_TOKEN_TYPES,
 } from "@megacrow/megalo";
 import type { Monaco } from "@monaco-editor/react";
-import { lspCompletions, lspHover, lspSemanticTokens } from "../lib/lspClient";
+import {
+  lspCompletions,
+  lspDefinition,
+  lspHover,
+  lspSemanticTokens,
+} from "../lib/lspClient";
 import { getMegaloFoldRanges } from "../lib/megaloBlockFolding";
 import {
   MEGALO_BUILTIN_GLOBALS,
@@ -17,31 +22,48 @@ import {
 } from "../lib/megaloShim";
 import { findPathReferences } from "../lib/pathReferences";
 import { REGION_END, REGION_START } from "../lib/regionComments";
-import { getStringTableFoldLineNumbers } from "../lib/stringTableGroups";
 import { applyEditorTheme } from "./theme";
 
 const MEGALO_LANGUAGE_ID = "megalo";
 let languageBasicsRegistered = false;
 let semanticTokensDisposable: { dispose(): void } | undefined;
 let hoverDisposable: { dispose(): void } | undefined;
+let definitionDisposable: { dispose(): void } | undefined;
 let completionDisposable: { dispose(): void } | undefined;
 let linkDisposable: { dispose(): void } | undefined;
 let linkOpenerDisposable: { dispose(): void } | undefined;
+let editorOpenerDisposable: { dispose(): void } | undefined;
 
 /** Custom scheme for Ctrl+Click include / base path links. */
 export const MEGACROW_PATH_SCHEME = "megacrow-path";
+
+/** Custom scheme for go-to-definition into another Megalo source file. */
+export const MEGACROW_DEFINITION_SCHEME = "megacrow-definition";
 
 export type MegaloPathOpenHandler = (payload: {
   kind: "include" | "localized_include" | "base";
   path: string;
 }) => void | Promise<void>;
 
+export type MegaloDefinitionOpenHandler = (payload: {
+  file: string;
+  line: number;
+  column: number;
+}) => void | Promise<void>;
+
 let pathOpenHandler: MegaloPathOpenHandler | null = null;
+let definitionOpenHandler: MegaloDefinitionOpenHandler | null = null;
 
 export function setMegaloPathOpenHandler(
   handler: MegaloPathOpenHandler | null
 ): void {
   pathOpenHandler = handler;
+}
+
+export function setMegaloDefinitionOpenHandler(
+  handler: MegaloDefinitionOpenHandler | null
+): void {
+  definitionOpenHandler = handler;
 }
 
 function encodePathLinkUrl(
@@ -75,6 +97,26 @@ function decodePathLinkUrl(
     return null;
   }
   return { kind, path };
+}
+
+function decodeDefinitionUrl(
+  uri: Monaco["Uri"]
+): { file: string; line: number; column: number } | null {
+  if (uri.scheme !== MEGACROW_DEFINITION_SCHEME) {
+    return null;
+  }
+  const params = new URLSearchParams(uri.query);
+  const file = params.get("file");
+  const line = Number(params.get("line"));
+  const character = Number(params.get("character"));
+  if (
+    !(file && Number.isFinite(line) && Number.isFinite(character)) ||
+    line < 0 ||
+    character < 0
+  ) {
+    return null;
+  }
+  return { file, line: line + 1, column: character + 1 };
 }
 
 /** Decode, clip to live model line lengths, and re-encode semantic tokens. */
@@ -171,12 +213,26 @@ function diagnosticToMarker(
 ): Monaco["editor"]["IMarkerData"] {
   const lineCount = model.getLineCount();
   const startLine = Math.min(Math.max(1, diagnostic.line), lineCount);
-  const lineLength = model.getLineLength(startLine);
-  const startColumn = Math.min(Math.max(1, diagnostic.column), lineLength + 1);
+  const endLineNumber = Math.min(
+    Math.max(startLine, diagnostic.endLine ?? startLine),
+    lineCount
+  );
+  const startLineLength = model.getLineLength(startLine);
+  const endLineLength = model.getLineLength(endLineNumber);
+  const startColumn = Math.min(
+    Math.max(1, diagnostic.column),
+    startLineLength + 1
+  );
 
-  const endLine = startLine;
   let endColumn = diagnostic.endColumn ?? startColumn + 1;
-  endColumn = Math.min(Math.max(endColumn, startColumn + 1), lineLength + 1);
+  if (endLineNumber === startLine) {
+    endColumn = Math.min(
+      Math.max(endColumn, startColumn + 1),
+      startLineLength + 1
+    );
+  } else {
+    endColumn = Math.min(Math.max(1, endColumn), endLineLength + 1);
+  }
 
   if (
     diagnostic.offset !== undefined &&
@@ -209,7 +265,7 @@ function diagnosticToMarker(
         : monaco.MarkerSeverity.Error,
     startLineNumber: startLine,
     startColumn,
-    endLineNumber: endLine,
+    endLineNumber,
     endColumn,
     message: diagnostic.message,
     source: "megalo",
@@ -510,8 +566,10 @@ function _buildTokenizer(
       trigger: triggerBody,
       section: sectionBody,
       string: [
-        [/[^\\"]+/, "string"],
+        [/%[nptos]/, "string.escape"],
         [/\\./, "string.escape"],
+        [/[^\\"%]+/, "string"],
+        [/%/, "string"],
         [/"/, "string", "@pop"],
       ],
     },
@@ -724,6 +782,46 @@ export function registerMegaloLanguage(monaco: Monaco): void {
     },
   });
 
+  definitionDisposable?.dispose();
+  definitionDisposable = monaco.languages.registerDefinitionProvider(
+    MEGALO_LANGUAGE_ID,
+    {
+      async provideDefinition(model, position) {
+        try {
+          const locations = await lspDefinition(model.getValue(), {
+            line: position.lineNumber - 1,
+            character: position.column - 1,
+          });
+          return locations.map((location) => {
+            if (location.uri.startsWith(`${MEGACROW_DEFINITION_SCHEME}:`)) {
+              return {
+                uri: monaco.Uri.parse(location.uri),
+                range: {
+                  startLineNumber: location.range.start.line + 1,
+                  startColumn: location.range.start.character + 1,
+                  endLineNumber: location.range.end.line + 1,
+                  endColumn: location.range.end.character + 1,
+                },
+              };
+            }
+            return {
+              uri: model.uri,
+              range: {
+                startLineNumber: location.range.start.line + 1,
+                startColumn: location.range.start.character + 1,
+                endLineNumber: location.range.end.line + 1,
+                endColumn: location.range.end.character + 1,
+              },
+            };
+          });
+        } catch (error) {
+          console.error("[megalo] definition failed", error);
+          return [];
+        }
+      },
+    }
+  );
+
   completionDisposable?.dispose();
   completionDisposable = monaco.languages.registerCompletionItemProvider(
     MEGALO_LANGUAGE_ID,
@@ -787,11 +885,29 @@ export function registerMegaloLanguage(monaco: Monaco): void {
   if (!linkOpenerDisposable) {
     linkOpenerDisposable = monaco.editor.registerLinkOpener({
       async open(resource) {
-        const decoded = decodePathLinkUrl(resource);
-        if (!(decoded && pathOpenHandler)) {
+        const pathDecoded = decodePathLinkUrl(resource);
+        if (pathDecoded && pathOpenHandler) {
+          await pathOpenHandler(pathDecoded);
+          return true;
+        }
+        const definitionDecoded = decodeDefinitionUrl(resource);
+        if (definitionDecoded && definitionOpenHandler) {
+          await definitionOpenHandler(definitionDecoded);
+          return true;
+        }
+        return false;
+      },
+    });
+  }
+
+  if (!editorOpenerDisposable) {
+    editorOpenerDisposable = monaco.editor.registerEditorOpener({
+      async openCodeEditor(_source, resource) {
+        const definitionDecoded = decodeDefinitionUrl(resource);
+        if (!(definitionDecoded && definitionOpenHandler)) {
           return false;
         }
-        await pathOpenHandler(decoded);
+        await definitionOpenHandler(definitionDecoded);
         return true;
       },
     });
@@ -819,94 +935,6 @@ export function setMegaloDiagnostics(
       .filter((d) => !d.trayOnly)
       .map((d) => diagnosticToMarker(monaco, model, d))
   );
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => window.setTimeout(resolve, ms));
-}
-
-interface FoldingRegion {
-  isCollapsed: boolean;
-  startLineNumber: number;
-}
-
-interface FoldingModelLike {
-  getRegionAtLine(line: number): FoldingRegion | null;
-  toggleCollapseState(regions: FoldingRegion[]): void;
-}
-
-interface FoldingControllerLike {
-  getFoldingModel(): Promise<FoldingModelLike | null> | null;
-}
-
-/** Collapse all `string_table` blocks once folding ranges are available. */
-export async function foldStringTables(
-  editor: Monaco["editor"]["IStandaloneCodeEditor"]
-): Promise<boolean> {
-  const model = editor.getModel();
-  if (!model) {
-    return false;
-  }
-
-  const headerLines = getStringTableFoldLineNumbers(model.getLinesContent());
-  if (headerLines.length === 0) {
-    return false;
-  }
-
-  const savedPosition = editor.getPosition();
-  const savedSelections = editor.getSelections();
-
-  const restoreCursor = () => {
-    if (savedSelections) {
-      editor.setSelections(savedSelections);
-    } else if (savedPosition) {
-      editor.setPosition(savedPosition);
-    }
-  };
-
-  for (let attempt = 0; attempt < 40; attempt++) {
-    const controller = editor.getContribution(
-      "editor.contrib.folding"
-    ) as FoldingControllerLike | null;
-    const foldingModel = await controller?.getFoldingModel?.();
-    if (!foldingModel) {
-      await sleep(75);
-      continue;
-    }
-
-    const regionsToFold: FoldingRegion[] = [];
-    for (const line of headerLines) {
-      const region = foldingModel.getRegionAtLine(line);
-      if (region?.startLineNumber === line && !region.isCollapsed) {
-        regionsToFold.push(region);
-      }
-    }
-
-    if (regionsToFold.length > 0) {
-      foldingModel.toggleCollapseState(regionsToFold);
-      restoreCursor();
-      return true;
-    }
-
-    const hasAnyRegion = headerLines.some(
-      (line) => foldingModel.getRegionAtLine(line) !== null
-    );
-    if (hasAnyRegion) {
-      restoreCursor();
-      return true;
-    }
-
-    await sleep(75);
-  }
-
-  for (const header of headerLines) {
-    editor.trigger("foldStringTables", "editor.fold", {
-      selectionLines: [header - 1],
-    });
-  }
-
-  restoreCursor();
-  return true;
 }
 
 export { MEGALO_LANGUAGE_ID };

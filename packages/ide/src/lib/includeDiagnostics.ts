@@ -165,7 +165,7 @@ export function megaloCompileOptionsFromWorkspace(
       ? {
           base: {
             fileProvider,
-            outputDir: workspace.outputPath,
+            outputDir: workspace.outputPath ?? workspace.inputPath,
             searchDirs: [
               workspace.outputPath,
               fromIncludes?.includes?.inputDir ??
@@ -173,7 +173,10 @@ export function megaloCompileOptionsFromWorkspace(
                 workspace.inputPath,
               workspace.inputPath,
             ].filter(
-              (dir, index, dirs) => dir !== "" && dirs.indexOf(dir) === index
+              (dir, index, dirs): dir is string =>
+                typeof dir === "string" &&
+                dir !== "" &&
+                dirs.indexOf(dir) === index
             ),
           },
         }

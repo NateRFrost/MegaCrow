@@ -76,12 +76,22 @@ end
     expect(tier1.name).toMatchObject({ value: "slayer_loadouts_t1" });
     expect(tier1.items).toHaveLength(2);
     expect(tier1.items[0]).toMatchObject({
-      kind: SyntaxKind.REFERENCE,
-      identifier: "loadout_scout",
+      identifier: "item",
+      parameters: [
+        {
+          kind: SyntaxKind.REFERENCE,
+          identifier: "loadout_scout",
+        },
+      ],
     });
     expect(tier1.items[1]).toMatchObject({
-      kind: SyntaxKind.REFERENCE,
-      identifier: "loadout_ninja",
+      identifier: "item",
+      parameters: [
+        {
+          kind: SyntaxKind.REFERENCE,
+          identifier: "loadout_ninja",
+        },
+      ],
     });
 
     const tier3 = palettes[2]!;
@@ -91,8 +101,13 @@ end
 
     expect(tier3.items).toHaveLength(5);
     expect(tier3.items[4]).toMatchObject({
-      kind: SyntaxKind.REFERENCE,
-      identifier: "loadout_guard",
+      identifier: "item",
+      parameters: [
+        {
+          kind: SyntaxKind.REFERENCE,
+          identifier: "loadout_guard",
+        },
+      ],
     });
 
     expect(
@@ -145,8 +160,13 @@ end
     }
 
     expect(element.items[0]).toMatchObject({
-      kind: SyntaxKind.KEYWORD,
-      value: "loadout_scout",
+      identifier: "item",
+      parameters: [
+        {
+          kind: SyntaxKind.KEYWORD,
+          value: "loadout_scout",
+        },
+      ],
     });
   });
 

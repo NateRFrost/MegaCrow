@@ -1,12 +1,18 @@
-import { exists } from "@tauri-apps/plugin-fs";
-import { useEffect, useRef, useState } from "react";
+import { join } from "@tauri-apps/api/path";
+import { exists, readTextFile } from "@tauri-apps/plugin-fs";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { StoredWorkspace } from "../lib/megacrowSettings";
 import { pickTauriFolder } from "../lib/tauriDisk";
-import { guessOutputPathFromScripts } from "../lib/workspacePaths";
+import {
+  guessHrekRootFromScripts,
+  guessOutputPathFromScripts,
+  parseProjectXmlDisplayName,
+} from "../lib/workspacePaths";
 
 export interface WorkspaceDraft {
   inputPath: string;
   name: string;
+  /** Empty string when the workspace has no build output folder. */
   outputPath: string;
 }
 
@@ -27,7 +33,7 @@ export function AddWorkspaceModal({
   onSave,
 }: Props) {
   const nameRef = useRef<HTMLInputElement>(null);
-  const [name, setName] = useState("HREK");
+  const [name, setName] = useState("");
   const [inputPath, setInputPath] = useState("");
   const [outputPath, setOutputPath] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +44,7 @@ export function AddWorkspaceModal({
     if (!open) {
       return;
     }
-    setName(initialWorkspace?.name ?? "HREK");
+    setName(initialWorkspace?.name ?? "");
     setInputPath(initialWorkspace?.inputPath ?? "");
     setOutputPath(initialWorkspace?.outputPath ?? "");
     setError(null);
@@ -60,6 +66,11 @@ export function AddWorkspaceModal({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, onCancel]);
 
+  const canSave = useMemo(
+    () => name.trim().length > 0 && inputPath.trim().length > 0,
+    [name, inputPath]
+  );
+
   if (!open) {
     return null;
   }
@@ -74,6 +85,27 @@ export function AddWorkspaceModal({
       return;
     }
     setInputPath(selected);
+
+    // Only fill name from project.xml when the user hasn't typed one yet.
+    if (!name.trim()) {
+      const hrekRoot = guessHrekRootFromScripts(selected);
+      if (hrekRoot) {
+        try {
+          const projectXmlPath = await join(hrekRoot, "project.xml");
+          if (await exists(projectXmlPath)) {
+            const displayName = parseProjectXmlDisplayName(
+              await readTextFile(projectXmlPath)
+            );
+            if (displayName) {
+              setName(displayName);
+            }
+          }
+        } catch {
+          // leave name empty if project.xml cannot be read
+        }
+      }
+    }
+
     const guessed = guessOutputPathFromScripts(selected);
     if (!guessed) {
       return;
@@ -96,23 +128,21 @@ export function AddWorkspaceModal({
 
   const handleSave = () => {
     const trimmedName = name.trim();
+    const trimmedInput = inputPath.trim();
     if (!trimmedName) {
       setError("Enter a workspace name.");
+      nameRef.current?.focus();
       return;
     }
-    if (!inputPath.trim()) {
+    if (!trimmedInput) {
       setError("Choose a scripts folder.");
-      return;
-    }
-    if (!outputPath.trim()) {
-      setError("Choose an output folder.");
       return;
     }
     setBusy(true);
     setError(null);
     onSave({
       name: trimmedName,
-      inputPath: inputPath.trim(),
+      inputPath: trimmedInput,
       outputPath: outputPath.trim(),
     });
     setBusy(false);
@@ -158,32 +188,53 @@ export function AddWorkspaceModal({
         </div>
         <p className="workspace-modal-hint">
           {required
-            ? "No workspace was found automatically. Point MegaCrow at a Halo Reach Editing Kit scripts folder and the matching maps/megalo output folder, or close and add one later."
-            : "Point MegaCrow at a Halo Reach Editing Kit scripts folder and the matching maps/megalo output folder."}
+            ? "No workspace was found automatically. Point MegaCrow at a Halo Reach Editing Kit scripts folder (and optionally a maps/megalo output folder), or close and add one later."
+            : "Point MegaCrow at a Halo Reach Editing Kit scripts folder. An output folder is optional and enables Build."}
         </p>
 
-        <label className="workspace-modal-field">
-          <span>Name</span>
-          <input
-            maxLength={64}
-            onChange={(event) => setName(event.target.value)}
-            ref={nameRef}
-            type="text"
-            value={name}
-          />
-        </label>
+        <div className="workspace-modal-field-row">
+          <label className="workspace-modal-field">
+            <span>
+              Name <span className="workspace-modal-required">*</span>
+            </span>
+            <input
+              maxLength={64}
+              onChange={(event) => setName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && canSave) {
+                  event.preventDefault();
+                  handleSave();
+                }
+              }}
+              placeholder="My workspace"
+              ref={nameRef}
+              required
+              type="text"
+              value={name}
+            />
+          </label>
 
-        <label className="workspace-modal-field">
-          <span>Megalo version</span>
-          <input disabled readOnly type="text" value="107 MCC (Halo Reach)" />
-        </label>
+          <label className="workspace-modal-field">
+            <span>Megalo version</span>
+            <input disabled readOnly type="text" value="107 MCC (Halo Reach)" />
+          </label>
+        </div>
 
         <div className="workspace-modal-field">
-          <span>Scripts folder</span>
+          <span>
+            Scripts folder <span className="workspace-modal-required">*</span>
+          </span>
           <div className="workspace-modal-path-row">
             <input
               onChange={(event) => setInputPath(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && canSave) {
+                  event.preventDefault();
+                  handleSave();
+                }
+              }}
               placeholder="…\data\multiplayer\megalo"
+              required
               type="text"
               value={inputPath}
             />
@@ -198,7 +249,7 @@ export function AddWorkspaceModal({
         </div>
 
         <div className="workspace-modal-field">
-          <span>Output folder</span>
+          <span>Output folder (optional)</span>
           <div className="workspace-modal-path-row">
             <input
               onChange={(event) => setOutputPath(event.target.value)}
@@ -228,7 +279,7 @@ export function AddWorkspaceModal({
           </button>
           <button
             className="workspace-modal-primary"
-            disabled={busy}
+            disabled={busy || !canSave}
             onClick={handleSave}
             type="button"
           >

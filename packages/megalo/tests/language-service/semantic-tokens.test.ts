@@ -31,6 +31,32 @@ end
     expect(encoded.length).toBeGreaterThan(0);
   });
 
+  it("highlights string_table language as enumMember", async () => {
+    const source = `string_table english
+\thello "Hello"
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    const tokens = getSemanticTokens(snapshot);
+    const language = tokens.find(
+      (token) =>
+        token.type === "enumMember" && token.length === "english".length
+    );
+    expect(language).toBeDefined();
+  });
+
+  it("highlights escapes and format placeholders inside quoted strings", async () => {
+    const source = `string_table english
+\tline "a\\nb%nc\\r"
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    const tokens = getSemanticTokens(snapshot);
+    const escapes = tokens.filter((token) => token.type === "regexp");
+    expect(escapes).toHaveLength(3);
+    expect(escapes.every((token) => token.length === 2)).toBe(true);
+  });
+
   it("treats empty action name recovery as keyword context", async () => {
     const source = `trigger initialization
 \taction 
@@ -84,7 +110,7 @@ end
     ]);
   });
 
-  it("highlights map_permissions default as parameter and exception as keyword", async () => {
+  it("highlights map_permissions default and exception as parameter", async () => {
     const source = `map_permissions
 \tdefault false
 \texception k_map_id_boneyard
@@ -94,18 +120,13 @@ end
     const snapshot = await analyzeDocument(source, { version });
     const tokens = getSemanticTokens(snapshot);
     const parameters = tokens.filter((token) => token.type === "parameter");
-    const keywords = tokens.filter(
-      (token) =>
-        token.type === "keyword" &&
-        token.length === "exception".length &&
-        token.line > 0
-    );
     const defaultValue = tokens.find(
       (token) => token.type === "enumMember" && token.length === "false".length
     );
-    expect(parameters).toHaveLength(1);
+    expect(parameters).toHaveLength(3);
     expect(parameters[0]?.length).toBe("default".length);
-    expect(keywords).toHaveLength(2);
+    expect(parameters[1]?.length).toBe("exception".length);
+    expect(parameters[2]?.length).toBe("exception".length);
     expect(defaultValue).toBeDefined();
   });
 
@@ -580,28 +601,99 @@ end
     expect(primaryWeapon).toBeDefined();
   });
 
-  it("highlights game_stats entry name as variable, type as type, grouping as enumMember", async () => {
+  it("highlights loadout_palette keyword as type and item as parameter", async () => {
+    const source = `loadout loadout_scout
+\tname scout
+end
+loadout_palette slayer_loadouts
+\titem loadout_scout
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    const tokens = getSemanticTokens(snapshot);
+    const paletteKeyword = tokens.find(
+      (token) =>
+        token.type === "type" &&
+        token.length === "loadout_palette".length &&
+        token.line === 3
+    );
+    const itemKeyword = tokens.find(
+      (token) =>
+        token.type === "parameter" &&
+        token.length === "item".length &&
+        token.line === 4
+    );
+    expect(paletteKeyword).toBeDefined();
+    expect(itemKeyword).toBeDefined();
+  });
+
+  it("highlights override loadout_palette name as type", async () => {
+    const source = `loadout loadout_scout
+\tname scout
+end
+loadout_palette covy_bronze
+\titem loadout_scout
+end
+game_options
+\toverride loadout_palette elite_tier1 covy_bronze
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    const tokens = getSemanticTokens(snapshot);
+    const overridePaletteType = tokens.find(
+      (token) =>
+        token.type === "type" &&
+        token.length === "loadout_palette".length &&
+        token.line === 7
+    );
+    expect(overridePaletteType).toBeDefined();
+  });
+
+  it("highlights game_stats entry name as variable, type as type, label as variable, grouping as enumMember", async () => {
     const source = `string_table english
 \tstat_kills "Kills"
 end
 game_stats
-\tkills number 0 none stat_kills
+\tkills number stat_kills none 0
 end
 `;
     const snapshot = await analyzeDocument(source, { version });
     const tokens = getSemanticTokens(snapshot);
     const name = tokens.find(
-      (token) => token.type === "variable" && token.length === "kills".length
+      (token) =>
+        token.type === "variable" &&
+        token.length === "kills".length &&
+        token.line === 4
     );
     const type = tokens.find(
       (token) => token.type === "type" && token.length === "number".length
+    );
+    const label = tokens.find(
+      (token) =>
+        token.type === "variable" &&
+        token.length === "stat_kills".length &&
+        token.modifiers.includes("readonly")
     );
     const grouping = tokens.find(
       (token) => token.type === "enumMember" && token.length === "none".length
     );
     expect(name).toBeDefined();
     expect(type).toBeDefined();
+    expect(label).toBeDefined();
     expect(grouping).toBeDefined();
+  });
+
+  it("does not highlight unresolved game_stats label identifiers", async () => {
+    const source = `game_stats
+\trating_stat number rating_stat_text none 0
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    const tokens = getSemanticTokens(snapshot);
+    const label = tokens.find(
+      (token) => token.length === "rating_stat_text".length && token.line === 1
+    );
+    expect(label).toBeUndefined();
   });
 
   it("highlights hud_post_message sound keywords", async () => {

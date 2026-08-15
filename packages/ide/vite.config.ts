@@ -73,7 +73,11 @@ function megaloSrcAlias(): Plugin {
  * so /docs/ falls through to the IDE SPA index.html without this rewrite.
  */
 function docsCleanUrlFallback(): Plugin {
-  const docsPrefix = `${appBase}docs`.replace(/\/{2,}/g, "/");
+  // Dev server request paths are always origin-absolute. Relative MEGACROW_BASE
+  // (`./`) still serves docs at `/docs` from `public/docs`.
+  const docsPrefix = appBase.startsWith(".")
+    ? "/docs"
+    : `${appBase}docs`.replace(/\/{2,}/g, "/").replace(/\/$/, "") || "/docs";
   const rewrite: Connect.NextHandleFunction = (req, _res, next) => {
     const raw = req.url;
     if (
@@ -173,6 +177,7 @@ export default defineConfig({
       input: {
         main: resolve(import.meta.dirname, "index.html"),
         cli: resolve(import.meta.dirname, "cli.html"),
+        "docs-window": resolve(import.meta.dirname, "docs-window.html"),
       },
     },
   },

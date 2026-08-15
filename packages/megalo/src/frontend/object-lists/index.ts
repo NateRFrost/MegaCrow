@@ -3,9 +3,13 @@ import {
   type ObjectListLocation,
   SourceLocationType,
 } from "src/diagnostics";
+import { diagnosticMessages } from "src/diagnostics/messages";
 
 // files that live under <megalo source folder>/object_lists/
 export enum ObjectListType {
+  // Halo: Reach - Pre-Release
+  LoadoutPalettes = "loadout_palettes",
+
   Objects = "objects",
   Weapons = "weapons",
   Vehicles = "vehicles",
@@ -15,7 +19,6 @@ export enum ObjectListType {
   Effects = "effects",
   Medals = "medals",
   Loadouts = "loadouts",
-  LoadoutPalettes = "loadout_palettes",
   HudWidgetIcons = "hud_widget_icons",
   WeaponSets = "weapon_sets",
   VehicleSets = "vehicle_sets",
@@ -63,20 +66,27 @@ export class ObjectListParser {
   public parse(text: string, diagnostics: Diagnostics): string[] {
     const lines = text.split("\n");
     const objectList: string[] = [];
+    const firstLineByName = new Map<string, number>();
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
+      const line = (lines[i] ?? "").replace(/\r$/, "");
       if (line.trim() === "") {
         continue;
       }
-      if (objectList.includes(line)) {
+      const previousLine0 = firstLineByName.get(line);
+      if (previousLine0 !== undefined) {
         diagnostics.addError(
-          `Duplicate object "${line}" in object list`,
+          diagnosticMessages.objectListDuplicateEntry(
+            line,
+            previousLine0 + 1,
+            i + 1
+          ),
           objectListLocation(ObjectListType.Objects, i)
         );
         // When we have a failure we dont compile,
         // so its fine to continue parsing the rest of the file.
         continue;
       }
+      firstLineByName.set(line, i);
       objectList.push(line);
     }
     return objectList;

@@ -5,12 +5,16 @@
   "type": "module",
   "description": "MegaCrow Megalo language documentation (VitePress)",
   "scripts": {
+    "docs:highlight": "node ./scripts/bundle-docs-highlight.mjs",
+    "predev": "npm run docs:highlight",
     "dev": "vitepress dev .",
+    "prebuild": "npm run docs:highlight",
     "build": "vitepress build .",
     "preview": "vitepress preview .",
     "extract-hover": "node ./scripts/extract-hover-descriptions.mjs"
   },
   "devDependencies": {
+    "esbuild": "^0.25.0",
     "markdown-it": "^14.2.0",
     "vitepress": "^1.6.4"
   }

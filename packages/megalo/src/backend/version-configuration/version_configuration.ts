@@ -17,4 +17,5 @@ export interface Limits {
 
 export abstract class VersionConfiguration {
   public abstract get limits(): Limits;
+  public abstract get objectListNames(): readonly string[];
 }

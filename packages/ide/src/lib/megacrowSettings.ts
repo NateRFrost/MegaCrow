@@ -26,7 +26,8 @@ export interface StoredWorkspace {
   lastOpenFilePath: string | null;
   megaloVersion: MegaloVersionId;
   name: string;
-  outputPath: string;
+  /** Compiled `.mglo` output folder; omit/`null` when Build is unused. */
+  outputPath: string | null;
 }
 
 export interface MegacrowSettings extends AppSettings {
@@ -126,14 +127,17 @@ function normalizeStoredWorkspace(
   if (
     typeof raw.id !== "string" ||
     typeof raw.name !== "string" ||
-    typeof raw.inputPath !== "string" ||
-    typeof raw.outputPath !== "string"
+    typeof raw.inputPath !== "string"
   ) {
     return null;
   }
   const lastOpenFilePath =
     typeof raw.lastOpenFilePath === "string" && raw.lastOpenFilePath.length > 0
       ? raw.lastOpenFilePath
+      : null;
+  const outputPath =
+    typeof raw.outputPath === "string" && raw.outputPath.trim().length > 0
+      ? raw.outputPath.trim()
       : null;
   return {
     id: raw.id,
@@ -142,7 +146,7 @@ function normalizeStoredWorkspace(
       ? (raw.megaloVersion as MegaloVersionId)
       : "107-mcc",
     inputPath: raw.inputPath,
-    outputPath: raw.outputPath,
+    outputPath,
     lastOpenFilePath:
       lastOpenFilePath &&
       isPathInWorkspaceInput(lastOpenFilePath, raw.inputPath)

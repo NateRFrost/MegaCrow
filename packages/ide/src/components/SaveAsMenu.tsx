@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
 import type { GametypeSaveFormat } from "../lib/megaloShim";
 
 interface SaveOption {
@@ -30,9 +37,11 @@ const SAVE_OPTIONS: SaveOption[] = [
     format: "asq",
     label: "Autosave Queue",
     description:
-      "Save the gametype as an Autosave Queue file. You can place these files in your autosave format to have them appear in your Recent Games list. This can be useful for testing gametypes on an Xbox 360 without needing to sign them, or for testing on Xenia which doesnt support xbox UGC yet.",
+      "Save the gametype as an Autosave Queue file. You can place these files in your autosave format to have them appear in your Recent Games list.",
   },
 ];
+
+const PANEL_WIDTH = 320;
 
 interface Props {
   disabled?: boolean;
@@ -41,7 +50,38 @@ interface Props {
 
 export function SaveAsMenu({ disabled = false, onSave }: Props) {
   const [open, setOpen] = useState(false);
+  const [panelPos, setPanelPos] = useState<{ top: number; left: number }>({
+    top: 0,
+    left: 0,
+  });
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const updatePanelPosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger) {
+      return;
+    }
+    const rect = trigger.getBoundingClientRect();
+    const nextLeft = Math.min(
+      Math.max(8, rect.right - PANEL_WIDTH),
+      Math.max(8, window.innerWidth - PANEL_WIDTH - 8)
+    );
+    const nextTop = rect.bottom + 4;
+    setPanelPos((prev) =>
+      prev.top === nextTop && prev.left === nextLeft
+        ? prev
+        : { top: nextTop, left: nextLeft }
+    );
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      return;
+    }
+    updatePanelPosition();
+  }, [open, updatePanelPosition]);
 
   useEffect(() => {
     if (!open) {
@@ -49,9 +89,14 @@ export function SaveAsMenu({ disabled = false, onSave }: Props) {
     }
 
     const onPointerDown = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
+      const target = event.target as Node;
+      if (
+        rootRef.current?.contains(target) ||
+        panelRef.current?.contains(target)
+      ) {
+        return;
       }
+      setOpen(false);
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -62,11 +107,15 @@ export function SaveAsMenu({ disabled = false, onSave }: Props) {
 
     window.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", updatePanelPosition);
+    window.addEventListener("scroll", updatePanelPosition, true);
     return () => {
       window.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("resize", updatePanelPosition);
+      window.removeEventListener("scroll", updatePanelPosition, true);
     };
-  }, [open]);
+  }, [open, updatePanelPosition]);
 
   const handleSave = (format: GametypeSaveFormat) => {
     setOpen(false);
@@ -81,6 +130,7 @@ export function SaveAsMenu({ disabled = false, onSave }: Props) {
         className="toolbar-btn save-as-menu-trigger"
         disabled={disabled}
         onClick={() => setOpen((value) => !value)}
+        ref={triggerRef}
         type="button"
       >
         Export
@@ -100,31 +150,42 @@ export function SaveAsMenu({ disabled = false, onSave }: Props) {
         </svg>
       </button>
 
-      {open ? (
-        <div
-          aria-label="Export format"
-          className="save-as-menu-panel"
-          role="menu"
-        >
-          <p className="save-as-menu-title">Export as</p>
-          {SAVE_OPTIONS.map((option) => (
-            <button
-              className="save-as-menu-item"
-              key={option.format}
-              onClick={() => handleSave(option.format)}
-              role="menuitem"
-              type="button"
+      {open
+        ? createPortal(
+            <div
+              aria-label="Export format"
+              className="save-as-menu-panel"
+              ref={panelRef}
+              role="menu"
+              style={{
+                top: panelPos.top,
+                left: panelPos.left,
+                width: Math.min(window.innerWidth - 24, PANEL_WIDTH),
+              }}
             >
-              <span className="save-as-menu-item-text">
-                <span className="save-as-menu-item-label">{option.label}</span>
-                <span className="save-as-menu-item-hint">
-                  {option.description}
-                </span>
-              </span>
-            </button>
-          ))}
-        </div>
-      ) : null}
+              <p className="save-as-menu-title">Export as</p>
+              {SAVE_OPTIONS.map((option) => (
+                <button
+                  className="save-as-menu-item"
+                  key={option.format}
+                  onClick={() => handleSave(option.format)}
+                  role="menuitem"
+                  type="button"
+                >
+                  <span className="save-as-menu-item-text">
+                    <span className="save-as-menu-item-label">
+                      {option.label}
+                    </span>
+                    <span className="save-as-menu-item-hint">
+                      {option.description}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   );
 }

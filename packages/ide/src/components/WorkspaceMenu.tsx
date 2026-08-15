@@ -245,16 +245,18 @@ export function WorkspaceMenu({
                                 Active
                               </span>
                             ) : null}
-                            <span className="workspace-menu-item-name">
-                              {entry.name}
-                            </span>
-                            <span className="workspace-menu-item-version">
-                              <img
-                                alt=""
-                                className="workspace-menu-game-icon"
-                                src={gameIconSrc(entry.megaloVersion)}
-                              />
-                              <span>{version.label}</span>
+                            <span className="workspace-menu-item-title">
+                              <span className="workspace-menu-item-name">
+                                {entry.name}
+                              </span>
+                              <span className="workspace-menu-item-version">
+                                <img
+                                  alt=""
+                                  className="workspace-menu-game-icon"
+                                  src={gameIconSrc(entry.megaloVersion)}
+                                />
+                                <span>{version.label}</span>
+                              </span>
                             </span>
                             <span className="workspace-menu-item-path">
                               {entry.inputPath}

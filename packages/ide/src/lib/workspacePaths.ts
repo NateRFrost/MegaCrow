@@ -28,3 +28,30 @@ export function guessOutputPathFromScripts(scriptsPath: string): string | null {
     ? suggested.replace(/\//g, "\\")
     : suggested;
 }
+
+/** HREK install root when scripts path is `…/data/multiplayer/megalo`. */
+export function guessHrekRootFromScripts(scriptsPath: string): string | null {
+  const normalized = scriptsPath.replace(/\\/g, "/").replace(/\/+$/, "");
+  const marker = "/data/multiplayer/megalo";
+  const lower = normalized.toLowerCase();
+  const index = lower.lastIndexOf(marker);
+  if (index < 0 || index + marker.length !== lower.length) {
+    return null;
+  }
+  const root = normalized.slice(0, index);
+  return scriptsPath.includes("\\") ? root.replace(/\//g, "\\") : root;
+}
+
+/**
+ * Parse `displayName` (preferred) or `name` from an HREK `project.xml` body.
+ */
+export function parseProjectXmlDisplayName(xml: string): string | null {
+  for (const attr of ["displayName", "name"] as const) {
+    const match = new RegExp(`${attr}\\s*=\\s*"([^"]+)"`, "i").exec(xml);
+    const value = match?.[1]?.trim();
+    if (value) {
+      return value;
+    }
+  }
+  return null;
+}

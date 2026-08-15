@@ -1,9 +1,11 @@
 const GAMETYPES_DIR = "gametypes";
 const WORKSPACE_ROOT = "workspace";
-/** Companion Megalo source next to a saved `.bin` (not a compiled `.mglo`). */
+/** Primary Megalo source extension for browser OPFS files. */
 const SOURCE_EXT = ".txt";
 /** Pre-rename companion extension; still read/deleted for migration. */
 const LEGACY_SOURCE_EXT = ".meg";
+/** Legacy compiled save next to a companion source (pre–source-first OPFS). */
+const LEGACY_BIN_EXT = ".bin";
 
 export interface OpfsGametypeEntry {
   name: string;
@@ -111,7 +113,28 @@ export async function writeOpfsWorkspaceBytes(
   await writable.close();
 }
 
-function safeFileName(name: string): string {
+function isSourceFileName(name: string): boolean {
+  const lower = name.toLowerCase();
+  return lower.endsWith(SOURCE_EXT) || lower.endsWith(LEGACY_SOURCE_EXT);
+}
+
+function safeSourceFileName(name: string): string {
+  const base = name.split(/[/\\]/).pop() ?? name;
+  const cleaned = base.replace(/[?%*:|"<>]/g, "_").replace(/^\.+/, "");
+  if (!cleaned) {
+    return `new_script${SOURCE_EXT}`;
+  }
+  if (isSourceFileName(cleaned)) {
+    return cleaned;
+  }
+  // Renaming a legacy `.bin` entry → `.txt` stem.
+  if (cleaned.toLowerCase().endsWith(LEGACY_BIN_EXT)) {
+    return `${cleaned.slice(0, -LEGACY_BIN_EXT.length)}${SOURCE_EXT}`;
+  }
+  return `${cleaned}${SOURCE_EXT}`;
+}
+
+function safeBinFileName(name: string): string {
   const base = name.split(/[/\\]/).pop() ?? name;
   const cleaned = base.replace(/[?%*:|"<>]/g, "_").replace(/^\.+/, "");
   if (!cleaned) {
@@ -134,7 +157,7 @@ export async function listOpfsGametypes(): Promise<OpfsGametypeEntry[]> {
   const entries: OpfsGametypeEntry[] = [];
 
   for await (const entry of dir.values()) {
-    if (entry.kind !== "file" || !entry.name.toLowerCase().endsWith(".bin")) {
+    if (entry.kind !== "file" || !isSourceFileName(entry.name)) {
       continue;
     }
     const fileHandle = entry as FileSystemFileHandle;
@@ -156,10 +179,17 @@ function companionSourceName(
   binName: string,
   ext: typeof SOURCE_EXT | typeof LEGACY_SOURCE_EXT = SOURCE_EXT
 ): string | null {
-  if (!binName.toLowerCase().endsWith(".bin")) {
+  if (!binName.toLowerCase().endsWith(LEGACY_BIN_EXT)) {
     return null;
   }
   return binName.replace(/\.bin$/i, ext);
+}
+
+function siblingBinName(sourceName: string): string | null {
+  if (!sourceName.toLowerCase().endsWith(SOURCE_EXT)) {
+    return null;
+  }
+  return sourceName.replace(/\.txt$/i, LEGACY_BIN_EXT);
 }
 
 async function removeCompanionSources(
@@ -179,10 +209,29 @@ async function removeCompanionSources(
   }
 }
 
+async function removeLegacyBinSibling(
+  dir: FileSystemDirectoryHandle,
+  sourceName: string
+): Promise<void> {
+  const binSibling = siblingBinName(sourceName);
+  if (!binSibling) {
+    return;
+  }
+  try {
+    await dir.removeEntry(binSibling);
+  } catch {
+    // Legacy `.bin` may not exist.
+  }
+}
+
 export async function deleteOpfsGametype(name: string): Promise<void> {
   const dir = await getGametypesDirectory();
   await dir.removeEntry(name);
-  await removeCompanionSources(dir, name);
+  if (isSourceFileName(name)) {
+    await removeLegacyBinSibling(dir, name);
+  } else {
+    await removeCompanionSources(dir, name);
+  }
 }
 
 async function fileExistsInDir(
@@ -219,12 +268,12 @@ async function renameEntryInDir(
   await dir.removeEntry(from);
 }
 
-/** Rename a saved `.bin` and its companion `.txt` source (if present). */
+/** Rename a Megalo source file (and a legacy sibling `.bin` if present). */
 export async function renameOpfsGametype(
   fromName: string,
   toName: string
 ): Promise<string> {
-  const safeTo = safeFileName(toName);
+  const safeTo = safeSourceFileName(toName);
   if (
     fromName.localeCompare(safeTo, undefined, { sensitivity: "accent" }) === 0
   ) {
@@ -236,43 +285,49 @@ export async function renameOpfsGametype(
   }
   await renameEntryInDir(dir, fromName, safeTo);
 
-  const toTxt = companionSourceName(safeTo, SOURCE_EXT);
-  if (toTxt) {
-    await removeCompanionSources(dir, safeTo);
-    const fromTxt = companionSourceName(fromName, SOURCE_EXT);
-    const fromLegacy = companionSourceName(fromName, LEGACY_SOURCE_EXT);
-    const fromCompanion =
-      fromTxt && (await fileExistsInDir(dir, fromTxt))
-        ? fromTxt
-        : fromLegacy && (await fileExistsInDir(dir, fromLegacy))
-          ? fromLegacy
-          : null;
-    if (fromCompanion) {
-      await renameEntryInDir(dir, fromCompanion, toTxt);
+  const fromBin = siblingBinName(fromName);
+  const toBin = siblingBinName(safeTo);
+  if (fromBin && toBin && (await fileExistsInDir(dir, fromBin))) {
+    if (await fileExistsInDir(dir, toBin)) {
+      await dir.removeEntry(toBin);
     }
+    await renameEntryInDir(dir, fromBin, toBin);
   }
   return safeTo;
 }
 
-/** Create an empty gametype save (`.bin` + empty `.txt` source) and return the `.bin` name. */
+/** Create an empty Megalo `.txt` and return its name. */
 export async function createOpfsGametype(): Promise<string> {
   const dir = await getGametypesDirectory();
-  let name = "new_gametype.bin";
+  let name = `new_script${SOURCE_EXT}`;
   let n = 2;
   while (await fileExistsInDir(dir, name)) {
-    name = `new_gametype_${n}.bin`;
+    name = `new_script_${n}${SOURCE_EXT}`;
     n += 1;
   }
-  return saveGametypeToOpfs(name, new Uint8Array(0), "");
+  const handle = await dir.getFileHandle(name, { create: true });
+  const writable = await handle.createWritable();
+  await writable.write("");
+  await writable.close();
+  return name;
 }
 
-/** Read companion Megalo source for a `.bin` save, if present. */
+/** Read Megalo source for an OPFS entry (`.txt` directly, or companion of a legacy `.bin`). */
 export async function readOpfsGametypeSource(
-  binName: string
+  name: string
 ): Promise<string | null> {
   const dir = await getGametypesDirectory();
+  if (isSourceFileName(name)) {
+    try {
+      const handle = await dir.getFileHandle(name);
+      const file = await handle.getFile();
+      return await file.text();
+    } catch {
+      return null;
+    }
+  }
   for (const ext of [SOURCE_EXT, LEGACY_SOURCE_EXT] as const) {
-    const companion = companionSourceName(binName, ext);
+    const companion = companionSourceName(name, ext);
     if (!companion) {
       return null;
     }
@@ -287,18 +342,47 @@ export async function readOpfsGametypeSource(
   return null;
 }
 
+/** Overwrite an OPFS Megalo source `.txt` (or create it). */
+export async function writeOpfsGametypeSource(
+  name: string,
+  source: string
+): Promise<void> {
+  const safeName = isSourceFileName(name)
+    ? name
+    : (companionSourceName(safeBinFileName(name), SOURCE_EXT) ??
+      `${name}${SOURCE_EXT}`);
+  const dir = await getGametypesDirectory();
+  const handle = await dir.getFileHandle(safeName, { create: true });
+  const writable = await handle.createWritable();
+  await writable.write(source);
+  await writable.close();
+}
+
 export function opfsGametypeLogicalPath(name: string): string {
   return `${GAMETYPES_DIR}/${name}`;
 }
 
-/** File blobs for system clipboard write (`.bin` + companion `.txt` when present). */
+/** File blobs for system clipboard write (source file, plus legacy `.bin` when present). */
 export async function getOpfsGametypeClipboardFiles(
   name: string
 ): Promise<File[]> {
   const dir = await getGametypesDirectory();
   const files: File[] = [];
-  const binHandle = await dir.getFileHandle(name);
-  files.push(await binHandle.getFile());
+  const primaryHandle = await dir.getFileHandle(name);
+  files.push(await primaryHandle.getFile());
+
+  if (isSourceFileName(name)) {
+    const binSibling = siblingBinName(name);
+    if (binSibling) {
+      try {
+        const handle = await dir.getFileHandle(binSibling);
+        files.push(await handle.getFile());
+      } catch {
+        // no legacy bin
+      }
+    }
+    return files;
+  }
 
   for (const ext of [SOURCE_EXT, LEGACY_SOURCE_EXT] as const) {
     const companion = companionSourceName(name, ext);
@@ -318,10 +402,12 @@ export async function getOpfsGametypeClipboardFiles(
 
 async function allocateOpfsCopyName(originalName: string): Promise<string> {
   const dir = await getGametypesDirectory();
-  const safeOriginal = safeFileName(originalName);
+  const safeOriginal = isSourceFileName(originalName)
+    ? originalName
+    : safeSourceFileName(originalName);
   const dot = safeOriginal.lastIndexOf(".");
   const stem = dot > 0 ? safeOriginal.slice(0, dot) : safeOriginal;
-  const ext = dot > 0 ? safeOriginal.slice(dot) : ".bin";
+  const ext = dot > 0 ? safeOriginal.slice(dot) : SOURCE_EXT;
   let candidate = `${stem} copy${ext}`;
   let n = 2;
   while (await fileExistsInDir(dir, candidate)) {
@@ -331,26 +417,27 @@ async function allocateOpfsCopyName(originalName: string): Promise<string> {
   return candidate;
 }
 
-/** Duplicate a `.bin` save (and companion `.txt` source if present). */
+/** Duplicate a Megalo source file (and a legacy sibling `.bin` if present). */
 export async function duplicateOpfsGametype(fromName: string): Promise<string> {
   const dir = await getGametypesDirectory();
   const toName = await allocateOpfsCopyName(fromName);
-  const fromHandle = await dir.getFileHandle(fromName);
-  const fromFile = await fromHandle.getFile();
-  const bytes = new Uint8Array(await fromFile.arrayBuffer());
   const source = (await readOpfsGametypeSource(fromName)) ?? "";
 
-  const binHandle = await dir.getFileHandle(toName, { create: true });
-  const binWritable = await binHandle.createWritable();
-  await binWritable.write(bytes as unknown as BlobPart);
-  await binWritable.close();
+  const sourceHandle = await dir.getFileHandle(toName, { create: true });
+  const sourceWritable = await sourceHandle.createWritable();
+  await sourceWritable.write(source);
+  await sourceWritable.close();
 
-  const toTxt = companionSourceName(toName, SOURCE_EXT);
-  if (toTxt) {
-    const megHandle = await dir.getFileHandle(toTxt, { create: true });
-    const megWritable = await megHandle.createWritable();
-    await megWritable.write(source);
-    await megWritable.close();
+  const fromBin = siblingBinName(fromName);
+  const toBin = siblingBinName(toName);
+  if (fromBin && toBin && (await fileExistsInDir(dir, fromBin))) {
+    const fromHandle = await dir.getFileHandle(fromBin);
+    const fromFile = await fromHandle.getFile();
+    const bytes = new Uint8Array(await fromFile.arrayBuffer());
+    const binHandle = await dir.getFileHandle(toBin, { create: true });
+    const binWritable = await binHandle.createWritable();
+    await binWritable.write(bytes as unknown as BlobPart);
+    await binWritable.close();
   }
 
   return toName;
@@ -361,7 +448,7 @@ export async function saveGametypeToOpfs(
   bytes: Uint8Array,
   source: string
 ): Promise<string> {
-  const safeName = safeFileName(name);
+  const safeName = safeBinFileName(name);
   const dir = await getGametypesDirectory();
 
   const binHandle = await dir.getFileHandle(safeName, { create: true });

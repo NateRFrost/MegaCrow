@@ -18,6 +18,9 @@ const highlightBundleUrl = pathToFileURL(
 
 function normalizeDocsBase(value: string | undefined): string {
   const raw = (value ?? "/megalo/").trim() || "/megalo/";
+  if (raw.startsWith(".")) {
+    return raw.endsWith("/") ? raw : `${raw}/`;
+  }
   const withLeading = raw.startsWith("/") ? raw : `/${raw}`;
   return withLeading.endsWith("/") ? withLeading : `${withLeading}/`;
 }

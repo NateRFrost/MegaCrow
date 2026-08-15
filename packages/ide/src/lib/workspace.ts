@@ -13,7 +13,8 @@ export interface Workspace {
   inputPath: string;
   megaloVersion: MegaloVersionId;
   name: string;
-  outputPath: string;
+  /** Compiled `.mglo` output folder, or `null` when Build is disabled. */
+  outputPath: string | null;
   type: WorkspaceType;
 }
 
@@ -68,7 +69,7 @@ export function resolveActiveWorkspace(
 export interface WorkspaceContext {
   inputPath: string;
   megaloVersion: MegaloVersionId;
-  outputPath: string;
+  outputPath: string | null;
   type: WorkspaceType;
 }
 

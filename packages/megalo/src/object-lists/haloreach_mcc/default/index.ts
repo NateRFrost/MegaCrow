@@ -3,7 +3,6 @@ import equipment from "src/object-lists/haloreach_mcc/default/equipment";
 import grenades from "src/object-lists/haloreach_mcc/default/grenades";
 import hudWidgetIcons from "src/object-lists/haloreach_mcc/default/hud_widget_icons";
 import incidents from "src/object-lists/haloreach_mcc/default/incidents";
-import loadoutPalettes from "src/object-lists/haloreach_mcc/default/loadout_palettes";
 import loadouts from "src/object-lists/haloreach_mcc/default/loadouts";
 import objects from "src/object-lists/haloreach_mcc/default/objects";
 import strings from "src/object-lists/haloreach_mcc/default/strings";
@@ -18,7 +17,6 @@ const objectLists = {
   [ObjectListType.HudWidgetIcons]: hudWidgetIcons,
   [ObjectListType.Incidents]: incidents,
   [ObjectListType.Loadouts]: loadouts,
-  [ObjectListType.LoadoutPalettes]: loadoutPalettes,
   [ObjectListType.Objects]: objects,
   [ObjectListType.Strings]: strings,
   [ObjectListType.Vehicles]: vehicles,

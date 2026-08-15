@@ -11,10 +11,10 @@ npm run validate   # test, typecheck, docs build
 
 | Script | Purpose |
 |--------|---------|
-| `npm run docs:highlight` | Bundle Megalo syntax highlighter for VitePress |
-| `npm run docs` | VitePress dev server |
-| `npm run docs:build` | Production docs site |
-| `npm run docs:preview` | Preview built docs |
+| `npm run docs:highlight -w @megacrow/docs` | Bundle Megalo semantic highlighter for VitePress |
+| `npm run dev -w @megacrow/docs` | VitePress dev server (runs `docs:highlight` first) |
+| `npm run build -w @megacrow/docs` | Production docs site (runs `docs:highlight` first) |
+| `npm run preview -w @megacrow/docs` | Preview built docs |
 | `npm test` | Run unit tests (excludes `tests/local/**`) |
 | `npm run test:local` | Local integration tests (fixtures, game installs) |
 | `npm run build` | Compile ESM `dist/` and CJS `dist-cjs/` |
@@ -22,11 +22,13 @@ npm run validate   # test, typecheck, docs build
 
 ## Docs site
 
-User guide: VitePress in `docs/` (same layout as [@blamnetwork/blf](https://blam-network.github.io/blf/)).
+User guide: VitePress in `packages/docs/` (same layout as [@blamnetwork/blf](https://blam-network.github.io/blf/)).
 
-Version pages, action pages under `docs/language/actions/`, and sidebar metadata (`docs/.vitepress/language-versions.json`, `language-actions.json`, `megalo-highlight-vocabulary.json`, `action-context-grammar.json`) are **hand-authored** in the repo. No script generates or overwrites action markdown — edit those `.md` files directly.
+Version pages, action pages under `docs/language/actions/`, and sidebar metadata (`docs/.vitepress/language-versions.json`, `language-actions.json`, `action-context-grammar.json`) are **hand-authored** in the repo. No script generates or overwrites action markdown — edit those `.md` files directly.
 
-`npm run predocs` only bundles the syntax highlighter; it does not touch action pages.
+`docs:highlight` esbuilds [`.vitepress/megalo-code-html.ts`](../.vitepress/megalo-code-html.ts) against `@megacrow/megalo`’s `analyzeDocumentSync` + `getSemanticTokens` into `.vitepress/megalo-highlight.bundle.mjs`. VitePress’s markdown hook loads that bundle so ` ```megalo ` fences get IDE-class highlighting.
+
+Megalo fences should be complete enough to analyze (grammar sketches belong in plain ` ``` ` fences). When a snippet needs surrounding declarations for correct highlighting but readers should not see them, mark those lines with a trailing `; [!code hide]` — they are still analyzed, then omitted from the rendered HTML.
 
 To refresh action operand names from HREK ManagedMegalo.dll:
 

@@ -2,6 +2,12 @@ export {
   type CompiledMegaloMetadata,
   EngineIcon,
 } from "src/backend/compile/compiler";
+export type {
+  Limits,
+  VariableLimits,
+  VersionConfiguration,
+} from "src/backend/version-configuration";
+export { getConfigurationForVersion } from "src/backend/version-configuration";
 export {
   MEGACROW_BUILD_STRING,
   MEGACROW_PACKAGE_VERSION,
@@ -44,9 +50,17 @@ export type { ObjectLists } from "src/frontend/object-lists";
 export {
   type AnalysisSnapshot,
   type AnalyzeDocumentOptions,
+  type AnalyzeDocumentSyncOptions,
+  type AnalyzeObjectListOptions,
   analyzeDocument,
+  analyzeDocumentSync,
+  analyzeObjectListSource,
+  type DefinitionRange,
+  type DefinitionTarget,
+  definitionAtPosition,
   encodeSemanticTokens,
   getSemanticTokens,
+  objectListEntryCount,
   SEMANTIC_TOKEN_MODIFIERS,
   SEMANTIC_TOKEN_TYPES,
   type SemanticToken,

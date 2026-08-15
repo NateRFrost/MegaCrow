@@ -120,11 +120,15 @@ export async function resolveWorkspaceBaseProgram(
   }
   const baseMgloPath = baseRef.path;
 
+  const outputPath = workspace.outputPath?.trim() || null;
   const searchDirs = [
-    workspace.outputPath,
+    outputPath,
     sourceDir ?? workspace.inputPath,
     workspace.inputPath,
-  ].filter((dir, index, dirs) => dir !== "" && dirs.indexOf(dir) === index);
+  ].filter(
+    (dir, index, dirs): dir is string =>
+      typeof dir === "string" && dir !== "" && dirs.indexOf(dir) === index
+  );
 
   if (workspace.type !== "tauri" && workspace.type !== "opfs") {
     const message = baseFileNotFoundMessage(baseMgloPath);
@@ -180,13 +184,16 @@ export async function resolveWorkspaceBaseProgram(
       fromUri,
       megacrowExtensions: ALL_MEGACROW_EXTENSIONS,
       onCompileProgress: options?.onStatus,
-      resolveBaseFile: async (path, ctx) => {
-        const absolute = await resolveInSearchDirs(path, ctx.fromUri);
-        if (absolute === null || !fileProvider.readBytes) {
-          return null;
-        }
-        return fileProvider.readBytes(absolute);
-      },
+      // Only look for built `.mglo` when the workspace has an output folder.
+      resolveBaseFile: outputPath
+        ? async (path, ctx) => {
+            const absolute = await resolveInSearchDirs(path, ctx.fromUri);
+            if (absolute === null || !fileProvider.readBytes) {
+              return null;
+            }
+            return fileProvider.readBytes(absolute);
+          }
+        : undefined,
       resolveInclude: async (path, ctx) => {
         const absolute = await resolveInSearchDirs(path, ctx.fromUri);
         if (absolute === null) {

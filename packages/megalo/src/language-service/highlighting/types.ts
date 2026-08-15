@@ -2,6 +2,7 @@
 export const SEMANTIC_TOKEN_TYPES = [
   "comment",
   "string",
+  "regexp",
   "number",
   "operator",
   "keyword",
@@ -45,6 +46,7 @@ export const MODIFIER_INDEX = Object.fromEntries(
 
 export const TYPE_PRIORITY: Record<SemanticTokenType, number> = {
   comment: 100,
+  regexp: 110,
   string: 100,
   number: 100,
   operator: 100,
