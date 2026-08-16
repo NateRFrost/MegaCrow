@@ -3,6 +3,7 @@ import { normalizeEditorThemeId } from "../monaco/theme";
 import {
   type AppSettings,
   DEFAULT_APP_SETTINGS,
+  normalizeCompilerProfile,
   normalizeUiLocale,
   readLocalAppSettings,
   writeLocalAppSettings,
@@ -67,9 +68,9 @@ export function appSettingsFromMegacrow(
 ): AppSettings {
   return {
     discordRichPresence: settings.discordRichPresence,
-    mccHotReload: settings.mccHotReload,
     gamertag: settings.gamertag,
     compilerStrictness: settings.compilerStrictness,
+    compilerProfile: normalizeCompilerProfile(settings.compilerProfile),
     editorTheme: normalizeEditorThemeId(settings.editorTheme),
     editorWordWrap: settings.editorWordWrap,
     locale: normalizeUiLocale(settings.locale),
@@ -88,6 +89,10 @@ export function mergeAppSettings(
       typeof patch.gamertag === "string"
         ? patch.gamertag.slice(0, 16)
         : settings.gamertag,
+    compilerProfile:
+      patch.compilerProfile === undefined
+        ? settings.compilerProfile
+        : normalizeCompilerProfile(patch.compilerProfile),
     editorTheme:
       patch.editorTheme === undefined
         ? settings.editorTheme
@@ -167,13 +172,13 @@ export function normalizeMegacrowSettings(
   const prefs = {
     discordRichPresence:
       raw?.discordRichPresence ?? DEFAULT_APP_SETTINGS.discordRichPresence,
-    mccHotReload: raw?.mccHotReload ?? DEFAULT_APP_SETTINGS.mccHotReload,
     gamertag:
       typeof raw?.gamertag === "string"
         ? raw.gamertag.slice(0, 16)
         : DEFAULT_APP_SETTINGS.gamertag,
     compilerStrictness:
       raw?.compilerStrictness ?? DEFAULT_APP_SETTINGS.compilerStrictness,
+    compilerProfile: normalizeCompilerProfile(raw?.compilerProfile),
     editorTheme: normalizeEditorThemeId(raw?.editorTheme),
     editorWordWrap:
       typeof raw?.editorWordWrap === "boolean"

@@ -474,7 +474,7 @@ const lowerSpec = (
       return {
         name: spec.name,
         value: located(
-          resolveScriptStringTableReference(node, ctx.ir, ctx.symbolTable),
+          resolveScriptStringTableReference(node, ctx.ir, ctx),
           node.location
         ),
       };

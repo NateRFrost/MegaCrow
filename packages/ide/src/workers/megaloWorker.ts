@@ -34,6 +34,7 @@ let workspaceObjectLists: ObjectLists | undefined;
 let _compilerSettings: MegaCrowCompilerSettings = {
   creatorGamertag: "",
   locale: "en",
+  megacrowExtensions: ALL_MEGACROW_EXTENSIONS,
   strictStringLiterals: false,
 };
 
@@ -77,7 +78,10 @@ async function compileToBytes(
   const started = performance.now();
   const result = await compileSource(source, {
     version: MEGALO_VERSIONS["107-mcc"],
-    megacrowExtensions: ALL_MEGACROW_EXTENSIONS,
+    megacrowExtensions: _compilerSettings.megacrowExtensions,
+    compilerSettings: {
+      strictStringLiterals: _compilerSettings.strictStringLiterals,
+    },
     objectLists: workspaceObjectLists,
     fromUri: includeCache?.sourceDir
       ? `${includeCache.sourceDir.replace(/\\/g, "/")}/.`
@@ -282,4 +286,3 @@ void originalBytes;
 void baseProgram;
 void baselineSource;
 void _workspaceContext;
-void _compilerSettings;

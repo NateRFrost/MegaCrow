@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="%BASE_URL%megacrow-icon.png">
     <title>MegaCrow Docs</title>
+    <!-- Match --bg-app before styles.css loads to avoid a white flash -->
+    <style>
+    html,
+    body,
+    .docs-shell {
+      height: 100%;
+      margin: 0;
+      color-scheme: dark;
+      background: #1e1e1e;
+    }
+    </style>
   </head>
   <body>
     <div class="docs-shell">

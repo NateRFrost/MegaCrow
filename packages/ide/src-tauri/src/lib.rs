@@ -14,7 +14,11 @@ use cli::{CliArgs, CliExitCode, create_headless_cli_window, is_cli_invocation};
 use discord_rpc::DiscordRpc;
 use mcc_install::MccInstallInfo;
 use settings::MegacrowSettings;
+use tauri::webview::Color;
 use tauri::{AppHandle, RunEvent, WebviewUrl, WebviewWindowBuilder};
+
+/// Matches CSS `--bg-app` so the native window isn't white before the page paints.
+const APP_BACKGROUND: Color = Color(0x1e, 0x1e, 0x1e, 0xff);
 use workspace_discover::DiscoveredWorkspace;
 
 #[tauri::command]
@@ -108,6 +112,7 @@ fn create_main_window(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>
     .fullscreen(false)
     .decorations(false)
     .shadow(true)
+    .background_color(APP_BACKGROUND)
     .build()?;
   Ok(())
 }

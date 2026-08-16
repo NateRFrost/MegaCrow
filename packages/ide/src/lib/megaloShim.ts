@@ -11,6 +11,7 @@ import {
   MEGACROW_BUILD_STRING,
   MEGACROW_SHOW_WATERMARK,
   MEGALO_VERSIONS,
+  type MegacrowExtensions,
   type VariantLimitItem as MegaloVariantLimitItem,
   type VariantLimitUsage as MegaloVariantLimitUsage,
   type MegaloVersionId,
@@ -23,6 +24,29 @@ import {
 export { MEGACROW_BUILD_STRING, MEGACROW_SHOW_WATERMARK };
 
 const DEFAULT_COMPILE_VERSION = MEGALO_VERSIONS["107-mcc"];
+
+let compileMegacrowExtensions: MegacrowExtensions = ALL_MEGACROW_EXTENSIONS;
+let compileStrictStringLiterals = false;
+
+/** Used by compiler-settings sync so main-thread compile matches the profile. */
+export function setCompileMegacrowExtensions(
+  extensions: MegacrowExtensions
+): void {
+  compileMegacrowExtensions = extensions;
+}
+
+export function getCompileMegacrowExtensions(): MegacrowExtensions {
+  return compileMegacrowExtensions;
+}
+
+/** Used by compiler-settings sync so main-thread compile matches strictness. */
+export function setCompileStrictStringLiterals(enabled: boolean): void {
+  compileStrictStringLiterals = enabled;
+}
+
+export function getCompileStrictStringLiterals(): boolean {
+  return compileStrictStringLiterals;
+}
 
 export type GametypeSaveFormat = "mglo" | "gvar" | "mpvr" | "asq";
 export type { MegaloVersionId };
@@ -269,7 +293,10 @@ async function compileOrThrow(
 ): Promise<Uint8Array> {
   const result = await megaloCompileSource(source, {
     version: DEFAULT_COMPILE_VERSION,
-    megacrowExtensions: ALL_MEGACROW_EXTENSIONS,
+    megacrowExtensions: compileMegacrowExtensions,
+    compilerSettings: {
+      strictStringLiterals: compileStrictStringLiterals,
+    },
     fromUri: options?.fromUri,
     resolveInclude: options?.resolveInclude,
     resolveBaseFile: options?.resolveBaseFile,

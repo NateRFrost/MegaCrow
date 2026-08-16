@@ -24,10 +24,10 @@ export const MEGACROW_TREE_PATH_MIME = "application/x-megacrow-tree-path";
 
 const DRAG_THRESHOLD_PX = 5;
 
-let activeTreeDragPath: string[] | null = null;
+let activeTreeDragPaths: string[][] | null = null;
 
 export function isMegacrowTreeDragActive(): boolean {
-  return activeTreeDragPath !== null;
+  return activeTreeDragPaths !== null;
 }
 
 interface Props {
@@ -42,10 +42,15 @@ interface Props {
   onCommitRename: (path: string[], newName: string) => void;
   onContextMenu: (
     event: ReactMouseEvent,
-    target: { type: "file" | "directory"; path: string[]; virtual?: boolean }
+    target: { type: "file" | "directory"; path: string[]; virtual?: boolean },
+    selectedTargets: Array<{
+      type: "file" | "directory";
+      path: string[];
+      virtual?: boolean;
+    }>
   ) => void;
-  /** Move `fromPath` into `toParentPath` (empty = workspace root). */
-  onMoveEntry: (fromPath: string[], toParentPath: string[]) => void;
+  /** Move entries into `toParentPath` (empty = workspace root). */
+  onMoveEntries: (fromPaths: string[][], toParentPath: string[]) => void;
   onOpenFile: (path: string[]) => void;
   renamingPathKey: string | null;
 }
@@ -203,6 +208,19 @@ function isPathPrefix(prefix: string[], path: string[]): boolean {
   return prefix.every((segment, index) => segment === path[index]);
 }
 
+/** Drop nested children when an ancestor is also selected. */
+export function pruneNestedPaths(paths: string[][]): string[][] {
+  const sorted = [...paths].sort((a, b) => a.length - b.length);
+  const kept: string[][] = [];
+  for (const path of sorted) {
+    if (kept.some((prefix) => isPathPrefix(prefix, path))) {
+      continue;
+    }
+    kept.push(path);
+  }
+  return kept;
+}
+
 function parsePathKey(key: string): string[] {
   if (key === "") {
     return [];
@@ -243,6 +261,47 @@ function dropParentForPathKey(
   return parent;
 }
 
+function dropParentForPaths(
+  targetKey: string,
+  targetType: "file" | "directory" | "root",
+  fromPaths: string[][]
+): string[] | null {
+  if (fromPaths.length === 0) {
+    return null;
+  }
+  let result: string[] | null = null;
+  for (const fromPath of fromPaths) {
+    const parent = dropParentForPathKey(targetKey, targetType, fromPath);
+    if (parent === null) {
+      return null;
+    }
+    result = parent;
+  }
+  return result;
+}
+
+function flattenVisibleNodes(
+  nodes: LocalDiskNode[],
+  expandedPaths: Set<string>
+): LocalDiskNode[] {
+  const out: LocalDiskNode[] = [];
+  const walk = (list: LocalDiskNode[]) => {
+    for (const node of list) {
+      out.push(node);
+      if (
+        node.type === "directory" &&
+        expandedPaths.has(pathKey(node.path)) &&
+        node.children &&
+        node.children.length > 0
+      ) {
+        walk(node.children);
+      }
+    }
+  };
+  walk(nodes);
+  return out;
+}
+
 function findDropTarget(
   clientX: number,
   clientY: number
@@ -275,11 +334,13 @@ function TreeNode({
   depth,
   activeFileName,
   dragOverKey,
-  draggingKey,
+  draggingKeys,
   expandedPaths,
   objectListNames,
   renamingPathKey,
+  selectedKeys,
   onPointerDownRow,
+  onRowActivate,
   onToggleDirectory,
   onOpenFile,
   onBeginRename,
@@ -291,14 +352,20 @@ function TreeNode({
   depth: number;
   activeFileName: string | null;
   dragOverKey: string | null;
-  draggingKey: string | null;
+  draggingKeys: Set<string>;
   expandedPaths: Set<string>;
   objectListNames: readonly string[];
   renamingPathKey: string | null;
+  selectedKeys: Set<string>;
   onPointerDownRow: (
     event: ReactPointerEvent<HTMLDivElement>,
     node: LocalDiskNode
   ) => void;
+  /** Returns true when the row should also open/toggle. */
+  onRowActivate: (
+    event: ReactMouseEvent<HTMLDivElement>,
+    node: LocalDiskNode
+  ) => boolean;
   onToggleDirectory: (path: string[]) => void;
   onOpenFile: (path: string[]) => void;
   onBeginRename: (path: string[]) => void;
@@ -313,7 +380,8 @@ function TreeNode({
   const nodeKey = pathKey(node.path);
   const isExpanded = expandedPaths.has(nodeKey);
   const isRenaming = renamingPathKey === nodeKey;
-  const isDragging = draggingKey === nodeKey;
+  const isDragging = draggingKeys.has(nodeKey);
+  const isSelected = selectedKeys.has(nodeKey);
   const isDropTarget = dragOverKey === nodeKey && !isDragging;
   const indent = { "--files-depth": String(depth) } as CSSProperties;
 
@@ -332,7 +400,7 @@ function TreeNode({
       <li className="files-tree-node">
         {isRenaming ? (
           <div
-            className={`files-row-btn files-row-btn--renaming${isActive ? " files-row-btn--active" : ""}${recognizedObjectList ? " files-row-btn--object-list-file" : ""}${isVirtual ? " files-row-btn--virtual" : ""}`}
+            className={`files-row-btn files-row-btn--renaming${isActive ? " files-row-btn--active" : ""}${isSelected ? " files-row-btn--selected" : ""}${recognizedObjectList ? " files-row-btn--object-list-file" : ""}${isVirtual ? " files-row-btn--virtual" : ""}`}
             style={indent}
           >
             <span aria-hidden="true" className="files-chevron-spacer" />
@@ -349,10 +417,15 @@ function TreeNode({
           </div>
         ) : (
           <div
-            className={`files-row-btn${isActive ? " files-row-btn--active" : ""}${recognizedObjectList ? " files-row-btn--object-list-file" : ""}${isVirtual ? " files-row-btn--virtual" : ""}${isDragging ? " files-row-btn--dragging" : ""}${isDropTarget ? " files-row-btn--drop-target" : ""}`}
+            aria-selected={isSelected}
+            className={`files-row-btn${isActive ? " files-row-btn--active" : ""}${isSelected ? " files-row-btn--selected" : ""}${recognizedObjectList ? " files-row-btn--object-list-file" : ""}${isVirtual ? " files-row-btn--virtual" : ""}${isDragging ? " files-row-btn--dragging" : ""}${isDropTarget ? " files-row-btn--drop-target" : ""}`}
             data-tree-drop="file"
             data-tree-path={nodeKey}
-            onClick={() => onOpenFile(node.path)}
+            onClick={(event) => {
+              if (onRowActivate(event, node)) {
+                onOpenFile(node.path);
+              }
+            }}
             onContextMenu={(event) => {
               event.preventDefault();
               onContextMenu(event, {
@@ -401,7 +474,7 @@ function TreeNode({
     <li className="files-tree-node files-tree-node--branch">
       {isRenaming ? (
         <div
-          className={`files-row-btn files-row-btn--folder files-row-btn--renaming${isObjectLists ? " files-row-btn--object-lists" : ""}`}
+          className={`files-row-btn files-row-btn--folder files-row-btn--renaming${isSelected ? " files-row-btn--selected" : ""}${isObjectLists ? " files-row-btn--object-lists" : ""}`}
           style={indent}
         >
           <span aria-hidden="true" className="files-chevron-spacer" />
@@ -419,10 +492,15 @@ function TreeNode({
       ) : (
         <div
           aria-expanded={isExpanded}
-          className={`files-row-btn files-row-btn--folder${isObjectLists ? " files-row-btn--object-lists" : ""}${isDragging ? " files-row-btn--dragging" : ""}${isDropTarget ? " files-row-btn--drop-target" : ""}`}
+          aria-selected={isSelected}
+          className={`files-row-btn files-row-btn--folder${isObjectLists ? " files-row-btn--object-lists" : ""}${isSelected ? " files-row-btn--selected" : ""}${isDragging ? " files-row-btn--dragging" : ""}${isDropTarget ? " files-row-btn--drop-target" : ""}`}
           data-tree-drop="directory"
           data-tree-path={nodeKey}
-          onClick={() => onToggleDirectory(node.path)}
+          onClick={(event) => {
+            if (onRowActivate(event, node)) {
+              onToggleDirectory(node.path);
+            }
+          }}
           onContextMenu={(event) => {
             event.preventDefault();
             onContextMenu(event, { type: "directory", path: node.path });
@@ -461,7 +539,7 @@ function TreeNode({
             <TreeNode
               activeFileName={activeFileName}
               depth={depth + 1}
-              draggingKey={draggingKey}
+              draggingKeys={draggingKeys}
               dragOverKey={dragOverKey}
               expandedPaths={expandedPaths}
               key={pathKey(child.path)}
@@ -473,8 +551,10 @@ function TreeNode({
               onContextMenu={onContextMenu}
               onOpenFile={onOpenFile}
               onPointerDownRow={onPointerDownRow}
+              onRowActivate={onRowActivate}
               onToggleDirectory={onToggleDirectory}
               renamingPathKey={renamingPathKey}
+              selectedKeys={selectedKeys}
             />
           ))}
         </ul>
@@ -493,20 +573,31 @@ export function LocalDiskTree({
   onCommitRename,
   onCancelRename,
   onContextMenu,
-  onMoveEntry,
+  onMoveEntries,
   ensureExpandedKeys = [],
 }: Props) {
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(
     () => new Set()
   );
-  const [draggingKey, setDraggingKey] = useState<string | null>(null);
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(
+    () => new Set()
+  );
+  const [selectionAnchorKey, setSelectionAnchorKey] = useState<string | null>(
+    null
+  );
+  const [draggingKeys, setDraggingKeys] = useState<Set<string>>(
+    () => new Set()
+  );
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
+  const selectedKeysRef = useRef(selectedKeys);
+  selectedKeysRef.current = selectedKeys;
   const pendingRef = useRef<{
     path: string[];
+    paths: string[][];
     x: number;
     y: number;
   } | null>(null);
-  const draggingPathRef = useRef<string[] | null>(null);
+  const draggingPathsRef = useRef<string[][] | null>(null);
   const dragOverKeyRef = useRef<string | null>(null);
   const suppressClickRef = useRef(false);
   const rootDropKey = "";
@@ -530,10 +621,10 @@ export function LocalDiskTree({
 
   const clearDrag = useCallback(() => {
     pendingRef.current = null;
-    draggingPathRef.current = null;
-    activeTreeDragPath = null;
+    draggingPathsRef.current = null;
+    activeTreeDragPaths = null;
     dragOverKeyRef.current = null;
-    setDraggingKey(null);
+    setDraggingKeys(new Set());
     setDragOverKey(null);
   }, []);
 
@@ -565,38 +656,156 @@ export function LocalDiskTree({
     [onOpenFile]
   );
 
+  const onRowActivate = useCallback(
+    (event: ReactMouseEvent<HTMLDivElement>, node: LocalDiskNode): boolean => {
+      if (suppressClickRef.current) {
+        suppressClickRef.current = false;
+        return false;
+      }
+      const key = pathKey(node.path);
+      if (event.shiftKey) {
+        const visible = flattenVisibleNodes(nodes, expandedPaths);
+        const anchorKey = selectionAnchorKey ?? key;
+        const anchorIndex = visible.findIndex(
+          (entry) => pathKey(entry.path) === anchorKey
+        );
+        const targetIndex = visible.findIndex(
+          (entry) => pathKey(entry.path) === key
+        );
+        if (anchorIndex >= 0 && targetIndex >= 0) {
+          const start = Math.min(anchorIndex, targetIndex);
+          const end = Math.max(anchorIndex, targetIndex);
+          const next = new Set<string>();
+          for (let i = start; i <= end; i++) {
+            next.add(pathKey(visible[i]!.path));
+          }
+          setSelectedKeys(next);
+        } else {
+          setSelectedKeys(new Set([key]));
+          setSelectionAnchorKey(key);
+        }
+        return false;
+      }
+      if (event.ctrlKey || event.metaKey) {
+        setSelectedKeys((current) => {
+          const next = new Set(current);
+          if (next.has(key)) {
+            next.delete(key);
+          } else {
+            next.add(key);
+          }
+          return next;
+        });
+        setSelectionAnchorKey(key);
+        return false;
+      }
+      setSelectedKeys(new Set([key]));
+      setSelectionAnchorKey(key);
+      return true;
+    },
+    [expandedPaths, nodes, selectionAnchorKey]
+  );
+
   const onPointerDownRow = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>, node: LocalDiskNode) => {
-      if (event.button !== 0 || renamingPathKey === pathKey(node.path)) {
+      if (
+        event.button !== 0 ||
+        node.virtual ||
+        renamingPathKey === pathKey(node.path)
+      ) {
         return;
+      }
+      const key = pathKey(node.path);
+      const current = selectedKeysRef.current;
+      let dragPaths: string[][];
+      if (current.has(key) && current.size > 1) {
+        const visible = flattenVisibleNodes(nodes, expandedPaths);
+        const byKey = new Map(
+          visible.map((entry) => [pathKey(entry.path), entry] as const)
+        );
+        dragPaths = pruneNestedPaths(
+          [...current]
+            .map(parsePathKey)
+            .filter((path) => byKey.get(pathKey(path))?.virtual !== true)
+        );
+        if (dragPaths.length === 0) {
+          dragPaths = [node.path];
+        }
+      } else {
+        dragPaths = [node.path];
       }
       pendingRef.current = {
         path: node.path,
+        paths: dragPaths,
         x: event.clientX,
         y: event.clientY,
       };
     },
-    [renamingPathKey]
+    [expandedPaths, nodes, renamingPathKey]
+  );
+
+  const handleContextMenu = useCallback(
+    (
+      event: ReactMouseEvent,
+      target: { type: "file" | "directory"; path: string[]; virtual?: boolean }
+    ) => {
+      const key = pathKey(target.path);
+      let paths: string[][];
+      if (
+        selectedKeysRef.current.has(key) &&
+        selectedKeysRef.current.size > 1
+      ) {
+        paths = [...selectedKeysRef.current].map(parsePathKey);
+      } else {
+        setSelectedKeys(new Set([key]));
+        setSelectionAnchorKey(key);
+        paths = [target.path];
+      }
+      const visible = flattenVisibleNodes(nodes, expandedPaths);
+      const byKey = new Map(
+        visible.map((entry) => [pathKey(entry.path), entry] as const)
+      );
+      const selectedTargets = paths.map((path) => {
+        const entry = byKey.get(pathKey(path));
+        if (entry) {
+          return {
+            type: entry.type,
+            path: entry.path,
+            virtual: entry.virtual,
+          };
+        }
+        if (
+          path.length === target.path.length &&
+          path.every((segment, index) => segment === target.path[index])
+        ) {
+          return target;
+        }
+        return { type: "file" as const, path };
+      });
+      onContextMenu(event, target, selectedTargets);
+    },
+    [expandedPaths, nodes, onContextMenu]
   );
 
   useEffect(() => {
     const onPointerMove = (event: PointerEvent) => {
       const pending = pendingRef.current;
-      if (pending && draggingPathRef.current === null) {
+      if (pending && draggingPathsRef.current === null) {
         const dx = event.clientX - pending.x;
         const dy = event.clientY - pending.y;
         if (dx * dx + dy * dy < DRAG_THRESHOLD_PX * DRAG_THRESHOLD_PX) {
           return;
         }
-        draggingPathRef.current = pending.path;
-        activeTreeDragPath = pending.path;
+        const paths = pending.paths;
+        draggingPathsRef.current = paths;
+        activeTreeDragPaths = paths;
         pendingRef.current = null;
-        setDraggingKey(pathKey(pending.path));
+        setDraggingKeys(new Set(paths.map((entry) => pathKey(entry))));
         suppressClickRef.current = true;
       }
 
-      const fromPath = draggingPathRef.current;
-      if (!fromPath) {
+      const fromPaths = draggingPathsRef.current;
+      if (!fromPaths) {
         return;
       }
 
@@ -604,11 +813,7 @@ export function LocalDiskTree({
       const target = findDropTarget(event.clientX, event.clientY);
       let nextKey: string | null = null;
       if (target) {
-        const toParent = dropParentForPathKey(
-          target.key,
-          target.type,
-          fromPath
-        );
+        const toParent = dropParentForPaths(target.key, target.type, fromPaths);
         if (toParent !== null) {
           nextKey = target.type === "root" ? rootDropKey : target.key;
         }
@@ -620,8 +825,8 @@ export function LocalDiskTree({
     };
 
     const onPointerUp = (event: PointerEvent) => {
-      const fromPath = draggingPathRef.current;
-      if (!fromPath) {
+      const fromPaths = draggingPathsRef.current;
+      if (!fromPaths) {
         pendingRef.current = null;
         return;
       }
@@ -629,12 +834,12 @@ export function LocalDiskTree({
       const target = findDropTarget(event.clientX, event.clientY);
       let toParent: string[] | null = null;
       if (target) {
-        toParent = dropParentForPathKey(target.key, target.type, fromPath);
+        toParent = dropParentForPaths(target.key, target.type, fromPaths);
       }
 
       clearDrag();
       if (toParent !== null) {
-        onMoveEntry(fromPath, toParent);
+        onMoveEntries(fromPaths, toParent);
       }
     };
 
@@ -644,7 +849,12 @@ export function LocalDiskTree({
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        clearDrag();
+        if (draggingPathsRef.current || pendingRef.current) {
+          clearDrag();
+          return;
+        }
+        setSelectedKeys(new Set());
+        setSelectionAnchorKey(null);
       }
     };
 
@@ -658,26 +868,25 @@ export function LocalDiskTree({
       window.removeEventListener("pointercancel", onPointerCancel);
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [clearDrag, onMoveEntry]);
+  }, [clearDrag, onMoveEntries]);
 
-  // Keep module flag in sync if the tree unmounts mid-drag.
   useEffect(
     () => () => {
-      activeTreeDragPath = null;
+      activeTreeDragPaths = null;
     },
     []
   );
 
   return (
     <ul
-      className={`files-tree${dragOverKey === rootDropKey ? " files-tree--drop-target" : ""}${draggingKey ? " files-tree--dragging" : ""}`}
+      className={`files-tree${dragOverKey === rootDropKey ? " files-tree--drop-target" : ""}${draggingKeys.size > 0 ? " files-tree--dragging" : ""}`}
       data-tree-root=""
     >
       {nodes.map((node) => (
         <TreeNode
           activeFileName={activeFileName}
           depth={0}
-          draggingKey={draggingKey}
+          draggingKeys={draggingKeys}
           dragOverKey={dragOverKey}
           expandedPaths={expandedPaths}
           key={pathKey(node.path)}
@@ -686,11 +895,13 @@ export function LocalDiskTree({
           onBeginRename={onBeginRename}
           onCancelRename={onCancelRename}
           onCommitRename={onCommitRename}
-          onContextMenu={onContextMenu}
+          onContextMenu={handleContextMenu}
           onOpenFile={onOpenFileGuarded}
           onPointerDownRow={onPointerDownRow}
+          onRowActivate={onRowActivate}
           onToggleDirectory={onToggleDirectory}
           renamingPathKey={renamingPathKey}
+          selectedKeys={selectedKeys}
         />
       ))}
     </ul>

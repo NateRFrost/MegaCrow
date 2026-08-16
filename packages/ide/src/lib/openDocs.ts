@@ -29,6 +29,8 @@ export async function openDocs(): Promise<void> {
     focus: true,
     decorations: false,
     resizable: true,
+    // Match CSS `--bg-app` so the window isn't white before the page paints.
+    backgroundColor: "#1e1e1e",
   });
 
   await new Promise<void>((resolve, reject) => {

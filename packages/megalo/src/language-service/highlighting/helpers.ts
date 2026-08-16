@@ -7,7 +7,10 @@ import {
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import type { MegaloEnumDef } from "src/frontend/intermediate-representation/megaloEnum";
 import { emitLocation } from "src/language-service/highlighting/emit";
-import { getHighlightVersion } from "src/language-service/highlighting/session";
+import {
+  getHighlightVersion,
+  shouldHighlightMemberName,
+} from "src/language-service/highlighting/session";
 import type {
   SemanticToken,
   SemanticTokenModifier,
@@ -145,7 +148,9 @@ export const highlightStructural = (
   }
   switch (node.kind) {
     case SyntaxKind.MEMBER_REFERENCE:
-      emitLocation(out, node.member.location, "property");
+      if (shouldHighlightMemberName(node.member.value)) {
+        emitLocation(out, node.member.location, "property");
+      }
       break;
     case SyntaxKind.GRENADE_COUNT:
       if (node.form === "preset") {

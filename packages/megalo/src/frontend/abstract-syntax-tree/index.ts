@@ -1,5 +1,5 @@
 import type { MegaloCompilerContext } from "src/context";
-import type { Diagnostics } from "src/diagnostics";
+import type { Diagnostics, SourceLocation } from "src/diagnostics";
 import { rootIncludeDeclaration } from "src/diagnostics";
 import { IncludeDiagnostics } from "src/diagnostics/include";
 import { diagnosticMessages } from "src/diagnostics/messages";
@@ -248,6 +248,29 @@ export class Parser {
     return elements;
   }
 
+  private reportMissingInclude(
+    kind: "include" | "localized_include",
+    path: string,
+    blameLocation: SourceLocation,
+    diagnostics: Diagnostics,
+    message?: string
+  ): void {
+    const resolvedMessage =
+      message ??
+      (kind === "localized_include"
+        ? diagnosticMessages.couldNotResolveLocalizedInclude(path)
+        : diagnosticMessages.couldNotResolveInclude(path));
+    if (kind === "localized_include") {
+      if (this.frontend.compilerSettings.strictStringLiterals) {
+        diagnostics.addError(resolvedMessage, blameLocation);
+      } else {
+        diagnostics.addWarning(resolvedMessage, blameLocation);
+      }
+      return;
+    }
+    diagnostics.addError(resolvedMessage, blameLocation);
+  }
+
   private async expandInclude(
     element: IncludeElementNode | LocalizedIncludeElementNode,
     diagnostics: Diagnostics,
@@ -284,10 +307,7 @@ export class Parser {
     }
 
     if (!options.resolveInclude) {
-      diagnostics.addError(
-        `Could not resolve include "${path}"`,
-        blameLocation
-      );
+      this.reportMissingInclude(kind, path, blameLocation, diagnostics);
       return [];
     }
 
@@ -298,20 +318,24 @@ export class Parser {
         fromUri: options.fromUri,
       });
     } catch (error) {
-      diagnostics.addError(
+      const message =
         error instanceof Error
           ? error.message
-          : `Could not resolve include "${path}"`,
-        blameLocation
+          : kind === "localized_include"
+            ? diagnosticMessages.couldNotResolveLocalizedInclude(path)
+            : diagnosticMessages.couldNotResolveInclude(path);
+      this.reportMissingInclude(
+        kind,
+        path,
+        blameLocation,
+        diagnostics,
+        message
       );
       return [];
     }
 
     if (resolved === null) {
-      diagnostics.addError(
-        `Could not resolve include "${path}"`,
-        blameLocation
-      );
+      this.reportMissingInclude(kind, path, blameLocation, diagnostics);
       return [];
     }
 

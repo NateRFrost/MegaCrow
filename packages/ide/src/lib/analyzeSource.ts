@@ -10,7 +10,6 @@ import {
   mergeMegaloCompileOptions,
 } from "./megaloCompilerSettings";
 import {
-  analyzeProgram,
   compileGvarFromEditedSource,
   compileMgloFromEditedProgram,
   compileMgloFromMegaloSource,
@@ -257,22 +256,6 @@ function includeErrorAnalysis(
   };
 }
 
-function strictLiteralDiagnostics(
-  source: string,
-  compilerSettings?: MegaCrowCompilerSettings
-): MegaloDiagnostic[] {
-  if (!compilerSettings?.strictStringLiterals) {
-    return [];
-  }
-  return analyzeProgram(source, "107-mcc", {
-    strictLocalizedIncludes: false,
-    strictStringLiterals: true,
-    temporaryOverflow: true,
-    creatorGamertag: compilerSettings.creatorGamertag,
-    paths: { inputDir: ".", outputDir: "." },
-  }).diagnostics.filter((diagnostic) => diagnostic.severity === "error");
-}
-
 async function analyzeSourceOnlyCompile(
   source: string,
   compileOptions?: MegaloCompileOptions,
@@ -284,20 +267,6 @@ async function analyzeSourceOnlyCompile(
     includeCache,
     compilerSettings
   );
-  const strictDiagnostics = strictLiteralDiagnostics(source, compilerSettings);
-  if (strictDiagnostics.length > 0) {
-    return {
-      compileState: "error",
-      errorCount: strictDiagnostics.length,
-      message: strictDiagnostics[0]!.message,
-      byteIdentical: null,
-      byteDiffCount: null,
-      compiledByteLength: null,
-      mgloBytes: null,
-      compileTiming: null,
-      diagnostics: strictDiagnostics,
-    };
-  }
 
   const parsed = tryParse(source);
   if (!parsed.ok) {
@@ -413,21 +382,6 @@ export async function analyzeMegaloSource(
     if (!expanded.ok) {
       return includeErrorAnalysis(expanded.errors);
     }
-  }
-
-  const strictDiagnostics = strictLiteralDiagnostics(source, compilerSettings);
-  if (strictDiagnostics.length > 0) {
-    return {
-      compileState: "error",
-      errorCount: strictDiagnostics.length,
-      message: strictDiagnostics[0]!.message,
-      byteIdentical: null,
-      byteDiffCount: null,
-      compiledByteLength: null,
-      mgloBytes: null,
-      compileTiming: null,
-      diagnostics: strictDiagnostics,
-    };
   }
 
   if (!originalBytes) {

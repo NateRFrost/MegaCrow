@@ -1,5 +1,4 @@
 import {
-  ALL_MEGACROW_EXTENSIONS,
   baseFileCompiledFromSourceMessage,
   baseFileCompileFailedMessage,
   baseFileNotFoundMessage,
@@ -10,6 +9,7 @@ import type { MegaloDiagnostic } from "./diagnostics";
 import { createPlatformFileProvider } from "./fileProvider";
 import {
   baseDirectiveLocation,
+  getCompileMegacrowExtensions,
   type MegaloProgram,
   megaloErrorLocation,
   parseBaseDirective,
@@ -182,7 +182,7 @@ export async function resolveWorkspaceBaseProgram(
     const resolved = await resolveBaseMgloBytes(baseMgloPath, {
       version: MEGALO_VERSIONS["107-mcc"],
       fromUri,
-      megacrowExtensions: ALL_MEGACROW_EXTENSIONS,
+      megacrowExtensions: getCompileMegacrowExtensions(),
       onCompileProgress: options?.onStatus,
       // Only look for built `.mglo` when the workspace has an output folder.
       resolveBaseFile: outputPath

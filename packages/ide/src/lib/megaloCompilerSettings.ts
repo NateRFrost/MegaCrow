@@ -1,4 +1,9 @@
-import type { AppSettings, UiLocale } from "./appSettings";
+import {
+  ALL_MEGACROW_EXTENSIONS,
+  DEFAULT_MEGACROW_EXTENSIONS,
+  type MegacrowExtensions,
+} from "@megacrow/megalo";
+import type { AppSettings, CompilerProfile, UiLocale } from "./appSettings";
 import {
   type MegaloCompileOptions,
   normalizeCreatorGamertag,
@@ -7,10 +12,16 @@ import {
 export interface MegaCrowCompilerSettings {
   creatorGamertag: string;
   locale: UiLocale;
-  megacrowExtensions?: {
-    targetTeam?: boolean;
-  };
+  megacrowExtensions: MegacrowExtensions;
   strictStringLiterals: boolean;
+}
+
+export function megacrowExtensionsForProfile(
+  profile: CompilerProfile
+): MegacrowExtensions {
+  return profile === "megaloedit"
+    ? DEFAULT_MEGACROW_EXTENSIONS
+    : ALL_MEGACROW_EXTENSIONS;
 }
 
 export function compilerSettingsFromApp(
@@ -19,8 +30,36 @@ export function compilerSettingsFromApp(
   return {
     creatorGamertag: normalizeCreatorGamertag(settings.gamertag),
     locale: settings.locale,
+    megacrowExtensions: megacrowExtensionsForProfile(settings.compilerProfile),
     strictStringLiterals: settings.compilerStrictness,
   };
+}
+
+const DEFAULT_COMPILER_SETTINGS: MegaCrowCompilerSettings =
+  compilerSettingsFromApp({
+    discordRichPresence: true,
+    gamertag: "",
+    compilerStrictness: false,
+    compilerProfile: "megacrow",
+    editorTheme: "megacrow-dark",
+    editorWordWrap: true,
+    locale: "en",
+    skippedUpdateVersion: null,
+  });
+
+let appliedCompilerSettings: MegaCrowCompilerSettings = {
+  ...DEFAULT_COMPILER_SETTINGS,
+};
+
+/** Remember the last synced compiler settings for main-thread compile paths. */
+export function applyCompilerSettings(
+  settings: MegaCrowCompilerSettings
+): void {
+  appliedCompilerSettings = settings;
+}
+
+export function getAppliedCompilerSettings(): MegaCrowCompilerSettings {
+  return appliedCompilerSettings;
 }
 
 export function mergeMegaloCompileOptions(
@@ -35,5 +74,9 @@ export function mergeMegaloCompileOptions(
     creatorGamertag: normalizeCreatorGamertag(
       compilerSettings?.creatorGamertag ?? options?.creatorGamertag ?? ""
     ),
+    strictStringLiterals:
+      compilerSettings?.strictStringLiterals ??
+      options?.strictStringLiterals ??
+      false,
   };
 }

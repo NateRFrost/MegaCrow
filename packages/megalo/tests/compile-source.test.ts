@@ -89,6 +89,73 @@ end
     }
   });
 
+  it("warns on missing localized_include when not strict", async () => {
+    const result = await compileSource(
+      `localized_include "missing.txt"
+${minimalScript}`,
+      {
+        version,
+        resolveInclude: () => Promise.resolve(null),
+      }
+    );
+
+    const warning = result.diagnostics.find(
+      (d) =>
+        d.severity === DiagnosticSeverity.Warning &&
+        d.message.includes('localized_include "missing.txt"')
+    );
+    expect(warning).toBeDefined();
+    expect(
+      result.diagnostics.some(
+        (d) =>
+          d.severity === DiagnosticSeverity.Error &&
+          d.message.includes("localized_include")
+      )
+    ).toBe(false);
+  });
+
+  it("errors on missing localized_include when strictStringLiterals", async () => {
+    const result = await compileSource(
+      `localized_include "missing.txt"
+${minimalScript}`,
+      {
+        version,
+        compilerSettings: { strictStringLiterals: true },
+        resolveInclude: () => Promise.resolve(null),
+      }
+    );
+
+    const error = result.diagnostics.find(
+      (d) =>
+        d.severity === DiagnosticSeverity.Error &&
+        d.message.includes('localized_include "missing.txt"')
+    );
+    expect(error).toBeDefined();
+  });
+
+  it("errors on string literals when strictStringLiterals", async () => {
+    const result = await compileSource(
+      `string_table english
+\tname "Custom Game"
+end
+engine_data
+\tname "Custom Game"
+end
+`,
+      {
+        version,
+        compilerSettings: { strictStringLiterals: true },
+      }
+    );
+
+    const error = result.diagnostics.find(
+      (d) =>
+        d.severity === DiagnosticSeverity.Error &&
+        d.message.includes("String literals are not allowed")
+    );
+    expect(error).toBeDefined();
+  });
+
   it("tags nested include parse errors as IncludeLocation on the outer include", async () => {
     const files = new Map<string, string>([
       ["outer.txt", `include "inner.txt"\n`],

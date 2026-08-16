@@ -27,7 +27,7 @@ const lowerOptionValue = (
     optionValue.name = resolveScriptStringTableReference(
       valueNode.name,
       ctx.ir,
-      ctx.symbolTable
+      ctx
     );
     ctx.ir.locations.record(optionValue, "name", valueNode.name.location);
   }
@@ -35,7 +35,7 @@ const lowerOptionValue = (
     optionValue.description = resolveScriptStringTableReference(
       valueNode.description,
       ctx.ir,
-      ctx.symbolTable
+      ctx
     );
     ctx.ir.locations.record(
       optionValue,
@@ -60,12 +60,12 @@ export const lowerOption = (
     const name = resolveScriptStringTableReference(
       entry.displayName,
       ctx.ir,
-      ctx.symbolTable
+      ctx
     );
     const description = resolveScriptStringTableReference(
       entry.description,
       ctx.ir,
-      ctx.symbolTable
+      ctx
     );
     const values = entry.values.map((value) => lowerOptionValue(value, ctx));
     const defaultNumber = lowerConstantNumber(entry.defaultValue, ctx).value;

@@ -1,9 +1,11 @@
 // MegaloEdit Compiler Settings
 export interface CompilerSettings {
+  strictStringLiterals: boolean;
   temporaryVariablesCanOverflowIntoUnusedGlobalVariables: boolean;
 }
 
 export const DEFAULT_COMPILER_SETTINGS: CompilerSettings = {
+  strictStringLiterals: false,
   temporaryVariablesCanOverflowIntoUnusedGlobalVariables: true,
 };
 

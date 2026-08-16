@@ -27,6 +27,10 @@ export const MEGACROW_SET_OBJECT_LISTS_METHOD = "megacrow/setObjectLists";
 export const MEGACROW_SET_RESOLVE_BASE_FILE_METHOD =
   "megacrow/setResolveBaseFile";
 export const MEGACROW_SET_LOCALE_METHOD = "megacrow/setLocale";
+export const MEGACROW_SET_MEGACROW_EXTENSIONS_METHOD =
+  "megacrow/setMegacrowExtensions";
+export const MEGACROW_SET_COMPILER_SETTINGS_METHOD =
+  "megacrow/setCompilerSettings";
 export const MEGACROW_RESET_SESSION_METHOD = "megacrow/resetSession";
 
 export type MegacrowArtifactKind = "semanticTokens" | "diagnostics" | "mglo";
@@ -683,4 +687,24 @@ export async function lspSetObjectLists(
 export async function lspSetLocale(locale: "en" | "ja"): Promise<void> {
   const connection = await getConnection();
   connection.sendNotification(MEGACROW_SET_LOCALE_METHOD, { locale });
+}
+
+/** Sync MegaCrow extension flags (compiler profile) into the LSP worker. */
+export async function lspSetMegacrowExtensions(
+  megacrowExtensions: import("@megacrow/megalo").MegacrowExtensions
+): Promise<void> {
+  const connection = await getConnection();
+  connection.sendNotification(MEGACROW_SET_MEGACROW_EXTENSIONS_METHOD, {
+    megacrowExtensions,
+  });
+}
+
+/** Sync compiler settings (e.g. strict string literals) into the LSP worker. */
+export async function lspSetCompilerSettings(
+  compilerSettings: Partial<import("@megacrow/megalo").CompilerSettings>
+): Promise<void> {
+  const connection = await getConnection();
+  connection.sendNotification(MEGACROW_SET_COMPILER_SETTINGS_METHOD, {
+    compilerSettings,
+  });
 }

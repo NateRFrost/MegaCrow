@@ -8,6 +8,7 @@ import { encodeGvarBlfFromMglo } from "./encodeGvarBlfFromMglo";
 import type { MegaloIncludeFileCache } from "./includeDiagnostics";
 import { megaloCompileOptionsFromCache } from "./includeDiagnostics";
 import {
+  applyCompilerSettings,
   type MegaCrowCompilerSettings,
   mergeMegaloCompileOptions,
 } from "./megaloCompilerSettings";
@@ -16,6 +17,8 @@ import {
   formatMegaloCompileTiming,
   type GametypeSaveFormat,
   type MegaloProgram,
+  setCompileMegacrowExtensions,
+  setCompileStrictStringLiterals,
   tryParse,
 } from "./megaloShim";
 import { type Workspace, workspaceContext } from "./workspace";
@@ -58,6 +61,14 @@ const listeners = new Set<Listener>();
 let currentCompilerSettings: MegaCrowCompilerSettings = {
   creatorGamertag: "",
   locale: "en",
+  megacrowExtensions: {
+    targetTeam: true,
+    coopSpawningWaypointIcon: true,
+    notBuiltIn: true,
+    compileMissingBaseFromSource: true,
+    megacrowVersionString: true,
+    supportLegacySyntax: true,
+  },
   strictStringLiterals: false,
 };
 
@@ -168,6 +179,9 @@ export function syncMegaloCompilerSettings(
   compilerSettings: MegaCrowCompilerSettings
 ): void {
   currentCompilerSettings = compilerSettings;
+  applyCompilerSettings(compilerSettings);
+  setCompileMegacrowExtensions(compilerSettings.megacrowExtensions);
+  setCompileStrictStringLiterals(compilerSettings.strictStringLiterals);
   postMegaloWorker({
     kind: "setCompilerSettings",
     compilerSettings,

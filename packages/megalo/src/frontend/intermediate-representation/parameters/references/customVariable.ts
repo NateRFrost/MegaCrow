@@ -486,7 +486,7 @@ const resolveCustomVariableReferenceUnchecked = (
   }
 
   const split: SplitMember = splitParameterMember(node, ctx.symbolTable);
-  const { base, member, baseSymbol } = split;
+  const { base, member, baseSymbol, memberLocation } = split;
   const name = member ? `${base}.${member}` : base;
 
   const compiledGlobal = tryCompiledGlobalNumber(name);
@@ -543,7 +543,9 @@ const resolveCustomVariableReferenceUnchecked = (
   }
 
   throw new LowerError(
-    diagnosticMessages.unresolvedIdentifier(name),
-    node.location
+    member === undefined
+      ? diagnosticMessages.unresolvedIdentifier(name)
+      : diagnosticMessages.unresolvedScopedIdentifier(base, member),
+    memberLocation ?? node.location
   );
 };

@@ -28,7 +28,7 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
             const titleIndex = resolveStringTableEntry(
               parameter,
               ir.gameVariant.scriptStrings,
-              symbolTable
+              ctx
             );
             // 1-based into scriptStrings (0 = none).
             setField(
@@ -42,7 +42,7 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
             );
           } else {
             const localizedName = new StringTable();
-            resolveStringTableEntry(parameter, localizedName, symbolTable);
+            resolveStringTableEntry(parameter, localizedName, ctx);
             setField(
               ir.locations,
               diagnostics,
@@ -60,7 +60,7 @@ export const engineDataLowerer: ElementLowerer<EngineDataElementNode> = (
         dxAssertionScope(diagnostics, () => {
           const parameter = property.parameters[0]!;
           const localizedDescription = new StringTable();
-          resolveStringTableEntry(parameter, localizedDescription, symbolTable);
+          resolveStringTableEntry(parameter, localizedDescription, ctx);
           setField(
             ir.locations,
             diagnostics,

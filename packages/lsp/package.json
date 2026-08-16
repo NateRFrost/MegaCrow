@@ -6,12 +6,16 @@
   "main": "./src/browser/index.ts",
   "exports": {
     ".": "./src/browser/index.ts",
-    "./browser": "./src/browser/index.ts"
+    "./browser": "./src/browser/index.ts",
+    "./node": "./src/node/index.ts",
+    "./core": "./src/core.ts"
   },
   "dependencies": {
     "@megacrow/megalo": "*",
     "vscode-languageserver": "^9.0.1",
-    "vscode-languageserver-textdocument": "^1.0.12"
+    "vscode-languageserver-protocol": "^3.17.5",
+    "vscode-languageserver-textdocument": "^1.0.12",
+    "vscode-languageserver-types": "^3.17.5"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

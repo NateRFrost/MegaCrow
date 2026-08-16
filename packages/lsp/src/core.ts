@@ -4,10 +4,12 @@ import {
   analyzeDocument,
   analyzeObjectListSource,
   type CompiledMegaloMetadata,
+  type CompilerSettings,
   type CompileSourceOptions,
   compileFromSnapshot,
   completeQuotedPath,
   completionsAtPosition,
+  DEFAULT_MEGACROW_EXTENSIONS,
   type DefinitionTarget,
   definitionAtPosition,
   encodeSemanticTokens,
@@ -15,11 +17,15 @@ import {
   getQuotedPathCompletionQuery,
   getSemanticTokens,
   hoverAtPosition,
+  isMegaloVersionId,
+  MEGALO_VERSIONS,
+  type MegacrowExtensions,
   type CompletionItem as MegaloCompletionItem,
   type CompletionKind as MegaloCompletionKind,
   type Diagnostic as MegaloDiagnostic,
   type HoverResult as MegaloHoverResult,
   DiagnosticSeverity as MegaloSeverity,
+  type MegaloVersionId,
   type ObjectLists,
   type PathDirectoryEntry,
   type QuotedPathCompletionQuery,
@@ -37,7 +43,7 @@ import {
   InsertTextFormat,
   type LocationLink,
   type SemanticTokensLegend,
-} from "vscode-languageserver/browser";
+} from "vscode-languageserver-types";
 
 export const MEGACROW_COMPILE_METHOD = "megacrow/compile";
 export const MEGACROW_REQUEST_ARTIFACTS_METHOD = "megacrow/requestArtifacts";
@@ -51,6 +57,12 @@ export const MEGACROW_SET_OBJECT_LISTS_METHOD = "megacrow/setObjectLists";
 export const MEGACROW_SET_RESOLVE_BASE_FILE_METHOD =
   "megacrow/setResolveBaseFile";
 export const MEGACROW_SET_LOCALE_METHOD = "megacrow/setLocale";
+export const MEGACROW_SET_MEGACROW_EXTENSIONS_METHOD =
+  "megacrow/setMegacrowExtensions";
+export const MEGACROW_SET_COMPILER_SETTINGS_METHOD =
+  "megacrow/setCompilerSettings";
+/** Active Megalo engine profile for analysis / hover / completion. */
+export const MEGACROW_SET_MEGALO_VERSION_METHOD = "megacrow/setMegaloVersion";
 /** Drop all open documents, caches, and pending analysis (workspace / session switch). */
 export const MEGACROW_RESET_SESSION_METHOD = "megacrow/resetSession";
 
@@ -58,6 +70,46 @@ export const SEMANTIC_TOKENS_LEGEND: SemanticTokensLegend = {
   tokenTypes: [...SEMANTIC_TOKEN_TYPES],
   tokenModifiers: [...SEMANTIC_TOKEN_MODIFIERS],
 };
+
+let sessionMegacrowExtensions: MegacrowExtensions = ALL_MEGACROW_EXTENSIONS;
+let sessionCompilerSettings: Partial<CompilerSettings> = {};
+let sessionMegaloVersion: SupportedMegaloVersion = MEGALO_VERSIONS["107-mcc"];
+
+export const getSessionMegacrowExtensions = (): MegacrowExtensions =>
+  sessionMegacrowExtensions;
+
+export const setSessionMegacrowExtensions = (
+  extensions: MegacrowExtensions
+): void => {
+  sessionMegacrowExtensions = extensions;
+};
+
+export const getSessionCompilerSettings = (): Partial<CompilerSettings> =>
+  sessionCompilerSettings;
+
+export const setSessionCompilerSettings = (
+  settings: Partial<CompilerSettings>
+): void => {
+  sessionCompilerSettings = settings;
+};
+
+export const getSessionMegaloVersion = (): SupportedMegaloVersion =>
+  sessionMegaloVersion;
+
+export const setSessionMegaloVersion = (versionId: string): boolean => {
+  if (!isMegaloVersionId(versionId)) {
+    return false;
+  }
+  sessionMegaloVersion = MEGALO_VERSIONS[versionId];
+  return true;
+};
+
+export const megacrowExtensionsForProfile = (
+  profile: "megacrow" | "megaloedit"
+): MegacrowExtensions =>
+  profile === "megaloedit"
+    ? DEFAULT_MEGACROW_EXTENSIONS
+    : ALL_MEGACROW_EXTENSIONS;
 
 export type MegacrowArtifactKind = "semanticTokens" | "diagnostics" | "mglo";
 
@@ -152,6 +204,19 @@ export interface MegacrowSetResolveBaseFileParams {
 export interface MegacrowSetLocaleParams {
   /** Diagnostics / hover locale (`en` or `ja`). */
   locale: "en" | "ja";
+}
+
+export interface MegacrowSetMegacrowExtensionsParams {
+  megacrowExtensions: MegacrowExtensions;
+}
+
+export interface MegacrowSetCompilerSettingsParams {
+  compilerSettings: Partial<CompilerSettings>;
+}
+
+export interface MegacrowSetMegaloVersionParams {
+  /** Engine profile id (e.g. `107-mcc`, `106`). */
+  megaloVersion: MegaloVersionId;
 }
 
 /** Params for {@link MEGACROW_RESET_SESSION_METHOD} (currently unused; reserved). */
@@ -259,6 +324,8 @@ export const analyzeDocumentSnapshot = async (
     objectLists: options.objectLists,
     fromUri: options.fromUri,
     resolveInclude: options.resolvers?.resolveInclude,
+    megacrowExtensions: sessionMegacrowExtensions,
+    compilerSettings: sessionCompilerSettings,
   });
 
 export const semanticTokensFromSnapshot = (
@@ -306,7 +373,8 @@ export const requestArtifactsFromSnapshot = async (
       fromUri: options.fromUri,
       resolveInclude: options.resolvers?.resolveInclude,
       resolveBaseFile: options.resolvers?.resolveBaseFile,
-      megacrowExtensions: ALL_MEGACROW_EXTENSIONS,
+      megacrowExtensions: sessionMegacrowExtensions,
+      compilerSettings: sessionCompilerSettings,
     });
     const diagnostics = toLspDiagnostics(compiled.diagnostics, snapshot.source);
 

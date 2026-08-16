@@ -35,12 +35,12 @@ export const lowerRangedOption = (
     const name = resolveScriptStringTableReference(
       entry.displayName,
       ctx.ir,
-      ctx.symbolTable
+      ctx
     );
     const description = resolveScriptStringTableReference(
       entry.description,
       ctx.ir,
-      ctx.symbolTable
+      ctx
     );
 
     if (entry.values.length < 2) {

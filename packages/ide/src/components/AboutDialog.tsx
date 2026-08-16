@@ -70,20 +70,25 @@ export function AboutDialog({ open, onClose, onVersionClick }: Props) {
           <h2 className="about-name" id="about-title">
             MegaCrow
           </h2>
-          <button
-            className="about-version"
-            onClick={() => onVersionClick?.()}
-            type="button"
-          >
-            {MEGACROW_BUILD_STRING}
-          </button>
         </div>
 
         <p className="about-tagline" id="about-description">
-          Megalo script IDE for Halo Reach gametypes
+          Megalo script IDE for Halo gametypes
         </p>
 
         <dl className="about-details">
+          <div className="about-detail">
+            <dt>MegaCrow</dt>
+            <dd>
+              <button
+                className="about-version"
+                onClick={() => onVersionClick?.()}
+                type="button"
+              >
+                {MEGACROW_BUILD_STRING}
+              </button>
+            </dd>
+          </div>
           <div className="about-detail">
             <dt>@blamnetwork/blf</dt>
             <dd>{blfPackageJson.version}</dd>
@@ -105,6 +110,21 @@ export function AboutDialog({ open, onClose, onVersionClick }: Props) {
             </dd>
           </div>
         </dl>
+
+        <section
+          aria-labelledby="about-credits-title"
+          className="about-credits"
+        >
+          <h3 className="about-credits-title" id="about-credits-title">
+            Credits
+          </h3>
+          <div className="about-credits-group">
+            <h4 className="about-credits-heading">Testers</h4>
+            <p className="about-credits-names">
+              General Izna, spartan 566, Matthew
+            </p>
+          </div>
+        </section>
 
         <p className="about-credit">
           Made with &lt;3 by{" "}

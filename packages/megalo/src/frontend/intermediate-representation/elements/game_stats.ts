@@ -75,7 +75,7 @@ export const gameStatsLowerer: ElementLowerer<GameStatsElementNode> = (
       const nameStringIndex = resolveScriptStringTableReference(
         entry.labelString,
         ctx.ir,
-        ctx.symbolTable
+        ctx
       );
 
       const statistic: MegaloGameStatistic = {

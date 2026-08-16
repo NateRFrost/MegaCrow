@@ -1,5 +1,5 @@
 import type { ObjectLists } from "@megacrow/megalo";
-import { setLocale } from "@megacrow/megalo";
+import { MEGALO_VERSIONS, setLocale } from "@megacrow/megalo";
 import {
   type CSSProperties,
   startTransition,
@@ -427,14 +427,22 @@ export function App() {
   }, [activeWorkspace, includeRoot]);
 
   useEffect(() => {
-    syncMegaloCompilerSettings(compilerSettingsFromApp(settings));
+    const compilerSettings = compilerSettingsFromApp(settings);
+    syncMegaloCompilerSettings(compilerSettings);
     setLocale(settings.locale === "ja" ? "ja" : "en");
-    void import("./lib/lspClient").then(({ lspSetLocale }) => {
-      void lspSetLocale(settings.locale === "ja" ? "ja" : "en");
-    });
+    void import("./lib/lspClient").then(
+      ({ lspSetLocale, lspSetMegacrowExtensions, lspSetCompilerSettings }) => {
+        void lspSetLocale(settings.locale === "ja" ? "ja" : "en");
+        void lspSetMegacrowExtensions(compilerSettings.megacrowExtensions);
+        void lspSetCompilerSettings({
+          strictStringLiterals: compilerSettings.strictStringLiterals,
+        });
+      }
+    );
   }, [
     settings.gamertag,
     settings.compilerStrictness,
+    settings.compilerProfile,
     settings.locale,
     settings,
   ]);
@@ -1303,8 +1311,14 @@ export function App() {
   );
 
   useEffect(() => {
+    const versionId = activeWorkspace?.megaloVersion ?? "107-mcc";
+    const flavour = MEGALO_VERSIONS[versionId]?.flavour;
+    const isWindows =
+      typeof navigator !== "undefined" &&
+      /Win/i.test(navigator.platform || navigator.userAgent);
     if (
-      !settings.mccHotReload ||
+      flavour !== "mcc" ||
+      !isWindows ||
       (analysis.compileState !== "ok" && analysis.compileState !== "warn") ||
       analysis.compiledByteLength === null ||
       !analysis.mgloBytes
@@ -1315,7 +1329,7 @@ export function App() {
     void writeMccHotReloadMglo(analysis.mgloBytes).catch((error) => {
       console.error("Failed to write MCC hot-reload .mglo:", error);
     });
-  }, [analysis, settings.mccHotReload]);
+  }, [analysis, activeWorkspace?.megaloVersion]);
 
   const compileDownload = useCallback(
     (format: GametypeSaveFormat) => {

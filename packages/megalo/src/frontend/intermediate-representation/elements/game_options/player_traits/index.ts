@@ -71,15 +71,11 @@ export const lowerPlayerTraits = (
       entry.location
     );
     const option: PlayerTraitOption = {
-      name: resolveScriptStringTableReference(
-        entry.displayName,
-        ctx.ir,
-        ctx.symbolTable
-      ),
+      name: resolveScriptStringTableReference(entry.displayName, ctx.ir, ctx),
       description: resolveScriptStringTableReference(
         entry.description,
         ctx.ir,
-        ctx.symbolTable
+        ctx
       ),
       traits,
     };

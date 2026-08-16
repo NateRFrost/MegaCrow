@@ -4,7 +4,7 @@ import {
   clipTokensToSource,
   mergeTokens,
 } from "src/language-service/highlighting/merge";
-import { runWithHighlightVersion } from "src/language-service/highlighting/session";
+import { runWithHighlightContext } from "src/language-service/highlighting/session";
 import { highlightSymbol } from "src/language-service/highlighting/symbols";
 import {
   MODIFIER_INDEX,
@@ -28,7 +28,7 @@ export {
 export const getSemanticTokens = (
   snapshot: AnalysisSnapshot
 ): SemanticToken[] =>
-  runWithHighlightVersion(snapshot.version, () => {
+  runWithHighlightContext(snapshot.version, snapshot.ast.symbolTable, () => {
     const out: SemanticToken[] = [];
 
     highlightLexicalTokens(out, snapshot);

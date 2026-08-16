@@ -26,8 +26,11 @@ import {
 export interface SplitMember {
   readonly base: string;
   readonly baseSymbol?: SymbolTableVariableEntry;
+  /** Full parameter span (`base` or `base.member`). */
   readonly location: SourceLocation;
   readonly member?: string;
+  /** Member token span only (when `member` is set). */
+  readonly memberLocation?: SourceLocation;
 }
 
 export const splitParameterMember = (
@@ -47,6 +50,7 @@ export const splitParameterMember = (
       member: node.member.value,
       baseSymbol,
       location: node.location,
+      memberLocation: node.member.location,
     };
   }
 

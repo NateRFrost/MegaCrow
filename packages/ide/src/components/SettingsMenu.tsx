@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { AppSettings } from "../lib/appSettings";
+import type { AppSettings, CompilerProfile } from "../lib/appSettings";
 import { EDITOR_THEME_OPTIONS } from "../monaco/theme";
 
 interface Props {
@@ -63,121 +63,154 @@ export function SettingsMenu({ settings, onChange }: Props) {
             </h2>
 
             <div className="settings-modal-body">
-              <label className="settings-field">
-                <span className="settings-toggle-text">
-                  <span className="settings-toggle-label">Language</span>
-                  <span className="settings-toggle-hint">
-                    Language for diagnostics and hover help
-                  </span>
-                </span>
-                <select
-                  className="settings-select"
-                  onChange={(event) =>
-                    onChange({
-                      locale: event.target.value === "ja" ? "ja" : "en",
-                    })
-                  }
-                  value={settings.locale}
+              <section
+                aria-labelledby="settings-compiler-heading"
+                className="settings-section"
+              >
+                <h3
+                  className="settings-section-title"
+                  id="settings-compiler-heading"
                 >
-                  <option value="en">English</option>
-                  <option value="ja">日本語</option>
-                </select>
-              </label>
+                  Compiler Settings
+                </h3>
 
-              <label className="settings-field">
-                <span className="settings-toggle-text">
-                  <span className="settings-toggle-label">Editor theme</span>
-                  <span className="settings-toggle-hint">
-                    Color theme for the Megalo editor
+                <label className="settings-field">
+                  <span className="settings-toggle-text">
+                    <span className="settings-toggle-label">
+                      Gametype Author
+                    </span>
+                    <span className="settings-toggle-hint">
+                      Creator written into the gametype, 16 characters maximum
+                    </span>
                   </span>
-                </span>
-                <select
-                  className="settings-select"
-                  onChange={(event) =>
-                    onChange({ editorTheme: event.target.value })
-                  }
-                  value={settings.editorTheme}
+                  <input
+                    className="settings-input"
+                    maxLength={16}
+                    onChange={(event) =>
+                      onChange({ gamertag: event.target.value })
+                    }
+                    placeholder="(empty)"
+                    spellCheck={false}
+                    type="text"
+                    value={settings.gamertag}
+                  />
+                </label>
+
+                <label className="settings-field">
+                  <span className="settings-toggle-text">
+                    <span className="settings-toggle-label">
+                      Compiler profile
+                    </span>
+                    <span className="settings-toggle-hint">
+                      MegaloEdit disables MegaCrow language extensions
+                    </span>
+                  </span>
+                  <select
+                    className="settings-select"
+                    onChange={(event) =>
+                      onChange({
+                        compilerProfile: event.target.value as CompilerProfile,
+                      })
+                    }
+                    value={settings.compilerProfile}
+                  >
+                    <option value="megacrow">MegaCrow</option>
+                    <option value="megaloedit">MegaloEdit</option>
+                  </select>
+                </label>
+
+                <label className="settings-toggle">
+                  <input
+                    checked={settings.compilerStrictness}
+                    onChange={(event) =>
+                      onChange({ compilerStrictness: event.target.checked })
+                    }
+                    type="checkbox"
+                  />
+                  <span className="settings-toggle-text">
+                    <span className="settings-toggle-label">
+                      Compiler strictness
+                    </span>
+                    <span className="settings-toggle-hint">
+                      Enforce localization — quoted string literals become
+                      errors
+                    </span>
+                  </span>
+                </label>
+              </section>
+
+              <section
+                aria-labelledby="settings-editor-heading"
+                className="settings-section"
+              >
+                <h3
+                  className="settings-section-title"
+                  id="settings-editor-heading"
                 >
-                  {EDITOR_THEME_OPTIONS.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  Editor Settings
+                </h3>
 
-              <label className="settings-toggle">
-                <input
-                  checked={settings.discordRichPresence}
-                  onChange={(event) =>
-                    onChange({ discordRichPresence: event.target.checked })
-                  }
-                  type="checkbox"
-                />
-                <span className="settings-toggle-text">
-                  <span className="settings-toggle-label">
-                    Discord rich presence
+                <label className="settings-field">
+                  <span className="settings-toggle-text">
+                    <span className="settings-toggle-label">Language</span>
+                    <span className="settings-toggle-hint">
+                      Language for diagnostics and hover help
+                    </span>
                   </span>
-                  <span className="settings-toggle-hint">
-                    Show what you are editing in Discord
-                  </span>
-                </span>
-              </label>
+                  <select
+                    className="settings-select"
+                    onChange={(event) =>
+                      onChange({
+                        locale: event.target.value === "ja" ? "ja" : "en",
+                      })
+                    }
+                    value={settings.locale}
+                  >
+                    <option value="en">English</option>
+                    <option value="ja">日本語</option>
+                  </select>
+                </label>
 
-              <label className="settings-toggle">
-                <input
-                  checked={settings.mccHotReload}
-                  onChange={(event) =>
-                    onChange({ mccHotReload: event.target.checked })
-                  }
-                  type="checkbox"
-                />
-                <span className="settings-toggle-text">
-                  <span className="settings-toggle-label">MCC hot reload</span>
-                  <span className="settings-toggle-hint">
-                    Write compiled .mglo to the MCC HotReload folder when
-                    compiling
+                <label className="settings-field">
+                  <span className="settings-toggle-text">
+                    <span className="settings-toggle-label">Editor theme</span>
+                    <span className="settings-toggle-hint">
+                      Color theme for the Megalo editor
+                    </span>
                   </span>
-                </span>
-              </label>
+                  <select
+                    className="settings-select"
+                    onChange={(event) =>
+                      onChange({ editorTheme: event.target.value })
+                    }
+                    value={settings.editorTheme}
+                  >
+                    {EDITOR_THEME_OPTIONS.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
 
-              <label className="settings-field">
-                <span className="settings-toggle-text">
-                  <span className="settings-toggle-label">Gamertag</span>
-                  <span className="settings-toggle-hint">
-                    Creator gamertag written into the gametype, 16 characters
-                    maximum
+                <label className="settings-toggle">
+                  <input
+                    checked={settings.discordRichPresence}
+                    onChange={(event) =>
+                      onChange({ discordRichPresence: event.target.checked })
+                    }
+                    type="checkbox"
+                  />
+                  <span className="settings-toggle-text">
+                    <span className="settings-toggle-label">
+                      Discord rich presence
+                    </span>
+                    <span className="settings-toggle-hint">
+                      Show what you are editing in Discord
+                    </span>
                   </span>
-                </span>
-                <input
-                  className="settings-input"
-                  maxLength={16}
-                  onChange={(event) =>
-                    onChange({ gamertag: event.target.value })
-                  }
-                  spellCheck={false}
-                  type="text"
-                  value={settings.gamertag}
-                />
-              </label>
-
-              <label className="settings-toggle">
-                <input
-                  checked={settings.compilerStrictness}
-                  onChange={(event) =>
-                    onChange({ compilerStrictness: event.target.checked })
-                  }
-                  type="checkbox"
-                />
-                <span className="settings-toggle-text">
-                  <span className="settings-toggle-label">
-                    Compiler strictness
-                  </span>
-                  <span className="settings-toggle-hint">
-                    Enforce localization — quoted string literals become errors
-                  </span>
-                </span>
-              </label>
+                </label>
+              </section>
             </div>
 
             <div className="settings-modal-footer">

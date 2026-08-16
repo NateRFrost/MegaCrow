@@ -36,7 +36,7 @@ export const mapObjectLowerer: ElementLowerer<MapObjectElementNode> = (
           const label = resolveScriptStringTableReference(
             property.value,
             ctx.ir,
-            ctx.symbolTable
+            ctx
           );
           setField(
             ctx.ir.locations,

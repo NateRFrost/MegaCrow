@@ -2,18 +2,21 @@ import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
 interface Props {
-  /** File or folder name shown in the prompt. */
+  /** When > 1, show a multi-item delete prompt. */
+  count?: number;
+  /** File or folder name shown in the prompt (single-item delete). */
   name: string;
   onCancel: () => void;
   onConfirm: () => void;
   open: boolean;
   /** When true, wording mentions folder contents. */
-  targetKind?: "file" | "directory";
+  targetKind?: "file" | "directory" | "mixed";
 }
 
 export function ConfirmDeleteDialog({
   open,
   name,
+  count = 1,
   targetKind = "file",
   onCancel,
   onConfirm,
@@ -41,9 +44,15 @@ export function ConfirmDeleteDialog({
     return null;
   }
 
-  const title = targetKind === "directory" ? "Delete folder" : "Delete file";
-  const body =
-    targetKind === "directory"
+  const multi = count > 1;
+  const title = multi
+    ? "Delete items"
+    : targetKind === "directory"
+      ? "Delete folder"
+      : "Delete file";
+  const body = multi
+    ? `Delete ${count} selected items? This cannot be undone.`
+    : targetKind === "directory"
       ? `Delete “${name}” and everything inside it? This cannot be undone.`
       : `Delete “${name}”? This cannot be undone.`;
 

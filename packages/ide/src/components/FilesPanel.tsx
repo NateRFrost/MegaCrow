@@ -79,6 +79,7 @@ import {
   isMegacrowTreeDragActive,
   LocalDiskTree,
   MEGACROW_TREE_PATH_MIME,
+  pruneNestedPaths,
 } from "./LocalDiskTree";
 import { WorkspaceMenu } from "./WorkspaceMenu";
 
@@ -285,13 +286,14 @@ export function FilesPanel({
     null
   );
   const [pendingDelete, setPendingDelete] = useState<{
-    path: string[];
+    paths: string[][];
     source: FilesContextSource;
-    target: FilesContextTarget;
+    targets: FilesContextTarget[];
   } | null>(null);
   const [pendingReplace, setPendingReplace] = useState<{
     displayName: string;
     fromPath: string[];
+    remaining: string[][];
     targetKind: "file" | "directory";
     toParentPath: string[];
   } | null>(null);
@@ -789,9 +791,9 @@ export function FilesPanel({
       fromPath: string[],
       toParentPath: string[],
       options?: { replace?: boolean }
-    ) => {
+    ): Promise<"moved" | "noop" | "needs_replace" | "error"> => {
       if (!localRoot) {
-        return;
+        return "error";
       }
       const oldDisplay = formatLocalDiskPath(fromPath);
       try {
@@ -803,18 +805,10 @@ export function FilesPanel({
           options
         );
         if (result.status === "needs_replace") {
-          const destPath = [...toParentPath, result.displayName];
-          const destNode = findLocalDiskNode(localTree, destPath);
-          setPendingReplace({
-            fromPath,
-            toParentPath,
-            displayName: result.displayName,
-            targetKind: destNode?.type === "directory" ? "directory" : "file",
-          });
-          return;
+          return "needs_replace";
         }
         if (result.status === "noop") {
-          return;
+          return "noop";
         }
         const toPath = result.path;
         const expandKeys = toParentPath.map((_, index) =>
@@ -830,39 +824,68 @@ export function FilesPanel({
           );
           onFileRenamed(oldDisplay, newDisplay, absoluteFilePath);
         }
+        return "moved";
       } catch (error) {
         setLocalError(String(error));
+        return "error";
       }
     },
-    [localRoot, localTree, onFileRenamed, refreshLocal]
+    [localRoot, onFileRenamed, refreshLocal]
   );
 
-  const moveLocalEntry = useCallback(
-    (fromPath: string[], toParentPath: string[]) =>
-      applyLocalMove(fromPath, toParentPath),
-    [applyLocalMove]
+  const moveLocalEntries = useCallback(
+    async (
+      fromPaths: string[][],
+      toParentPath: string[],
+      options?: { replaceFirst?: boolean }
+    ) => {
+      const queue = pruneNestedPaths(fromPaths);
+      let replaceNext = options?.replaceFirst === true;
+      while (queue.length > 0) {
+        const fromPath = queue.shift()!;
+        const status = await applyLocalMove(fromPath, toParentPath, {
+          replace: replaceNext,
+        });
+        replaceNext = false;
+        if (status === "needs_replace") {
+          const displayName = fromPath.at(-1) ?? formatLocalDiskPath(fromPath);
+          const destPath = [...toParentPath, displayName];
+          const destNode = findLocalDiskNode(localTree, destPath);
+          setPendingReplace({
+            fromPath,
+            toParentPath,
+            remaining: queue,
+            displayName,
+            targetKind: destNode?.type === "directory" ? "directory" : "file",
+          });
+          return;
+        }
+        if (status === "error") {
+          return;
+        }
+      }
+    },
+    [applyLocalMove, localTree]
   );
 
-  const deleteLocalFile = useCallback(
-    async (path: string[], options?: { skipConfirm?: boolean }) => {
+  const deleteLocalFiles = useCallback(
+    async (paths: string[][]) => {
       if (!localRoot) {
         return;
       }
-      const display = formatLocalDiskPath(path);
-      if (
-        !(
-          options?.skipConfirm ||
-          window.confirm(`Delete "${display}"? This cannot be undone.`)
-        )
-      ) {
+      const pruned = pruneNestedPaths(paths);
+      if (pruned.length === 0) {
         return;
       }
       try {
         setLocalError(null);
-        await deleteSystemMegaloFile(localRoot, path);
+        for (const path of pruned) {
+          const display = formatLocalDiskPath(path);
+          await deleteSystemMegaloFile(localRoot, path);
+          onFileDeleted(display);
+        }
         setRenamingPathKey(null);
         await refreshLocal();
-        onFileDeleted(display);
       } catch (error) {
         setLocalError(String(error));
       }
@@ -903,7 +926,8 @@ export function FilesPanel({
   const onTreeContextMenu = useCallback(
     (
       event: MouseEvent,
-      target: { type: "file" | "directory"; path: string[]; virtual?: boolean }
+      target: { type: "file" | "directory"; path: string[]; virtual?: boolean },
+      selectedTargets: FilesContextTarget[]
     ) => {
       setPastePayload(null);
       setContextMenu({
@@ -911,6 +935,7 @@ export function FilesPanel({
         y: event.clientY,
         source: "local",
         target,
+        selectedTargets,
       });
       refreshPasteFromClipboard();
     },
@@ -1195,8 +1220,8 @@ export function FilesPanel({
                         void commitRename(path, name)
                       }
                       onContextMenu={onTreeContextMenu}
-                      onMoveEntry={(fromPath, toParentPath) =>
-                        void moveLocalEntry(fromPath, toParentPath)
+                      onMoveEntries={(fromPaths, toParentPath) =>
+                        void moveLocalEntries(fromPaths, toParentPath)
                       }
                       onOpenFile={(path) => void openLocalFile(path)}
                       renamingPathKey={renamingPathKey}
@@ -1370,9 +1395,9 @@ export function FilesPanel({
             }
           })();
         }}
-        onCopyPath={(path, source) => {
+        onCopyPath={(paths, source) => {
           if (source === "opfs") {
-            const name = path[0];
+            const name = paths[0]?.[0];
             if (name) {
               void copyOpfsPath(name);
             }
@@ -1380,11 +1405,17 @@ export function FilesPanel({
           }
           void (async () => {
             try {
-              const absolute = await resolveContextAbsolutePath(path, source);
-              if (!absolute) {
+              const absolutes: string[] = [];
+              for (const path of paths) {
+                const absolute = await resolveContextAbsolutePath(path, source);
+                if (absolute) {
+                  absolutes.push(absolute);
+                }
+              }
+              if (absolutes.length === 0) {
                 return;
               }
-              await writeClipboardText(absolute);
+              await writeClipboardText(absolutes.join("\n"));
             } catch (error) {
               if (source === "builds") {
                 setBuildsError(String(error));
@@ -1394,14 +1425,15 @@ export function FilesPanel({
             }
           })();
         }}
-        onDelete={(target, source) => {
-          if (target.virtual) {
+        onDelete={(targets, source) => {
+          const deletable = targets.filter((target) => !target.virtual);
+          if (deletable.length === 0) {
             return;
           }
           setPendingDelete({
-            path: target.path,
+            paths: deletable.map((target) => target.path),
             source,
-            target,
+            targets: deletable,
           });
         }}
         onNewFile={(parentPath, source) => {
@@ -1475,10 +1507,11 @@ export function FilesPanel({
       />
 
       <ConfirmDeleteDialog
+        count={pendingDelete?.paths.length ?? 1}
         name={
           pendingDelete
-            ? (pendingDelete.path.at(-1) ??
-              formatLocalDiskPath(pendingDelete.path))
+            ? (pendingDelete.paths[0]?.at(-1) ??
+              formatLocalDiskPath(pendingDelete.paths[0] ?? []))
             : ""
         }
         onCancel={() => setPendingDelete(null)}
@@ -1486,10 +1519,10 @@ export function FilesPanel({
           if (!pendingDelete) {
             return;
           }
-          const { path, source } = pendingDelete;
+          const { paths, source } = pendingDelete;
           setPendingDelete(null);
           if (source === "opfs") {
-            const name = path[0];
+            const name = paths[0]?.[0];
             if (name) {
               void deleteOpfsFile(name, { skipConfirm: true });
             }
@@ -1500,25 +1533,27 @@ export function FilesPanel({
               if (!outputPath) {
                 return;
               }
-              const name = path[0] ?? formatLocalDiskPath(path);
               try {
                 setBuildsError(null);
-                await deleteSystemMegaloFile({ path: outputPath }, path);
+                for (const path of paths) {
+                  await deleteSystemMegaloFile({ path: outputPath }, path);
+                }
                 await refreshBuilds();
               } catch (error) {
                 setBuildsError(String(error));
-                console.error(
-                  `Failed to delete built gametype ${name}:`,
-                  error
-                );
+                console.error("Failed to delete built gametype(s):", error);
               }
             })();
             return;
           }
-          void deleteLocalFile(path, { skipConfirm: true });
+          void deleteLocalFiles(paths);
         }}
         open={pendingDelete !== null}
-        targetKind={pendingDelete?.target.type ?? "file"}
+        targetKind={
+          pendingDelete && pendingDelete.targets.length > 1
+            ? "mixed"
+            : (pendingDelete?.targets[0]?.type ?? "file")
+        }
       />
 
       <ConfirmReplaceDialog
@@ -1528,9 +1563,11 @@ export function FilesPanel({
           if (!pendingReplace) {
             return;
           }
-          const { fromPath, toParentPath } = pendingReplace;
+          const { fromPath, toParentPath, remaining } = pendingReplace;
           setPendingReplace(null);
-          void applyLocalMove(fromPath, toParentPath, { replace: true });
+          void moveLocalEntries([fromPath, ...remaining], toParentPath, {
+            replaceFirst: true,
+          });
         }}
         open={pendingReplace !== null}
         targetKind={pendingReplace?.targetKind ?? "file"}

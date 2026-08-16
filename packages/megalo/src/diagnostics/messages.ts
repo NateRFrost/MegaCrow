@@ -188,6 +188,10 @@ export const diagnosticMessages = {
     return translate("unresolved_identifier", { name });
   },
 
+  unresolvedScopedIdentifier(base: string, member: string): string {
+    return translate("unresolved_scoped_identifier", { base, member });
+  },
+
   unknownTriggerStatement(got: string): string {
     return translate("unrecognized_element", { value: got });
   },
@@ -356,6 +360,18 @@ export const diagnosticMessages = {
 
   unsupportedDynamicStringReplacement(got: string): string {
     return translate("unsupported_dynamic_string_replacement", { got });
+  },
+
+  stringLiteralNotAllowedWhenStrict(): string {
+    return translate("string_literal_not_allowed_when_strict");
+  },
+
+  couldNotResolveInclude(path: string): string {
+    return translate("could_not_resolve_include", { path });
+  },
+
+  couldNotResolveLocalizedInclude(path: string): string {
+    return translate("could_not_resolve_localized_include", { path });
   },
 
   transientVariableInPersistentString(): string {

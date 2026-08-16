@@ -9,6 +9,8 @@ export type FilesContextTarget =
 export type FilesContextSource = "local" | "opfs" | "builds";
 
 export interface FilesContextMenuState {
+  /** When set (local tree multi-select), actions apply to all targets. */
+  selectedTargets?: FilesContextTarget[];
   source: FilesContextSource;
   target: FilesContextTarget;
   x: number;
@@ -20,9 +22,9 @@ interface Props {
   menu: FilesContextMenuState | null;
   onClose: () => void;
   onCopy: (path: string[], source: FilesContextSource) => void;
-  onCopyPath: (path: string[], source: FilesContextSource) => void;
+  onCopyPath: (paths: string[][], source: FilesContextSource) => void;
   /** Opens delete confirmation (does not delete immediately). */
-  onDelete: (target: FilesContextTarget, source: FilesContextSource) => void;
+  onDelete: (targets: FilesContextTarget[], source: FilesContextSource) => void;
   onNewFile: (parentPath: string[], source: FilesContextSource) => void;
   onNewFolder?: (parentPath: string[], source: FilesContextSource) => void;
   onPaste: (target: FilesContextTarget, source: FilesContextSource) => void;
@@ -103,16 +105,24 @@ export function FilesContextMenu({
   const isFile = menu.target.type === "file";
   const isVirtual = menu.target.virtual === true;
   const { source } = menu;
+  const selectedTargets = menu.selectedTargets ?? [menu.target];
+  const multiSelect = selectedTargets.length > 1;
   const canReveal =
     onReveal !== undefined &&
     !isVirtual &&
+    !multiSelect &&
     (source === "local" || source === "builds");
   const canRename =
-    !isVirtual && source !== "builds" && (isFile || source === "local");
+    !(multiSelect || isVirtual) &&
+    source !== "builds" &&
+    (isFile || source === "local");
   const canDelete =
-    !isVirtual && (isFile || source === "local" || source === "builds");
-  const canCopy = isFile && source !== "builds" && !isVirtual;
-  const showNewActions = menu.target.type === "directory" && source === "local";
+    selectedTargets.some((target) => !target.virtual) &&
+    (source === "local" || source === "builds" || isFile);
+  const canCopy = !multiSelect && isFile && source !== "builds" && !isVirtual;
+  const showNewActions =
+    !multiSelect && menu.target.type === "directory" && source === "local";
+  const deleteTargets = selectedTargets.filter((target) => !target.virtual);
 
   return createPortal(
     <div
@@ -196,13 +206,16 @@ export function FilesContextMenu({
       <button
         className="files-context-menu-item"
         onClick={() => {
-          onCopyPath(menu.target.path, source);
+          onCopyPath(
+            selectedTargets.map((target) => target.path),
+            source
+          );
           onClose();
         }}
         role="menuitem"
         type="button"
       >
-        Copy Path
+        {multiSelect ? "Copy Paths" : "Copy Path"}
       </button>
       {canReveal ? (
         <button
@@ -217,17 +230,19 @@ export function FilesContextMenu({
           {revealLabel}
         </button>
       ) : null}
-      {canDelete ? (
+      {canDelete && deleteTargets.length > 0 ? (
         <button
           className="files-context-menu-item files-context-menu-item--danger"
           onClick={() => {
-            onDelete(menu.target, source);
+            onDelete(deleteTargets, source);
             onClose();
           }}
           role="menuitem"
           type="button"
         >
-          Delete
+          {deleteTargets.length > 1
+            ? `Delete ${deleteTargets.length} Items`
+            : "Delete"}
         </button>
       ) : null}
     </div>,

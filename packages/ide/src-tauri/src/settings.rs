@@ -26,9 +26,13 @@ pub struct MegacrowSettings {
   pub active_workspace_id: Option<String>,
   pub workspaces: Vec<StoredWorkspace>,
   pub discord_rich_presence: bool,
+  /// Retained for older settings.json files; unused by the app.
+  #[serde(default = "default_true")]
   pub mcc_hot_reload: bool,
   pub gamertag: String,
   pub compiler_strictness: bool,
+  #[serde(default = "default_compiler_profile")]
+  pub compiler_profile: String,
   #[serde(default = "default_editor_theme")]
   pub editor_theme: String,
   #[serde(default = "default_editor_word_wrap")]
@@ -37,6 +41,14 @@ pub struct MegacrowSettings {
   pub locale: String,
   #[serde(default)]
   pub skipped_update_version: Option<String>,
+}
+
+fn default_true() -> bool {
+  true
+}
+
+fn default_compiler_profile() -> String {
+  "megacrow".to_string()
 }
 
 fn default_editor_theme() -> String {
@@ -61,6 +73,7 @@ impl Default for MegacrowSettings {
       mcc_hot_reload: true,
       gamertag: String::new(),
       compiler_strictness: false,
+      compiler_profile: default_compiler_profile(),
       editor_theme: default_editor_theme(),
       editor_word_wrap: default_editor_word_wrap(),
       locale: default_locale(),
@@ -108,9 +121,9 @@ mod tests {
       "activeWorkspaceId": null,
       "workspaces": [],
       "discordRichPresence": true,
-      "mccHotReload": true,
       "gamertag": "",
       "compilerStrictness": false,
+      "compilerProfile": "megacrow",
       "editorTheme": "megacrow-dark",
       "skippedUpdateVersion": null
     }"#;
@@ -118,6 +131,25 @@ mod tests {
     assert_eq!(settings.version, 3);
     assert!(settings.workspaces.is_empty());
     assert!(settings.editor_word_wrap);
+    assert_eq!(settings.compiler_profile, "megacrow");
+  }
+
+  #[test]
+  fn deserializes_legacy_mcc_hot_reload() {
+    let raw = r#"{
+      "version": 3,
+      "activeWorkspaceId": null,
+      "workspaces": [],
+      "discordRichPresence": true,
+      "mccHotReload": true,
+      "gamertag": "",
+      "compilerStrictness": false,
+      "editorTheme": "megacrow-dark",
+      "skippedUpdateVersion": null
+    }"#;
+    let settings: MegacrowSettings = serde_json::from_str(raw).expect("deserialize");
+    assert_eq!(settings.compiler_profile, "megacrow");
+    assert!(settings.mcc_hot_reload);
   }
 
   #[test]
@@ -134,7 +166,6 @@ mod tests {
         "lastOpenFilePath": "C:/HREK/data/multiplayer/megalo/foo.txt"
       }],
       "discordRichPresence": true,
-      "mccHotReload": true,
       "gamertag": "",
       "compilerStrictness": false,
       "editorTheme": "megacrow-dark",
@@ -163,7 +194,6 @@ mod tests {
         "inputPath": "C:/HREK/data/multiplayer/megalo"
       }],
       "discordRichPresence": true,
-      "mccHotReload": true,
       "gamertag": "",
       "compilerStrictness": false,
       "editorTheme": "megacrow-dark",
@@ -188,7 +218,6 @@ mod tests {
         "lastOpenFilePath": null
       }],
       "discordRichPresence": true,
-      "mccHotReload": true,
       "gamertag": "",
       "compilerStrictness": false,
       "editorTheme": "megacrow-dark",

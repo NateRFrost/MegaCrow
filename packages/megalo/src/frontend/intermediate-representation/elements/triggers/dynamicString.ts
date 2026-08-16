@@ -144,22 +144,14 @@ export const lowerDynamicString = (
 ): DynamicString => {
   if (node.kind !== SyntaxKind.DYNAMIC_STRING) {
     return {
-      stringIndex: resolveScriptStringTableReference(
-        node,
-        ctx.ir,
-        ctx.symbolTable
-      ),
+      stringIndex: resolveScriptStringTableReference(node, ctx.ir, ctx),
       tokens: [],
     };
   }
 
   const dynamic = node as ASTDynamicStringNode;
   return {
-    stringIndex: resolveScriptStringTableReference(
-      dynamic.string,
-      ctx.ir,
-      ctx.symbolTable
-    ),
+    stringIndex: resolveScriptStringTableReference(dynamic.string, ctx.ir, ctx),
     tokens: dynamic.replacements.map((replacement) =>
       lowerReplacement(replacement, ctx, options)
     ),

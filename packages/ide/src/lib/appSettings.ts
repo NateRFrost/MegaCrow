@@ -5,16 +5,20 @@ import {
 
 export type UiLocale = "en" | "ja";
 
+/** MegaCrow enables product extensions; MegaloEdit matches stock MegaloEdit. */
+export type CompilerProfile = "megacrow" | "megaloedit";
+
 export interface AppSettings {
+  compilerProfile: CompilerProfile;
   compilerStrictness: boolean;
   discordRichPresence: boolean;
   editorTheme: string;
   /** When true, wrap long lines; when false, use horizontal scroll. */
   editorWordWrap: boolean;
+  /** Creator written into the gametype (max 16 chars). Empty by default. */
   gamertag: string;
   /** Diagnostics / hover language (`en` or `ja`). */
   locale: UiLocale;
-  mccHotReload: boolean;
   skippedUpdateVersion: string | null;
 }
 
@@ -22,9 +26,9 @@ const STORAGE_KEY = "megacrow_settings";
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   discordRichPresence: true,
-  mccHotReload: true,
   gamertag: "",
   compilerStrictness: false,
+  compilerProfile: "megacrow",
   editorTheme: DEFAULT_EDITOR_THEME_ID,
   editorWordWrap: true,
   locale: "en",
@@ -33,6 +37,10 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
 
 export function normalizeUiLocale(value: unknown): UiLocale {
   return value === "ja" ? "ja" : "en";
+}
+
+export function normalizeCompilerProfile(value: unknown): CompilerProfile {
+  return value === "megaloedit" ? "megaloedit" : "megacrow";
 }
 
 export function readLocalAppSettings(): AppSettings {
@@ -45,13 +53,13 @@ export function readLocalAppSettings(): AppSettings {
     return {
       discordRichPresence:
         parsed.discordRichPresence ?? DEFAULT_APP_SETTINGS.discordRichPresence,
-      mccHotReload: parsed.mccHotReload ?? DEFAULT_APP_SETTINGS.mccHotReload,
       gamertag:
         typeof parsed.gamertag === "string"
           ? parsed.gamertag.slice(0, 16)
           : DEFAULT_APP_SETTINGS.gamertag,
       compilerStrictness:
         parsed.compilerStrictness ?? DEFAULT_APP_SETTINGS.compilerStrictness,
+      compilerProfile: normalizeCompilerProfile(parsed.compilerProfile),
       editorTheme: normalizeEditorThemeId(parsed.editorTheme),
       editorWordWrap:
         typeof parsed.editorWordWrap === "boolean"
