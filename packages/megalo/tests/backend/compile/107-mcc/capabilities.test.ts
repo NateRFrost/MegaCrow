@@ -24,6 +24,7 @@ class TestCompiler extends Compiler {
     return {
       data: new Uint8Array(),
       metadata: {},
+      variantByteLength: 0,
     };
   }
   getCapabilities() {

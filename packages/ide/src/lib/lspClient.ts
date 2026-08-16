@@ -34,7 +34,12 @@ export const MEGACROW_SET_COMPILER_SETTINGS_METHOD =
   "megacrow/setCompilerSettings";
 export const MEGACROW_RESET_SESSION_METHOD = "megacrow/resetSession";
 
-export type MegacrowArtifactKind = "semanticTokens" | "diagnostics" | "mglo";
+export type MegacrowArtifactKind =
+  | "semanticTokens"
+  | "diagnostics"
+  | "mglo"
+  | "mpvr"
+  | "gvar";
 
 export interface MegacrowCompileResult {
   dataBase64?: string;
@@ -42,6 +47,8 @@ export interface MegacrowCompileResult {
   error?: string;
   metadata?: import("@megacrow/megalo").CompiledMegaloMetadata;
   ok: boolean;
+  /** Raw `.mglo` bitstream length (excludes BLF framing). */
+  variantByteLength?: number;
 }
 
 export interface MegacrowRequestArtifactsResult {
@@ -51,6 +58,8 @@ export interface MegacrowRequestArtifactsResult {
   metadata?: MegacrowCompileResult["metadata"];
   ok?: boolean;
   semanticTokens?: number[];
+  /** Raw `.mglo` bitstream length (excludes BLF framing). */
+  variantByteLength?: number;
   version: number;
 }
 
@@ -438,14 +447,18 @@ export async function lspSyncDocument(text: string): Promise<void> {
   });
 }
 
-export async function lspCompileSource(text: string): Promise<{
+export async function lspCompileSource(
+  text: string,
+  fileType: "mglo" | "mpvr" | "gvar" = "mglo"
+): Promise<{
   ok: boolean;
   bytes?: Uint8Array;
   diagnostics: Diagnostic[];
   error?: string;
   metadata?: MegacrowCompileResult["metadata"];
+  variantByteLength?: number;
 }> {
-  const artifacts = await lspRequestArtifacts(text, ["diagnostics", "mglo"]);
+  const artifacts = await lspRequestArtifacts(text, ["diagnostics", fileType]);
   if (!(artifacts.ok && artifacts.bytes)) {
     return {
       ok: false,
@@ -458,6 +471,7 @@ export async function lspCompileSource(text: string): Promise<{
     bytes: artifacts.bytes,
     diagnostics: artifacts.diagnostics ?? [],
     metadata: artifacts.metadata,
+    variantByteLength: artifacts.variantByteLength,
   };
 }
 
@@ -476,6 +490,7 @@ export async function lspRequestArtifacts(
   metadata?: MegacrowCompileResult["metadata"];
   semanticTokens?: number[];
   version: number;
+  variantByteLength?: number;
 }> {
   const connection = await getConnection();
   await lspSyncDocument(text);
@@ -496,6 +511,7 @@ export async function lspRequestArtifacts(
     metadata: result.metadata,
     semanticTokens: result.semanticTokens,
     version: result.version,
+    variantByteLength: result.variantByteLength,
   };
 }
 
@@ -686,7 +702,7 @@ export async function lspSetObjectLists(
 
 /** Switch the LSP session Megalo engine profile. */
 export async function lspSetMegaloVersion(
-  megaloVersion: import("./megaloShim").MegaloVersionId
+  megaloVersion: import("@megacrow/megalo").MegaloVersionId
 ): Promise<void> {
   const connection = await getConnection();
   connection.sendNotification(MEGACROW_SET_MEGALO_VERSION_METHOD, {

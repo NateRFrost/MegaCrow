@@ -133,7 +133,7 @@ export class Lowerer {
     _lowerCtx: LowerContext
   ) {
     applyDefaultLoadoutCameraTime(ir);
-    applyMetadata(ir);
+    applyMetadata(ir, ctx);
     applyVariableMetadata(ir, ctx);
     assertMccTeamColorOverrides(ir, ctx);
   }
@@ -152,13 +152,13 @@ export class Lowerer {
           creationHistory: {
             timestamp: new Date(),
             xuid: BigInt(0),
-            name: "Default",
+            name: "MegaCrow",
             isOnline: false,
           },
           modificationHistory: {
             timestamp: new Date(),
             xuid: BigInt(0),
-            name: "Default",
+            name: "MegaCrow",
             isOnline: false,
           },
         },

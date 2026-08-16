@@ -38,10 +38,24 @@ export enum EngineIcon {
   Attack = 30,
 }
 
+/** On-disk container for a compiled custom variant. */
+export type CompiledMegaloFileType = "mglo" | "mpvr" | "gvar";
+
+export interface WriteMegaloFileOptions {
+  /** Defaults to `mglo` (raw custom-variant bitstream). */
+  fileType?: CompiledMegaloFileType;
+}
+
 export interface CompiledMegaloMetadata {
   description?: Record<StringTableLanguage, string>;
   engineIcon?: EngineIcon;
   name?: Record<StringTableLanguage, string>;
+}
+
+export interface WriteMegaloFileResult {
+  data: Uint8Array;
+  metadata: CompiledMegaloMetadata;
+  variantByteLength: number;
 }
 
 export abstract class Compiler {
@@ -51,8 +65,9 @@ export abstract class Compiler {
   ): { metadata: CompiledMegaloMetadata };
   public abstract writeMegaloFile(
     ir: IR,
-    diagnostics: Diagnostics
-  ): { data: Uint8Array; metadata: CompiledMegaloMetadata };
+    diagnostics: Diagnostics,
+    options?: WriteMegaloFileOptions
+  ): WriteMegaloFileResult;
   public abstract getCapabilities(): CompilerCapabilities;
   public abstract getMegaloVersion(): SupportedMegaloVersion;
 }

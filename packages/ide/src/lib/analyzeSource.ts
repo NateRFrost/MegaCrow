@@ -6,10 +6,6 @@ import {
   megaloCompileOptionsFromCache,
 } from "./includeDiagnostics";
 import {
-  type MegaCrowCompilerSettings,
-  mergeMegaloCompileOptions,
-} from "./megaloCompilerSettings";
-import {
   compileGvarFromEditedSource,
   compileMgloFromEditedProgram,
   compileMgloFromMegaloSource,
@@ -19,17 +15,25 @@ import {
   exportMgloFromBlf,
   formatMegaloCompileTiming,
   logCompileStringTablesDebug,
-  type MegaloCompileOptions,
   type MegaloCompileTiming,
-  type MegaloProgram,
   megaloErrorLocation,
-  type ParseWarning,
   remapIncludeDiagnostic,
+} from "./megaloCompile";
+import {
+  type MegaCrowCompilerSettings,
+  mergeMegaloCompileOptions,
+} from "./megaloCompilerSettings";
+import {
+  type MegaloCompileOptions,
   sourceHasIncludeDirectives,
   tryExpandMegaloIncludes,
-  tryParse,
   unresolvedIncludeErrors,
-} from "./megaloShim";
+} from "./megaloIncludeScan";
+import {
+  type MegaloProgram,
+  type ParseWarning,
+  tryParse,
+} from "./megaloProgram";
 
 export type CompileState = "idle" | "parsing" | "ok" | "warn" | "error";
 
@@ -424,7 +428,7 @@ export async function analyzeMegaloSource(
       message: "Loaded — edit source to recompile",
       byteIdentical: true,
       byteDiffCount: 0,
-      compiledByteLength: originalBytes.length,
+      compiledByteLength: mgloBytes?.length ?? originalBytes.length,
       mgloBytes,
       compileTiming: null,
       diagnostics: [],
@@ -500,7 +504,7 @@ export async function analyzeMegaloSource(
             : `Compile OK — ${diffCount} byte(s) differ from original`),
       byteIdentical: identical,
       byteDiffCount: diffCount,
-      compiledByteLength: output.length,
+      compiledByteLength: mgloBytes?.length ?? output.length,
       mgloBytes,
       compileTiming,
       diagnostics: warningDiagnostics,

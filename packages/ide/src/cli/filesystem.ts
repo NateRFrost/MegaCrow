@@ -1,4 +1,4 @@
-import type { FileProvider } from "../lib/megaloShim";
+import type { FileProvider } from "../lib/fileProvider";
 
 export interface CliFilesystem {
   basename(filePath: string, ext?: string): Promise<string>;

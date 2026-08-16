@@ -41,7 +41,7 @@ export const lowerAdjustGrenades = (
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),
       grenadeType,
-      operation: parseMathOperation(parameters[2]!, location),
+      operation: parseMathOperation(parameters[2]!, location, ctx),
       amount: resolveCustomVariableReference(parameters[3]!, paramCtx),
     },
   };

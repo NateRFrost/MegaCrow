@@ -787,18 +787,37 @@ body {
   margin-bottom: 0;
 }
 
-.workspace-modal-field input {
+.workspace-modal-field input,
+.workspace-modal-field select {
   box-sizing: border-box;
   width: 100%;
   padding: 8px 10px;
+  font: inherit;
   font-size: 12px;
   color: var(--text-primary);
+  color-scheme: dark;
   background: #1e1e1e;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 6px;
 }
 
-.workspace-modal-field input:disabled {
+.workspace-modal-field select {
+  cursor: pointer;
+}
+
+.workspace-modal-field select option {
+  color: var(--text-primary);
+  background-color: #1e1e1e;
+}
+
+.workspace-modal-field input:focus,
+.workspace-modal-field select:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.workspace-modal-field input:disabled,
+.workspace-modal-field select:disabled {
   opacity: 0.7;
 }
 
@@ -2571,7 +2590,8 @@ body {
 }
 
 .confirm-delete-secondary,
-.confirm-delete-danger {
+.confirm-delete-danger,
+.confirm-delete-primary {
   padding: 8px 14px;
   font-size: 12px;
   cursor: pointer;
@@ -2588,6 +2608,21 @@ body {
   background: rgba(255, 255, 255, 0.05);
 }
 
+.confirm-delete-primary {
+  color: #fff;
+  background: var(--accent);
+  border: 0;
+}
+
+.confirm-delete-primary:hover {
+  filter: brightness(1.08);
+}
+
+.confirm-delete-primary:focus-visible {
+  outline: 1px solid var(--accent-soft);
+  outline-offset: 2px;
+}
+
 .confirm-delete-danger {
   color: #fff;
   background: #c54b3c;
@@ -2601,6 +2636,26 @@ body {
 .confirm-delete-danger:focus-visible {
   outline: 1px solid #f48771;
   outline-offset: 2px;
+}
+
+.files-row-regenerate {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  margin-left: auto;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--text-muted);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+}
+
+.files-row-regenerate:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .files-row-delete {

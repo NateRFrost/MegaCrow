@@ -1,3 +1,4 @@
+import { diagnosticMessages } from "src/diagnostics/messages";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import { ExplicitObject } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_explicit_object";
@@ -13,6 +14,7 @@ import {
   parseExplicitObject,
   parseIndexSuffix,
   parseQualifiedTemporaryName,
+  tryParseExplicitObject,
 } from "src/frontend/intermediate-representation/parameters/explicit";
 import {
   resolveExplicitObjectForBase,
@@ -33,6 +35,7 @@ import {
 } from "src/frontend/intermediate-representation/preprocessing/symbols";
 import {
   isBuiltInVariable,
+  SymbolKind,
   type SymbolTableVariableEntry,
   VariableScope,
   VariableType,
@@ -340,8 +343,26 @@ const resolveObjectReferenceUnchecked = (
     };
   }
 
-  return {
-    type: ObjectReferenceType.GlobalObject,
-    object: resolveExplicitObjectForBase(ctx, base, baseSymbol),
-  };
+  if (tryParseExplicitObject(base) !== undefined) {
+    return {
+      type: ObjectReferenceType.GlobalObject,
+      object: resolveExplicitObjectForBase(ctx, base, baseSymbol),
+    };
+  }
+
+  if (
+    ctx.symbolTable
+      .toArray()
+      .some(
+        (entry) =>
+          entry.kind === SymbolKind.ObjectListItem && entry.name === base
+      )
+  ) {
+    throw new LowerError(
+      diagnosticMessages.objectTypeUsedAsObjectReference(base),
+      location
+    );
+  }
+
+  throw new LowerError(diagnosticMessages.unresolvedIdentifier(base), location);
 };

@@ -15,7 +15,7 @@ export interface AppSettings {
   editorTheme: string;
   /** When true, wrap long lines; when false, use horizontal scroll. */
   editorWordWrap: boolean;
-  /** Creator written into the gametype (max 16 chars). Empty by default. */
+  /** Creator written into the gametype (max 16 chars). */
   gamertag: string;
   /** Diagnostics / hover language (`en` or `ja`). */
   locale: UiLocale;
@@ -26,7 +26,7 @@ const STORAGE_KEY = "megacrow_settings";
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   discordRichPresence: true,
-  gamertag: "",
+  gamertag: "MegaCrow",
   compilerStrictness: false,
   compilerProfile: "megacrow",
   editorTheme: DEFAULT_EDITOR_THEME_ID,
@@ -43,6 +43,15 @@ export function normalizeCompilerProfile(value: unknown): CompilerProfile {
   return value === "megaloedit" ? "megaloedit" : "megacrow";
 }
 
+/** Empty / missing author falls back to MegaCrow (max 16 chars on the wire). */
+export function normalizeGametypeAuthor(value: unknown): string {
+  if (typeof value !== "string") {
+    return DEFAULT_APP_SETTINGS.gamertag;
+  }
+  const trimmed = value.trim().slice(0, 16);
+  return trimmed.length > 0 ? trimmed : DEFAULT_APP_SETTINGS.gamertag;
+}
+
 export function readLocalAppSettings(): AppSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -53,10 +62,9 @@ export function readLocalAppSettings(): AppSettings {
     return {
       discordRichPresence:
         parsed.discordRichPresence ?? DEFAULT_APP_SETTINGS.discordRichPresence,
-      gamertag:
-        typeof parsed.gamertag === "string"
-          ? parsed.gamertag.slice(0, 16)
-          : DEFAULT_APP_SETTINGS.gamertag,
+      gamertag: normalizeGametypeAuthor(
+        typeof parsed.gamertag === "string" ? parsed.gamertag : undefined
+      ),
       compilerStrictness:
         parsed.compilerStrictness ?? DEFAULT_APP_SETTINGS.compilerStrictness,
       compilerProfile: normalizeCompilerProfile(parsed.compilerProfile),

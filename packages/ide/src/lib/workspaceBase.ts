@@ -2,6 +2,7 @@ import {
   baseFileCompiledFromSourceMessage,
   baseFileCompileFailedMessage,
   baseFileNotFoundMessage,
+  isMegaloVersionId,
   MEGALO_VERSIONS,
   resolveBaseMgloBytes,
 } from "@megacrow/megalo";
@@ -9,12 +10,13 @@ import type { MegaloDiagnostic } from "./diagnostics";
 import { createPlatformFileProvider } from "./fileProvider";
 import {
   baseDirectiveLocation,
-  getCompileMegacrowExtensions,
-  type MegaloProgram,
-  megaloErrorLocation,
   parseBaseDirective,
-  tryParse,
-} from "./megaloShim";
+} from "./megaloBaseDirective";
+import {
+  getCompileMegacrowExtensions,
+  megaloErrorLocation,
+} from "./megaloCompile";
+import { type MegaloProgram, tryParse } from "./megaloProgram";
 import type { Workspace } from "./workspace";
 
 export type WorkspaceBaseResult =
@@ -179,8 +181,13 @@ export async function resolveWorkspaceBaseProgram(
   };
 
   try {
+    const versionId = workspace.megaloVersion;
+    const version =
+      isMegaloVersionId(versionId) && MEGALO_VERSIONS[versionId]
+        ? MEGALO_VERSIONS[versionId]
+        : MEGALO_VERSIONS["107-mcc"];
     const resolved = await resolveBaseMgloBytes(baseMgloPath, {
-      version: MEGALO_VERSIONS["107-mcc"],
+      version,
       fromUri,
       megacrowExtensions: getCompileMegacrowExtensions(),
       onCompileProgress: options?.onStatus,

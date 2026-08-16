@@ -127,6 +127,10 @@ export const diagnosticMessages = {
     return expectedOneOf([translate("variable_reference")], got);
   },
 
+  objectTypeUsedAsObjectReference(name: string): string {
+    return translate("object_type_used_as_object_reference", { name });
+  },
+
   expectedParameterType(expected: string, got: string): string {
     return translate("expected_parameter_type", { expected, got });
   },
@@ -360,6 +364,14 @@ export const diagnosticMessages = {
 
   unsupportedDynamicStringReplacement(got: string): string {
     return translate("unsupported_dynamic_string_replacement", { got });
+  },
+
+  unsupportedAction(name: string, versionLabel: string): string {
+    return translate("unsupported_action", { name, versionLabel });
+  },
+
+  unsupportedMathOperation(name: string, versionLabel: string): string {
+    return translate("unsupported_math_operation", { name, versionLabel });
   },
 
   stringLiteralNotAllowedWhenStrict(): string {

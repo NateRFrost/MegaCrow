@@ -1,8 +1,8 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { type MouseEvent, useEffect, useState } from "react";
 import type { AppSettings } from "../lib/appSettings";
+import type { GametypeSaveFormat } from "../lib/gametypeSaveFormat";
 import { detectMccInstall, launchMcc } from "../lib/mccInstall";
-import type { GametypeSaveFormat } from "../lib/megaloShim";
 import { openDocs } from "../lib/openDocs";
 import { openExternalUrl } from "../lib/openExternalUrl";
 import { isTauriRuntime } from "../lib/tauriRuntime";

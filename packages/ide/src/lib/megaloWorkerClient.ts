@@ -5,23 +5,27 @@ import type {
 } from "../workers/megaloWorkerTypes";
 import type { SourceAnalysis } from "./analyzeSource";
 import { analyzeMegaloSource } from "./analyzeSource";
-import { encodeGvarBlfFromMglo } from "./encodeGvarBlfFromMglo";
+import {
+  compiledFileTypeForSaveFormat,
+  finalizeGametypeSaveBytes,
+  type GametypeSaveFormat,
+} from "./gametypeSaveFormat";
 import type { MegaloIncludeFileCache } from "./includeDiagnostics";
 import { megaloCompileOptionsFromCache } from "./includeDiagnostics";
+import {
+  compileGametypeForSave,
+  formatMegaloCompileTiming,
+  setCompileCreatorGamertag,
+  setCompileMegacrowExtensions,
+  setCompileMegaloVersion,
+  setCompileStrictStringLiterals,
+} from "./megaloCompile";
 import {
   applyCompilerSettings,
   type MegaCrowCompilerSettings,
   mergeMegaloCompileOptions,
 } from "./megaloCompilerSettings";
-import {
-  compileGametypeForSave,
-  formatMegaloCompileTiming,
-  type GametypeSaveFormat,
-  type MegaloProgram,
-  setCompileMegacrowExtensions,
-  setCompileStrictStringLiterals,
-  tryParse,
-} from "./megaloShim";
+import { type MegaloProgram, tryParse } from "./megaloProgram";
 import { type Workspace, workspaceContext } from "./workspace";
 
 export interface WorkerCompileContext {
@@ -45,22 +49,12 @@ function gametypeSaveFormatLabel(format: GametypeSaveFormat): string {
   }
 }
 
-function gametypeBytesForFormat(
-  mgloBytes: Uint8Array,
-  format: GametypeSaveFormat
-): Uint8Array {
-  if (format === "gvar") {
-    return encodeGvarBlfFromMglo(mgloBytes);
-  }
-  return mgloBytes;
-}
-
 type Listener = (response: MegaloWorkerResponse) => void;
 
 let worker: Worker | null = null;
 const listeners = new Set<Listener>();
 let currentCompilerSettings: MegaCrowCompilerSettings = {
-  creatorGamertag: "",
+  creatorGamertag: "MegaCrow",
   locale: "en",
   megacrowExtensions: {
     targetTeam: true,
@@ -95,7 +89,7 @@ const pendingCompileDownloads = new Map<
 
 const pendingCompletions = new Map<
   number,
-  { resolve: (value: import("./megaloShim").CompletionItem[]) => void }
+  { resolve: (value: import("@megacrow/megalo").CompletionItem[]) => void }
 >();
 
 /** Eagerly spawn the Megalo worker so first file open avoids cold-start latency. */
@@ -167,13 +161,19 @@ export function postMegaloWorker(message: MegaloWorkerRequest): boolean {
 }
 
 export function syncMegaloWorkspace(workspace: Workspace | null): void {
+  setCompileMegaloVersion(workspace?.megaloVersion ?? "107-mcc");
   postMegaloWorker({
     kind: "setWorkspace",
     workspace: workspace ? workspaceContext(workspace) : null,
   });
-  void import("./lspClient").then(({ lspConfigureResolveContext }) => {
-    lspConfigureResolveContext({ workspace });
-  });
+  void import("./lspClient").then(
+    ({ lspConfigureResolveContext, lspSetMegaloVersion }) => {
+      lspConfigureResolveContext({ workspace });
+      if (workspace?.megaloVersion) {
+        void lspSetMegaloVersion(workspace.megaloVersion);
+      }
+    }
+  );
 }
 
 export function syncMegaloCompilerSettings(
@@ -183,6 +183,7 @@ export function syncMegaloCompilerSettings(
   applyCompilerSettings(compilerSettings);
   setCompileMegacrowExtensions(compilerSettings.megacrowExtensions);
   setCompileStrictStringLiterals(compilerSettings.strictStringLiterals);
+  setCompileCreatorGamertag(compilerSettings.creatorGamertag);
   postMegaloWorker({
     kind: "setCompilerSettings",
     compilerSettings,
@@ -256,6 +257,7 @@ async function runSourceOnlyCompileOnce(
   const diagnostics = result.diagnostics.map((d) => ({
     line: d.range.start.line + 1,
     column: d.range.start.character + 1,
+    endLine: d.range.end.line + 1,
     endColumn: d.range.end.character + 1,
     message: d.message,
     severity: d.severity === 1 ? ("error" as const) : ("warning" as const),
@@ -285,7 +287,7 @@ async function runSourceOnlyCompileOnce(
     message: formatMegaloCompileTiming(timing) || translate("status_compiled"),
     byteIdentical: null,
     byteDiffCount: null,
-    compiledByteLength: result.bytes.length,
+    compiledByteLength: result.variantByteLength ?? result.bytes.length,
     mgloBytes: result.bytes,
     compiledMetadata: result.metadata ?? null,
     compileTiming: timing,
@@ -469,8 +471,7 @@ async function compileDownloadFallback(
         currentCompilerSettings
       )
     );
-    const output =
-      format === "gvar" ? encodeGvarBlfFromMglo(compiled) : compiled;
+    const output = finalizeGametypeSaveBytes(compiled, format);
     const identical =
       format !== "mglo" &&
       format !== "asq" &&
@@ -492,7 +493,7 @@ async function compileDownloadFallback(
             }),
         byteIdentical: originalBytes ? identical : null,
         byteDiffCount: identical ? 0 : null,
-        compiledByteLength: output.length,
+        compiledByteLength: format === "mglo" ? output.length : null,
         mgloBytes: null,
         compileTiming: null,
         diagnostics: [],
@@ -527,12 +528,16 @@ export async function requestCompileDownloadInWorker(
   try {
     const { lspCompileSource } = await import("./lspClient");
     const started = performance.now();
-    const result = await lspCompileSource(source);
+    const result = await lspCompileSource(
+      source,
+      compiledFileTypeForSaveFormat(format)
+    );
     const totalMs = performance.now() - started;
     const timing = { parseMs: 0, compileMs: totalMs, totalMs };
     const diagnostics = result.diagnostics.map((d) => ({
       line: d.range.start.line + 1,
       column: d.range.start.character + 1,
+      endLine: d.range.end.line + 1,
       endColumn: d.range.end.character + 1,
       message: d.message,
       severity: d.severity === 1 ? ("error" as const) : ("warning" as const),
@@ -553,7 +558,7 @@ export async function requestCompileDownloadInWorker(
         },
       };
     }
-    const output = gametypeBytesForFormat(result.bytes, format);
+    const output = finalizeGametypeSaveBytes(result.bytes, format);
     return {
       output,
       analysis: {
@@ -564,8 +569,10 @@ export async function requestCompileDownloadInWorker(
         message: formatMegaloCompileTiming(timing),
         byteIdentical: null,
         byteDiffCount: null,
-        compiledByteLength: output.length,
-        mgloBytes: result.bytes,
+        compiledByteLength:
+          result.variantByteLength ??
+          (format === "mglo" ? result.bytes.length : null),
+        mgloBytes: format === "mglo" ? result.bytes : null,
         compiledMetadata: result.metadata ?? null,
         compileTiming: timing,
         diagnostics,
@@ -606,13 +613,19 @@ export async function requestCompileDownloadInWorker(
   if (!result.output) {
     return result;
   }
-  const output = gametypeBytesForFormat(result.output, format);
+  const output = finalizeGametypeSaveBytes(result.output, format);
   return {
     output,
     analysis: {
       ...result.analysis,
-      compiledByteLength: output.length,
-      mgloBytes: result.analysis.mgloBytes ?? result.output,
+      // Keep encoded-size meter on `.mglo` content; do not use BLF/ASQ length.
+      compiledByteLength:
+        result.analysis.compiledByteLength ??
+        (format === "mglo" ? output.length : null),
+      mgloBytes:
+        format === "mglo"
+          ? (result.analysis.mgloBytes ?? result.output)
+          : result.analysis.mgloBytes,
     },
   };
 }
@@ -623,7 +636,7 @@ export function requestCompletionsInWorker(
   source: string,
   line: number,
   column: number
-): Promise<import("./megaloShim").CompletionItem[]> {
+): Promise<import("@megacrow/megalo").CompletionItem[]> {
   const id = ++completionRequestId;
   const posted = postMegaloWorker({
     kind: "completions",

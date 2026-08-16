@@ -162,7 +162,17 @@ var megaloEnum = (members, allowedForVersion) => {
 };
 
 // ../megalo/src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions.ts
-var actionType = megaloEnum([
+var MCC_ONLY_ACTIONS = [
+  "begin",
+  "hs_function_call",
+  "get_button_time",
+  "team_set_vehicle_spawning",
+  "player_set_vehicle_spawning",
+  "set_player_respawn_vehicle",
+  "set_team_respawn_vehicle",
+  "hide_object"
+];
+var ACTION_TYPE_MEMBERS = [
   "set_score",
   "create_object",
   "delete_object",
@@ -269,7 +279,17 @@ var actionType = megaloEnum([
   "set_player_respawn_vehicle",
   "set_team_respawn_vehicle",
   "hide_object"
-]);
+];
+var actionType = megaloEnum(ACTION_TYPE_MEMBERS, (version2) => {
+  const all = new Set(ACTION_TYPE_MEMBERS);
+  if (version2.flavour === "mcc") {
+    return all;
+  }
+  for (const name of MCC_ONLY_ACTIONS) {
+    all.delete(name);
+  }
+  return all;
+});
 var ActionType = actionType.enum;
 var teamOrPlayerTarget = megaloEnum([
   "everyone",
@@ -277,7 +297,7 @@ var teamOrPlayerTarget = megaloEnum([
   "team"
 ]);
 var TeamOrPlayerTargetKind = teamOrPlayerTarget.enum;
-var mathOperation = megaloEnum([
+var MATH_OPERATION_MEMBERS = [
   "add",
   { name: "+=", aliasOf: "add" },
   "subtract",
@@ -304,7 +324,33 @@ var mathOperation = megaloEnum([
   { name: ">>", aliasOf: "rshift" },
   "abs"
   // no alias?
-]);
+];
+var MCC_ONLY_MATH_OPERATIONS = ["lshift", "rshift"];
+var mathOperation = megaloEnum(MATH_OPERATION_MEMBERS, (version2) => {
+  const canonical = [
+    "add",
+    "subtract",
+    "multiply",
+    "divide",
+    "set_to",
+    "modulo",
+    "and",
+    "or",
+    "xor",
+    "not",
+    "lshift",
+    "rshift",
+    "abs"
+  ];
+  const all = new Set(canonical);
+  if (version2.flavour === "mcc") {
+    return all;
+  }
+  for (const name of MCC_ONLY_MATH_OPERATIONS) {
+    all.delete(name);
+  }
+  return all;
+});
 var MathOperation = mathOperation.enum;
 var navpointPriority = megaloEnum([
   "low",
@@ -785,6 +831,8 @@ var en_default = {
   fireteam_count_out_of_range: "Fireteam count of {{value}} is outside the valid range of 0 to {{max}}",
   value_out_of_range_ignored: "{{name}} {{value}} is out of range {{min}} to {{max}} and will be ignored",
   unsupported_field: "'{{fieldPath}}' is not supported by {{versionLabel}}.",
+  unsupported_action: "Action '{{name}}' is not supported by {{versionLabel}}.",
+  unsupported_math_operation: "Math operation '{{name}}' is not supported by {{versionLabel}}.",
   only_one_base_directive_allowed: "Only one base directive is allowed",
   duplicate_declaration_name_ignored: "Duplicate {{kind}} name '{{name}}' will be ignored for name lookup (MegaloEdit uses the first declaration)",
   legacy_hud_widget_text_keyword: "Legacy 'text' prefix on hud_widgets entries is old syntax and will not compile with MegaloEdit",
@@ -805,11 +853,17 @@ var en_default = {
   megacrow_extension_required: "'{{sourceName}}' requires MegaCrow extension '{{extension}}' (not supported by MegaloEdit)",
   timer_rate_snapped: "Timer rate {{got}} is not a supported rate; using {{used}}",
   team_color_overrides_do_not_apply_in_mcc_menus: "team color overrides do not apply in the MCC menus, your chosen color will only be visible in-game",
-  version_label_107_mcc: "Halo: Reach - The Master Chief Collection",
-  version_label_107: "Halo: Reach - Title Update 1",
-  version_label_106: "Halo: Reach - Release",
-  version_label_73: "Halo: Reach - Beta",
-  version_label_49: "Halo: Reach - Alpha"
+  version_game_halo_reach: "Halo: Reach",
+  version_short_107_mcc: "MCC",
+  version_short_107: "TU 1",
+  version_short_106: "Release",
+  version_short_73: "Public Beta",
+  version_short_49: "Private Alpha",
+  version_full_107_mcc: "The Master Chief Collection",
+  version_full_107: "Title Update 1",
+  version_full_106: "Release",
+  version_full_73: "Public Beta",
+  version_full_49: "Private Alpha"
 };
 
 // ../megalo/src/localization/locales/ja.json
@@ -853,6 +907,8 @@ var ja_default = {
   fireteam_count_out_of_range: "fireteam_count {{value}} \u306F\u6709\u52B9\u7BC4\u56F2 0\uFF5E{{max}} \u306E\u5916\u3067\u3059",
   value_out_of_range_ignored: "{{name}} {{value}} \u306F\u7BC4\u56F2 {{min}}\uFF5E{{max}} \u306E\u5916\u306E\u305F\u3081\u7121\u8996\u3055\u308C\u307E\u3059",
   unsupported_field: "'{{fieldPath}}' \u306F {{versionLabel}} \u3067\u306F\u30B5\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u307E\u305B\u3093\u3002",
+  unsupported_action: "\u30A2\u30AF\u30B7\u30E7\u30F3 '{{name}}' \u306F {{versionLabel}} \u3067\u306F\u30B5\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u307E\u305B\u3093\u3002",
+  unsupported_math_operation: "\u7B97\u8853\u6F14\u7B97 '{{name}}' \u306F {{versionLabel}} \u3067\u306F\u30B5\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u307E\u305B\u3093\u3002",
   only_one_base_directive_allowed: "base \u30C7\u30A3\u30EC\u30AF\u30C6\u30A3\u30D6\u306F1\u3064\u3060\u3051\u8A31\u53EF\u3055\u308C\u3066\u3044\u307E\u3059",
   duplicate_declaration_name_ignored: "\u91CD\u8907\u3059\u308B {{kind}} \u540D '{{name}}' \u306F\u540D\u524D\u89E3\u6C7A\u3067\u306F\u7121\u8996\u3055\u308C\u307E\u3059\uFF08MegaloEdit \u306F\u6700\u521D\u306E\u5B9A\u7FA9\u3092\u4F7F\u7528\u3057\u307E\u3059\uFF09",
   legacy_hud_widget_text_keyword: "hud_widgets \u30A8\u30F3\u30C8\u30EA\u306E\u5148\u982D\u306B\u3042\u308B\u53E4\u3044 'text' \u63A5\u982D\u8F9E\u306F\u65E7\u69CB\u6587\u3067\u3059\u3002MegaloEdit \u3067\u306F\u30B3\u30F3\u30D1\u30A4\u30EB\u3067\u304D\u307E\u305B\u3093",
@@ -873,11 +929,17 @@ var ja_default = {
   megacrow_extension_required: "'{{sourceName}}' \u306B\u306F MegaCrow \u62E1\u5F35 '{{extension}}' \u304C\u5FC5\u8981\u3067\u3059\uFF08MegaloEdit \u3067\u306F\u672A\u5BFE\u5FDC\uFF09",
   timer_rate_snapped: "\u30BF\u30A4\u30DE\u30FC\u30EC\u30FC\u30C8 {{got}} \u306F\u30B5\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u307E\u305B\u3093\u3002{{used}} \u3092\u4F7F\u7528\u3057\u307E\u3059",
   team_color_overrides_do_not_apply_in_mcc_menus: "\u30C1\u30FC\u30E0\u30AB\u30E9\u30FC\u306E\u4E0A\u66F8\u304D\u306F MCC \u30E1\u30CB\u30E5\u30FC\u306B\u306F\u53CD\u6620\u3055\u308C\u307E\u305B\u3093\u3002\u9078\u629E\u3057\u305F\u8272\u306F\u30B2\u30FC\u30E0\u5185\u3067\u306E\u307F\u8868\u793A\u3055\u308C\u307E\u3059",
-  version_label_107_mcc: "Halo: Reach - Master Chief Collection",
-  version_label_107: "Halo: Reach - \u30BF\u30A4\u30C8\u30EB\u30A2\u30C3\u30D7\u30C7\u30FC\u30C81",
-  version_label_106: "Halo: Reach - \u88FD\u54C1\u7248",
-  version_label_73: "Halo: Reach - \u30D9\u30FC\u30BF",
-  version_label_49: "Halo: Reach - \u30A2\u30EB\u30D5\u30A1"
+  version_game_halo_reach: "Halo: Reach",
+  version_short_107_mcc: "MCC",
+  version_short_107: "TU 1",
+  version_short_106: "\u88FD\u54C1\u7248",
+  version_short_73: "\u30D1\u30D6\u30EA\u30C3\u30AF\u30D9\u30FC\u30BF",
+  version_short_49: "\u30D7\u30E9\u30A4\u30D9\u30FC\u30C8\u30A2\u30EB\u30D5\u30A1",
+  version_full_107_mcc: "Master Chief Collection",
+  version_full_107: "\u30BF\u30A4\u30C8\u30EB\u30A2\u30C3\u30D7\u30C7\u30FC\u30C81",
+  version_full_106: "\u88FD\u54C1\u7248",
+  version_full_73: "\u30D1\u30D6\u30EA\u30C3\u30AF\u30D9\u30FC\u30BF",
+  version_full_49: "\u30D7\u30E9\u30A4\u30D9\u30FC\u30C8\u30A2\u30EB\u30D5\u30A1"
 };
 
 // ../megalo/src/frontend/language-configuration/omni/strings.ts
@@ -1189,6 +1251,12 @@ var diagnosticMessages = {
   unsupportedDynamicStringReplacement(got) {
     return translate("unsupported_dynamic_string_replacement", { got });
   },
+  unsupportedAction(name, versionLabel) {
+    return translate("unsupported_action", { name, versionLabel });
+  },
+  unsupportedMathOperation(name, versionLabel) {
+    return translate("unsupported_math_operation", { name, versionLabel });
+  },
   stringLiteralNotAllowedWhenStrict() {
     return translate("string_literal_not_allowed_when_strict");
   },
@@ -1493,6 +1561,182 @@ var SymbolBinder = class {
   }
 };
 
+// ../megalo/src/backend/version-configuration/106/index.ts
+var VersionConfiguration106 = class _VersionConfiguration106 extends VersionConfiguration {
+  static PREGAME_ACTIONS = [
+    ActionType.set,
+    ActionType.for_each
+  ];
+  /** Reach object list tables under `object_lists/`. */
+  static OBJECT_LIST_NAMES = [
+    "objects.txt",
+    "weapons.txt",
+    "vehicles.txt",
+    "equipment.txt",
+    "grenades.txt",
+    "incidents.txt",
+    "loadouts.txt",
+    "hud_widget_icons.txt",
+    "weapon_sets.txt",
+    "vehicle_sets.txt",
+    "strings.txt"
+  ];
+  static VARIABLE_LIMITS = {
+    [0 /* Global */]: {
+      [1 /* Number */]: 12,
+      [0 /* Timer */]: 8,
+      [2 /* Team */]: 8,
+      [3 /* Player */]: 8,
+      [4 /* Object */]: 16
+    },
+    [1 /* Team */]: {
+      [1 /* Number */]: 8,
+      [0 /* Timer */]: 4,
+      [2 /* Team */]: 4,
+      [3 /* Player */]: 4,
+      [4 /* Object */]: 6
+    },
+    [2 /* Player */]: {
+      [1 /* Number */]: 8,
+      [0 /* Timer */]: 4,
+      [2 /* Team */]: 4,
+      [3 /* Player */]: 4,
+      [4 /* Object */]: 4
+    },
+    [3 /* Object */]: {
+      [1 /* Number */]: 8,
+      [0 /* Timer */]: 4,
+      [2 /* Team */]: 2,
+      [3 /* Player */]: 4,
+      [4 /* Object */]: 4
+    },
+    // 360 Release / TU1 have no dedicated temporary pool — temps always spill to globals.
+    [4 /* Temporary */]: {
+      [1 /* Number */]: 0,
+      [4 /* Object */]: 0,
+      [2 /* Team */]: 0,
+      [3 /* Player */]: 0
+    }
+  };
+  get limits() {
+    return {
+      variables: _VersionConfiguration106.VARIABLE_LIMITS,
+      objectsUsed: 2048,
+      triggers: 320,
+      conditions: 512,
+      actions: 1024,
+      userDefinedOptions: 16,
+      encodedSize: 20480,
+      strings: 112,
+      stringBytes: 19456,
+      hudWidgets: 4,
+      gameStatistics: 4,
+      objectFilters: 16,
+      loadouts: 32,
+      loadoutPalettes: 16,
+      // Requisition was cut before Reach shipped; MCC does not use palettes.
+      requisitionPalettes: 0,
+      playerTraitSets: 16,
+      teams: 8,
+      mapPermissionExceptions: 32
+    };
+  }
+  get objectListNames() {
+    return _VersionConfiguration106.OBJECT_LIST_NAMES;
+  }
+  get pregameActions() {
+    return _VersionConfiguration106.PREGAME_ACTIONS;
+  }
+};
+
+// ../megalo/src/backend/version-configuration/107/index.ts
+var VersionConfiguration107 = class _VersionConfiguration107 extends VersionConfiguration {
+  static PREGAME_ACTIONS = [
+    ActionType.set,
+    ActionType.for_each
+  ];
+  /** Reach object list tables under `object_lists/`. */
+  static OBJECT_LIST_NAMES = [
+    "objects.txt",
+    "weapons.txt",
+    "vehicles.txt",
+    "equipment.txt",
+    "grenades.txt",
+    "incidents.txt",
+    "loadouts.txt",
+    "hud_widget_icons.txt",
+    "weapon_sets.txt",
+    "vehicle_sets.txt",
+    "strings.txt"
+  ];
+  static VARIABLE_LIMITS = {
+    [0 /* Global */]: {
+      [1 /* Number */]: 12,
+      [0 /* Timer */]: 8,
+      [2 /* Team */]: 8,
+      [3 /* Player */]: 8,
+      [4 /* Object */]: 16
+    },
+    [1 /* Team */]: {
+      [1 /* Number */]: 8,
+      [0 /* Timer */]: 4,
+      [2 /* Team */]: 4,
+      [3 /* Player */]: 4,
+      [4 /* Object */]: 6
+    },
+    [2 /* Player */]: {
+      [1 /* Number */]: 8,
+      [0 /* Timer */]: 4,
+      [2 /* Team */]: 4,
+      [3 /* Player */]: 4,
+      [4 /* Object */]: 4
+    },
+    [3 /* Object */]: {
+      [1 /* Number */]: 8,
+      [0 /* Timer */]: 4,
+      [2 /* Team */]: 2,
+      [3 /* Player */]: 4,
+      [4 /* Object */]: 4
+    },
+    // 360 TU1 has no dedicated temporary pool — temps always spill to globals.
+    [4 /* Temporary */]: {
+      [1 /* Number */]: 0,
+      [4 /* Object */]: 0,
+      [2 /* Team */]: 0,
+      [3 /* Player */]: 0
+    }
+  };
+  get limits() {
+    return {
+      variables: _VersionConfiguration107.VARIABLE_LIMITS,
+      objectsUsed: 2048,
+      triggers: 320,
+      conditions: 512,
+      actions: 1024,
+      userDefinedOptions: 16,
+      encodedSize: 20480,
+      strings: 112,
+      stringBytes: 19456,
+      hudWidgets: 4,
+      gameStatistics: 4,
+      objectFilters: 16,
+      loadouts: 32,
+      loadoutPalettes: 16,
+      // Requisition was cut before Reach shipped; MCC does not use palettes.
+      requisitionPalettes: 0,
+      playerTraitSets: 16,
+      teams: 8,
+      mapPermissionExceptions: 32
+    };
+  }
+  get objectListNames() {
+    return _VersionConfiguration107.OBJECT_LIST_NAMES;
+  }
+  get pregameActions() {
+    return _VersionConfiguration107.PREGAME_ACTIONS;
+  }
+};
+
 // ../megalo/src/backend/version-configuration/107-mcc/index.ts
 var VersionConfiguration107MCC = class _VersionConfiguration107MCC extends VersionConfiguration {
   static PREGAME_ACTIONS = [
@@ -1592,9 +1836,11 @@ var getConfigurationForVersion = ({
         case "mcc":
           return new VersionConfiguration107MCC();
         default:
-          throw new Error(`Unsupported flavour: ${flavour}`);
+          return new VersionConfiguration107();
       }
     }
+    case 106:
+      return new VersionConfiguration106();
   }
   throw new Error(`Unsupported version: ${version2}`);
 };
@@ -7758,6 +8004,8 @@ var Parser = class {
         case 3 /* QuotedString */:
         case 4 /* Integer */:
         case 5 /* FloatingPoint */:
+        case 0 /* None */:
+        case 7 /* Operator */:
           ctx.diagnostics.addError(
             diagnosticMessages.expectedElement(token.value),
             token.location
@@ -7851,6 +8099,8 @@ var Parser = class {
         case 3 /* QuotedString */:
         case 4 /* Integer */:
         case 5 /* FloatingPoint */:
+        case 0 /* None */:
+        case 7 /* Operator */:
           ctx.diagnostics.addError(
             diagnosticMessages.expectedElement(token.value),
             token.location
@@ -9026,7 +9276,7 @@ var default_default = objectLists;
 
 // ../megalo/src/load-object-lists.ts
 var loadObjectListsForVersion = (version2) => {
-  if (version2.version === 107 && version2.flavour === "mcc") {
+  if (version2.version === 107 || version2.version === 106) {
     return default_default;
   }
   return {};

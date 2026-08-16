@@ -1,3 +1,4 @@
+import type { VariantLimitItem, VariantLimitUsage } from "@megacrow/megalo";
 import {
   useCallback,
   useEffect,
@@ -6,7 +7,6 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import type { VariantLimitItem, VariantLimitUsage } from "../lib/megaloShim";
 import {
   formatVariantBytes,
   variantCapacityLevel,

@@ -118,6 +118,8 @@ export class Parser {
         case TokenKind.QuotedString:
         case TokenKind.Integer:
         case TokenKind.FloatingPoint:
+        case TokenKind.None:
+        case TokenKind.Operator:
           ctx.diagnostics.addError(
             diagnosticMessages.expectedElement(token.value),
             token.location
@@ -237,6 +239,8 @@ export class Parser {
         case TokenKind.QuotedString:
         case TokenKind.Integer:
         case TokenKind.FloatingPoint:
+        case TokenKind.None:
+        case TokenKind.Operator:
           ctx.diagnostics.addError(
             diagnosticMessages.expectedElement(token.value),
             token.location

@@ -1,5 +1,8 @@
 import { getCompilerForVersion } from "src/backend/compile";
-import type { CompiledMegaloMetadata } from "src/backend/compile/compiler";
+import type {
+  CompiledMegaloFileType,
+  CompiledMegaloMetadata,
+} from "src/backend/compile/compiler";
 import { assertEncodedSize } from "src/backend/compile/diagnostics/assertEncodedSize";
 import type { CompilerSettings } from "src/compiler-settings";
 import { MegaloCompilerContext } from "src/context";
@@ -38,6 +41,11 @@ export type CompileProgressFn = (message: string) => void;
 export interface CompileSourceOptions {
   /** MegaloEdit-parity compiler knobs. */
   compilerSettings?: Partial<CompilerSettings>;
+  /**
+   * Output container: raw `.mglo`, full `mpvr` BLF, or matchmaking `gvar` BLF.
+   * Defaults to `mglo`.
+   */
+  fileType?: CompiledMegaloFileType;
   /** URI of the source document (for relative path resolution). */
   fromUri?: string;
   /** MegaCrow-only language extensions (defaults keep MegaloEdit parity). */
@@ -65,6 +73,11 @@ export interface CompileSourceResult {
   diagnostics: Diagnostic[];
   /** Present when compilation succeeded with no errors. */
   metadata?: CompiledMegaloMetadata;
+  /**
+   * Raw custom-variant bitstream length (`.mglo` content), not BLF framing /
+   * ASQ padding. Used for encoded-size limits and UI meters.
+   */
+  variantByteLength?: number;
 }
 
 export type ResolveBaseMgloFailureReason = "not_found" | "compile_failed";
@@ -362,8 +375,13 @@ export const compileFromAst = async (
 
     let data: Uint8Array;
     let metadata: CompiledMegaloMetadata;
+    let variantByteLength: number;
     try {
-      ({ data, metadata } = compiler.writeMegaloFile(ir, diagnostics));
+      ({ data, metadata, variantByteLength } = compiler.writeMegaloFile(
+        ir,
+        diagnostics,
+        { fileType: options.fileType ?? "mglo" }
+      ));
     } catch (error) {
       // Encode/write failures (incl. BLF) — size is the usual cause.
       if (!(error instanceof CompilerError)) {
@@ -381,7 +399,7 @@ export const compileFromAst = async (
       throw error;
     }
     assertEncodedSize(
-      data.length,
+      variantByteLength,
       frontend.versionConfiguration.limits.encodedSize,
       diagnostics
     );
@@ -390,6 +408,7 @@ export const compileFromAst = async (
       diagnostics: [...diagnostics.getErrors(), ...diagnostics.getWarnings()],
       bytes: ok ? data : undefined,
       metadata: ok ? metadata : undefined,
+      variantByteLength: ok ? variantByteLength : undefined,
     };
   } catch (error) {
     if (error instanceof CompilerError) {

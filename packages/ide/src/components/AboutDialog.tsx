@@ -1,6 +1,6 @@
+import { MEGACROW_BUILD_STRING } from "@megacrow/megalo";
 import { type MouseEvent, useEffect, useRef } from "react";
 import blfPackageJson from "../../../../node_modules/@blamnetwork/blf/package.json";
-import { MEGACROW_BUILD_STRING } from "../lib/megaloShim";
 import { openExternalUrl } from "../lib/openExternalUrl";
 import { useT } from "../localization";
 

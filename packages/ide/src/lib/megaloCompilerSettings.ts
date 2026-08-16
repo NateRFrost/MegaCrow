@@ -4,10 +4,8 @@ import {
   type MegacrowExtensions,
 } from "@megacrow/megalo";
 import type { AppSettings, CompilerProfile, UiLocale } from "./appSettings";
-import {
-  type MegaloCompileOptions,
-  normalizeCreatorGamertag,
-} from "./megaloShim";
+import { normalizeCreatorGamertag } from "./megaloCompile";
+import type { MegaloCompileOptions } from "./megaloIncludeScan";
 
 export interface MegaCrowCompilerSettings {
   creatorGamertag: string;
@@ -28,7 +26,7 @@ export function compilerSettingsFromApp(
   settings: AppSettings
 ): MegaCrowCompilerSettings {
   return {
-    creatorGamertag: normalizeCreatorGamertag(settings.gamertag),
+    creatorGamertag: normalizeCreatorGamertag(settings.gamertag) || "MegaCrow",
     locale: settings.locale,
     megacrowExtensions: megacrowExtensionsForProfile(settings.compilerProfile),
     strictStringLiterals: settings.compilerStrictness,
@@ -38,7 +36,7 @@ export function compilerSettingsFromApp(
 const DEFAULT_COMPILER_SETTINGS: MegaCrowCompilerSettings =
   compilerSettingsFromApp({
     discordRichPresence: true,
-    gamertag: "",
+    gamertag: "MegaCrow",
     compilerStrictness: false,
     compilerProfile: "megacrow",
     editorTheme: "megacrow-dark",
@@ -71,9 +69,10 @@ export function mergeMegaloCompileOptions(
   }
   return {
     ...options,
-    creatorGamertag: normalizeCreatorGamertag(
-      compilerSettings?.creatorGamertag ?? options?.creatorGamertag ?? ""
-    ),
+    creatorGamertag:
+      normalizeCreatorGamertag(
+        compilerSettings?.creatorGamertag ?? options?.creatorGamertag ?? ""
+      ) || "MegaCrow",
     strictStringLiterals:
       compilerSettings?.strictStringLiterals ??
       options?.strictStringLiterals ??

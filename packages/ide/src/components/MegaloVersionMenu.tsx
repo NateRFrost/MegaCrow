@@ -1,4 +1,10 @@
 import {
+  getGameName,
+  getShortDescription,
+  MEGALO_VERSIONS,
+  type MegaloVersionId,
+} from "@megacrow/megalo";
+import {
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -6,18 +12,16 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import {
-  getGameName,
-  getShortDescription,
-  MEGALO_VERSIONS,
-  type MegaloVersionId,
-} from "../lib/megaloShim";
 import { useT } from "../localization";
 
 const PANEL_WIDTH = 340;
 
 /** Versions selectable in the browser IDE (expand as support lands). */
-export const BROWSER_MEGALO_VERSIONS: readonly MegaloVersionId[] = ["107-mcc"];
+export const BROWSER_MEGALO_VERSIONS: readonly MegaloVersionId[] = [
+  "107-mcc",
+  "107",
+  "106",
+];
 
 interface Props {
   megaloVersion: MegaloVersionId;

@@ -63,6 +63,10 @@ fn default_locale() -> String {
   "en".to_string()
 }
 
+fn default_gamertag() -> String {
+  "MegaCrow".to_string()
+}
+
 impl Default for MegacrowSettings {
   fn default() -> Self {
     Self {
@@ -71,7 +75,7 @@ impl Default for MegacrowSettings {
       workspaces: Vec::new(),
       discord_rich_presence: true,
       mcc_hot_reload: true,
-      gamertag: String::new(),
+      gamertag: default_gamertag(),
       compiler_strictness: false,
       compiler_profile: default_compiler_profile(),
       editor_theme: default_editor_theme(),
@@ -225,5 +229,10 @@ mod tests {
     }"#;
     let settings: MegacrowSettings = serde_json::from_str(raw).expect("deserialize");
     assert!(settings.workspaces[0].output_path.is_none());
+  }
+
+  #[test]
+  fn default_gamertag_is_megacrow() {
+    assert_eq!(MegacrowSettings::default().gamertag, "MegaCrow");
   }
 }

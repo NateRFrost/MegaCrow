@@ -1,14 +1,15 @@
+import { isMegaloVersionId, type MegaloVersionId } from "@megacrow/megalo";
 import { invoke } from "@tauri-apps/api/core";
 import { normalizeEditorThemeId } from "../monaco/theme";
 import {
   type AppSettings,
   DEFAULT_APP_SETTINGS,
   normalizeCompilerProfile,
+  normalizeGametypeAuthor,
   normalizeUiLocale,
   readLocalAppSettings,
   writeLocalAppSettings,
 } from "./appSettings";
-import { isMegaloVersionId, type MegaloVersionId } from "./megaloShim";
 import {
   isOpfsSupported,
   workspaceInputPath,
@@ -86,9 +87,9 @@ export function mergeAppSettings(
     ...settings,
     ...patch,
     gamertag:
-      typeof patch.gamertag === "string"
-        ? patch.gamertag.slice(0, 16)
-        : settings.gamertag,
+      patch.gamertag === undefined
+        ? settings.gamertag
+        : normalizeGametypeAuthor(patch.gamertag),
     compilerProfile:
       patch.compilerProfile === undefined
         ? settings.compilerProfile
@@ -172,10 +173,7 @@ export function normalizeMegacrowSettings(
   const prefs = {
     discordRichPresence:
       raw?.discordRichPresence ?? DEFAULT_APP_SETTINGS.discordRichPresence,
-    gamertag:
-      typeof raw?.gamertag === "string"
-        ? raw.gamertag.slice(0, 16)
-        : DEFAULT_APP_SETTINGS.gamertag,
+    gamertag: normalizeGametypeAuthor(raw?.gamertag),
     compilerStrictness:
       raw?.compilerStrictness ?? DEFAULT_APP_SETTINGS.compilerStrictness,
     compilerProfile: normalizeCompilerProfile(raw?.compilerProfile),

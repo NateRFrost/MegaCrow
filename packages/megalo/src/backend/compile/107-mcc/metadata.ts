@@ -7,6 +7,7 @@ import {
   s_content_item_game_variant_metadata,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
 import { encodeGameEngineCategory } from "src/backend/compile/107-mcc/enums/e_game_engine_category";
+import { assignContentUniqueIds } from "src/backend/compile/contentUniqueIds";
 import type { IR } from "src/frontend/intermediate-representation";
 
 function applyHistory(
@@ -41,6 +42,7 @@ export const compileMetadata = (
   metadata.general.activity = e_gui_game_mode.multiplayer;
   metadata.general.game_mode = e_game_mode.multiplayer;
   metadata.general.game_engine_type = e_game_engine_type.megalogamengine;
+  assignContentUniqueIds(metadata.general);
 
   if (
     !(metadata.file_type_data instanceof s_content_item_game_variant_metadata)

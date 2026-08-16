@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import type { GametypeSaveFormat } from "../lib/megaloShim";
+import type { GametypeSaveFormat } from "../lib/gametypeSaveFormat";
 import { type IdeMessageKey, useT } from "../localization";
 import { DOCS_PATHS, DocsHelpButton } from "./DocsHelpButton";
 

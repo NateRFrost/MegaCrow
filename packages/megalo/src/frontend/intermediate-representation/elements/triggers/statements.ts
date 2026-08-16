@@ -28,6 +28,7 @@ import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   type Action,
   ActionType,
+  actionType,
   type BeginParameters,
   MathOperation,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
@@ -63,6 +64,7 @@ import {
   VariableScope,
   VariableType,
 } from "src/frontend/symbol-table";
+import { getLabel } from "src/version";
 
 export interface ActionScopeContext {
   appendTarget: AppendTarget;
@@ -185,6 +187,20 @@ export const lowerBegin = (
   statement: BeginStatementNode,
   scopeCtx: ActionScopeContext
 ): void => {
+  if (
+    !actionType
+      .supportedMembers(scopeCtx.ctx.frontend.megaloVersion)
+      .has(ActionType.begin)
+  ) {
+    throw new LowerError(
+      diagnosticMessages.unsupportedAction(
+        "begin",
+        getLabel(scopeCtx.ctx.frontend.megaloVersion)
+      ),
+      statement.location
+    );
+  }
+
   const { actions: maxActions } =
     scopeCtx.ctx.frontend.versionConfiguration.limits;
   if (

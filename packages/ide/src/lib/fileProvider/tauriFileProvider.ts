@@ -1,11 +1,11 @@
 import { readFile } from "@tauri-apps/plugin-fs";
 import { decodeTextFile } from "../decodeTextFile";
-import type { FileProvider } from "../megaloShim";
 import {
   isAbsoluteLogicalPath,
   joinLogicalPaths,
   normalizeLogicalPath,
 } from "./paths";
+import type { FileProvider } from "./types";
 
 export function createTauriFileProvider(): FileProvider {
   return {

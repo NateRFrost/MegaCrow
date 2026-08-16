@@ -4,7 +4,7 @@ import {
   findMegaloIncludeDirectives,
   sourceHasIncludeDirectives,
   tryExpandMegaloIncludes,
-} from "../lib/megaloShim";
+} from "../lib/megaloIncludeScan";
 import type { CliFilesystem } from "./filesystem";
 
 function storeCached(

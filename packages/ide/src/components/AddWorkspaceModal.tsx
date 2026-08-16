@@ -1,8 +1,13 @@
+import {
+  getLabel,
+  isMegaloVersionId,
+  MEGALO_VERSIONS,
+  type MegaloVersionId,
+} from "@megacrow/megalo";
 import { join } from "@tauri-apps/api/path";
 import { exists, readTextFile } from "@tauri-apps/plugin-fs";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { StoredWorkspace } from "../lib/megacrowSettings";
-import { getLabel, MEGALO_VERSIONS } from "../lib/megaloShim";
 import { pickTauriFolder } from "../lib/tauriDisk";
 import {
   guessHrekRootFromScripts,
@@ -10,9 +15,15 @@ import {
   parseProjectXmlDisplayName,
 } from "../lib/workspacePaths";
 import { useT } from "../localization";
+import { BROWSER_MEGALO_VERSIONS } from "./MegaloVersionMenu";
+
+/** Workspace versions with a real compile backend. */
+export const WORKSPACE_MEGALO_VERSIONS: readonly MegaloVersionId[] =
+  BROWSER_MEGALO_VERSIONS;
 
 export interface WorkspaceDraft {
   inputPath: string;
+  megaloVersion: MegaloVersionId;
   name: string;
   /** Empty string when the workspace has no build output folder. */
   outputPath: string;
@@ -37,6 +48,8 @@ export function AddWorkspaceModal({
   const t = useT();
   const nameRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState("");
+  const [megaloVersion, setMegaloVersion] =
+    useState<MegaloVersionId>("107-mcc");
   const [inputPath, setInputPath] = useState("");
   const [outputPath, setOutputPath] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +61,7 @@ export function AddWorkspaceModal({
       return;
     }
     setName(initialWorkspace?.name ?? "");
+    setMegaloVersion(initialWorkspace?.megaloVersion ?? "107-mcc");
     setInputPath(initialWorkspace?.inputPath ?? "");
     setOutputPath(initialWorkspace?.outputPath ?? "");
     setError(null);
@@ -145,6 +159,7 @@ export function AddWorkspaceModal({
     setError(null);
     onSave({
       name: trimmedName,
+      megaloVersion,
       inputPath: trimmedInput,
       outputPath: outputPath.trim(),
     });
@@ -222,12 +237,21 @@ export function AddWorkspaceModal({
 
           <label className="workspace-modal-field">
             <span>{t("workspace_modal_megalo_version")}</span>
-            <input
-              disabled
-              readOnly
-              type="text"
-              value={getLabel(MEGALO_VERSIONS["107-mcc"])}
-            />
+            <select
+              onChange={(event) => {
+                const value = event.target.value;
+                if (isMegaloVersionId(value)) {
+                  setMegaloVersion(value);
+                }
+              }}
+              value={megaloVersion}
+            >
+              {WORKSPACE_MEGALO_VERSIONS.map((id) => (
+                <option key={id} value={id}>
+                  {id} — {getLabel(MEGALO_VERSIONS[id])}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
 

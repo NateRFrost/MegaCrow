@@ -11,7 +11,7 @@ import {
   sourceHasIncludeDirectives,
   tryExpandMegaloIncludes,
   unresolvedIncludeErrors,
-} from "./megaloShim";
+} from "./megaloIncludeScan";
 import type { Workspace } from "./workspace";
 
 /** @deprecated Prefer workspace.inputPath from the active workspace. */

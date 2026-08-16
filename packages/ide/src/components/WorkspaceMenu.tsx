@@ -1,3 +1,4 @@
+import type { MegaloVersionId } from "@megacrow/megalo";
 import {
   useCallback,
   useEffect,
@@ -7,7 +8,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import type { StoredWorkspace } from "../lib/megacrowSettings";
-import { getVersionInfo, type MegaloVersionId } from "../lib/megaloShim";
+import { getVersionInfo } from "../lib/megaloVersionInfo";
 import type { Workspace } from "../lib/workspace";
 import { useT } from "../localization";
 import { DOCS_PATHS, DocsHelpButton } from "./DocsHelpButton";

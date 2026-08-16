@@ -14,12 +14,14 @@ import type { MegaloIncludeFileCache } from "./includeDiagnostics";
 import { megaloCompileOptionsFromCache } from "./includeDiagnostics";
 import {
   extractGvarFromBlf,
+  resolveStringSymbolFromProgram,
+} from "./megaloCompile";
+import { tryExpandMegaloIncludes } from "./megaloIncludeScan";
+import {
   type MegaloEngineData,
   type MegaloProgram,
-  resolveStringSymbolFromProgram,
-  tryExpandMegaloIncludes,
   tryParse,
-} from "./megaloShim";
+} from "./megaloProgram";
 import {
   isObjectListsPath,
   isRecognizedObjectListName,

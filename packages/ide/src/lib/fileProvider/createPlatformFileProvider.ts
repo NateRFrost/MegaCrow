@@ -1,9 +1,9 @@
-import type { FileProvider } from "../megaloShim";
 import { isOpfsSupported } from "../opfsStorage";
 import { isTauriRuntime } from "../tauriRuntime";
 import type { Workspace } from "../workspace";
 import { createOpfsFileProvider } from "./opfsFileProvider";
 import { createTauriFileProvider } from "./tauriFileProvider";
+import type { FileProvider } from "./types";
 
 /**
  * Platform FileProvider for Megalo includes and `base` resolution.

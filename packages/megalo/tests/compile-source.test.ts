@@ -752,3 +752,31 @@ describe("compileFromSnapshot", () => {
     ).toHaveLength(0);
   });
 });
+
+describe("compileSource unexpected tokens", () => {
+  it.each([
+    "fuck!",
+    "!!!",
+    "@",
+  ])("rejects top-level garbage %j", async (source) => {
+    const result = await compileSource(source, { version });
+    expect(result.bytes).toBeUndefined();
+    expect(
+      result.diagnostics.some(
+        (d) =>
+          d.severity === DiagnosticSeverity.Error &&
+          d.message.includes("Unrecognized element")
+      )
+    ).toBe(true);
+  });
+
+  it("still rejects unknown identifiers", async () => {
+    const result = await compileSource("fuck", { version });
+    expect(result.bytes).toBeUndefined();
+    expect(
+      result.diagnostics.some((d) =>
+        d.message.includes("Unrecognized element 'fuck'")
+      )
+    ).toBe(true);
+  });
+});

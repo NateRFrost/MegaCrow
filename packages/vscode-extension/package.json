@@ -73,6 +73,12 @@
           "default": false,
           "description": "Treat undeclared string literals as errors instead of warnings."
         },
+        "megacrow.gametypeAuthor": {
+          "type": "string",
+          "default": "MegaCrow",
+          "maxLength": 16,
+          "description": "Author name written into compiled gametype content metadata."
+        },
         "megacrow.megaloVersion": {
           "type": "string",
           "enum": [

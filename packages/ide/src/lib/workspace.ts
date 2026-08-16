@@ -1,9 +1,9 @@
+import type { MegaloVersionId } from "@megacrow/megalo";
 import {
   browserOpfsStoredWorkspace,
   isBrowserWorkspaceAvailable,
   type StoredWorkspace,
 } from "./megacrowSettings";
-import type { MegaloVersionId } from "./megaloShim";
 import { isTauriRuntime } from "./tauriRuntime";
 
 export type WorkspaceType = "opfs" | "tauri";

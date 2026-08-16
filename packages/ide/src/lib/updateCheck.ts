@@ -1,5 +1,5 @@
+import { MEGACROW_BUILD_STRING } from "@megacrow/megalo";
 import { isNewerBuild, parseBuildSeq } from "./buildString";
-import { MEGACROW_BUILD_STRING } from "./megaloShim";
 import { isTauriRuntime } from "./tauriRuntime";
 
 const GITHUB_REPO = "craftycodie/MegaCrow";

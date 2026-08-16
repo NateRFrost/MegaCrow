@@ -120,7 +120,10 @@ const syncServerSettings = async (
     }
   );
   await languageClient.sendNotification(MEGACROW_SET_COMPILER_SETTINGS_METHOD, {
-    compilerSettings: { strictStringLiterals },
+    compilerSettings: {
+      strictStringLiterals,
+      creatorGamertag: config.get<string>("gametypeAuthor", "MegaCrow"),
+    },
   });
   await languageClient.sendNotification(MEGACROW_SET_MEGALO_VERSION_METHOD, {
     megaloVersion,

@@ -52,11 +52,7 @@ const parseIdentifierInitialValue = (
   const valuePeek = ctx.peekToken();
   if (isMissingInitial(valuePeek)) {
     ctx.diagnostics.addError(
-      diagnosticMessages.expectedTokenKind(
-        TokenKind.Identifier,
-        valuePeek?.kind ?? TokenKind.None,
-        valuePeek?.value ?? ""
-      ),
+      diagnosticMessages.expectedVariableReference(valuePeek?.value || "end"),
       anchor.location
     );
     return {
@@ -174,88 +170,163 @@ const parseScope = (
   };
 };
 
+const missingEntryField = (
+  ctx: ParserContext,
+  expected: TokenKind,
+  anchor: Token
+): ASTErrorNode => {
+  const peek = ctx.peekToken();
+  ctx.diagnostics.addError(
+    diagnosticMessages.expectedTokenKind(
+      expected,
+      peek?.kind ?? TokenKind.None,
+      peek?.value ?? ""
+    ),
+    peek && !isMissingInitial(peek) ? peek.location : anchor.location
+  );
+  return {
+    kind: SyntaxKind.INVALID,
+    location: anchor.location,
+  };
+};
+
 const parseVariableEntry = (
   ctx: ParserContext,
   variableScope: ReturnType<typeof variableScopeFromName> | undefined
 ): VariableEntryNode => {
-  const networkToken = ctx.getToken();
+  const first = ctx.peekToken();
+  if (!first) {
+    const empty: SourceCodeLocation = {
+      type: SourceLocationType.SOURCE_CODE,
+      start: { localOffset: 0, absoluteOffset: 0, line: 1, column: 1 },
+      end: { localOffset: 0, absoluteOffset: 0, line: 1, column: 1 },
+    };
+    return {
+      network: { kind: SyntaxKind.INVALID, location: empty },
+      type: { kind: SyntaxKind.INVALID, location: empty },
+      name: { kind: SyntaxKind.INVALID, location: empty },
+      initial: { kind: SyntaxKind.INVALID, location: empty },
+      location: empty,
+    };
+  }
+
+  // `object foo none` — network omitted; default to local (MegaloEdit requires it).
+  const networkOmitted =
+    first.kind === TokenKind.Identifier && isVariableTypeName(first.value);
+
+  let networkToken = first;
   let network: VariableEntryNode["network"];
-  if (networkToken.kind === TokenKind.Identifier) {
+  if (networkOmitted) {
     network = {
-      value: networkToken.value,
-      location: networkToken.location,
+      value: "local",
+      location: first.location,
     };
   } else {
-    ctx.diagnostics.addError(
-      diagnosticMessages.expectedTokenKind(
-        TokenKind.Identifier,
-        networkToken.kind,
-        networkToken.value
-      ),
-      networkToken.location
-    );
-    network = {
-      kind: SyntaxKind.INVALID,
-      location: networkToken.location,
-    };
-  }
-
-  const typeToken = ctx.getToken();
-  let type: VariableEntryNode["type"];
-  if (
-    typeToken.kind === TokenKind.Identifier &&
-    isVariableTypeName(typeToken.value)
-  ) {
-    type = {
-      value: typeToken.value,
-      location: typeToken.location,
-    };
-  } else {
-    ctx.diagnostics.addError(
-      diagnosticMessages.expectedVariableType(typeToken.value),
-      typeToken.location
-    );
-    type = {
-      kind: SyntaxKind.INVALID,
-      location: typeToken.location,
-    };
-  }
-
-  const nameToken = ctx.getToken();
-  let name: VariableEntryNode["name"];
-  if (nameToken.kind === TokenKind.Identifier) {
-    name = {
-      value: nameToken.value,
-      location: nameToken.location,
-    };
-
-    if (!isAstErrorNode(type) && variableScope !== undefined) {
-      ctx.symbolParser.addVariableToScope({
-        name: nameToken.value,
-        type: variableTypeFromName(type.value),
-        declaration: nameToken.location,
-        scope: variableScope,
-      });
+    networkToken = ctx.getToken();
+    if (networkToken.kind === TokenKind.Identifier) {
+      network = {
+        value: networkToken.value,
+        location: networkToken.location,
+      };
+    } else {
+      ctx.diagnostics.addError(
+        diagnosticMessages.expectedTokenKind(
+          TokenKind.Identifier,
+          networkToken.kind,
+          networkToken.value
+        ),
+        networkToken.location
+      );
+      network = {
+        kind: SyntaxKind.INVALID,
+        location: networkToken.location,
+      };
     }
-  } else {
-    ctx.diagnostics.addError(
-      diagnosticMessages.expectedTokenKind(
-        TokenKind.Identifier,
-        nameToken.kind,
-        nameToken.value
-      ),
-      nameToken.location
-    );
-    name = {
-      kind: SyntaxKind.INVALID,
-      location: nameToken.location,
-    };
   }
 
+  const typePeek = ctx.peekToken();
+  let typeToken = networkToken;
+  let type: VariableEntryNode["type"];
+  if (isMissingInitial(typePeek)) {
+    type = missingEntryField(ctx, TokenKind.Identifier, networkToken);
+  } else {
+    typeToken = ctx.getToken();
+    if (
+      typeToken.kind === TokenKind.Identifier &&
+      isVariableTypeName(typeToken.value)
+    ) {
+      type = {
+        value: typeToken.value,
+        location: typeToken.location,
+      };
+    } else {
+      ctx.diagnostics.addError(
+        diagnosticMessages.expectedVariableType(typeToken.value),
+        typeToken.location
+      );
+      type = {
+        kind: SyntaxKind.INVALID,
+        location: typeToken.location,
+      };
+    }
+  }
+
+  const namePeek = ctx.peekToken();
+  let nameToken = typeToken;
+  let name: VariableEntryNode["name"];
+  const afterName = ctx.peekToken(1);
+  const nameLooksLikeVariableNamedEnd =
+    !isAstErrorNode(type) &&
+    namePeek?.kind === TokenKind.Identifier &&
+    namePeek.value === "end" &&
+    afterName !== undefined &&
+    (isNumericVariableType(type.value)
+      ? afterName.kind === TokenKind.Integer ||
+        afterName.kind === TokenKind.Identifier
+      : afterName.kind === TokenKind.Identifier && afterName.value !== "end");
+
+  if (
+    !namePeek ||
+    (isMissingInitial(namePeek) && !nameLooksLikeVariableNamedEnd)
+  ) {
+    name = missingEntryField(ctx, TokenKind.Identifier, typeToken);
+  } else {
+    nameToken = ctx.getToken();
+    if (nameToken.kind === TokenKind.Identifier) {
+      name = {
+        value: nameToken.value,
+        location: nameToken.location,
+      };
+
+      if (!isAstErrorNode(type) && variableScope !== undefined) {
+        ctx.symbolParser.addVariableToScope({
+          name: nameToken.value,
+          type: variableTypeFromName(type.value),
+          declaration: nameToken.location,
+          scope: variableScope,
+        });
+      }
+    } else {
+      ctx.diagnostics.addError(
+        diagnosticMessages.expectedTokenKind(
+          TokenKind.Identifier,
+          nameToken.kind,
+          nameToken.value
+        ),
+        nameToken.location
+      );
+      name = {
+        kind: SyntaxKind.INVALID,
+        location: nameToken.location,
+      };
+    }
+  }
+
+  const initialAnchor = isAstErrorNode(name) ? typeToken : nameToken;
   const initial =
     !isAstErrorNode(type) && isNumericVariableType(type.value)
-      ? parseIntegerInitialValue(ctx, nameToken)
-      : parseIdentifierInitialValue(ctx, nameToken);
+      ? parseIntegerInitialValue(ctx, initialAnchor)
+      : parseIdentifierInitialValue(ctx, initialAnchor);
 
   return {
     network,
@@ -293,9 +364,14 @@ export const variablesParser = (
       break;
     }
 
+    const indexBefore = ctx.mark();
     const entry = parseVariableEntry(ctx, variableScope);
     if (hasValidScope) {
       entries.push(entry);
+    }
+    // Avoid infinite loops if an entry fails to consume tokens.
+    if (ctx.mark() === indexBefore && ctx.hasMore()) {
+      ctx.getToken();
     }
   }
 

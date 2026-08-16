@@ -40,7 +40,10 @@ export const isInsidePregameTrigger = (
 export const suggestActionNames = (
   ctx: ActionNameCompletionContext
 ): CompletionItem[] => {
-  let names = actionType.names.filter((name) => !actionType.isDeprecated(name));
+  const supported = actionType.supportedMembers(ctx.snapshot.version);
+  let names = actionType.names.filter(
+    (name) => !actionType.isDeprecated(name) && supported.has(name)
+  );
   if (isInsidePregameTrigger(ctx.snapshot, ctx.offset)) {
     const allowed = new Set<string>(
       getConfigurationForVersion(ctx.snapshot.version).pregameActions

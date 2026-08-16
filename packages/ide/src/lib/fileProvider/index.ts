@@ -6,3 +6,4 @@ export {
   normalizeLogicalPath,
 } from "./paths";
 export { createTauriFileProvider } from "./tauriFileProvider";
+export type { FileProvider } from "./types";

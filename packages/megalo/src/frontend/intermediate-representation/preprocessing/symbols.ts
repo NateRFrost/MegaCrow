@@ -219,19 +219,20 @@ export const buildVariableSlotMap = (
   assignTemporariesByLifetime(temporariesByType, slotTable);
 
   // If there are too many temporaries, they spill over into any unused global slots.
-  // For pre-107-mcc, there are no temporary slots, all of them spill into globals.
-  if (
-    frontend.compilerSettings
-      .temporaryVariablesCanOverflowIntoUnusedGlobalVariables
-  ) {
-    for (const type of VARIABLE_TYPES) {
-      // MegaloEdit: temps beyond the dedicated pool spill into free global
-      // metadata slots. Wire refs for overflowed slots use Global* / GlobalNumber.
-      const temporaryLimit = limits[VariableScope.Temporary][type];
-      const globalLimit = limits[VariableScope.Global][type];
-      if (temporaryLimit !== undefined && globalLimit !== undefined) {
-        overflowTemporaries(slotTable, type, temporaryLimit, globalLimit);
-      }
+  // When the temporary pool limit is 0 (pre-MCC), always spill regardless of settings.
+  for (const type of VARIABLE_TYPES) {
+    const temporaryLimit = limits[VariableScope.Temporary][type];
+    const globalLimit = limits[VariableScope.Global][type];
+    if (temporaryLimit === undefined || globalLimit === undefined) {
+      continue;
+    }
+    const forceOverflow = temporaryLimit === 0;
+    if (
+      forceOverflow ||
+      frontend.compilerSettings
+        .temporaryVariablesCanOverflowIntoUnusedGlobalVariables
+    ) {
+      overflowTemporaries(slotTable, type, temporaryLimit, globalLimit);
     }
   }
 

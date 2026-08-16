@@ -13,6 +13,107 @@ export function isPathInWorkspaceInput(
   return file === root || file.startsWith(`${root}\\`);
 }
 
+function stripTrailingSeparators(path: string): string {
+  return path.replace(/\\/g, "/").replace(/\/+$/, "");
+}
+
+function withNativeSeparators(path: string, sample: string): string {
+  return sample.includes("\\") ? path.replace(/\//g, "\\") : path;
+}
+
+/**
+ * If input/output match an Editing Kit layout, return the kit root.
+ * Does not check `project.root` on disk — see {@link getEditingKitRoot}.
+ *
+ * Layout:
+ * - input:  `<root>/data/multiplayer/megalo`
+ * - output: `<root>/maps/megalo`
+ */
+export function guessEditingKitRootFromWorkspacePaths(
+  inputPath: string,
+  outputPath: string | null | undefined
+): string | undefined {
+  if (!outputPath?.trim()) {
+    return;
+  }
+  const input = stripTrailingSeparators(inputPath);
+  const output = stripTrailingSeparators(outputPath);
+  const inputMarker = "/data/multiplayer/megalo";
+  const outputMarker = "/maps/megalo";
+  const inputLower = input.toLowerCase();
+  const outputLower = output.toLowerCase();
+  const inputIndex = inputLower.lastIndexOf(inputMarker);
+  const outputIndex = outputLower.lastIndexOf(outputMarker);
+  if (
+    inputIndex < 0 ||
+    inputIndex + inputMarker.length !== inputLower.length ||
+    outputIndex < 0 ||
+    outputIndex + outputMarker.length !== outputLower.length
+  ) {
+    return;
+  }
+  const inputRoot = input.slice(0, inputIndex);
+  const outputRoot = output.slice(0, outputIndex);
+  if (normalizePathKey(inputRoot) !== normalizePathKey(outputRoot)) {
+    return;
+  }
+  return withNativeSeparators(inputRoot, inputPath);
+}
+
+/** `<root>/tool.exe` when `root` is an Editing Kit root. */
+export function editingKitToolExePath(editingKitRoot: string): string {
+  const root = stripTrailingSeparators(editingKitRoot);
+  return withNativeSeparators(`${root}/tool.exe`, editingKitRoot);
+}
+
+/** `<root>/project.root` when `root` is an Editing Kit root. */
+export function editingKitProjectRootPath(editingKitRoot: string): string {
+  const root = stripTrailingSeparators(editingKitRoot);
+  return withNativeSeparators(`${root}/project.root`, editingKitRoot);
+}
+
+/**
+ * Editing Kit root when input/output match the HREK layout and
+ * `<root>/project.root` exists; otherwise `undefined`.
+ */
+export async function getEditingKitRoot(
+  inputPath: string,
+  outputPath: string | null | undefined
+): Promise<string | undefined> {
+  const root = guessEditingKitRootFromWorkspacePaths(inputPath, outputPath);
+  if (!root) {
+    return;
+  }
+  try {
+    const { exists } = await import("@tauri-apps/plugin-fs");
+    if (!(await exists(editingKitProjectRootPath(root)))) {
+      return;
+    }
+  } catch {
+    return;
+  }
+  return root;
+}
+
+/** True on desktop Windows when `<root>/tool.exe` exists. */
+export async function canRegenerateObjectListsWithTool(
+  editingKitRoot: string
+): Promise<boolean> {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+  const isWindows = /Win/i.test(navigator.platform || navigator.userAgent);
+  if (!isWindows) {
+    return false;
+  }
+  try {
+    const { exists } = await import("@tauri-apps/plugin-fs");
+    return await exists(editingKitToolExePath(editingKitRoot));
+  } catch {
+    return false;
+  }
+}
+
 /** If scripts path is .../data/multiplayer/megalo, suggest sibling maps/megalo. */
 export function guessOutputPathFromScripts(scriptsPath: string): string | null {
   const normalized = scriptsPath.replace(/\\/g, "/").replace(/\/+$/, "");

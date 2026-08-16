@@ -330,6 +330,37 @@ end
     });
   });
 
+  it("parses an empty nested base_player_traits override body", () => {
+    const source = `game_options
+\toverride base_player_traits
+\t\t
+\tend
+end
+`;
+
+    const { ast, diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+
+    const element = ast.elements[0]!;
+    if (element.elementKind !== ElementKind.GAME_OPTIONS) {
+      throw new Error("expected game_options");
+    }
+
+    const entry = element.entries[0];
+    if (entry?.kind !== GameOptionEntryKind.OVERRIDE) {
+      throw new Error("expected override entry");
+    }
+    expect(entry.name).toMatchObject({
+      kind: "player_traits_override",
+      option: "base_player_traits",
+    });
+    expect(entry.value).toMatchObject({
+      kind: OverrideValueKind.NESTED,
+      body: { options: [] },
+    });
+  });
+
   it("parses weapon_set and vehicle_set as simple overrides", () => {
     const source = `game_options
 \toverride weapon_set none

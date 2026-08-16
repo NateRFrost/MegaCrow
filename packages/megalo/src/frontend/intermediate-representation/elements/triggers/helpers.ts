@@ -22,6 +22,7 @@ import {
   asParameterLoweringContext,
   type ElementLowerContext,
 } from "src/frontend/intermediate-representation/parameters/context";
+import { getLabel } from "src/version";
 
 export const requireParamCount = (
   parameters: ASTParameterNode[],
@@ -166,13 +167,25 @@ export const parseTeamOrPlayerTarget = (
 
 export const parseMathOperation = (
   node: ASTParameterNode,
-  location: SourceCodeLocation
+  location: SourceCodeLocation,
+  ctx: ElementLowerContext
 ): MathOperation => {
   const name = requireKeyword(node, location).toLowerCase();
   const operation = mathOperation.parse(name);
   if (operation === undefined) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType("math operation", name),
+      node.location
+    );
+  }
+  if (
+    !mathOperation.supportedMembers(ctx.frontend.megaloVersion).has(operation)
+  ) {
+    throw new LowerError(
+      diagnosticMessages.unsupportedMathOperation(
+        name,
+        getLabel(ctx.frontend.megaloVersion)
+      ),
       node.location
     );
   }

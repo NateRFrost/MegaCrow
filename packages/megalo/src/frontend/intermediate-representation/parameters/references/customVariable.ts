@@ -410,7 +410,7 @@ const tryNamedScopedNumber = (
   return;
 };
 
-/** `.score`, `.user_data`, `.player_score` / money / rating. */
+/** `.score`, `.money`, `.rating`, `.user_data` (MegaloEdit member names). */
 const tryBuiltinMember = (
   ctx: ParameterLoweringContext,
   base: string,
@@ -438,20 +438,15 @@ const tryBuiltinMember = (
   }
 
   if (
-    member === "player_score" ||
-    member === "player_money" ||
-    member === "player_rating" ||
-    member === "rating"
+    (member === "money" || member === "rating") &&
+    isPlayerReferenceBase(ctx, base)
   ) {
     const player = resolveExplicitPlayerForBase(
       ctx,
       base,
       resolvedBaseVariable
     );
-    if (member === "player_score") {
-      return { type: CustomVariableType.PlayerScore, player };
-    }
-    if (member === "player_money") {
+    if (member === "money") {
       return { type: CustomVariableType.PlayerMoney, player };
     }
     return { type: CustomVariableType.PlayerRating, player };

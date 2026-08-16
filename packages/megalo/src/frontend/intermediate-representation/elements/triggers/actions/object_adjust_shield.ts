@@ -33,7 +33,7 @@ const lowerVitalityAdjustment = (
     type,
     parameters: {
       object: resolveObjectReference(parameters[0]!, paramCtx),
-      operation: parseMathOperation(parameters[1]!, location),
+      operation: parseMathOperation(parameters[1]!, location, ctx),
       amount: resolveCustomVariableReference(parameters[2]!, paramCtx),
     },
   };

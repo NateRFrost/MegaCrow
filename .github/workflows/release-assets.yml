@@ -8,7 +8,7 @@
 # Uploaded:
 #   - Tauri installers (.msi, .exe, .dmg, .deb, .rpm, .AppImage, .app.tar.gz, …)
 #   - VS Code .vsix
-#   - Web dist as megacrow-web.zip (too many files to attach individually)
+# Web dist is not attached (Pages deploy handles it).
 
 name: Release assets
 
@@ -130,7 +130,7 @@ jobs:
           # --- Tauri installers (unique names via artifact folder prefix) ---
           is_installer() {
             case "$1" in
-              *.msi|*.exe|*.dmg|*.deb|*.rpm|*.AppImage|*.app.tar.gz|*.tar.gz|*.apk)
+              *.msi|*.exe|*.dmg|*.deb|*.rpm|*.AppImage|*.app.tar.gz|*.apk)
                 return 0
                 ;;
               *)
@@ -157,11 +157,7 @@ jobs:
             done < <(find "$dir" -type f -print0)
           done
 
-          # --- Web: single zip (too many files for individual assets) ---
-          if [[ -d artifacts/megacrow-web ]] && [[ -f artifacts/megacrow-web/index.html ]]; then
-            (cd artifacts/megacrow-web && zip -qr ../../upload/megacrow-web.zip .)
-            echo "Queued megacrow-web.zip ($(du -sh upload/megacrow-web.zip | cut -f1))"
-          fi
+          # --- Web dist is published via Pages; do not attach megacrow-web.zip ---
 
           count=$(find upload -type f | wc -l | tr -d ' ')
           echo "asset_count=$count" >> "$GITHUB_OUTPUT"

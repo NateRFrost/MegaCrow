@@ -103,14 +103,8 @@ const parseOverrideName = (
   };
 };
 
-const isNestedPlayerTraitsOverride = (
-  ctx: ParserContext,
-  name: OverrideNameNode,
-  peek: Token | undefined
-): boolean =>
-  name.kind === "player_traits_override" &&
-  peek?.kind === TokenKind.Identifier &&
-  ctx.playerTraitParserRepository.getParser(peek.value) !== undefined;
+const isNestedPlayerTraitsOverride = (name: OverrideNameNode): boolean =>
+  name.kind === "player_traits_override";
 
 const missingOperandAfter = (
   ctx: ParserContext,
@@ -279,7 +273,7 @@ export const overrideParser = (
 
   if (name.kind === "loadout_palette") {
     value = parseLoadoutPaletteOverrideValue(ctx, name.location);
-  } else if (isNestedPlayerTraitsOverride(ctx, name, peek)) {
+  } else if (isNestedPlayerTraitsOverride(name)) {
     const body = parsePlayerTraitOptions(ctx, nameToken);
     value = {
       kind: OverrideValueKind.NESTED,

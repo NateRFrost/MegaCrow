@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import type { SourceAnalysis } from "../lib/analyzeSource";
 import { buildVariantIdentity } from "../lib/gametypeMetadata";
 import type { MegaloIncludeFileCache } from "../lib/includeDiagnostics";
-import type { MegaloProgram } from "../lib/megaloShim";
+import type { MegaloProgram } from "../lib/megaloProgram";
 import { useIdeLocale, useT } from "../localization";
 
 interface Props {

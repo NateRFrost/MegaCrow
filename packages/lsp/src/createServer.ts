@@ -53,7 +53,6 @@ import {
   type MegacrowSetObjectListsParams,
   type MegacrowSetResolveBaseFileParams,
   type MegacrowVersionConfigurationResult,
-  parseDiagnosticsFromSnapshot,
   pathCompletionsFromEntries,
   requestArtifactsFromSnapshot,
   SEMANTIC_TOKENS_LEGEND,
@@ -250,7 +249,7 @@ export const startMegacrowLanguageServer = (connection: Connection): void => {
     return await refreshSnapshot(uri, doc.getText(), doc.version);
   };
 
-  /** Lex+parse once on sync; publish parse diagnostics only (full compile is debounced). */
+  /** Lex+parse, then compile for diagnostics (coalesced via drainPublish). */
   const publishFor = async (
     uri: string,
     text: string,
@@ -265,9 +264,23 @@ export const startMegacrowLanguageServer = (connection: Connection): void => {
     if (!doc || doc.version !== version) {
       return;
     }
+    const artifacts = await requestArtifactsFromSnapshot(entry.snapshot, {
+      artifacts: ["diagnostics"],
+      documentVersion: version,
+      fromUri: uri,
+      objectLists: workspaceObjectLists,
+      resolvers: createResolvers(),
+    });
+    if (epoch !== sessionEpoch) {
+      return;
+    }
+    const latest = documents.get(uri);
+    if (!latest || latest.version !== version) {
+      return;
+    }
     connection.sendDiagnostics({
       uri,
-      diagnostics: parseDiagnosticsFromSnapshot(entry.snapshot),
+      diagnostics: artifacts.diagnostics ?? [],
     });
   };
 

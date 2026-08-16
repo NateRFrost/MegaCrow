@@ -1,5 +1,12 @@
 import type { ObjectLists } from "@megacrow/megalo";
-import { MEGALO_VERSIONS, setLocale } from "@megacrow/megalo";
+import {
+  computeVariantLimitUsage,
+  MEGACROW_BUILD_STRING,
+  MEGACROW_SHOW_WATERMARK,
+  MEGALO_VERSIONS,
+  type MegaloVersionId,
+  setLocale,
+} from "@megacrow/megalo";
 import {
   type CSSProperties,
   startTransition,
@@ -46,6 +53,7 @@ import {
 } from "./lib/fileNavigation";
 import { installFileNavShortcuts } from "./lib/fileNavShortcuts";
 import { createPlatformFileProvider } from "./lib/fileProvider";
+import type { GametypeSaveFormat } from "./lib/gametypeSaveFormat";
 import {
   includeCompileFailureAnalysis,
   type MegaloIncludeFileCache,
@@ -73,15 +81,7 @@ import {
 } from "./lib/megacrowSettings";
 import { compilerSettingsFromApp } from "./lib/megaloCompilerSettings";
 import type { MegaloIncludeRoot } from "./lib/megaloIncludes";
-import {
-  computeVariantLimitUsage,
-  type GametypeSaveFormat,
-  MEGACROW_BUILD_STRING,
-  MEGACROW_SHOW_WATERMARK,
-  type MegaloProgram,
-  type MegaloVersionId,
-  tryParse,
-} from "./lib/megaloShim";
+import { type MegaloProgram, tryParse } from "./lib/megaloProgram";
 import {
   initMegaloWorkerContext,
   postMegaloWorker,
@@ -136,7 +136,6 @@ import { workspaceUnexpectedFailure } from "./lib/workspaceBase";
 import { prepareWorkspaceCompileContext } from "./lib/workspaceCompileContext";
 import { materializeObjectListsOnFirstSave } from "./lib/workspaceObjectLists";
 import { IdeLocaleProvider, setIdeLocale, translate } from "./localization";
-import type { MegaloHoverContext } from "./monaco/megalo-language";
 import {
   setMegaloDefinitionOpenHandler,
   setMegaloPathOpenHandler,
@@ -408,6 +407,29 @@ export function App() {
     syncMegaloWorkspace(activeWorkspace);
   }, [activeWorkspace]);
 
+  // Keep LSP + object lists on the workspace Megalo version (not the 107-mcc default).
+  useEffect(() => {
+    const version = activeWorkspace?.megaloVersion;
+    if (!version) {
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        await lspSetMegaloVersion(version);
+        const config = await lspVersionConfiguration();
+        if (!cancelled) {
+          setObjectListNames(config.objectListNames);
+        }
+      } catch (error) {
+        console.error("Failed to sync Megalo version to LSP:", error);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeWorkspace?.megaloVersion]);
+
   // Workspace changes must drop file history (back/forward starts fresh).
   const activeWorkspaceId = activeWorkspace?.id ?? null;
   const fileNavWorkspaceIdRef = useRef<string | null>(activeWorkspaceId);
@@ -441,6 +463,7 @@ export function App() {
         void lspSetMegacrowExtensions(compilerSettings.megacrowExtensions);
         void lspSetCompilerSettings({
           strictStringLiterals: compilerSettings.strictStringLiterals,
+          creatorGamertag: compilerSettings.creatorGamertag,
         });
       }
     );
@@ -642,7 +665,19 @@ export function App() {
       if (!activeWorkspace || activeWorkspace.megaloVersion === version) {
         return;
       }
-      applyWorkspace({ ...activeWorkspace, megaloVersion: version });
+      const nextWorkspace = { ...activeWorkspace, megaloVersion: version };
+      applyWorkspace(nextWorkspace);
+      if (megacrowSettings) {
+        const next: MegacrowSettings = {
+          ...megacrowSettings,
+          workspaces: megacrowSettings.workspaces.map((workspace) =>
+            workspace.id === activeWorkspace.id
+              ? { ...workspace, megaloVersion: version }
+              : workspace
+          ),
+        };
+        void commitSettings(next, nextWorkspace);
+      }
       try {
         await lspSetMegaloVersion(version);
         const config = await lspVersionConfiguration();
@@ -651,7 +686,7 @@ export function App() {
         console.error("Failed to switch Megalo version:", error);
       }
     },
-    [activeWorkspace, applyWorkspace]
+    [activeWorkspace, applyWorkspace, commitSettings, megacrowSettings]
   );
 
   const handleDeleteWorkspace = useCallback(
@@ -687,7 +722,12 @@ export function App() {
   );
 
   const handleSaveWorkspace = useCallback(
-    (draft: { name: string; inputPath: string; outputPath: string }) => {
+    (draft: {
+      name: string;
+      inputPath: string;
+      outputPath: string;
+      megaloVersion: MegaloVersionId;
+    }) => {
       const base = megacrowSettings ?? defaultMegacrowSettings();
       const nextOutputPath = draft.outputPath.trim() || null;
       const editingId = editingWorkspaceId;
@@ -706,6 +746,7 @@ export function App() {
           updated = {
             ...workspace,
             name: draft.name,
+            megaloVersion: draft.megaloVersion,
             inputPath: draft.inputPath,
             outputPath: nextOutputPath,
             lastOpenFilePath:
@@ -742,7 +783,7 @@ export function App() {
       const stored: StoredWorkspace = {
         id: createWorkspaceId(),
         name: draft.name,
-        megaloVersion: "107-mcc",
+        megaloVersion: draft.megaloVersion,
         inputPath: draft.inputPath,
         outputPath: nextOutputPath,
         lastOpenFilePath: null,
@@ -1432,7 +1473,10 @@ export function App() {
             downloadName
           );
           if (saveResult.saved) {
-            setCompiledSize(output.length);
+            setCompiledSize(
+              analysis.compiledByteLength ??
+                (format === "mglo" ? output.length : null)
+            );
             setAnalysis({
               ...analysis,
               message: saveResult.path
@@ -1528,8 +1572,13 @@ export function App() {
       }
 
       try {
-        await writeBuildOutputsToWorkspace(activeWorkspace, fileName, output);
-        setCompiledSize(output.length);
+        await writeBuildOutputsToWorkspace(
+          activeWorkspace,
+          fileName,
+          output,
+          megaloVersionId
+        );
+        setCompiledSize(analysis.compiledByteLength ?? output.length);
         setAnalysis({
           ...analysis,
           message: translate("status_built_outputs", {
@@ -1576,21 +1625,16 @@ export function App() {
     if (!outlineSource.trim()) {
       return null;
     }
-    return computeVariantLimitUsage(
-      outlineSource,
-      variantBytes,
-      megaloVersionId
-    );
+    try {
+      return computeVariantLimitUsage(outlineSource, {
+        version: MEGALO_VERSIONS[megaloVersionId],
+        usedBytes: variantBytes,
+      });
+    } catch (error) {
+      console.error("Failed to compute variant limit usage:", error);
+      return null;
+    }
   }, [outlineSource, variantBytes, megaloVersionId]);
-
-  const editorHoverContext = useMemo(
-    (): MegaloHoverContext => ({
-      baseProgram,
-      baselineSource,
-      includeCache: includeFileCache,
-    }),
-    [baseProgram, baselineSource, includeFileCache]
-  );
 
   useEffect(() => {
     setMegaloPathOpenHandler(async ({ kind, path }) => {
@@ -1844,7 +1888,6 @@ export function App() {
                   documentContent={documentContent}
                   editorTheme={settings.editorTheme}
                   editorWordWrap={settings.editorWordWrap}
-                  hoverContext={editorHoverContext}
                   onCompileDebounced={
                     isObjectListDocumentOpen
                       ? handleObjectListAnalyzeDebounced

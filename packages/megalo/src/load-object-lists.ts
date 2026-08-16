@@ -6,7 +6,7 @@ import type { SupportedMegaloVersion } from "src/version";
 export const loadObjectListsForVersion = (
   version: SupportedMegaloVersion
 ): ObjectLists => {
-  if (version.version === 107 && version.flavour === "mcc") {
+  if (version.version === 107 || version.version === 106) {
     return objectListsHaloReachMccDefault;
   }
   return {};

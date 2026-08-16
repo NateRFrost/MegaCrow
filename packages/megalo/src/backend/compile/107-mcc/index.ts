@@ -1,11 +1,8 @@
-import { bitstream } from "@blamnetwork/blf";
 import {
   c_game_engine_custom_variant,
   c_string_table,
   e_game_engine_category,
 } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
-
-const { c_bitstream_writer, e_bitstream_byte_order } = bitstream;
 
 import { compileActions } from "src/backend/compile/107-mcc/actions";
 import { CAPABILITES_107_MCC } from "src/backend/compile/107-mcc/capabilities";
@@ -21,6 +18,7 @@ import { compileLoadoutPalettes } from "src/backend/compile/107-mcc/loadout_pale
 import { compileMapObjects } from "src/backend/compile/107-mcc/map_object";
 import { compileMapPermissions } from "src/backend/compile/107-mcc/map_permissions";
 import { compileMetadata } from "src/backend/compile/107-mcc/metadata";
+import { packCompiledVariant } from "src/backend/compile/107-mcc/pack";
 import { compilePlayerRatings } from "src/backend/compile/107-mcc/player_rating";
 import { compileTeams } from "src/backend/compile/107-mcc/teams";
 import { compileTriggers } from "src/backend/compile/107-mcc/triggers";
@@ -29,6 +27,8 @@ import {
   type CompiledMegaloMetadata,
   Compiler,
   EngineIcon,
+  type WriteMegaloFileOptions,
+  type WriteMegaloFileResult,
 } from "src/backend/compile/compiler";
 import {
   assertCompatibleIR,
@@ -355,8 +355,9 @@ export class Compiler107MCC extends Compiler {
 
   public writeMegaloFile(
     ir: IR,
-    diagnostics: Diagnostics
-  ): { data: Uint8Array; metadata: CompiledMegaloMetadata } {
+    diagnostics: Diagnostics,
+    options?: WriteMegaloFileOptions
+  ): WriteMegaloFileResult {
     const gametype = this.compile(ir, diagnostics);
     if (diagnostics.hasErrors()) {
       throw new CompilerError(
@@ -364,15 +365,10 @@ export class Compiler107MCC extends Compiler {
         UNKNOWN_LOCATION
       );
     }
-    const bitstreamWriter = c_bitstream_writer.new(
-      0,
-      e_bitstream_byte_order._bitstream_byte_order_big_endian
-    );
-    bitstreamWriter.begin_writing();
-    gametype.encode(bitstreamWriter);
-    bitstreamWriter.finish_writing();
+    const packed = packCompiledVariant(gametype, options?.fileType ?? "mglo");
     return {
-      data: bitstreamWriter.get_data(),
+      data: packed.data,
+      variantByteLength: packed.variantByteLength,
       metadata: this.getGametypeMetadata(gametype),
     };
   }

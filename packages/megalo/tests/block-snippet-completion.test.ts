@@ -95,6 +95,23 @@ end
     expect(lock?.insertAsSnippet).toBeFalsy();
   });
 
+  it("wraps override player-traits targets with end and body tabstop", async () => {
+    const source = `game_options
+\toverride 
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    const character =
+      source.split(/\n/)[1]!.indexOf("override ") + "override ".length;
+    const items = completionsAtPosition(snapshot, { line: 1, character });
+    const traits = items.find((entry) => entry.label === "base_player_traits");
+    expect(traits).toBeDefined();
+    expectBlockSnippet(traits!, "base_player_traits");
+    const simple = items.find((entry) => entry.label === "teams_enabled");
+    expect(simple?.insertAsSnippet).toBeFalsy();
+    expect(simple?.insertText).toBe("teams_enabled ");
+  });
+
   it("wraps nested team inside teams", async () => {
     const source = `teams
 \t

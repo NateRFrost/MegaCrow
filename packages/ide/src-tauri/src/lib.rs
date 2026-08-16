@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 mod cli;
 mod clipboard_files;
 mod discord_rpc;
+mod editing_kit;
 mod mcc_install;
 mod settings;
 mod steam;
@@ -152,6 +153,7 @@ pub fn run() {
       load_megacrow_settings,
       save_megacrow_settings,
       discover_hrek_workspaces,
+      editing_kit::regenerate_object_lists_with_tool,
       clipboard_files::clipboard_write_files,
       cli::get_cli_args,
       cli::cli_log,

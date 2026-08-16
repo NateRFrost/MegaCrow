@@ -176,13 +176,7 @@ const builtinMembersFor = (
     type === ParameterType.Integer || type === ParameterType.Float;
   if (rootType === VariableType.Player) {
     if (wantsNumber) {
-      names.push(
-        "score",
-        "player_score",
-        "player_money",
-        "player_rating",
-        "rating"
-      );
+      names.push("score", "money", "rating");
     }
     if (type === ParameterType.Team) {
       names.push("team");
@@ -555,7 +549,7 @@ export const suggestEnum = (
   ctx: SuggestCtx,
   def:
     | MegaloEnumDef<string>
-    | Pick<MegaloEnumDef<string>, "names" | "isDeprecated">
+    | Pick<MegaloEnumDef<string>, "names" | "isDeprecated" | "supportedMembers">
     | readonly string[]
 ): CompletionItem[] => {
   let names: readonly string[];
@@ -563,9 +557,18 @@ export const suggestEnum = (
     names = def;
   } else if ("names" in def) {
     // Canonical members only — aliases parse but stay out of autocomplete.
-    names = def.names.filter(
-      (name) => !("isDeprecated" in def && def.isDeprecated?.(name))
-    );
+    names = def.names.filter((name) => {
+      if ("isDeprecated" in def && def.isDeprecated?.(name)) {
+        return false;
+      }
+      if (
+        "supportedMembers" in def &&
+        typeof def.supportedMembers === "function"
+      ) {
+        return def.supportedMembers(ctx.snapshot.version).has(name);
+      }
+      return true;
+    });
   } else {
     names = [];
   }

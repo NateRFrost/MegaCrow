@@ -3,8 +3,8 @@ import { createPlatformFileProvider } from "./fileProvider";
 import type {
   MegaloCompileOptions,
   MegaloIncludeError,
-  MegaloProgram,
-} from "./megaloShim";
+} from "./megaloIncludeScan";
+import type { MegaloProgram } from "./megaloProgram";
 import type { Workspace } from "./workspace";
 
 export interface MegaloIncludeFileCache {

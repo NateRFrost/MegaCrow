@@ -107,8 +107,12 @@ import { lowerTimerReset } from "src/frontend/intermediate-representation/elemen
 import { lowerTimerSetRate } from "src/frontend/intermediate-representation/elements/triggers/actions/timer_set_rate";
 import { lowerWeaponSetPickupPriority } from "src/frontend/intermediate-representation/elements/triggers/actions/weapon_set_pickup_priority";
 import { LowerError } from "src/frontend/intermediate-representation/error";
-import type { Action } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import {
+  type Action,
+  actionType,
+} from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
+import { getLabel } from "src/version";
 
 export type ActionLowerer = (
   parameters: ASTParameterNode[],
@@ -237,10 +241,24 @@ export const lowerActionStatement = (
   statement: ActionStatementNode,
   ctx: ElementLowerContext
 ): Action => {
-  const lowerer = ACTION_LOWERERS.get(statement.name.value);
+  const actionName = statement.name.value;
+  const canonical = actionType.parse(actionName);
+  if (
+    canonical !== undefined &&
+    !actionType.supportedMembers(ctx.frontend.megaloVersion).has(canonical)
+  ) {
+    throw new LowerError(
+      diagnosticMessages.unsupportedAction(
+        actionName,
+        getLabel(ctx.frontend.megaloVersion)
+      ),
+      statement.name.location
+    );
+  }
+  const lowerer = ACTION_LOWERERS.get(actionName);
   if (lowerer === undefined) {
     throw new LowerError(
-      diagnosticMessages.unknownAction(statement.name.value),
+      diagnosticMessages.unknownAction(actionName),
       statement.name.location
     );
   }

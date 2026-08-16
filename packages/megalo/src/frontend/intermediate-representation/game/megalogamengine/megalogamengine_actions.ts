@@ -17,7 +17,7 @@ import {
   megaloEnum,
 } from "src/frontend/intermediate-representation/megaloEnum";
 
-export const actionType = megaloEnum([
+const ACTION_TYPE_MEMBERS = [
   "set_score",
   "create_object",
   "delete_object",
@@ -124,7 +124,123 @@ export const actionType = megaloEnum([
   "set_player_respawn_vehicle",
   "set_team_respawn_vehicle",
   "hide_object",
-] as const);
+] as const;
+
+export const actionType = megaloEnum(ACTION_TYPE_MEMBERS, (version) => {
+  const supported = new Set<(typeof ACTION_TYPE_MEMBERS)[number]>([
+    "set_score",
+    "create_object",
+    "delete_object",
+    "navpoint_set_visible",
+    "navpoint_set_icon",
+    "navpoint_set_priority",
+    "navpoint_set_timer",
+    "navpoint_set_visible_range",
+    "set",
+    "set_boundary",
+    "apply_player_traits",
+    "set_pickup_filter",
+    "set_respawn_filter",
+    "set_fireteam_respawn_filter",
+    "set_progress_bar",
+    "hud_post_message",
+    "timer_set_rate",
+    "print_variable",
+    "get_player_holding_object",
+    "for_each",
+    "end_round",
+    "boundary_set_visible",
+    "object_destroy",
+    "object_set_invincibility",
+    "random",
+    "break_into_debugger",
+    "object_get_orientation",
+    "object_get_velocity",
+    "player_death_get_killing_player",
+    "player_death_get_damage_type",
+    "player_death_get_special_type",
+    "debugging_enable_tracing",
+    "object_attach",
+    "object_detach",
+    "player_get_place",
+    "team_get_place",
+    "player_get_killing_spree_count",
+    "player_adjust_money",
+    "player_enable_purchases",
+    "player_get_vehicle",
+    "player_set_vehicle",
+    "player_set_unit",
+    "timer_reset",
+    "weapon_set_pickup_priority",
+    "object_bounce",
+    "hud_widget_set_text",
+    "hud_widget_set_value",
+    "hud_widget_set_meter",
+    "hud_widget_set_icon",
+    "hud_widget_set_visibility",
+    "play_sound",
+    "object_set_scale",
+    "navpoint_set_text",
+    "object_get_shield",
+    "object_get_health",
+    "player_set_objective",
+    "player_set_objective_allegiance",
+    "player_set_objective_allegiance_icon",
+    "team_set_coop_spawning",
+    "team_set_primary_respawn_object",
+    "player_set_primary_respawn_object",
+    "player_get_fireteam_index",
+    "player_set_fireteam_index",
+    "object_adjust_shield",
+    "object_adjust_health",
+    "object_get_distance",
+    "object_adjust_maximum_shield",
+    "object_adjust_maximum_health",
+    "player_set_requisition_palette",
+    "device_set_power",
+    "device_get_power",
+    "device_set_position",
+    "device_get_position",
+    "adjust_grenades",
+    "submit_incident",
+    "submit_incident_with_custom_value",
+    "set_loadout_palette",
+    "device_set_position_track",
+    "device_animate_position",
+    "device_set_position_immediate",
+    "saved_film_insert_marker",
+    "respawn_zone_enable",
+    "player_get_weapon",
+    "player_get_equipment",
+    "object_set_never_garbage",
+    "player_get_target_object",
+    "create_tunnel",
+    "debug_force_player_view_count",
+    "player_pick_up_weapon",
+    "player_set_coop_spawning",
+    "object_set_orientation",
+    "object_face_object",
+    "biped_give_weapon",
+    "biped_drop_weapon",
+    "set_scenario_interpolator_state",
+    "get_random_object",
+    "game_grief_record_custom_penalty",
+    "boundary_set_player_color",
+  ]);
+
+  if (version.version === 107 && version.flavour === "mcc") {
+    supported.add("begin");
+    supported.add("hs_function_call");
+    supported.add("get_button_time");
+    supported.add("team_set_vehicle_spawning");
+    supported.add("player_set_vehicle_spawning");
+    supported.add("set_player_respawn_vehicle");
+    supported.add("set_team_respawn_vehicle");
+    supported.add("hide_object");
+  }
+
+  return supported;
+});
 export const ActionType = actionType.enum;
 export type ActionType = MegaloEnumNames<typeof actionType>;
 
@@ -146,7 +262,7 @@ export type TeamOrPlayerTarget =
   | { type: typeof TeamOrPlayerTargetKind.player; player: PlayerReference }
   | { type: typeof TeamOrPlayerTargetKind.team; team: TeamReference };
 
-export const mathOperation = megaloEnum([
+const MATH_OPERATION_MEMBERS = [
   "add",
   { name: "+=", aliasOf: "add" },
   "subtract",
@@ -172,7 +288,44 @@ export const mathOperation = megaloEnum([
   "rshift",
   { name: ">>", aliasOf: "rshift" },
   "abs", // no alias?
-] as const);
+] as const;
+
+export const mathOperation = megaloEnum(MATH_OPERATION_MEMBERS, (version) => {
+  const supported = new Set<
+    | "add"
+    | "subtract"
+    | "multiply"
+    | "divide"
+    | "set_to"
+    | "modulo"
+    | "and"
+    | "or"
+    | "xor"
+    | "not"
+    | "lshift"
+    | "rshift"
+    | "abs"
+  >([
+    "add",
+    "subtract",
+    "multiply",
+    "divide",
+    "set_to",
+    "modulo",
+    "and",
+    "or",
+    "xor",
+    "not",
+    "abs",
+  ]);
+
+  if (version.version === 107 && version.flavour === "mcc") {
+    supported.add("lshift");
+    supported.add("rshift");
+  }
+
+  return supported;
+});
 export const MathOperation = mathOperation.enum;
 export type MathOperation = MegaloEnumNames<typeof mathOperation>;
 

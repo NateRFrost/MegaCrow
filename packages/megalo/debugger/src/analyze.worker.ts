@@ -329,7 +329,7 @@ const saveGametype = (request: SaveGametypeRequest): SaveGametypeResponse => {
         diagnostics: [...diagnostics.getErrors(), ...diagnostics.getWarnings()],
       };
     }
-    const bytes = compiler.writeMegaloFile(ir, diagnostics);
+    const { data: bytes } = compiler.writeMegaloFile(ir, diagnostics);
     const data = bytes.buffer.slice(
       bytes.byteOffset,
       bytes.byteOffset + bytes.byteLength

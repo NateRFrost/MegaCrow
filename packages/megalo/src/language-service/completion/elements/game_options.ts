@@ -15,10 +15,12 @@ import {
 import { loadoutPaletteType } from "src/frontend/intermediate-representation/game/megalogamengine/loadoutPaletteType";
 import {
   BUILT_IN_GAME_OPTION_NAMES,
+  isPlayerTraitsOverrideOption,
   PLAYER_TRAITS_OVERRIDE_OPTIONS,
 } from "src/frontend/language-configuration/omni/game_options";
 import {
   focusNamedPropertyAllowingEmptyValue,
+  isPastCompletedPropertyValue,
   isSameLineAs,
   type NamedPropertyLike,
 } from "src/language-service/completion/elements/property";
@@ -113,6 +115,15 @@ const OVERRIDE_NAMES = [
   "loadout_palette",
 ] as const;
 
+const suggestOverrideNames = (
+  ctx: ElementCompletionContext
+): CompletionItem[] =>
+  suggestKeywords(ctx, OVERRIDE_NAMES, "enumMember").map((entry) =>
+    isPlayerTraitsOverrideOption(entry.label)
+      ? withBlockEndSnippet(entry)
+      : withContinueCompletion(entry)
+  );
+
 const sameLineAfter = (
   ctx: ElementCompletionContext,
   property: NamedPropertyLike
@@ -171,6 +182,13 @@ const completeTraitOptions = (
   if (focus?.kind === "value") {
     return completeTraitValue(ctx, focus.key);
   }
+  if (
+    isPastCompletedPropertyValue(options, ctx.offset, (property) =>
+      sameLineAfter(ctx, property)
+    )
+  ) {
+    return [];
+  }
   return suggestKeywords(ctx, PLAYER_TRAIT_OPTION_NAMES, "property");
 };
 
@@ -202,7 +220,7 @@ export const completeGameOptions = (
         entry.name.kind !== SyntaxKind.INVALID &&
         offsetIn(entry.name.location, ctx.offset)
       ) {
-        return suggestKeywords(ctx, OVERRIDE_NAMES, "enumMember");
+        return suggestOverrideNames(ctx);
       }
 
       if (
@@ -295,7 +313,7 @@ export const completeGameOptions = (
           ctx.offset <= entry.name.location.end.localOffset ||
           isSameLineAs(ctx.snapshot, ctx.offset, entry.keywordLocation))
       ) {
-        return suggestKeywords(ctx, OVERRIDE_NAMES, "enumMember");
+        return suggestOverrideNames(ctx);
       }
     }
   }

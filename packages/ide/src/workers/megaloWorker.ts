@@ -1,10 +1,8 @@
-/**
- * Legacy worker kept for App compatibility. Compile uses @megacrow/megalo.
- */
 import {
   ALL_MEGACROW_EXTENSIONS,
   compileSource,
   DiagnosticSeverity,
+  isMegaloVersionId,
   MEGALO_VERSIONS,
   type ObjectLists,
   SourceLocationType,
@@ -14,12 +12,10 @@ import {
 import type { SourceAnalysis } from "../lib/analyzeSource";
 import type { MegaloIncludeFileCache } from "../lib/includeDiagnostics";
 import { resolveIncludeFromCache } from "../lib/includeDiagnostics";
+import { formatMegaloCompileTiming } from "../lib/megaloCompile";
 import type { MegaCrowCompilerSettings } from "../lib/megaloCompilerSettings";
-import {
-  formatMegaloCompileTiming,
-  type MegaloProgram,
-  tryParse,
-} from "../lib/megaloShim";
+import type { MegaloProgram } from "../lib/megaloProgram";
+import { tryParse } from "../lib/megaloProgram";
 import type { WorkspaceContext } from "../lib/workspace";
 import type {
   MegaloWorkerRequest,
@@ -32,11 +28,19 @@ let baselineSource: string | null = null;
 let _workspaceContext: WorkspaceContext | null = null;
 let workspaceObjectLists: ObjectLists | undefined;
 let _compilerSettings: MegaCrowCompilerSettings = {
-  creatorGamertag: "",
+  creatorGamertag: "MegaCrow",
   locale: "en",
   megacrowExtensions: ALL_MEGACROW_EXTENSIONS,
   strictStringLiterals: false,
 };
+
+function compileVersion() {
+  const id = _workspaceContext?.megaloVersion;
+  if (id && isMegaloVersionId(id)) {
+    return MEGALO_VERSIONS[id];
+  }
+  return MEGALO_VERSIONS["107-mcc"];
+}
 
 function compileResultToAnalysis(
   compileState: SourceAnalysis["compileState"],
@@ -44,7 +48,8 @@ function compileResultToAnalysis(
   diagnostics: SourceAnalysis["diagnostics"],
   bytes: Uint8Array | null = null,
   compileTiming: SourceAnalysis["compileTiming"] = null,
-  compiledMetadata: SourceAnalysis["compiledMetadata"] = null
+  compiledMetadata: SourceAnalysis["compiledMetadata"] = null,
+  variantByteLength: number | null = null
 ): SourceAnalysis {
   const errorCount = diagnostics.filter((d) => d.severity === "error").length;
   return {
@@ -53,7 +58,7 @@ function compileResultToAnalysis(
     message,
     byteIdentical: null,
     byteDiffCount: null,
-    compiledByteLength: bytes?.length ?? null,
+    compiledByteLength: variantByteLength ?? bytes?.length ?? null,
     mgloBytes: bytes,
     compiledMetadata,
     compileTiming,
@@ -64,6 +69,7 @@ function compileResultToAnalysis(
 async function compileToBytes(
   source: string,
   options?: {
+    fileType?: "mglo" | "mpvr" | "gvar";
     includeCache?: MegaloIncludeFileCache;
     resolvedBaseCustomVariantMgloBytes?: Uint8Array;
   }
@@ -72,15 +78,19 @@ async function compileToBytes(
   diagnostics: SourceAnalysis["diagnostics"];
   timing: SourceAnalysis["compileTiming"];
   metadata: SourceAnalysis["compiledMetadata"];
+  variantByteLength: number | null;
 }> {
   const includeCache = options?.includeCache;
   const baseBytes = options?.resolvedBaseCustomVariantMgloBytes;
   const started = performance.now();
   const result = await compileSource(source, {
-    version: MEGALO_VERSIONS["107-mcc"],
+    version: compileVersion(),
+    fileType: options?.fileType ?? "mglo",
     megacrowExtensions: _compilerSettings.megacrowExtensions,
     compilerSettings: {
       strictStringLiterals: _compilerSettings.strictStringLiterals,
+      creatorGamertag:
+        _compilerSettings.creatorGamertag.trim().slice(0, 16) || "MegaCrow",
     },
     objectLists: workspaceObjectLists,
     fromUri: includeCache?.sourceDir
@@ -108,6 +118,7 @@ async function compileToBytes(
         return {
           line: start.line,
           column: start.column,
+          endLine: end.line,
           endColumn: end.column,
           offset: start.localOffset,
           length: Math.max(0, end.localOffset - start.localOffset),
@@ -120,6 +131,7 @@ async function compileToBytes(
         return {
           line: start.line,
           column: start.column,
+          endLine: end.line,
           endColumn: end.column,
           offset: start.localOffset,
           length: Math.max(0, end.localOffset - start.localOffset),
@@ -140,6 +152,7 @@ async function compileToBytes(
     diagnostics,
     timing,
     metadata: result.metadata ?? null,
+    variantByteLength: result.variantByteLength ?? null,
   };
 }
 
@@ -171,14 +184,12 @@ async function handleMessage(message: MegaloWorkerRequest): Promise<void> {
     case "compile":
     case "parse": {
       const parsed = tryParse(message.source);
-      const { bytes, diagnostics, timing, metadata } = await compileToBytes(
-        message.source,
-        {
+      const { bytes, diagnostics, timing, metadata, variantByteLength } =
+        await compileToBytes(message.source, {
           includeCache: message.includeCache,
           resolvedBaseCustomVariantMgloBytes:
             message.resolvedBaseCustomVariantMgloBytes,
-        }
-      );
+        });
       const mergedDiagnostics = [
         ...(message.baseJitDiagnostics ?? []),
         ...diagnostics,
@@ -192,7 +203,8 @@ async function handleMessage(message: MegaloWorkerRequest): Promise<void> {
             mergedDiagnostics,
             bytes,
             timing,
-            metadata
+            metadata,
+            variantByteLength
           )
         : compileResultToAnalysis(
             "error",
@@ -238,14 +250,17 @@ async function handleMessage(message: MegaloWorkerRequest): Promise<void> {
     }
 
     case "compileDownload": {
-      const { bytes, diagnostics, timing, metadata } = await compileToBytes(
-        message.source,
-        {
+      const { compiledFileTypeForSaveFormat } = await import(
+        "../lib/gametypeSaveFormat"
+      );
+      const fileType = compiledFileTypeForSaveFormat(message.format);
+      const { bytes, diagnostics, timing, metadata, variantByteLength } =
+        await compileToBytes(message.source, {
+          fileType,
           includeCache: message.includeCache,
           resolvedBaseCustomVariantMgloBytes:
             message.resolvedBaseCustomVariantMgloBytes,
-        }
-      );
+        });
       if (!bytes) {
         self.postMessage({
           kind: "compileDownload",
@@ -261,18 +276,20 @@ async function handleMessage(message: MegaloWorkerRequest): Promise<void> {
         } satisfies MegaloWorkerResponse);
         break;
       }
+      const analysis = compileResultToAnalysis(
+        diagnostics.some((d) => d.severity === "warning") ? "warn" : "ok",
+        formatMegaloCompileTiming(timing),
+        diagnostics,
+        fileType === "mglo" ? bytes : null,
+        timing,
+        metadata,
+        variantByteLength
+      );
       self.postMessage({
         kind: "compileDownload",
         id: message.id,
         output: bytes,
-        analysis: compileResultToAnalysis(
-          diagnostics.some((d) => d.severity === "warning") ? "warn" : "ok",
-          formatMegaloCompileTiming(timing),
-          diagnostics,
-          bytes,
-          timing,
-          metadata
-        ),
+        analysis,
       } satisfies MegaloWorkerResponse);
       break;
     }

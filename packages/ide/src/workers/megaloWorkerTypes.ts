@@ -1,12 +1,10 @@
+import type { CompletionItem } from "@megacrow/megalo";
 import type { SourceAnalysis } from "../lib/analyzeSource";
 import type { MegaloDiagnostic } from "../lib/diagnostics";
+import type { GametypeSaveFormat } from "../lib/gametypeSaveFormat";
 import type { MegaloIncludeFileCache } from "../lib/includeDiagnostics";
 import type { MegaCrowCompilerSettings } from "../lib/megaloCompilerSettings";
-import type {
-  CompletionItem,
-  GametypeSaveFormat,
-  MegaloProgram,
-} from "../lib/megaloShim";
+import type { MegaloProgram } from "../lib/megaloProgram";
 import type { WorkspaceContext } from "../lib/workspace";
 
 interface BaseResolveFields {

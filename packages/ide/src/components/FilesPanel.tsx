@@ -1,3 +1,4 @@
+import type { MegaloVersionId } from "@megacrow/megalo";
 import {
   type MouseEvent,
   useCallback,
@@ -20,7 +21,6 @@ import {
 } from "../lib/localFolder";
 import type { StoredWorkspace } from "../lib/megacrowSettings";
 import type { MegaloIncludeRoot } from "../lib/megaloIncludes";
-import type { MegaloVersionId } from "../lib/megaloShim";
 import { isObjectListsPath } from "../lib/objectListsPath";
 import {
   createOpfsGametype,
@@ -34,6 +34,7 @@ import {
   readOpfsGametypeSource,
   renameOpfsGametype,
 } from "../lib/opfsStorage";
+import { regenerateObjectListsWithTool } from "../lib/regenerateObjectLists";
 import { revealInFileManager } from "../lib/revealInFileManager";
 import {
   flattenSourceFileNodes,
@@ -70,8 +71,13 @@ import {
   objectListsFolderIsEmpty,
   withObjectListsFolder,
 } from "../lib/workspaceObjectLists";
+import {
+  canRegenerateObjectListsWithTool,
+  getEditingKitRoot,
+} from "../lib/workspacePaths";
 import { useT } from "../localization";
 import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
+import { ConfirmRegenerateObjectListsDialog } from "./ConfirmRegenerateObjectListsDialog";
 import { ConfirmReplaceDialog } from "./ConfirmReplaceDialog";
 import {
   FilesContextMenu,
@@ -273,6 +279,11 @@ export function FilesPanel({
     targetKind: "file" | "directory";
     toParentPath: string[];
   } | null>(null);
+  const [pendingRegenerateObjectLists, setPendingRegenerateObjectLists] =
+    useState(false);
+  const [editingKitRoot, setEditingKitRoot] = useState<string | undefined>();
+  const [canRegenerateObjectLists, setCanRegenerateObjectLists] =
+    useState(false);
   const [renamingPathKey, setRenamingPathKey] = useState<string | null>(null);
   const [ensureExpandedKeys, setEnsureExpandedKeys] = useState<string[]>([]);
   const [pastePayload, setPastePayload] = useState<FileClipboardPayload | null>(
@@ -317,6 +328,33 @@ export function FilesPanel({
     workspace?.type === "tauri" && workspace.outputPath?.trim()
       ? workspace.outputPath.trim()
       : null;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!(tauriAvailable && localRootPath && outputPath)) {
+      setEditingKitRoot(undefined);
+      setCanRegenerateObjectLists(false);
+      return;
+    }
+    void (async () => {
+      const root = await getEditingKitRoot(localRootPath, outputPath);
+      if (cancelled) {
+        return;
+      }
+      setEditingKitRoot(root);
+      if (!root) {
+        setCanRegenerateObjectLists(false);
+        return;
+      }
+      const can = await canRegenerateObjectListsWithTool(root);
+      if (!cancelled) {
+        setCanRegenerateObjectLists(can);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [tauriAvailable, localRootPath, outputPath]);
 
   const refreshOpfs = useCallback(async () => {
     if (!opfsAvailable) {
@@ -624,7 +662,6 @@ export function FilesPanel({
         setOpfsError(null);
         const name = await duplicateOpfsGametype(payload.name);
         await refreshOpfs();
-        setRenamingPathKey(pathKey([name]));
         await openOpfsFile(name);
       } catch (error) {
         setOpfsError(String(error));
@@ -748,6 +785,36 @@ export function FilesPanel({
     },
     [localRoot, openLocalFile, refreshLocal]
   );
+
+  const runRegenerateObjectLists = useCallback(async () => {
+    if (!(localRoot && editingKitRoot)) {
+      return;
+    }
+    try {
+      setLocalError(null);
+      const objectListsDir = await resolveSystemMegaloFilePath(localRoot, [
+        "object_lists",
+      ]);
+      await regenerateObjectListsWithTool(editingKitRoot, objectListsDir);
+      await refreshLocal();
+      if (activeFileName && isObjectListsPath(activeFileName)) {
+        const path = activeFileName
+          .replace(/\\/g, "/")
+          .split("/")
+          .filter((segment) => segment.length > 0);
+        if (path.length > 0) {
+          const absoluteFilePath = await resolveSystemMegaloFilePath(
+            localRoot,
+            path
+          );
+          const text = await readSystemMegaloFile(localRoot, path);
+          onOpenSource(text, formatLocalDiskPath(path), { absoluteFilePath });
+        }
+      }
+    } catch (error) {
+      setLocalError(String(error));
+    }
+  }, [activeFileName, editingKitRoot, localRoot, onOpenSource, refreshLocal]);
 
   const createLocalFolder = useCallback(
     async (parentSegments: string[] = []) => {
@@ -932,7 +999,6 @@ export function FilesPanel({
         );
         setEnsureExpandedKeys(expandKeys);
         await refreshLocal();
-        setRenamingPathKey(pathKey(createdPath));
         await openLocalFile(createdPath);
       } catch (error) {
         setLocalError(String(error));
@@ -1215,6 +1281,14 @@ export function FilesPanel({
                         void moveLocalEntries(fromPaths, toParentPath)
                       }
                       onOpenFile={(path) => void openLocalFile(path)}
+                      onRegenerateObjectLists={
+                        canRegenerateObjectLists
+                          ? () => setPendingRegenerateObjectLists(true)
+                          : undefined
+                      }
+                      regenerateObjectListsLabel={t(
+                        "files_regenerate_object_lists"
+                      )}
                       renamingPathKey={renamingPathKey}
                     />
                   )}
@@ -1440,8 +1514,10 @@ export function FilesPanel({
           }
         }}
         onPaste={(target, source) => {
+          // Capture before onClose clears pastePayload.
+          const payloadSnapshot = pastePayload;
           void (async () => {
-            const payload = (await readFileClipboard()) ?? pastePayload;
+            const payload = (await readFileClipboard()) ?? payloadSnapshot;
             if (!payload || payload.source !== source) {
               return;
             }
@@ -1547,6 +1623,15 @@ export function FilesPanel({
             ? "mixed"
             : (pendingDelete?.targets[0]?.type ?? "file")
         }
+      />
+
+      <ConfirmRegenerateObjectListsDialog
+        onCancel={() => setPendingRegenerateObjectLists(false)}
+        onConfirm={() => {
+          setPendingRegenerateObjectLists(false);
+          void runRegenerateObjectLists();
+        }}
+        open={pendingRegenerateObjectLists}
       />
 
       <ConfirmReplaceDialog

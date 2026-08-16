@@ -1,4 +1,5 @@
 import type { SourceCodeLocation } from "src/diagnostics";
+import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import { slotIndexForParameters } from "src/language-service/completion/context";
 import { offsetToPosition } from "src/language-service/position";
@@ -30,6 +31,33 @@ const containsOffset = (
 ): boolean =>
   offset >= location.start.localOffset && offset <= location.end.localOffset;
 
+/** Quoted values keep an exclusive end so a caret after `"` is past the token. */
+const isQuotedValueParameter = (param: ASTParameterNode): boolean =>
+  param.kind === SyntaxKind.QUOTED_STRING ||
+  param.kind === SyntaxKind.DYNAMIC_STRING;
+
+/**
+ * Whether `offset` is still editing a property's value span.
+ * Bare identifiers include the exclusive end (typing caret sits there);
+ * quoted strings do not (caret after closing `"` is finished).
+ */
+const offsetInValueSpan = (
+  parameters: readonly ASTParameterNode[],
+  offset: number
+): boolean => {
+  const first = parameters[0]!;
+  const last = parameters.at(-1)!;
+  const valueStart = first.location.start.localOffset;
+  const valueEnd = last.location.end.localOffset;
+  if (offset < valueStart) {
+    return false;
+  }
+  if (isQuotedValueParameter(last)) {
+    return offset < valueEnd;
+  }
+  return offset <= valueEnd;
+};
+
 /**
  * Resolve whether the cursor is on a property key or inside its value slots.
  */
@@ -40,15 +68,11 @@ export const focusNamedProperty = (
   for (const property of properties) {
     if (property.parameters.length > 0) {
       const first = property.parameters[0]!;
-      const last = property.parameters.at(-1)!;
       const valueStart = first.location.start.localOffset;
-      const valueEnd = last.location.end.localOffset;
       if (offset > property.location.end.localOffset && offset < valueStart) {
         return { kind: "value", key: property.identifier, slotIndex: 0 };
       }
-      // `end` is exclusive — standing at the end of a finished value is not
-      // still editing that token (avoids suggest-after-`"` / completed ids).
-      if (offset >= valueStart && offset < valueEnd) {
+      if (offsetInValueSpan(property.parameters, offset)) {
         return {
           kind: "value",
           key: property.identifier,
@@ -86,7 +110,11 @@ export const focusNamedPropertyAllowingEmptyValue = (
       // when the caret sits after them (e.g. after a closing `"`).
       if (property.parameters.length > 0) {
         const last = property.parameters.at(-1)!;
-        if (offset >= last.location.end.localOffset) {
+        if (isQuotedValueParameter(last)) {
+          if (offset >= last.location.end.localOffset) {
+            continue;
+          }
+        } else if (offset > last.location.end.localOffset) {
           continue;
         }
       }
@@ -117,7 +145,13 @@ export const isPastCompletedPropertyValue = (
       continue;
     }
     const last = property.parameters.at(-1)!;
-    if (offset >= last.location.end.localOffset) {
+    // Bare tokens: only past when strictly after the token (caret at end is
+    // still editing). Quoted: caret at exclusive end is already past.
+    if (isQuotedValueParameter(last)) {
+      if (offset >= last.location.end.localOffset) {
+        return true;
+      }
+    } else if (offset > last.location.end.localOffset) {
       return true;
     }
   }

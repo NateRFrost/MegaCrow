@@ -4,7 +4,7 @@ import {
   type MegaloIncludeRoot,
   prepareIncludeCompileContext,
 } from "./megaloIncludes";
-import { type MegaloProgram, tryParse } from "./megaloShim";
+import { type MegaloProgram, tryParse } from "./megaloProgram";
 import type { Workspace } from "./workspace";
 import {
   resolveWorkspaceBaseProgram,

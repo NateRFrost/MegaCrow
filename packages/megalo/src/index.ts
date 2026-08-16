@@ -1,7 +1,12 @@
 export {
+  type CompiledMegaloFileType,
   type CompiledMegaloMetadata,
   EngineIcon,
-} from "src/backend/compile/compiler";
+  getCompilerForVersion,
+  packMgloBytesForVersion,
+  type WriteMegaloFileOptions,
+  type WriteMegaloFileResult,
+} from "src/backend/compile";
 export type {
   Limits,
   VariableLimits,

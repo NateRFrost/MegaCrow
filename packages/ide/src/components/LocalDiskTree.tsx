@@ -52,6 +52,9 @@ interface Props {
   /** Move entries into `toParentPath` (empty = workspace root). */
   onMoveEntries: (fromPaths: string[][], toParentPath: string[]) => void;
   onOpenFile: (path: string[]) => void;
+  /** Shown on the RHS of the `object_lists` folder when Editing Kit + tool.exe. */
+  onRegenerateObjectLists?: () => void;
+  regenerateObjectListsLabel?: string;
   renamingPathKey: string | null;
 }
 
@@ -337,6 +340,8 @@ function TreeNode({
   draggingKeys,
   expandedPaths,
   objectListNames,
+  onRegenerateObjectLists,
+  regenerateObjectListsLabel,
   renamingPathKey,
   selectedKeys,
   onPointerDownRow,
@@ -355,6 +360,8 @@ function TreeNode({
   draggingKeys: Set<string>;
   expandedPaths: Set<string>;
   objectListNames: readonly string[];
+  onRegenerateObjectLists?: () => void;
+  regenerateObjectListsLabel?: string;
   renamingPathKey: string | null;
   selectedKeys: Set<string>;
   onPointerDownRow: (
@@ -527,6 +534,24 @@ function TreeNode({
             <FolderGlyph open={isExpanded} />
           )}
           <span className="files-row-label">{node.name}</span>
+          {isObjectLists && onRegenerateObjectLists ? (
+            <button
+              aria-label={regenerateObjectListsLabel}
+              className="files-row-regenerate"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                onRegenerateObjectLists();
+              }}
+              onPointerDown={(event) => {
+                event.stopPropagation();
+              }}
+              title={regenerateObjectListsLabel}
+              type="button"
+            >
+              {regenerateObjectListsLabel}
+            </button>
+          ) : null}
         </div>
       )}
       {isExpanded && node.children && node.children.length > 0 ? (
@@ -551,8 +576,10 @@ function TreeNode({
               onContextMenu={onContextMenu}
               onOpenFile={onOpenFile}
               onPointerDownRow={onPointerDownRow}
+              onRegenerateObjectLists={onRegenerateObjectLists}
               onRowActivate={onRowActivate}
               onToggleDirectory={onToggleDirectory}
+              regenerateObjectListsLabel={regenerateObjectListsLabel}
               renamingPathKey={renamingPathKey}
               selectedKeys={selectedKeys}
             />
@@ -568,6 +595,8 @@ export function LocalDiskTree({
   activeFileName,
   objectListNames = [],
   onOpenFile,
+  onRegenerateObjectLists,
+  regenerateObjectListsLabel,
   renamingPathKey,
   onBeginRename,
   onCommitRename,
@@ -898,8 +927,10 @@ export function LocalDiskTree({
           onContextMenu={handleContextMenu}
           onOpenFile={onOpenFileGuarded}
           onPointerDownRow={onPointerDownRow}
+          onRegenerateObjectLists={onRegenerateObjectLists}
           onRowActivate={onRowActivate}
           onToggleDirectory={onToggleDirectory}
+          regenerateObjectListsLabel={regenerateObjectListsLabel}
           renamingPathKey={renamingPathKey}
           selectedKeys={selectedKeys}
         />

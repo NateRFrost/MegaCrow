@@ -1,11 +1,11 @@
 import { decodeTextFile } from "../decodeTextFile";
-import type { FileProvider } from "../megaloShim";
 import { readOpfsWorkspaceBytes } from "../opfsStorage";
 import {
   isAbsoluteLogicalPath,
   joinLogicalPaths,
   normalizeLogicalPath,
 } from "./paths";
+import type { FileProvider } from "./types";
 
 /** OPFS-backed FileProvider for browser workspace paths (`workspace/input`, etc.). */
 export function createOpfsFileProvider(): FileProvider {

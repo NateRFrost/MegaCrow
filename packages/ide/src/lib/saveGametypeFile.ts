@@ -1,9 +1,16 @@
+import {
+  MEGALO_VERSIONS,
+  type MegaloVersionId,
+  packMgloBytesForVersion,
+} from "@megacrow/megalo";
 import { join } from "@tauri-apps/api/path";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
-import { encodeGvarBlfFromMglo } from "./encodeGvarBlfFromMglo";
-import type { GametypeSaveFormat } from "./megaloShim";
-import { autosaveQueueFileName } from "./megaloShim";
+import {
+  autosaveQueueFileName,
+  finalizeGametypeSaveBytes,
+  type GametypeSaveFormat,
+} from "./gametypeSaveFormat";
 import { isTauriRuntime } from "./tauriRuntime";
 import type { Workspace } from "./workspace";
 
@@ -40,6 +47,7 @@ export async function saveGametypeBytes(
   format: GametypeSaveFormat,
   suggestedName: string
 ): Promise<SaveGametypeResult> {
+  const output = finalizeGametypeSaveBytes(bytes, format);
   if (isTauriRuntime()) {
     const path = await save({
       title: "Save gametype",
@@ -49,11 +57,11 @@ export async function saveGametypeBytes(
     if (!path) {
       return { saved: false, cancelled: true };
     }
-    await writeFile(path, bytes);
+    await writeFile(path, output);
     return { saved: true, path };
   }
 
-  const blob = new Blob([bytes], { type: "application/octet-stream" });
+  const blob = new Blob([output], { type: "application/octet-stream" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
@@ -72,7 +80,8 @@ export async function saveGametypeBytes(
 export async function writeBuildOutputsToWorkspace(
   workspace: Workspace,
   fileName: string | null,
-  mgloBytes: Uint8Array
+  mgloBytes: Uint8Array,
+  megaloVersionId: MegaloVersionId = "107-mcc"
 ): Promise<{ mgloPath: string; binPath: string }> {
   if (workspace.type !== "tauri") {
     throw new Error("Build requires the desktop app with an active workspace.");
@@ -84,7 +93,11 @@ export async function writeBuildOutputsToWorkspace(
   const binName = gametypeSaveFileName(fileName, "gvar");
   const mgloPath = await join(workspace.outputPath, mgloName);
   const binPath = await join(workspace.outputPath, binName);
-  const gvarBytes = encodeGvarBlfFromMglo(mgloBytes);
+  const gvarBytes = packMgloBytesForVersion(
+    mgloBytes,
+    MEGALO_VERSIONS[megaloVersionId],
+    "gvar"
+  );
   await writeFile(mgloPath, mgloBytes);
   await writeFile(binPath, gvarBytes);
   return { mgloPath, binPath };

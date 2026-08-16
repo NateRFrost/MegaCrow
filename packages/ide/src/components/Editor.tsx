@@ -14,10 +14,8 @@ import { useT } from "../localization";
 import {
   MEGALO_LANGUAGE_ID,
   type MegaloDiagnostic,
-  type MegaloHoverContext,
   registerMegaloLanguage,
   setMegaloDiagnostics,
-  setMegaloHoverContext,
 } from "../monaco/megalo-language";
 import {
   applyEditorTheme,
@@ -33,7 +31,6 @@ interface Props {
   editorTheme?: string;
   /** Wrap long lines when true; horizontal scroll when false. */
   editorWordWrap?: boolean;
-  hoverContext?: MegaloHoverContext;
   onCompileDebounced?: (source: string) => void;
   onCursorChange?: (line: number, column: number) => void;
   onEditorWordWrapChange?: (wordWrap: boolean) => void;
@@ -72,7 +69,6 @@ export const MegaloEditor = memo(function MegaloEditor({
   diagnostics = [],
   onCursorChange,
   onRegisterNavigate,
-  hoverContext,
   plainText = false,
   readOnly = false,
   editorTheme = DEFAULT_EDITOR_THEME_ID,
@@ -146,12 +142,6 @@ export const MegaloEditor = memo(function MegaloEditor({
       onCompileDebouncedRef.current?.(text);
     }, COMPILE_DEBOUNCE_MS);
   }, []);
-
-  useEffect(() => {
-    setMegaloHoverContext(
-      hoverContext ?? { baseProgram: null, baselineSource: null }
-    );
-  }, [hoverContext]);
 
   useEffect(
     () => () => {
@@ -259,6 +249,7 @@ export const MegaloEditor = memo(function MegaloEditor({
       const mapped: MegaloDiagnostic[] = lspDiags.map((d) => ({
         line: d.range.start.line + 1,
         column: d.range.start.character + 1,
+        endLine: d.range.end.line + 1,
         endColumn: d.range.end.character + 1,
         message: d.message,
         severity: d.severity === 1 ? "error" : "warning",

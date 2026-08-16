@@ -45,11 +45,9 @@ export const getHighlightSymbolTable = (): SymbolTable | undefined =>
 
 const BUILTIN_MEMBER_NAMES = new Set([
   "score",
+  "money",
   "user_data",
   "team",
-  "player_score",
-  "player_money",
-  "player_rating",
   "rating",
 ]);
 

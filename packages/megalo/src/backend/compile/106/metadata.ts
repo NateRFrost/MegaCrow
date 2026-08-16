@@ -1,0 +1,73 @@
+import {
+  type c_game_engine_custom_variant,
+  e_file_type,
+  e_game_engine_type,
+  e_game_mode,
+  e_gui_game_mode,
+  s_content_item_game_variant_metadata,
+} from "@blamnetwork/blf/haloreach/v11860_10_07_24_0147_omaha_release";
+import { encodeGameEngineCategory } from "src/backend/compile/106/enums/e_game_engine_category";
+import { assignContentUniqueIds } from "src/backend/compile/contentUniqueIds";
+import type { IR } from "src/frontend/intermediate-representation";
+
+function applyHistory(
+  target: {
+    timestamp: Date;
+    xuid: bigint;
+    name: string;
+    is_online: boolean;
+  },
+  source: {
+    timestamp: Date;
+    xuid: bigint;
+    name: string;
+    isOnline: boolean;
+  }
+): void {
+  target.timestamp = source.timestamp;
+  target.xuid = source.xuid;
+  target.name = source.name;
+  target.is_online = source.isOnline;
+}
+
+export const compileMetadata = (
+  ir: IR,
+  gameVariant: c_game_engine_custom_variant
+): void => {
+  const variant = ir.gameVariant;
+  const metadata = gameVariant.m_base_variant.m_metadata;
+  const irMetadata = variant.baseVariant.metadata;
+
+  metadata.general.file_type = e_file_type.GameVariant;
+  metadata.general.activity = e_gui_game_mode.multiplayer;
+  metadata.general.game_mode = e_game_mode.multiplayer;
+  metadata.general.game_engine_type = e_game_engine_type.megalogamengine;
+  assignContentUniqueIds(metadata.general);
+
+  if (
+    !(metadata.file_type_data instanceof s_content_item_game_variant_metadata)
+  ) {
+    metadata.file_type_data = new s_content_item_game_variant_metadata();
+  }
+
+  if (variant.engineIcon !== undefined) {
+    gameVariant.m_engine_icon = variant.engineIcon;
+    metadata.file_type_data.icon_index = variant.engineIcon;
+  }
+
+  if (variant.engineCategory !== undefined) {
+    const engineCategory = encodeGameEngineCategory(variant.engineCategory);
+    gameVariant.m_engine_category = engineCategory;
+    metadata.display.megalo_category_index = engineCategory;
+  }
+
+  if (irMetadata.name !== undefined) {
+    metadata.name = irMetadata.name;
+  }
+  if (irMetadata.description !== undefined) {
+    metadata.description = irMetadata.description;
+  }
+
+  applyHistory(metadata.creation_history, irMetadata.creationHistory);
+  applyHistory(metadata.modification_history, irMetadata.modificationHistory);
+};

@@ -1,8 +1,6 @@
 import { decodeTextFile } from "../lib/decodeTextFile";
-import {
-  compileMgloFromMegaloSourceAsync,
-  type FileProvider,
-} from "../lib/megaloShim";
+import type { FileProvider } from "../lib/fileProvider";
+import { compileMgloFromMegaloSourceAsync } from "../lib/megaloCompile";
 import type { CliFilesystem } from "./filesystem";
 
 export type CompileOutputFormat = "mglo" | "bin";

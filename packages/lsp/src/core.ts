@@ -111,7 +111,12 @@ export const megacrowExtensionsForProfile = (
     ? DEFAULT_MEGACROW_EXTENSIONS
     : ALL_MEGACROW_EXTENSIONS;
 
-export type MegacrowArtifactKind = "semanticTokens" | "diagnostics" | "mglo";
+export type MegacrowArtifactKind =
+  | "semanticTokens"
+  | "diagnostics"
+  | "mglo"
+  | "mpvr"
+  | "gvar";
 
 export interface MegacrowCompileParams {
   objectLists?: ObjectLists;
@@ -121,12 +126,14 @@ export interface MegacrowCompileParams {
 }
 
 export interface MegacrowCompileResult {
-  /** Base64-encoded `.mglo` bytes when compilation succeeded. */
+  /** Base64-encoded output bytes when compilation succeeded. */
   dataBase64?: string;
   diagnostics: Diagnostic[];
   error?: string;
   metadata?: CompiledMegaloMetadata;
   ok: boolean;
+  /** Raw `.mglo` bitstream length (excludes BLF framing). */
+  variantByteLength?: number;
 }
 
 export interface MegacrowRequestArtifactsParams {
@@ -138,14 +145,16 @@ export interface MegacrowRequestArtifactsParams {
 }
 
 export interface MegacrowRequestArtifactsResult {
-  /** Base64-encoded `.mglo` bytes when `mglo` was requested and compilation succeeded. */
+  /** Base64-encoded output bytes when a binary artifact was requested and compilation succeeded. */
   dataBase64?: string;
   diagnostics?: Diagnostic[];
   error?: string;
   metadata?: CompiledMegaloMetadata;
-  /** Present when `mglo` was requested. */
+  /** Present when a binary artifact was requested. */
   ok?: boolean;
   semanticTokens?: number[];
+  /** Raw `.mglo` bitstream length (excludes BLF framing). */
+  variantByteLength?: number;
   /** Document version the artifacts were computed for (server-side). */
   version: number;
 }
@@ -296,8 +305,18 @@ export const toLspDiagnostics = (
         ];
       }
 
-      // UNKNOWN / BUILT_IN / OBJECT_LIST: no document span — omit from LSP publish.
-      return [];
+      // UNKNOWN / BUILT_IN / OBJECT_LIST: no document span — still publish so
+      // Problems / compile status aren't empty ("No output produced").
+      return [
+        {
+          severity,
+          message: d.message,
+          range: {
+            start: { line: 0, character: 0 },
+            end: { line: 0, character: 0 },
+          },
+        },
+      ];
     }
   );
 
@@ -356,7 +375,14 @@ export const requestArtifactsFromSnapshot = async (
 ): Promise<MegacrowRequestArtifactsResult> => {
   const wantsTokens = options.artifacts.includes("semanticTokens");
   const wantsDiagnostics = options.artifacts.includes("diagnostics");
-  const wantsMglo = options.artifacts.includes("mglo");
+  const fileType = options.artifacts.includes("mpvr")
+    ? ("mpvr" as const)
+    : options.artifacts.includes("gvar")
+      ? ("gvar" as const)
+      : options.artifacts.includes("mglo")
+        ? ("mglo" as const)
+        : undefined;
+  const wantsBinary = fileType !== undefined;
 
   const result: MegacrowRequestArtifactsResult = {
     version: options.documentVersion,
@@ -366,7 +392,7 @@ export const requestArtifactsFromSnapshot = async (
     result.semanticTokens = semanticTokensFromSnapshot(snapshot);
   }
 
-  if (wantsDiagnostics || wantsMglo) {
+  if (wantsDiagnostics || wantsBinary) {
     const compiled = await compileFromSnapshot(snapshot, {
       version: snapshot.version,
       objectLists: options.objectLists,
@@ -375,25 +401,26 @@ export const requestArtifactsFromSnapshot = async (
       resolveBaseFile: options.resolvers?.resolveBaseFile,
       megacrowExtensions: sessionMegacrowExtensions,
       compilerSettings: sessionCompilerSettings,
+      fileType,
     });
     const diagnostics = toLspDiagnostics(compiled.diagnostics, snapshot.source);
 
-    if (wantsDiagnostics || wantsMglo) {
+    if (wantsDiagnostics || wantsBinary) {
       result.diagnostics = diagnostics;
     }
 
-    if (wantsMglo) {
+    if (wantsBinary) {
       if (compiled.bytes) {
         result.ok = true;
         result.dataBase64 = bytesToBase64(compiled.bytes);
         result.metadata = compiled.metadata;
+        result.variantByteLength = compiled.variantByteLength;
       } else {
         result.ok = false;
-        result.error = diagnostics.some(
+        const firstError = diagnostics.find(
           (d) => d.severity === DiagnosticSeverity.Error
-        )
-          ? "Compilation failed"
-          : "No output produced";
+        );
+        result.error = firstError?.message ?? "No output produced";
       }
     }
   }
@@ -454,6 +481,7 @@ export const analyzeAndCompile = async (
     diagnostics: artifacts.diagnostics ?? [],
     dataBase64: artifacts.dataBase64,
     metadata: artifacts.metadata,
+    variantByteLength: artifacts.variantByteLength,
     error: artifacts.error,
   };
 };
