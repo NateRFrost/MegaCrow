@@ -8,6 +8,7 @@ import type {
   TeamsPropertyNode,
 } from "src/frontend/abstract-syntax-tree/elements/teams";
 import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { assertSymbolKind } from "src/frontend/intermediate-representation/diagnostics/assertSymbolKind";
 import { assertSyntaxKind } from "src/frontend/intermediate-representation/diagnostics/assertSyntaxKind";
 import type { ElementLowerer } from "src/frontend/intermediate-representation/elements";
 import { LowerError } from "src/frontend/intermediate-representation/error";
@@ -70,19 +71,17 @@ const lowerStringName = (
   ctx: ElementLowerContext,
   fallbackLocation: SourceCodeLocation
 ): StringTableEntry => {
-  const keyword = requireKeyword(property, fallbackLocation);
-  const parameter = property.parameters[0]!;
-  const symbol = ctx.symbolTable
-    .toArray()
-    .find(
-      (entry) => entry.kind === SymbolKind.String && entry.name === keyword
-    );
-  if (symbol?.kind !== SymbolKind.String) {
+  const parameter = property.parameters[0];
+  if (parameter === undefined || property.parameters.length !== 1) {
     throw new LowerError(
-      diagnosticMessages.expectedParameterType("string", keyword),
-      parameter.location
+      diagnosticMessages.invalidParameterCount(1, property.parameters.length),
+      parameter?.location ?? fallbackLocation
     );
   }
+  assertSyntaxKind(parameter, SyntaxKind.REFERENCE);
+  const symbol = ctx.symbolTable.getSymbol(parameter.symbolId);
+  assertSymbolKind(symbol, SymbolKind.String);
+  // Keep prior behavior: also intern into script strings for tooling/parity.
   ctx.ir.gameVariant.scriptStrings.addEntry(symbol.languageContents, symbol.id);
   return { ...symbol.languageContents };
 };

@@ -70,7 +70,7 @@ export class TeamsParserRepository {
     this.registerParser(
       this.teamOptionParsers,
       "name",
-      buildParameterParser([ParameterType.Keyword])
+      buildParameterParser([ParameterType.String])
     );
     this.registerParser(
       this.teamOptionParsers,
