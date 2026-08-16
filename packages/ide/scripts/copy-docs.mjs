@@ -8,7 +8,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ideRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -26,19 +26,67 @@ function normalizeBase(value) {
 }
 
 /**
- * VitePress emits `/./assets/...` for `base: './'`. Browsers treat that as
- * origin-absolute (`https://host/assets/...`), which breaks project Pages
- * under `/<repo>/<branch>/docs/`.
+ * VitePress does **not** support `base: './'` — it causes hydration mismatches
+ * and a flash-then-404 (https://github.com/vuejs/vitepress/issues/3988).
  *
- * A JS-injected `<base href>` is too late: the preload scanner resolves
- * `./assets/...` against the page URL first, so nested clean URLs request
- * `.../language/elements/assets/...` (404) instead of `.../docs/assets/...`.
- *
- * Fix: rewrite site-root-relative `./` URLs in each HTML file to a
- * depth-correct relative prefix (`../../` from `language/elements/*.html`).
+ * Prefer an absolute docs base:
+ * - Explicit `DOCS_BASE`
+ * - CI web / Pages artifact (`MEGACROW_BASE` relative): `/<repo>/<branch>/docs/`
+ * - Tauri / local default: `/docs/` (app origin root)
  */
-const OLD_BASE_BOOTSTRAP_RE =
-  /<script>\(function\(\)\{var p=location\.pathname,m="\/docs\/"[\s\S]*?<\/script>/;
+function resolveDocsBase(appBase) {
+  if (process.env.DOCS_BASE) {
+    return normalizeBase(process.env.DOCS_BASE);
+  }
+
+  const onActions = process.env.GITHUB_ACTIONS === "true";
+  const eventName = process.env.GITHUB_EVENT_NAME ?? "";
+  const repository = process.env.GITHUB_REPOSITORY ?? "";
+  const refName = process.env.GITHUB_REF_NAME ?? "";
+  const repoName = repository.includes("/")
+    ? repository.split("/")[1]
+    : repository;
+
+  // Only the GitHub Pages web artifact uses a relative SPA base (`./`). Tauri
+  // builds also run on Actions but must keep docs at `/docs/`.
+  if (
+    onActions &&
+    appBase.startsWith(".") &&
+    eventName !== "pull_request" &&
+    repoName &&
+    refName &&
+    // Branch / tag names that are safe as a single path segment.
+    !refName.includes("/")
+  ) {
+    return `/${repoName}/${refName}/docs/`;
+  }
+
+  if (appBase.startsWith(".")) {
+    return "/docs/";
+  }
+
+  return `${appBase}docs/`;
+}
+
+/**
+ * VitePress sometimes emits `/./assets/...` or origin-absolute `/images/...`
+ * even with an absolute base. Rewrite those to be base-correct.
+ */
+function polishDocsHtml(docsDir, docsBase) {
+  for (const file of walkFiles(docsDir)) {
+    if (!file.endsWith(".html")) {
+      continue;
+    }
+    let html = readFileSync(file, "utf8");
+    html = html.replaceAll("/./", "./");
+    // Stray root-absolute static assets → under docs base.
+    html = html.replace(
+      /\b(href|src)="\/((?:assets|images)\/[^"]*|vp-icons\.css)"/g,
+      `$1="${docsBase}$2"`
+    );
+    writeFileSync(file, html);
+  }
+}
 
 function walkFiles(dir, out = []) {
   for (const name of readdirSync(dir)) {
@@ -52,49 +100,8 @@ function walkFiles(dir, out = []) {
   return out;
 }
 
-/** `language/elements/hud-widgets.html` → `../../`; `index.html` → `./` */
-function docsRootPrefix(htmlFile, docsDir) {
-  const rel = relative(docsDir, htmlFile).replace(/\\/g, "/");
-  const dir = dirname(rel);
-  if (dir === ".") {
-    return "./";
-  }
-  const depth = dir.split("/").filter(Boolean).length;
-  return "../".repeat(depth);
-}
-
-function rewriteDocsForRelativeBase(docsDir) {
-  for (const file of walkFiles(docsDir)) {
-    if (!file.endsWith(".html")) {
-      continue;
-    }
-    let html = readFileSync(file, "utf8");
-    html = html.replace(OLD_BASE_BOOTSTRAP_RE, "");
-    // `/./foo` → `./foo` (VitePress relative-base quirk).
-    html = html.replaceAll("/./", "./");
-
-    const prefix = docsRootPrefix(file, docsDir);
-    if (prefix !== "./") {
-      // Site-root-relative URLs from VitePress (`./assets/...`, `./language/...`).
-      html = html.replace(/\b(href|src)="\.\//g, `$1="${prefix}`);
-    }
-    // VitePress sometimes normalizes `./images/...` to origin-absolute `/images/...`.
-    html = html.replace(
-      /\b(href|src)="\/((?:assets|images)\/[^"]*|vp-icons\.css)"/g,
-      `$1="${prefix}$2"`
-    );
-
-    writeFileSync(file, html);
-  }
-}
-
 const appBase = normalizeBase(process.env.MEGACROW_BASE);
-const useRelativeDocsBase = appBase.startsWith(".");
-const docsBase = process.env.DOCS_BASE
-  ? normalizeBase(process.env.DOCS_BASE)
-  : useRelativeDocsBase
-    ? "./"
-    : `${appBase}docs/`;
+const docsBase = resolveDocsBase(appBase);
 
 execSync("npm run build", {
   cwd: docsRoot,
@@ -110,15 +117,9 @@ rmSync(dest, { recursive: true, force: true });
 mkdirSync(dest, { recursive: true });
 cpSync(src, dest, { recursive: true });
 
-if (docsBase.startsWith(".")) {
-  rewriteDocsForRelativeBase(dest);
-}
+polishDocsHtml(dest, docsBase);
 
 // Remove prior Tauri packaging path if present.
 rmSync(resolve(ideRoot, "public/megalo"), { recursive: true, force: true });
 
-console.log(
-  `Copied docs from ${src} → ${dest} (DOCS_BASE=${docsBase}${
-    docsBase.startsWith(".") ? ", relative rewrite applied" : ""
-  })`
-);
+console.log(`Copied docs from ${src} → ${dest} (DOCS_BASE=${docsBase})`);

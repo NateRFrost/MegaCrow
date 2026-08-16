@@ -103,6 +103,14 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "mode=$mode destination=${destination:-'(root)'} tag=${tag:-'-'} branch=${branch:-'-'}"
 
+      - name: Check out rewrite script
+        if: steps.target.outputs.mode == 'root'
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            scripts/rewrite-docs-base.mjs
+          sparse-checkout-cone-mode: false
+
       - name: Download megacrow-web
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -172,6 +180,22 @@ jobs:
             exit 1
           fi
           echo "Fetched megacrow-web ($(du -sh dist | cut -f1))"
+
+      - name: Rewrite docs base for release root
+        if: steps.target.outputs.mode == 'root'
+        env:
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO_NAME="${REPO##*/}"
+          if [[ ! -d dist/docs ]]; then
+            echo "No dist/docs to rewrite"
+            exit 0
+          fi
+          node scripts/rewrite-docs-base.mjs \
+            --dir dist/docs \
+            --base "/${REPO_NAME}/docs/"
 
       - name: Upload dist for deploy job
         uses: actions/upload-artifact@v4
