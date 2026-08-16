@@ -113,3 +113,43 @@ jobs:
             packages/ide/src-tauri/target/release/*.exe
             packages/ide/src-tauri/target/release/*.app
           if-no-files-found: warn
+
+  vscode-extension:
+    name: VS Code extension
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Write untracked build info
+        run: node scripts/write-build-info.mjs --untracked
+
+      - name: Install
+        run: npm install
+
+      - name: Package VSIX
+        run: npm run package --workspace=megacrow-megalo
+
+      - name: Verify build string in bundles
+        shell: bash
+        run: |
+          set -euo pipefail
+          BUILD_STRING='untracked version'
+          for bundle in packages/vscode-extension/dist/server.js packages/vscode-extension/README.md; do
+            if ! grep -F "$BUILD_STRING" "$bundle" >/dev/null; then
+              echo "Missing build string in $bundle"
+              exit 1
+            fi
+            echo "OK: $bundle contains $BUILD_STRING"
+          done
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: megacrow-vscode-extension-pr
+          path: packages/vscode-extension/megacrow-megalo-*.vsix

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Write MegaCrow build-info into packages/megalo/src/build-info.ts and
- * sync Tauri/Cargo package versions.
+ * sync Tauri/Cargo/IDE/VS Code extension package versions.
  *
  * Usage:
  *   node scripts/write-build-info.mjs
@@ -83,6 +83,17 @@ const idePkgPath = join(root, "packages/ide/package.json");
 const idePkg = JSON.parse(readFileSync(idePkgPath, "utf8"));
 idePkg.version = packageVersion;
 writeFileSync(idePkgPath, `${JSON.stringify(idePkg, null, 2)}\n`, "utf8");
+
+const vscodeExtPkgPath = join(root, "packages/vscode-extension/package.json");
+const vscodeExtPkg = JSON.parse(readFileSync(vscodeExtPkgPath, "utf8"));
+// Marketplace version is always 0.<build-number>.0 (seq from CI / git tags).
+const seq = Number(info.seq ?? 0);
+vscodeExtPkg.version = `0.${Number.isFinite(seq) && seq >= 0 ? seq : 0}.0`;
+writeFileSync(
+  vscodeExtPkgPath,
+  `${JSON.stringify(vscodeExtPkg, null, 2)}\n`,
+  "utf8"
+);
 
 process.stdout.write(
   `Wrote build-info: ${buildString} (package ${packageVersion}, watermark=${showWatermark})\n`

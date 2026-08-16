@@ -1,0 +1,118 @@
+{
+  "name": "megacrow-megalo",
+  "displayName": "MegaCrow Megalo",
+  "description": "Megalo language support for VS Code — syntax highlighting, autocomplete, hover, and go-to-definition via the MegaCrow LSP.",
+  "version": "0.0.0",
+  "private": true,
+  "publisher": "megacrow",
+  "license": "ISC",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters"
+  ],
+  "keywords": [
+    "megalo",
+    "halo",
+    "megacrow",
+    "lsp"
+  ],
+  "activationEvents": [
+    "onLanguage:megalo"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "megalo",
+        "aliases": [
+          "Megalo",
+          "megalo"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "megalo",
+        "scopeName": "source.megalo",
+        "path": "./syntaxes/megalo.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "title": "MegaCrow",
+      "properties": {
+        "megacrow.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces communication between VS Code and the Megalo language server."
+        },
+        "megacrow.locale": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ja"
+          ],
+          "default": "en",
+          "description": "Locale for Megalo diagnostics and hover text."
+        },
+        "megacrow.megacrowExtensions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable MegaCrow language extensions (vs MegaloEdit-compatible mode)."
+        },
+        "megacrow.strictStringLiterals": {
+          "type": "boolean",
+          "default": false,
+          "description": "Treat undeclared string literals as errors instead of warnings."
+        },
+        "megacrow.megaloVersion": {
+          "type": "string",
+          "enum": [
+            "107-mcc",
+            "107",
+            "106",
+            "73",
+            "49"
+          ],
+          "default": "107-mcc",
+          "description": "Megalo engine profile used for highlighting, hover, and diagnostics."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "megacrow.restartServer",
+        "title": "MegaCrow: Restart Language Server"
+      },
+      {
+        "command": "megacrow.selectMegaloVersion",
+        "title": "MegaCrow: Select Megalo Version"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node ./scripts/build.mjs",
+    "dev": "node ./scripts/build.mjs --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "package": "npm run build && vsce package --no-dependencies"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@megacrow/lsp": "*",
+    "@types/node": "^22.15.21",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.7.1",
+    "esbuild": "^0.25.12",
+    "typescript": "^5.8.3"
+  }
+}

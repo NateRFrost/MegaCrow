@@ -1,0 +1,50 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Megalo",
+  "scopeName": "source.megalo",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#section-keywords" },
+    { "include": "#keywords" },
+    { "include": "#operators" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.semicolon.megalo",
+          "match": ";.*$"
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.megalo",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.megalo",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "numbers": {
+      "name": "constant.numeric.megalo",
+      "match": "\\b\\d+(\\.\\d+)?\\b"
+    },
+    "section-keywords": {
+      "name": "keyword.control.section.megalo",
+      "match": "(?i)\\b(base|include|localized_include|string_table|constants|variables|game_options|hud_widgets|loadout|loadout_palette|teams|engine_data|player_rating|map_permissions|game_stats|map_object|requisition_palette|trigger|end)\\b"
+    },
+    "keywords": {
+      "name": "keyword.control.megalo",
+      "match": "(?i)\\b(action|condition|if|and|or|do|else|alias|temp|foreach|not)\\b"
+    },
+    "operators": {
+      "name": "keyword.operator.megalo",
+      "match": "(==|!=|>=|<=|>|<|=|\\+|\\-|\\*|/)"
+    }
+  }
+}
