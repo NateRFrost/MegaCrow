@@ -1,6 +1,8 @@
-import type { SourceCodeLocation } from "src/diagnostics";
 import type { PlayerRatingElementNode } from "src/frontend/abstract-syntax-tree/elements/player_rating";
-import { isSameLineAs } from "src/language-service/completion/elements/property";
+import {
+  focusKeyValueProperty,
+  isSameLineAs,
+} from "src/language-service/completion/elements/property";
 import {
   ParameterType,
   suggestKeywords,
@@ -31,47 +33,12 @@ const PLAYER_RATING_KEYS = [
   "end",
 ] as const;
 
-interface KeyValueLike {
-  key: string;
-  location: SourceCodeLocation;
-  value: { location: SourceCodeLocation };
-}
-
-const focusKeyValue = (
-  fields: readonly KeyValueLike[],
-  offset: number,
-  sameLineAfterKey: (field: KeyValueLike) => boolean
-): { kind: "key" | "value"; key: string } | undefined => {
-  for (const field of fields) {
-    const valueStart = field.value.location.start.localOffset;
-    const valueEnd = field.value.location.end.localOffset;
-    if (offset > field.location.end.localOffset && offset < valueStart) {
-      return { kind: "value", key: field.key };
-    }
-    if (offset >= valueStart && offset <= valueEnd) {
-      return { kind: "value", key: field.key };
-    }
-    if (
-      offset >= field.location.start.localOffset &&
-      offset <= field.location.end.localOffset
-    ) {
-      return { kind: "key", key: field.key };
-    }
-  }
-  for (const field of fields) {
-    if (offset > field.location.end.localOffset && sameLineAfterKey(field)) {
-      return { kind: "value", key: field.key };
-    }
-  }
-  return;
-};
-
 export const completePlayerRating = (
   ctx: ElementCompletionContext
 ): CompletionItem[] => {
   const element = ctx.element as PlayerRatingElementNode;
 
-  const focus = focusKeyValue(element.fields, ctx.offset, (field) =>
+  const focus = focusKeyValueProperty(element.fields, ctx.offset, (field) =>
     isSameLineAs(ctx.snapshot, ctx.offset, field.location)
   );
   if (focus?.kind === "value") {

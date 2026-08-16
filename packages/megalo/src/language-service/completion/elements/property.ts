@@ -123,3 +123,58 @@ export const isPastCompletedPropertyValue = (
   }
   return false;
 };
+
+/** Key/value property shape used by map_object / map_permissions / player_rating. */
+export interface KeyValuePropertyLike {
+  key: string;
+  location: SourceCodeLocation;
+  value: { location: SourceCodeLocation };
+}
+
+/**
+ * Resolve whether the cursor is on a key/value property key or inside its value.
+ * Value ranges use an exclusive end so a caret after a closing `"` is not treated
+ * as still editing that token.
+ */
+export const focusKeyValueProperty = (
+  properties: readonly KeyValuePropertyLike[],
+  offset: number,
+  sameLineAfterKey: (property: KeyValuePropertyLike) => boolean
+): { kind: "key" | "value"; key: string } | undefined => {
+  for (const property of properties) {
+    const valueStart = property.value.location.start.localOffset;
+    const valueEnd = property.value.location.end.localOffset;
+    if (offset > property.location.end.localOffset && offset < valueStart) {
+      return { kind: "value", key: property.key };
+    }
+    // `end` is exclusive — standing at/after a finished value is not editing it.
+    if (offset >= valueStart && offset < valueEnd) {
+      return { kind: "value", key: property.key };
+    }
+    if (containsOffset(property.location, offset)) {
+      return { kind: "key", key: property.key };
+    }
+  }
+  for (const property of properties) {
+    if (
+      offset > property.location.end.localOffset &&
+      sameLineAfterKey(property)
+    ) {
+      // Finished value already occupies the line — don't reopen value suggest
+      // when the caret sits after it (e.g. after a closing `"`). Skip only when
+      // there is a real value token past the key (incomplete parses often reuse
+      // the key location as a placeholder).
+      const valueStartsAfterKey =
+        property.value.location.start.localOffset >
+        property.location.end.localOffset;
+      if (
+        valueStartsAfterKey &&
+        offset >= property.value.location.end.localOffset
+      ) {
+        continue;
+      }
+      return { kind: "value", key: property.key };
+    }
+  }
+  return;
+};

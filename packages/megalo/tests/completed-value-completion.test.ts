@@ -28,6 +28,45 @@ end
     expect(labels).toEqual([]);
   });
 
+  it("does not suggest object types after a finished map_object type quote", async () => {
+    const source = `map_object created_banshee
+\ttype "banshee"
+end
+`;
+    const snapshot = await analyzeDocument(source, {
+      version,
+      megacrowExtensions: ALL_MEGACROW_EXTENSIONS,
+    });
+    const line = source.split(/\n/)[1]!;
+    const character = line.indexOf('"banshee"') + '"banshee"'.length;
+    const labels = completionsAtPosition(snapshot, {
+      line: 1,
+      character,
+    }).map((item) => item.label);
+    expect(labels).not.toContain("banshee");
+    expect(labels).not.toContain("warthog");
+  });
+
+  it("still suggests object types inside an open map_object type quote", async () => {
+    const source = `map_object created_banshee
+\ttype "ban
+end
+`;
+    const snapshot = await analyzeDocument(source, {
+      version,
+      megacrowExtensions: ALL_MEGACROW_EXTENSIONS,
+    });
+    const line = source.split(/\n/)[1]!;
+    const character = line.indexOf('"ban') + '"ban'.length;
+    const labels = completionsAtPosition(snapshot, {
+      line: 1,
+      character,
+    }).map((item) => item.label);
+    expect(labels, JSON.stringify({ line, character, labels })).toContain(
+      "banshee"
+    );
+  });
+
   it("hides megacrow_version from string autocomplete", async () => {
     const source = `engine_data
 \tname 
