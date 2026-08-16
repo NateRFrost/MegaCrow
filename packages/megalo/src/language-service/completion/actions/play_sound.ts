@@ -1,9 +1,9 @@
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
+import { megaloSound } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_sounds";
 import {
-  ParameterType,
+  suggestEnum,
   suggestKeywords,
   suggestTeamOrPlayerTarget,
-  suggestTyped,
 } from "src/language-service/completion/helpers";
 import type {
   ActionCompletionContext,
@@ -26,7 +26,7 @@ export const completePlaySound = (
     return [
       ...suggestTeamOrPlayerTarget(ctx, 0),
       ...suggestKeywords(ctx, ["immediate"]),
-      ...suggestTyped(ctx, ParameterType.String),
+      ...suggestEnum(ctx, megaloSound),
     ];
   }
 
@@ -40,7 +40,7 @@ export const completePlaySound = (
     if (ctx.slotIndex === targetEnd) {
       return [
         ...suggestKeywords(ctx, ["immediate"]),
-        ...suggestTyped(ctx, ParameterType.String),
+        ...suggestEnum(ctx, megaloSound),
       ];
     }
     if (
@@ -48,7 +48,7 @@ export const completePlaySound = (
       p[targetEnd]?.kind === SyntaxKind.KEYWORD &&
       p[targetEnd].value === "immediate"
     ) {
-      return suggestTyped(ctx, ParameterType.String);
+      return suggestEnum(ctx, megaloSound);
     }
     return [];
   }
@@ -58,7 +58,7 @@ export const completePlaySound = (
     first?.kind === SyntaxKind.KEYWORD &&
     first.value === "immediate"
   ) {
-    return suggestTyped(ctx, ParameterType.String);
+    return suggestEnum(ctx, megaloSound);
   }
   return [];
 };

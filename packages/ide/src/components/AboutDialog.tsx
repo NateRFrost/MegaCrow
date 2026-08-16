@@ -4,6 +4,9 @@ import { MEGACROW_BUILD_STRING } from "../lib/megaloShim";
 import { openExternalUrl } from "../lib/openExternalUrl";
 import { useT } from "../localization";
 
+const BUG_REPORT_URL =
+  "https://github.com/craftycodie/MegaCrow/issues/new?template=bug_report.yml";
+
 interface Props {
   onClose: () => void;
   onVersionClick?: () => void;
@@ -21,6 +24,10 @@ export function AboutDialog({ open, onClose, onVersionClick }: Props) {
     event.preventDefault();
     event.stopPropagation();
     void openExternalUrl(url);
+  };
+
+  const handleReportBug = () => {
+    void openExternalUrl(BUG_REPORT_URL);
   };
 
   useEffect(() => {
@@ -144,6 +151,13 @@ export function AboutDialog({ open, onClose, onVersionClick }: Props) {
         </p>
 
         <div className="about-actions">
+          <button
+            className="about-report-bug"
+            onClick={handleReportBug}
+            type="button"
+          >
+            {t("about_report_bug")}
+          </button>
           <button
             className="about-close"
             onClick={onClose}
