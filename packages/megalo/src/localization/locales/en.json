@@ -42,7 +42,7 @@
   "duplicate_declaration_name_ignored": "Duplicate {{kind}} name '{{name}}' will be ignored for name lookup (MegaloEdit uses the first declaration)",
   "legacy_hud_widget_text_keyword": "Legacy 'text' prefix on hud_widgets entries is old syntax and will not compile with MegaloEdit",
   "unsupported_dynamic_string_replacement": "'{{got}}' is not a valid dynamic-string replacement. Use a declared reference that matches the placeholder (%n number, %p player, %t team, %o object, %s timer).",
-  "string_literal_not_allowed_when_strict": "String literals are not allowed when compiler strictness is enabled; use a string table identifier",
+  "string_literal_not_allowed_when_strict": "String literals are not allowed when strict compiler is enabled; use a string table identifier",
   "could_not_resolve_include": "Could not resolve include \"{{path}}\"",
   "could_not_resolve_localized_include": "Could not resolve localized_include \"{{path}}\"",
   "transient_variable_in_persistent_string": "Can't use transient variables when reading a persistent string",

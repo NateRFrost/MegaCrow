@@ -1,4 +1,5 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { docsPageUrl, listenDocsNavigate } from "../lib/openDocs";
 import { isTauriRuntime } from "../lib/tauriRuntime";
 import "./styles.css";
 
@@ -10,6 +11,9 @@ const titleEl = document.querySelector<HTMLElement>(".docs-chrome-title")!;
 const frame = document.querySelector<HTMLIFrameElement>("#docs-frame")!;
 const chrome = document.querySelector<HTMLElement>(".docs-chrome")!;
 const controlsHost = document.querySelector("#docs-window-controls")!;
+
+const initialDocsPath = new URLSearchParams(window.location.search).get("path");
+frame.src = docsPageUrl(initialDocsPath);
 
 /** Index into the iframe session history we have observed. */
 let historyIndex = 0;
@@ -279,6 +283,12 @@ frame.addEventListener("load", () => {
     // Cross-origin should not happen for packaged docs.
   }
 });
+
+if (isTauriRuntime()) {
+  void listenDocsNavigate((path) => {
+    frame.src = docsPageUrl(path);
+  });
+}
 
 mountWindowControls();
 syncNavButtons();

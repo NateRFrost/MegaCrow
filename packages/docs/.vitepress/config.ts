@@ -263,6 +263,11 @@ export default defineConfig(async () => {
       nav: [
         { text: "Blam Network", link: "https://blam.network" },
         { text: "Guide", link: "/guide/quick-start" },
+        {
+          text: "MegaCrow",
+          link: "/megacrow/",
+          activeMatch: "/megacrow/",
+        },
         { text: "Language", link: "/language/", activeMatch: "/language/" },
         { text: "Changelog", link: "/changelog" },
         {
@@ -280,6 +285,15 @@ export default defineConfig(async () => {
           items: [
             { text: "What is megalo?", link: "/" },
             { text: "Install & quick start", link: "/guide/quick-start" },
+          ],
+        },
+        {
+          text: "MegaCrow",
+          items: [
+            { text: "Overview", link: "/megacrow/" },
+            { text: "Workspaces", link: "/megacrow/workspaces" },
+            { text: "Export", link: "/megacrow/export" },
+            { text: "Settings", link: "/megacrow/settings" },
           ],
         },
         {

@@ -8,6 +8,7 @@ import {
 import { createPortal } from "react-dom";
 import type { GametypeSaveFormat } from "../lib/megaloShim";
 import { type IdeMessageKey, useT } from "../localization";
+import { DOCS_PATHS, DocsHelpButton } from "./DocsHelpButton";
 
 interface SaveOption {
   descriptionKey: IdeMessageKey;
@@ -163,7 +164,13 @@ export function SaveAsMenu({ disabled = false, onSave }: Props) {
                 width: Math.min(window.innerWidth - 24, PANEL_WIDTH),
               }}
             >
-              <p className="save-as-menu-title">{t("export_as")}</p>
+              <div className="save-as-menu-title-row">
+                <p className="save-as-menu-title">{t("export_as")}</p>
+                <DocsHelpButton
+                  label={t("docs_open_export")}
+                  path={DOCS_PATHS.export}
+                />
+              </div>
               {SAVE_OPTIONS.map((option) => (
                 <button
                   className="save-as-menu-item"

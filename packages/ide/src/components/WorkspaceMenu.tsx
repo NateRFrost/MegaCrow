@@ -10,6 +10,7 @@ import type { StoredWorkspace } from "../lib/megacrowSettings";
 import { getVersionInfo, type MegaloVersionId } from "../lib/megaloShim";
 import type { Workspace } from "../lib/workspace";
 import { useT } from "../localization";
+import { DOCS_PATHS, DocsHelpButton } from "./DocsHelpButton";
 
 const PANEL_WIDTH = 380;
 
@@ -209,16 +210,33 @@ export function WorkspaceMenu({
             >
               {workspaces.length === 0 ? (
                 <>
-                  <p className="workspace-menu-title">{t("workspace_title")}</p>
+                  <div className="workspace-menu-title-row">
+                    <p className="workspace-menu-title">
+                      {t("workspace_title")}
+                    </p>
+                    <DocsHelpButton
+                      label={t("docs_open_workspaces")}
+                      path={DOCS_PATHS.workspaces}
+                    />
+                  </div>
                   <p className="workspace-menu-empty">
                     {t("workspace_none_configured")}
                   </p>
                 </>
               ) : (
                 <div className="workspace-menu-table">
-                  <div aria-hidden="true" className="workspace-menu-columns">
-                    <span>{t("workspace_title")}</span>
-                    <span className="workspace-menu-columns-actions">
+                  <div className="workspace-menu-columns">
+                    <span className="workspace-menu-columns-label">
+                      <span>{t("workspace_title")}</span>
+                      <DocsHelpButton
+                        label={t("docs_open_workspaces")}
+                        path={DOCS_PATHS.workspaces}
+                      />
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="workspace-menu-columns-actions"
+                    >
                       {t("workspace_actions")}
                     </span>
                   </div>

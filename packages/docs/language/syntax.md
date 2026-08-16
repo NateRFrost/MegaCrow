@@ -143,7 +143,7 @@ action player_set_objective current_player "+%n" score_to_win_round
 
 At runtime the engine substitutes the player's score-to-win value into the `%n` slot, producing text like `+25`. See [Dynamic strings](/language/enums/dynamic-strings) for the full placeholder table, limits, and which actions use them.
 
-### Compiler strictness
+### Strict compiler
 
 Many fields expect a string-table **symbol**, not a literal. For example, `engine_data name slayer_title` is normal; `engine_data name "Slayer"` compiles in MegaloEdit but emits a warning that the internal build farm would reject it. See [String literal strictness](/language/compiler-settings#string-literal-strictness).
 

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { AppSettings, CompilerProfile } from "../lib/appSettings";
 import { useT } from "../localization";
 import { EDITOR_THEME_OPTIONS } from "../monaco/theme";
+import { DOCS_PATHS, DocsHelpButton } from "./DocsHelpButton";
 
 interface Props {
   onChange: (patch: Partial<AppSettings>) => void;
@@ -60,10 +61,15 @@ export function SettingsMenu({ settings, onChange }: Props) {
             className="settings-modal"
             role="dialog"
           >
-            <h2 className="settings-modal-title" id="settings-modal-title">
-              {t("settings_title")}
-            </h2>
-
+            <div className="settings-modal-title-row">
+              <h2 className="settings-modal-title" id="settings-modal-title">
+                {t("settings_title")}
+              </h2>
+              <DocsHelpButton
+                label={t("docs_open_settings")}
+                path={DOCS_PATHS.settings}
+              />
+            </div>
             <div className="settings-modal-body">
               <section
                 aria-labelledby="settings-compiler-heading"

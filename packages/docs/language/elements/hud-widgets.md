@@ -7,6 +7,10 @@
 
 Declares on-screen HUD widget slots. Each line is a widget identifier and a screen position.
 
+![Halo: Reach HUD with labeled widget positions — top_left, top_center, top_right, high/low left and right, high/low/bottom center, and bottom_left on the motion tracker](/images/language/hud-widget-positions.png)
+
+*Widget position tokens and where they land on the Reach HUD.*
+
 ```megalo
 hud_widgets
 	proximity_warning high_center

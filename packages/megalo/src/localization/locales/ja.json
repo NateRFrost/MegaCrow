@@ -42,7 +42,7 @@
   "duplicate_declaration_name_ignored": "重複する {{kind}} 名 '{{name}}' は名前解決では無視されます（MegaloEdit は最初の定義を使用します）",
   "legacy_hud_widget_text_keyword": "hud_widgets エントリの先頭にある古い 'text' 接頭辞は旧構文です。MegaloEdit ではコンパイルできません",
   "unsupported_dynamic_string_replacement": "'{{got}}' は dynamic-string の置換として無効です。プレースホルダに合う宣言済み参照を使ってください（%n 数値、%p プレイヤー、%t チーム、%o オブジェクト、%s タイマー）。",
-  "string_literal_not_allowed_when_strict": "コンパイラ厳格モードでは文字列リテラルは使えません。string table の識別子を使用してください",
+  "string_literal_not_allowed_when_strict": "厳格コンパイラでは文字列リテラルは使えません。string table の識別子を使用してください",
   "could_not_resolve_include": "include \"{{path}}\" を解決できませんでした",
   "could_not_resolve_localized_include": "localized_include \"{{path}}\" を解決できませんでした",
   "transient_variable_in_persistent_string": "永続文字列を読むときは一時変数を使えません",

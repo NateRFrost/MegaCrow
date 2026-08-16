@@ -86,6 +86,297 @@ var require_dist = __commonJS({
 var VersionConfiguration = class {
 };
 
+// ../megalo/src/frontend/intermediate-representation/megaloEnum.ts
+var normalizeMember = (member) => {
+  if (typeof member === "string") {
+    return { name: member, deprecated: false };
+  }
+  return {
+    name: member.name,
+    deprecated: member.deprecated === true,
+    aliasOf: member.aliasOf
+  };
+};
+var megaloEnum = (members, allowedForVersion) => {
+  const normalized = members.map(normalizeMember);
+  const seen = /* @__PURE__ */ new Set();
+  for (const member of normalized) {
+    if (seen.has(member.name)) {
+      throw new Error(`Duplicate megaloEnum member: ${member.name}`);
+    }
+    seen.add(member.name);
+  }
+  const names = [];
+  const acceptedNames = [];
+  const enumObject = {};
+  const canonicalNames = /* @__PURE__ */ new Set();
+  const deprecatedNames = /* @__PURE__ */ new Set();
+  const resolve = /* @__PURE__ */ new Map();
+  const allowedByVersion = /* @__PURE__ */ new Map();
+  const resolveAllowed = allowedForVersion ?? ((_version) => new Set(names));
+  for (const member of normalized) {
+    if (member.aliasOf !== void 0) {
+      continue;
+    }
+    const name = member.name;
+    names.push(name);
+    acceptedNames.push(name);
+    enumObject[name] = name;
+    canonicalNames.add(name);
+    resolve.set(name, name);
+    if (member.deprecated) {
+      deprecatedNames.add(name);
+    }
+  }
+  for (const member of normalized) {
+    if (member.aliasOf === void 0) {
+      continue;
+    }
+    if (!canonicalNames.has(member.aliasOf)) {
+      throw new Error(
+        `megaloEnum alias "${member.name}" targets unknown member "${member.aliasOf}"`
+      );
+    }
+    acceptedNames.push(member.name);
+    resolve.set(member.name, member.aliasOf);
+    if (member.deprecated) {
+      deprecatedNames.add(member.name);
+    }
+  }
+  return {
+    names,
+    acceptedNames,
+    enum: enumObject,
+    parse: (name) => resolve.get(name),
+    has: (name) => resolve.has(name),
+    isDeprecated: (name) => deprecatedNames.has(name),
+    supportedMembers: (version2) => {
+      let allowed = allowedByVersion.get(version2);
+      if (allowed === void 0) {
+        allowed = resolveAllowed(version2);
+        allowedByVersion.set(version2, allowed);
+      }
+      return allowed;
+    }
+  };
+};
+
+// ../megalo/src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions.ts
+var actionType = megaloEnum([
+  "set_score",
+  "create_object",
+  "delete_object",
+  "navpoint_set_visible",
+  "navpoint_set_icon",
+  "navpoint_set_priority",
+  "navpoint_set_timer",
+  "navpoint_set_visible_range",
+  "set",
+  "set_boundary",
+  "apply_player_traits",
+  "set_pickup_filter",
+  "set_respawn_filter",
+  "set_fireteam_respawn_filter",
+  "set_progress_bar",
+  "hud_post_message",
+  "timer_set_rate",
+  "print_variable",
+  "get_player_holding_object",
+  "for_each",
+  "end_round",
+  "boundary_set_visible",
+  "object_destroy",
+  "object_set_invincibility",
+  "random",
+  "break_into_debugger",
+  "object_get_orientation",
+  "object_get_velocity",
+  "player_death_get_killing_player",
+  "player_death_get_damage_type",
+  "player_death_get_special_type",
+  "debugging_enable_tracing",
+  "object_attach",
+  "object_detach",
+  "player_get_place",
+  "team_get_place",
+  "player_get_killing_spree_count",
+  "player_adjust_money",
+  "player_enable_purchases",
+  "player_get_vehicle",
+  "player_set_vehicle",
+  "player_set_unit",
+  "timer_reset",
+  "weapon_set_pickup_priority",
+  "object_bounce",
+  "hud_widget_set_text",
+  "hud_widget_set_value",
+  "hud_widget_set_meter",
+  "hud_widget_set_icon",
+  "hud_widget_set_visibility",
+  "play_sound",
+  "object_set_scale",
+  "navpoint_set_text",
+  "object_get_shield",
+  "object_get_health",
+  "player_set_objective",
+  "player_set_objective_allegiance",
+  "player_set_objective_allegiance_icon",
+  "team_set_coop_spawning",
+  "team_set_primary_respawn_object",
+  "player_set_primary_respawn_object",
+  "player_get_fireteam_index",
+  "player_set_fireteam_index",
+  "object_adjust_shield",
+  "object_adjust_health",
+  "object_get_distance",
+  "object_adjust_maximum_shield",
+  "object_adjust_maximum_health",
+  "player_set_requisition_palette",
+  "device_set_power",
+  "device_get_power",
+  "device_set_position",
+  "device_get_position",
+  "adjust_grenades",
+  "submit_incident",
+  "submit_incident_with_custom_value",
+  "set_loadout_palette",
+  "device_set_position_track",
+  "device_animate_position",
+  "device_set_position_immediate",
+  "saved_film_insert_marker",
+  "respawn_zone_enable",
+  "player_get_weapon",
+  "player_get_equipment",
+  "object_set_never_garbage",
+  "player_get_target_object",
+  "create_tunnel",
+  "debug_force_player_view_count",
+  "player_pick_up_weapon",
+  "player_set_coop_spawning",
+  "object_set_orientation",
+  "object_face_object",
+  "biped_give_weapon",
+  "biped_drop_weapon",
+  "set_scenario_interpolator_state",
+  "get_random_object",
+  "game_grief_record_custom_penalty",
+  "boundary_set_player_color",
+  "begin",
+  "hs_function_call",
+  "get_button_time",
+  "team_set_vehicle_spawning",
+  "player_set_vehicle_spawning",
+  "set_player_respawn_vehicle",
+  "set_team_respawn_vehicle",
+  "hide_object"
+]);
+var ActionType = actionType.enum;
+var teamOrPlayerTarget = megaloEnum([
+  "everyone",
+  "player",
+  "team"
+]);
+var TeamOrPlayerTargetKind = teamOrPlayerTarget.enum;
+var mathOperation = megaloEnum([
+  "add",
+  { name: "+=", aliasOf: "add" },
+  "subtract",
+  { name: "-=", aliasOf: "subtract" },
+  "multiply",
+  { name: "*=", aliasOf: "multiply" },
+  "divide",
+  { name: "/=", aliasOf: "divide" },
+  "set_to",
+  { name: "=", aliasOf: "set_to" },
+  "modulo",
+  { name: "%=", aliasOf: "modulo" },
+  "and",
+  { name: "&=", aliasOf: "and" },
+  "or",
+  { name: "|=", aliasOf: "or" },
+  "xor",
+  { name: "^=", aliasOf: "xor" },
+  "not",
+  { name: "~=", aliasOf: "not" },
+  "lshift",
+  { name: "<<", aliasOf: "lshift" },
+  "rshift",
+  { name: ">>", aliasOf: "rshift" },
+  "abs"
+  // no alias?
+]);
+var MathOperation = mathOperation.enum;
+var navpointPriority = megaloEnum([
+  "low",
+  "normal",
+  "high",
+  "blink"
+]);
+var NavpointPriority = navpointPriority.enum;
+var boundaryShape = megaloEnum([
+  "none",
+  "sphere",
+  "cylinder",
+  "box"
+]);
+var BoundaryShape = boundaryShape.enum;
+var playerFilterType = megaloEnum([
+  "no_one",
+  "everyone",
+  "allies",
+  "enemies",
+  "player",
+  "all",
+  { name: "normal", aliasOf: "all" }
+]);
+var PlayerFilterType = playerFilterType.enum;
+var purchaseLifeState = megaloEnum(["alive", "dead", "both"]);
+var PurchaseLifeState = purchaseLifeState.enum;
+var purchaseCategory = megaloEnum([
+  "weapons",
+  "equipment",
+  "vehicles",
+  "all"
+]);
+var PurchaseCategory = purchaseCategory.enum;
+var fireteamFilterPreset = megaloEnum(["none", "all"]);
+var FireteamFilterPreset = fireteamFilterPreset.enum;
+var weaponSlot = megaloEnum(["primary", "secondary"]);
+var WeaponSlot = weaponSlot.enum;
+var weaponPickupPriority = megaloEnum([
+  "normal",
+  "special",
+  { name: "high", aliasOf: "special" },
+  "auto",
+  { name: "automatic", aliasOf: "auto" }
+]);
+var WeaponPickupPriority = weaponPickupPriority.enum;
+var grenadeType = megaloEnum(["frag", "plasma"]);
+var GrenadeType = grenadeType.enum;
+var bipedGiveWeaponMode = megaloEnum([
+  "primary",
+  "secondary",
+  "force"
+]);
+var BipedGiveWeaponMode = bipedGiveWeaponMode.enum;
+var scriptableGameButtons = megaloEnum([
+  "jump",
+  "grenade",
+  "switch_weapon",
+  "context_primary",
+  "melee_attack",
+  "equipment",
+  "throw_grenade",
+  "fire_primary",
+  "crouch",
+  "scope_zoom",
+  "night_vision",
+  "fire_secondary",
+  "fire_tertiary",
+  "vehicle_trick"
+]);
+var ScriptableGameButtons = scriptableGameButtons.enum;
+
 // ../megalo/src/diagnostics/index.ts
 var SENTINEL_POSITION = {
   localOffset: -1,
@@ -466,6 +757,8 @@ var en_default = {
   invalid_explicit_team: "Invalid explicit team: {{token}}",
   variable_reference: "variable reference",
   expected_parameter_type: "Expected {{expected}} parameter but got '{{got}}'",
+  unresolved_identifier: "Unresolved identifier '{{name}}'.",
+  unresolved_scoped_identifier: "Unresolved identifier {{base}}.'{{member}}'.",
   unknown_player_trait: "Expected player trait modifier, got '{{got}}'",
   unknown_loadout_property: "Expected loadout property, got '{{got}}'",
   unknown_teams_block_property: "Expected teams block property, got '{{got}}'",
@@ -476,6 +769,8 @@ var en_default = {
   invalid_parameter_count: "Expected {{expected}} parameters but got {{got}}",
   too_many_variables: "Too many {{scope}} {{type}} variables (limit {{limit}})",
   too_many_hud_widgets: "Too many hud widgets",
+  variant_encoded_too_large: "Variant encoded too large!! encoded {{encoded}} max {{max}}",
+  failed_to_write_gametype_file: "Failed to write gametype file. Your file may be too large.",
   too_many_team_entries: "Too many team entries!",
   too_many_map_permission_exceptions: "Too many map permission exceptions",
   map_id_out_of_range: "map id out of range (-32k, +32k)",
@@ -492,7 +787,18 @@ var en_default = {
   unsupported_field: "'{{fieldPath}}' is not supported by {{versionLabel}}.",
   only_one_base_directive_allowed: "Only one base directive is allowed",
   duplicate_declaration_name_ignored: "Duplicate {{kind}} name '{{name}}' will be ignored for name lookup (MegaloEdit uses the first declaration)",
+  legacy_hud_widget_text_keyword: "Legacy 'text' prefix on hud_widgets entries is old syntax and will not compile with MegaloEdit",
+  unsupported_dynamic_string_replacement: "'{{got}}' is not a valid dynamic-string replacement. Use a declared reference that matches the placeholder (%n number, %p player, %t team, %o object, %s timer).",
+  string_literal_not_allowed_when_strict: "String literals are not allowed when compiler strictness is enabled; use a string table identifier",
+  could_not_resolve_include: 'Could not resolve include "{{path}}"',
+  could_not_resolve_localized_include: 'Could not resolve localized_include "{{path}}"',
+  transient_variable_in_persistent_string: "Can't use transient variables when reading a persistent string",
   element_not_allowed_in_base_derived: "'{{element}}' is not allowed in a base-derived script",
+  action_not_allowed_in_pregame: "This action can't be used inside a pregame trigger",
+  object_reference_must_be_writable: "Object reference must be writable",
+  player_reference_must_be_writeable: "player reference must be writeable",
+  team_reference_must_be_writeable: "Team reference must be writeable",
+  numeric_reference_must_be_writeable: "Numeric reference must be writeable",
   game_option_not_allowed_in_base_derived: "'{{entry}}' cannot define new entries in a base-derived script; override an existing option instead",
   game_option_override_requires_base: "'{{entry}}' override form requires a base-derived script",
   locking_hiding_player_traits_not_supported: "Locking/hiding of player_traits is not supported",
@@ -519,6 +825,8 @@ var ja_default = {
   invalid_explicit_team: "\u7121\u52B9\u306A\u660E\u793A\u30C1\u30FC\u30E0: {{token}}",
   variable_reference: "\u5909\u6570\u53C2\u7167",
   expected_parameter_type: "{{expected}} \u30D1\u30E9\u30E1\u30FC\u30BF\u304C\u5FC5\u8981\u3067\u3059\u304C\u3001'{{got}}' \u304C\u898B\u3064\u304B\u308A\u307E\u3057\u305F",
+  unresolved_identifier: "\u672A\u89E3\u6C7A\u306E\u8B58\u5225\u5B50 '{{name}}'\u3002",
+  unresolved_scoped_identifier: "\u672A\u89E3\u6C7A\u306E\u8B58\u5225\u5B50 {{base}}.'{{member}}'\u3002",
   unknown_player_trait: "player trait modifier \u304C\u5FC5\u8981\u3067\u3059\u304C\u3001'{{got}}' \u304C\u898B\u3064\u304B\u308A\u307E\u3057\u305F",
   unknown_loadout_property: "loadout property \u304C\u5FC5\u8981\u3067\u3059\u304C\u3001'{{got}}' \u304C\u898B\u3064\u304B\u308A\u307E\u3057\u305F",
   unknown_teams_block_property: "teams block property \u304C\u5FC5\u8981\u3067\u3059\u304C\u3001'{{got}}' \u304C\u898B\u3064\u304B\u308A\u307E\u3057\u305F",
@@ -529,6 +837,8 @@ var ja_default = {
   invalid_parameter_count: "{{expected}} \u30D1\u30E9\u30E1\u30FC\u30BF\u304C\u5FC5\u8981\u3067\u3059\u304C\u3001{{got}} \u30D1\u30E9\u30E1\u30FC\u30BF\u304C\u898B\u3064\u304B\u308A\u307E\u3057\u305F",
   too_many_variables: "{{scope}} {{type}} \u5909\u6570\u304C\u591A\u3059\u304E\u307E\u3059\uFF08\u4E0A\u9650 {{limit}}\uFF09",
   too_many_hud_widgets: "hud widget \u304C\u591A\u3059\u304E\u307E\u3059",
+  variant_encoded_too_large: "\u30D0\u30EA\u30A2\u30F3\u30C8\u306E\u30A8\u30F3\u30B3\u30FC\u30C9\u30B5\u30A4\u30BA\u304C\u5927\u304D\u3059\u304E\u307E\u3059!! encoded {{encoded}} max {{max}}",
+  failed_to_write_gametype_file: "\u30B2\u30FC\u30E0\u30BF\u30A4\u30D7\u30D5\u30A1\u30A4\u30EB\u306E\u66F8\u304D\u8FBC\u307F\u306B\u5931\u6557\u3057\u307E\u3057\u305F\u3002\u30D5\u30A1\u30A4\u30EB\u304C\u5927\u304D\u3059\u304E\u308B\u53EF\u80FD\u6027\u304C\u3042\u308A\u307E\u3059\u3002",
   too_many_team_entries: "team \u30A8\u30F3\u30C8\u30EA\u304C\u591A\u3059\u304E\u307E\u3059\uFF01",
   too_many_map_permission_exceptions: "map permission \u306E exception \u304C\u591A\u3059\u304E\u307E\u3059",
   map_id_out_of_range: "map id \u304C\u7BC4\u56F2\u5916\u3067\u3059\uFF08-32k\uFF5E+32k\uFF09",
@@ -545,7 +855,18 @@ var ja_default = {
   unsupported_field: "'{{fieldPath}}' \u306F {{versionLabel}} \u3067\u306F\u30B5\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u307E\u305B\u3093\u3002",
   only_one_base_directive_allowed: "base \u30C7\u30A3\u30EC\u30AF\u30C6\u30A3\u30D6\u306F1\u3064\u3060\u3051\u8A31\u53EF\u3055\u308C\u3066\u3044\u307E\u3059",
   duplicate_declaration_name_ignored: "\u91CD\u8907\u3059\u308B {{kind}} \u540D '{{name}}' \u306F\u540D\u524D\u89E3\u6C7A\u3067\u306F\u7121\u8996\u3055\u308C\u307E\u3059\uFF08MegaloEdit \u306F\u6700\u521D\u306E\u5B9A\u7FA9\u3092\u4F7F\u7528\u3057\u307E\u3059\uFF09",
+  legacy_hud_widget_text_keyword: "hud_widgets \u30A8\u30F3\u30C8\u30EA\u306E\u5148\u982D\u306B\u3042\u308B\u53E4\u3044 'text' \u63A5\u982D\u8F9E\u306F\u65E7\u69CB\u6587\u3067\u3059\u3002MegaloEdit \u3067\u306F\u30B3\u30F3\u30D1\u30A4\u30EB\u3067\u304D\u307E\u305B\u3093",
+  unsupported_dynamic_string_replacement: "'{{got}}' \u306F dynamic-string \u306E\u7F6E\u63DB\u3068\u3057\u3066\u7121\u52B9\u3067\u3059\u3002\u30D7\u30EC\u30FC\u30B9\u30DB\u30EB\u30C0\u306B\u5408\u3046\u5BA3\u8A00\u6E08\u307F\u53C2\u7167\u3092\u4F7F\u3063\u3066\u304F\u3060\u3055\u3044\uFF08%n \u6570\u5024\u3001%p \u30D7\u30EC\u30A4\u30E4\u30FC\u3001%t \u30C1\u30FC\u30E0\u3001%o \u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3001%s \u30BF\u30A4\u30DE\u30FC\uFF09\u3002",
+  string_literal_not_allowed_when_strict: "\u30B3\u30F3\u30D1\u30A4\u30E9\u53B3\u683C\u30E2\u30FC\u30C9\u3067\u306F\u6587\u5B57\u5217\u30EA\u30C6\u30E9\u30EB\u306F\u4F7F\u3048\u307E\u305B\u3093\u3002string table \u306E\u8B58\u5225\u5B50\u3092\u4F7F\u7528\u3057\u3066\u304F\u3060\u3055\u3044",
+  could_not_resolve_include: 'include "{{path}}" \u3092\u89E3\u6C7A\u3067\u304D\u307E\u305B\u3093\u3067\u3057\u305F',
+  could_not_resolve_localized_include: 'localized_include "{{path}}" \u3092\u89E3\u6C7A\u3067\u304D\u307E\u305B\u3093\u3067\u3057\u305F',
+  transient_variable_in_persistent_string: "\u6C38\u7D9A\u6587\u5B57\u5217\u3092\u8AAD\u3080\u3068\u304D\u306F\u4E00\u6642\u5909\u6570\u3092\u4F7F\u3048\u307E\u305B\u3093",
   element_not_allowed_in_base_derived: "base \u6D3E\u751F\u30B9\u30AF\u30EA\u30D7\u30C8\u3067\u306F '{{element}}' \u306F\u4F7F\u7528\u3067\u304D\u307E\u305B\u3093",
+  action_not_allowed_in_pregame: "\u3053\u306E\u30A2\u30AF\u30B7\u30E7\u30F3\u306F pregame \u30C8\u30EA\u30AC\u30FC\u5185\u3067\u306F\u4F7F\u7528\u3067\u304D\u307E\u305B\u3093",
+  object_reference_must_be_writable: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u306F\u66F8\u304D\u8FBC\u307F\u53EF\u80FD\u3067\u3042\u308B\u5FC5\u8981\u304C\u3042\u308A\u307E\u3059",
+  player_reference_must_be_writeable: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u306F\u66F8\u304D\u8FBC\u307F\u53EF\u80FD\u3067\u3042\u308B\u5FC5\u8981\u304C\u3042\u308A\u307E\u3059",
+  team_reference_must_be_writeable: "\u30C1\u30FC\u30E0\u53C2\u7167\u306F\u66F8\u304D\u8FBC\u307F\u53EF\u80FD\u3067\u3042\u308B\u5FC5\u8981\u304C\u3042\u308A\u307E\u3059",
+  numeric_reference_must_be_writeable: "\u6570\u5024\u53C2\u7167\u306F\u66F8\u304D\u8FBC\u307F\u53EF\u80FD\u3067\u3042\u308B\u5FC5\u8981\u304C\u3042\u308A\u307E\u3059",
   game_option_not_allowed_in_base_derived: "base \u6D3E\u751F\u30B9\u30AF\u30EA\u30D7\u30C8\u3067\u306F '{{entry}}' \u3067\u65B0\u898F\u5B9A\u7FA9\u306F\u3067\u304D\u307E\u305B\u3093\u3002\u65E2\u5B58\u30AA\u30D7\u30B7\u30E7\u30F3\u3092 override \u3057\u3066\u304F\u3060\u3055\u3044",
   game_option_override_requires_base: "'{{entry}}' \u306E override \u5F62\u5F0F\u306B\u306F base \u6D3E\u751F\u30B9\u30AF\u30EA\u30D7\u30C8\u304C\u5FC5\u8981\u3067\u3059",
   locking_hiding_player_traits_not_supported: "player_traits \u306E lock/hide \u306F\u30B5\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u307E\u305B\u3093",
@@ -558,6 +879,22 @@ var ja_default = {
   version_label_73: "Halo: Reach - \u30D9\u30FC\u30BF",
   version_label_49: "Halo: Reach - \u30A2\u30EB\u30D5\u30A1"
 };
+
+// ../megalo/src/frontend/language-configuration/omni/strings.ts
+var STRING_TABLE_LANGUAGES = [
+  "english",
+  "japanese",
+  "german",
+  "french",
+  "spanish",
+  "mexican_spanish",
+  "italian",
+  "korean",
+  "traditional_chinese",
+  "simplified_chinese",
+  "portuguese",
+  "polish"
+];
 
 // ../megalo/src/localization/index.ts
 var i18n = (0, import_rosetta.default)({ en: en_default, ja: ja_default });
@@ -704,6 +1041,27 @@ var diagnosticMessages = {
   unknownAction(got) {
     return `Unknown action '${got}'.`;
   },
+  actionNotAllowedInPregame() {
+    return translate("action_not_allowed_in_pregame");
+  },
+  objectReferenceMustBeWritable() {
+    return translate("object_reference_must_be_writable");
+  },
+  playerReferenceMustBeWriteable() {
+    return translate("player_reference_must_be_writeable");
+  },
+  teamReferenceMustBeWriteable() {
+    return translate("team_reference_must_be_writeable");
+  },
+  numericReferenceMustBeWriteable() {
+    return translate("numeric_reference_must_be_writeable");
+  },
+  unresolvedIdentifier(name) {
+    return translate("unresolved_identifier", { name });
+  },
+  unresolvedScopedIdentifier(base, member) {
+    return translate("unresolved_scoped_identifier", { base, member });
+  },
   unknownTriggerStatement(got) {
     return translate("unrecognized_element", { value: got });
   },
@@ -722,6 +1080,15 @@ var diagnosticMessages = {
   },
   tooManyHudWidgets() {
     return translate("too_many_hud_widgets");
+  },
+  variantEncodedTooLarge(encoded, max) {
+    return translate("variant_encoded_too_large", {
+      encoded: String(encoded),
+      max: String(max)
+    });
+  },
+  failedToWriteGametypeFile() {
+    return translate("failed_to_write_gametype_file");
   },
   tooManyTeamEntries() {
     return translate("too_many_team_entries");
@@ -815,24 +1182,26 @@ var diagnosticMessages = {
   },
   teamColorOverridesDoNotApplyInMccMenus() {
     return translate("team_color_overrides_do_not_apply_in_mcc_menus");
+  },
+  legacyHudWidgetTextKeyword() {
+    return translate("legacy_hud_widget_text_keyword");
+  },
+  unsupportedDynamicStringReplacement(got) {
+    return translate("unsupported_dynamic_string_replacement", { got });
+  },
+  stringLiteralNotAllowedWhenStrict() {
+    return translate("string_literal_not_allowed_when_strict");
+  },
+  couldNotResolveInclude(path) {
+    return translate("could_not_resolve_include", { path });
+  },
+  couldNotResolveLocalizedInclude(path) {
+    return translate("could_not_resolve_localized_include", { path });
+  },
+  transientVariableInPersistentString() {
+    return translate("transient_variable_in_persistent_string");
   }
 };
-
-// ../megalo/src/frontend/language-configuration/omni/strings.ts
-var STRING_TABLE_LANGUAGES = [
-  "english",
-  "japanese",
-  "german",
-  "french",
-  "spanish",
-  "mexican_spanish",
-  "italian",
-  "korean",
-  "traditional_chinese",
-  "simplified_chinese",
-  "portuguese",
-  "polish"
-];
 
 // ../megalo/src/frontend/intermediate-representation/game/string_table.ts
 var stringTableEntry = (language, content) => ({ [language]: content });
@@ -1126,6 +1495,11 @@ var SymbolBinder = class {
 
 // ../megalo/src/backend/version-configuration/107-mcc/index.ts
 var VersionConfiguration107MCC = class _VersionConfiguration107MCC extends VersionConfiguration {
+  static PREGAME_ACTIONS = [
+    ActionType.set,
+    ActionType.for_each,
+    ActionType.begin
+  ];
   /** Reach MCC object list tables under `object_lists/`. */
   static OBJECT_LIST_NAMES = [
     "objects.txt",
@@ -1183,11 +1557,27 @@ var VersionConfiguration107MCC = class _VersionConfiguration107MCC extends Versi
       triggers: 320,
       conditions: 512,
       actions: 1024,
-      userDefinedOptions: 16
+      userDefinedOptions: 16,
+      encodedSize: 20480,
+      strings: 112,
+      stringBytes: 19456,
+      hudWidgets: 4,
+      gameStatistics: 4,
+      objectFilters: 16,
+      loadouts: 32,
+      loadoutPalettes: 16,
+      // Requisition was cut before Reach shipped; MCC does not use palettes.
+      requisitionPalettes: 0,
+      playerTraitSets: 16,
+      teams: 8,
+      mapPermissionExceptions: 32
     };
   }
   get objectListNames() {
     return _VersionConfiguration107MCC.OBJECT_LIST_NAMES;
+  }
+  get pregameActions() {
+    return _VersionConfiguration107MCC.PREGAME_ACTIONS;
   }
 };
 
@@ -1211,6 +1601,7 @@ var getConfigurationForVersion = ({
 
 // ../megalo/src/compiler-settings.ts
 var DEFAULT_COMPILER_SETTINGS = {
+  strictStringLiterals: false,
   temporaryVariablesCanOverflowIntoUnusedGlobalVariables: true
 };
 var resolveCompilerSettings = (partial) => ({
@@ -1224,14 +1615,16 @@ var DEFAULT_MEGACROW_EXTENSIONS = {
   coopSpawningWaypointIcon: false,
   notBuiltIn: false,
   compileMissingBaseFromSource: false,
-  megacrowVersionString: false
+  megacrowVersionString: false,
+  supportLegacySyntax: false
 };
 var ALL_MEGACROW_EXTENSIONS = {
   targetTeam: true,
   coopSpawningWaypointIcon: true,
   notBuiltIn: true,
   compileMissingBaseFromSource: true,
-  megacrowVersionString: true
+  megacrowVersionString: true,
+  supportLegacySyntax: true
 };
 var resolveMegacrowExtensions = (partial) => ({
   ...DEFAULT_MEGACROW_EXTENSIONS,
@@ -1320,7 +1713,7 @@ var IncludeDiagnostics = class extends Diagnostics {
 };
 
 // ../megalo/src/frontend/abstract-syntax-tree/kinds.ts
-var isAstErrorNode = (node) => "kind" in node && node.kind === -1 /* INVALID */;
+var isAstErrorNode = (node) => node.kind === -1 /* INVALID */;
 
 // ../megalo/src/frontend/abstract-syntax-tree/comment.ts
 var lineStartLocation = (location) => ({
@@ -1429,6 +1822,24 @@ var collectComments = (tokens) => {
 // ../megalo/src/frontend/abstract-syntax-tree/elements/game_options/shared.ts
 var isEndToken = (token) => token?.kind === 1 /* Identifier */ && token.value === "end";
 var locationSpan = spanSourceCodeLocations;
+var isGameOptionsEntryBoundary = (token) => {
+  if (token === void 0 || token.kind !== 1 /* Identifier */) {
+    return false;
+  }
+  switch (token.value) {
+    case "end":
+    case "override":
+    case "option":
+    case "ranged_option":
+    case "player_traits":
+    case "lock":
+    case "hide":
+      return true;
+    default:
+      return false;
+  }
+};
+var canTakeBoundaryAsIdentifierOperand = (ctx, token) => isGameOptionsEntryBoundary(token) && isGameOptionsEntryBoundary(ctx.peekToken(1));
 var parseIdentifier = (ctx, anchor) => {
   const token = ctx.getToken();
   if (token.kind === 1 /* Identifier */) {
@@ -1448,6 +1859,40 @@ var parseIdentifier = (ctx, anchor) => {
   return {
     kind: -1 /* INVALID */,
     location: anchor.location
+  };
+};
+var missingIdentifierAfter = (ctx, previousLocation, peek) => {
+  const end = peek !== void 0 && peek.location.start.localOffset >= previousLocation.end.localOffset ? peek.location.start : previousLocation.end;
+  const location = {
+    type: previousLocation.type,
+    start: previousLocation.end,
+    end
+  };
+  ctx.diagnostics.addError(
+    diagnosticMessages.expectedTokenKind(
+      1 /* Identifier */,
+      peek?.kind ?? 0 /* None */,
+      peek?.value ?? ""
+    ),
+    location
+  );
+  return {
+    kind: -1 /* INVALID */,
+    location
+  };
+};
+var parseGameOptionsIdentifierOperand = (ctx, previousLocation) => {
+  const peek = ctx.peekToken();
+  if (!peek || peek.kind !== 1 /* Identifier */) {
+    return missingIdentifierAfter(ctx, previousLocation, peek);
+  }
+  if (isGameOptionsEntryBoundary(peek) && !canTakeBoundaryAsIdentifierOperand(ctx, peek)) {
+    return missingIdentifierAfter(ctx, previousLocation, peek);
+  }
+  const token = ctx.getToken();
+  return {
+    value: token.value,
+    location: token.location
   };
 };
 
@@ -1745,6 +2190,7 @@ var matchesParameterType = (entry, type) => {
     case 15 /* PlayerTraits */:
       return entry.kind === 10 /* PlayerTraits */;
     case 2 /* String */:
+    case 4 /* DynamicString */:
       return entry.kind === 2 /* String */;
     default:
       return false;
@@ -1791,9 +2237,33 @@ var parseMemberReference = (ctx, rootToken) => {
   };
 };
 var lookupReferenceSymbolId = (ctx, name) => ctx.symbolParser.lookupSymbol(name) ?? ctx.symbolParser.lookupString(name) ?? ctx.symbolParser.lookupHudWidget(name) ?? ctx.symbolParser.lookupLoadout(name) ?? ctx.symbolParser.lookupLoadoutPalette(name) ?? ctx.symbolParser.lookupRequisitionPalette(name) ?? ctx.symbolParser.lookupObjectFilter(name) ?? ctx.symbolParser.lookupPlayerTraits(name);
+var isTriggerStatementBoundary = (token) => {
+  if (token === void 0) {
+    return true;
+  }
+  if (token.kind !== 1 /* Identifier */) {
+    return false;
+  }
+  switch (token.value) {
+    case "end":
+    case "action":
+    case "condition":
+    case "begin":
+    case "temporary":
+      return true;
+    default:
+      return false;
+  }
+};
 var consumeLenientParameter = (ctx, anchor) => {
   const token = ctx.peekToken();
-  if (token?.kind === 1 /* Identifier */ && ctx.peekToken(1)?.kind === 2 /* MemberVariableSeparator */) {
+  if (token === void 0 || isTriggerStatementBoundary(token)) {
+    return {
+      kind: -1 /* INVALID */,
+      location: anchor
+    };
+  }
+  if (token.kind === 1 /* Identifier */ && ctx.peekToken(1)?.kind === 2 /* MemberVariableSeparator */) {
     const rootToken = ctx.getToken();
     return parseMemberReference(ctx, rootToken);
   }
@@ -1913,7 +2383,7 @@ var parseNamedSymbolParameter = (ctx, lookup) => {
 };
 var parseObjectListParameter = (ctx, objectType) => {
   const token = ctx.peekToken();
-  if (token?.kind !== 1 /* Identifier */) {
+  if (token?.kind !== 1 /* Identifier */ && token?.kind !== 3 /* QuotedString */) {
     return;
   }
   const symbolId = ctx.symbolParser.lookupObjectListItem(
@@ -2084,6 +2554,9 @@ var tryParseSlot = (ctx, slot) => {
 };
 var parseSlot = (ctx, slot, anchor) => {
   if (slot === 4 /* DynamicString */) {
+    if (isTriggerStatementBoundary(ctx.peekToken())) {
+      return [];
+    }
     return [
       parseDynamicString(
         ctx,
@@ -2108,8 +2581,8 @@ var parseSlot = (ctx, slot, anchor) => {
     ];
     if (slot.specs !== void 0) {
       for (const spec of slot.specs) {
-        const parameter = parseParameter(ctx, spec) ?? consumeLenientParameter(ctx, anchor);
-        nodes.push(parameter);
+        const parameter2 = parseParameter(ctx, spec) ?? consumeLenientParameter(ctx, anchor);
+        nodes.push(parameter2);
       }
     }
     return nodes;
@@ -2117,15 +2590,25 @@ var parseSlot = (ctx, slot, anchor) => {
   if (isParameterUnion(slot)) {
     for (const spec of slot) {
       const mark = ctx.mark();
-      const parameter = parseParameter(ctx, spec);
-      if (parameter !== void 0) {
-        return [parameter];
+      const parameter2 = parseParameter(ctx, spec);
+      if (parameter2 !== void 0) {
+        return [parameter2];
       }
       ctx.reset(mark);
     }
+    if (isTriggerStatementBoundary(ctx.peekToken())) {
+      return [];
+    }
     return [consumeLenientParameter(ctx, anchor)];
   }
-  return [parseParameter(ctx, slot) ?? consumeLenientParameter(ctx, anchor)];
+  const parameter = parseParameter(ctx, slot);
+  if (parameter !== void 0) {
+    return [parameter];
+  }
+  if (isTriggerStatementBoundary(ctx.peekToken())) {
+    return [];
+  }
+  return [consumeLenientParameter(ctx, anchor)];
 };
 var tryParseSignature = (ctx, signature) => {
   const parameters = [];
@@ -2584,10 +3067,19 @@ var OBJECT_LIST_TYPES = [
   "ordnances" /* Ordnances */,
   "strings" /* Strings */
 ];
-var objectListLocation = (objectType, index) => ({
+var isObjectListFileSource = (data) => data !== void 0 && !Array.isArray(data) && "entries" in data;
+var objectListEntries = (data) => {
+  if (data === void 0) {
+    return [];
+  }
+  return isObjectListFileSource(data) ? data.entries : data;
+};
+var objectListSourceFile = (data) => isObjectListFileSource(data) ? data.file : void 0;
+var objectListLocation = (objectType, index, file) => ({
   type: 3 /* OBJECT_LIST */,
   objectType,
-  source: { localOffset: -1, absoluteOffset: -1, line: index, column: 0 }
+  source: { localOffset: -1, absoluteOffset: -1, line: index, column: 0 },
+  ...file === void 0 ? {} : { file }
 });
 
 // ../megalo/src/frontend/abstract-syntax-tree/elements/game_options/player_traits.ts
@@ -2828,7 +3320,68 @@ var PlayerTraitParserRepository = class {
   }
 };
 
+// ../megalo/src/frontend/intermediate-representation/game/megalogamengine/loadoutPaletteType.ts
+var loadoutPaletteType = megaloEnum([
+  "none",
+  "spartan_tier1",
+  "elite_tier1",
+  "spartan_tier2",
+  "elite_tier2",
+  "spartan_tier3",
+  "elite_tier3"
+]);
+var LoadoutPaletteType = loadoutPaletteType.enum;
+
 // ../megalo/src/frontend/language-configuration/omni/game_options.ts
+var BUILT_IN_GAME_OPTION_NAMES = [
+  "score_to_win_round",
+  "fire_teams_enabled",
+  "teams_enabled",
+  "round_time_limit",
+  "round_count",
+  "perfection_enabled",
+  "early_victory_win_count",
+  "sudden_death_time_limit",
+  "grace_period_time_limit",
+  "lives_per_round",
+  "team_lives_per_round",
+  "respawn_time",
+  "suicide_respawn_penalty",
+  "betrayal_respawn_penalty",
+  "respawn_time_growth",
+  "loadout_selection_time",
+  "respawn_traits_duration",
+  "friendly_fire_enabled",
+  "betrayal_booting_enabled",
+  "enemy_voice_enabled",
+  "open_channel_voice_enabled",
+  "dead_player_voice_enabled",
+  "grenades_on_map",
+  "shortcuts_on_map",
+  "equipment_on_map",
+  "powerups_on_map",
+  "turrets_on_map",
+  "indestructible_vehicles",
+  "weapon_set",
+  "vehicle_set",
+  "red_powerup_duration",
+  "blue_powerup_duration",
+  "yellow_powerup_duration",
+  "team_scoring_mode",
+  "tu1_always_spillover_damage",
+  "tu1_armor_lock_stickies_remain",
+  "tu1_attached_damage_bypass_shields",
+  "tu1_active_camo_override_energy_curve",
+  "tu1_sword_gun_clang_kills",
+  "tu1_magnum_is_automatic",
+  "tu1_headshot_weapon_reticule_bloom_multiplier",
+  "tu1_armor_lock_damage_to_energy_transfer",
+  "tu1_armor_lock_damage_to_energy_cap",
+  "tu1_active_camo_override_energy_curve_min",
+  "tu1_active_camo_override_energy_curve_max",
+  "tu1_magnum_damage_multiplier",
+  "tu1_magnum_fire_recovery_time_multiplier"
+];
 var PLAYER_TRAITS_OVERRIDE_OPTIONS = [
   "base_player_traits",
   "respawn_traits",
@@ -2839,6 +3392,19 @@ var PLAYER_TRAITS_OVERRIDE_OPTIONS = [
 var isPlayerTraitsOverrideOption = (value) => PLAYER_TRAITS_OVERRIDE_OPTIONS.includes(value);
 
 // ../megalo/src/frontend/abstract-syntax-tree/elements/game_options/override.ts
+var objectListTypeForOverride = (name) => {
+  if (name.kind !== 4 /* REFERENCE */) {
+    return;
+  }
+  switch (name.identifier) {
+    case "weapon_set":
+      return "weapon_sets" /* WeaponSets */;
+    case "vehicle_set":
+      return "vehicle_sets" /* VehicleSets */;
+    default:
+      return;
+  }
+};
 var parseOverrideName = (ctx, nameToken) => {
   if (nameToken.kind !== 1 /* Identifier */) {
     ctx.diagnostics.addError(
@@ -2889,14 +3455,92 @@ var parseOverrideName = (ctx, nameToken) => {
     location: nameToken.location
   };
 };
-var isNestedPlayerTraitsOverride = (name, peek) => name.kind === "player_traits_override" && peek !== void 0 && peek.location.start.line !== name.location.start.line;
-var parseOverrideSimpleValue = (ctx, anchor) => {
+var isNestedPlayerTraitsOverride = (ctx, name, peek) => name.kind === "player_traits_override" && peek?.kind === 1 /* Identifier */ && ctx.playerTraitParserRepository.getParser(peek.value) !== void 0;
+var missingOperandAfter = (ctx, previousLocation, peek, expected) => {
+  const end = peek !== void 0 && peek.location.start.localOffset >= previousLocation.end.localOffset ? peek.location.start : previousLocation.end;
+  const location = {
+    type: previousLocation.type,
+    start: previousLocation.end,
+    end
+  };
+  ctx.diagnostics.addError(
+    diagnosticMessages.expectedParameterType(expected, peek?.value ?? ""),
+    location
+  );
+  return {
+    kind: -1 /* INVALID */,
+    location
+  };
+};
+var parseLoadoutPaletteOverrideValue = (ctx, nameLocation) => {
+  const tierPeek = ctx.peekToken();
+  let tier;
+  if (tierPeek?.kind === 1 /* Identifier */ && loadoutPaletteType.has(tierPeek.value)) {
+    const token = ctx.getToken();
+    tier = { value: token.value, location: token.location };
+  } else if (tierPeek?.kind === 1 /* Identifier */ && !isGameOptionsEntryBoundary(tierPeek)) {
+    const token = ctx.getToken();
+    ctx.diagnostics.addError(
+      diagnosticMessages.expectedParameterType(
+        "loadout palette type",
+        token.value
+      ),
+      token.location
+    );
+    tier = { kind: -1 /* INVALID */, location: token.location };
+  } else {
+    tier = missingOperandAfter(
+      ctx,
+      nameLocation,
+      tierPeek,
+      "loadout palette type"
+    );
+  }
+  const afterTier = isAstErrorNode(tier) ? tier.location : tier.location;
+  const palette = parseGameOptionsIdentifierOperand(ctx, afterTier);
+  return {
+    kind: 1 /* LOADOUT_PALETTE */,
+    tier,
+    palette
+  };
+};
+var canStartSimpleOverrideValue = (ctx, peek) => {
+  if (!peek) {
+    return false;
+  }
+  if (peek.kind === 4 /* Integer */ || peek.kind === 5 /* FloatingPoint */) {
+    return true;
+  }
+  if (peek.kind !== 1 /* Identifier */) {
+    return false;
+  }
+  if (!isGameOptionsEntryBoundary(peek)) {
+    return true;
+  }
+  return canTakeBoundaryAsIdentifierOperand(ctx, peek);
+};
+var parseOverrideSimpleValue = (ctx, anchor, objectListType) => {
   const token = ctx.peekToken();
   if (token?.kind === 4 /* Integer */ || token?.kind === 5 /* FloatingPoint */) {
     return parseNumericInitialValue(ctx, anchor);
   }
   if (token?.kind === 1 /* Identifier */) {
     const valueToken = ctx.getToken();
+    if (objectListType !== void 0) {
+      const listSymbolId = ctx.symbolParser.lookupObjectListItem(
+        objectListType,
+        valueToken.value
+      );
+      if (listSymbolId !== void 0) {
+        ctx.symbolParser.recordReference(listSymbolId, valueToken.location);
+        return {
+          kind: 4 /* REFERENCE */,
+          identifier: valueToken.value,
+          symbolId: listSymbolId,
+          location: valueToken.location
+        };
+      }
+    }
     const symbolId = ctx.symbolParser.lookupSymbol(valueToken.value);
     if (symbolId !== void 0) {
       ctx.symbolParser.recordReference(symbolId, valueToken.location);
@@ -2928,28 +3572,21 @@ var overrideParser = (ctx, keywordToken, modifiers) => {
   let value;
   const peek = ctx.peekToken();
   if (name.kind === "loadout_palette") {
-    const tier = parseIdentifier(ctx, nameToken);
-    const palette = parseIdentifier(ctx, nameToken);
-    value = {
-      kind: 1 /* LOADOUT_PALETTE */,
-      tier,
-      palette
-    };
-  } else if (isNestedPlayerTraitsOverride(name, peek)) {
+    value = parseLoadoutPaletteOverrideValue(ctx, name.location);
+  } else if (isNestedPlayerTraitsOverride(ctx, name, peek)) {
     const body = parsePlayerTraitOptions(ctx, nameToken);
     value = {
       kind: 2 /* NESTED */,
       body
     };
-  } else if (peek && (peek.kind === 4 /* Integer */ || peek.kind === 5 /* FloatingPoint */ || peek.kind === 1 /* Identifier */ && peek.value !== "end")) {
+  } else if (canStartSimpleOverrideValue(ctx, peek)) {
     value = {
       kind: 0 /* SIMPLE */,
-      value: parseOverrideSimpleValue(ctx, nameToken)
-    };
-  } else if (isEndToken(peek)) {
-    value = {
-      kind: -1 /* INVALID */,
-      location: nameToken.location
+      value: parseOverrideSimpleValue(
+        ctx,
+        nameToken,
+        objectListTypeForOverride(name)
+      )
     };
   } else {
     ctx.diagnostics.addError(
@@ -3267,7 +3904,29 @@ var gameStatsParser = (ctx, elementToken) => {
 };
 
 // ../megalo/src/frontend/abstract-syntax-tree/elements/hud_widgets.ts
+var tryConsumeLegacyTextKeyword = (ctx) => {
+  const first = ctx.peekToken();
+  const second = ctx.peekToken(1);
+  const third = ctx.peekToken(2);
+  if (!(first?.kind === 1 /* Identifier */ && first.value === "text" && second?.kind === 1 /* Identifier */ && third?.kind === 1 /* Identifier */ && first.location.start.line === second.location.start.line && second.location.start.line === third.location.start.line)) {
+    return;
+  }
+  const textToken = ctx.getToken();
+  if (ctx.frontend.megaloVersion.version >= 106) {
+    const message = diagnosticMessages.legacyHudWidgetTextKeyword();
+    if (ctx.frontend.megacrowExtensions.supportLegacySyntax) {
+      ctx.diagnostics.addWarning(message, textToken.location);
+    } else {
+      ctx.diagnostics.addError(message, textToken.location);
+    }
+  }
+  return {
+    value: "text",
+    location: textToken.location
+  };
+};
 var parseHudWidgetEntry = (ctx) => {
+  const textKeyword = tryConsumeLegacyTextKeyword(ctx);
   const nameToken = ctx.getToken();
   let name;
   if (nameToken.kind === 1 /* Identifier */) {
@@ -3311,12 +3970,14 @@ var parseHudWidgetEntry = (ctx) => {
       location: positionToken.location
     };
   }
+  const startLocation = textKeyword?.location ?? nameToken.location;
   return {
+    ...textKeyword === void 0 ? {} : { textKeyword },
     name,
     position,
     location: {
       type: 0 /* SOURCE_CODE */,
-      start: nameToken.location.start,
+      start: startLocation.start,
       end: positionToken.location.end
     }
   };
@@ -3477,13 +4138,14 @@ var loadoutParser = (ctx, elementToken) => {
     diagnosticMessages.expectedEndBeforeEof(),
     elementToken.location
   );
+  const endLocation = items.at(-1)?.location ?? name.location;
   return {
     kind: 0 /* ELEMENT */,
     elementKind: 8 /* LOADOUT */,
     keywordLocation: elementToken.location,
     name,
     items,
-    location: elementToken.location
+    location: locationSpan(elementToken.location, endLocation)
   };
 };
 
@@ -3588,13 +4250,14 @@ var loadoutPaletteParser = (ctx, elementToken) => {
     diagnosticMessages.expectedEndBeforeEof(),
     elementToken.location
   );
+  const endLocation = items.at(-1)?.location ?? name.location;
   return {
     kind: 0 /* ELEMENT */,
     elementKind: 9 /* LOADOUT_PALETTE */,
     keywordLocation: elementToken.location,
     name,
     items,
-    location: elementToken.location
+    location: locationSpan(elementToken.location, endLocation)
   };
 };
 
@@ -4448,299 +5111,6 @@ var teamsParser = (ctx, elementToken) => {
   };
 };
 
-// ../megalo/src/frontend/intermediate-representation/megaloEnum.ts
-var normalizeMember = (member) => {
-  if (typeof member === "string") {
-    return { name: member, deprecated: false };
-  }
-  return {
-    name: member.name,
-    deprecated: member.deprecated === true,
-    aliasOf: member.aliasOf
-  };
-};
-var megaloEnum = (members) => {
-  const normalized = members.map(normalizeMember);
-  const seen = /* @__PURE__ */ new Set();
-  for (const member of normalized) {
-    if (seen.has(member.name)) {
-      throw new Error(`Duplicate megaloEnum member: ${member.name}`);
-    }
-    seen.add(member.name);
-  }
-  const names = [];
-  const acceptedNames = [];
-  const enumObject = {};
-  const canonicalNames = /* @__PURE__ */ new Set();
-  const deprecatedNames = /* @__PURE__ */ new Set();
-  const resolve = /* @__PURE__ */ new Map();
-  for (const member of normalized) {
-    if (member.aliasOf !== void 0) {
-      continue;
-    }
-    const name = member.name;
-    names.push(name);
-    acceptedNames.push(name);
-    enumObject[name] = name;
-    canonicalNames.add(name);
-    resolve.set(name, name);
-    if (member.deprecated) {
-      deprecatedNames.add(name);
-    }
-  }
-  for (const member of normalized) {
-    if (member.aliasOf === void 0) {
-      continue;
-    }
-    if (!canonicalNames.has(member.aliasOf)) {
-      throw new Error(
-        `megaloEnum alias "${member.name}" targets unknown member "${member.aliasOf}"`
-      );
-    }
-    acceptedNames.push(member.name);
-    resolve.set(member.name, member.aliasOf);
-    if (member.deprecated) {
-      deprecatedNames.add(member.name);
-    }
-  }
-  return {
-    names,
-    acceptedNames,
-    enum: enumObject,
-    parse: (name) => resolve.get(name),
-    has: (name) => resolve.has(name),
-    isDeprecated: (name) => deprecatedNames.has(name)
-  };
-};
-
-// ../megalo/src/frontend/intermediate-representation/game/megalogamengine/loadoutPaletteType.ts
-var loadoutPaletteType = megaloEnum([
-  "none",
-  "spartan_tier1",
-  "elite_tier1",
-  "spartan_tier2",
-  "elite_tier2",
-  "spartan_tier3",
-  "elite_tier3"
-]);
-var LoadoutPaletteType = loadoutPaletteType.enum;
-
-// ../megalo/src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions.ts
-var actionType = megaloEnum([
-  "set_score",
-  "create_object",
-  "delete_object",
-  "navpoint_set_visible",
-  "navpoint_set_icon",
-  "navpoint_set_priority",
-  "navpoint_set_timer",
-  "navpoint_set_visible_range",
-  "set",
-  "set_boundary",
-  "apply_player_traits",
-  "set_pickup_filter",
-  "set_respawn_filter",
-  "set_fireteam_respawn_filter",
-  "set_progress_bar",
-  "hud_post_message",
-  "timer_set_rate",
-  "print_variable",
-  "get_player_holding_object",
-  "for_each",
-  "end_round",
-  "boundary_set_visible",
-  "object_destroy",
-  "object_set_invincibility",
-  "random",
-  "break_into_debugger",
-  "object_get_orientation",
-  "object_get_velocity",
-  "player_death_get_killing_player",
-  "player_death_get_damage_type",
-  "player_death_get_special_type",
-  "debugging_enable_tracing",
-  "object_attach",
-  "object_detach",
-  "player_get_place",
-  "team_get_place",
-  "player_get_killing_spree_count",
-  "player_adjust_money",
-  "player_enable_purchases",
-  "player_get_vehicle",
-  "player_set_vehicle",
-  "player_set_unit",
-  "timer_reset",
-  "weapon_set_pickup_priority",
-  "object_bounce",
-  "hud_widget_set_text",
-  "hud_widget_set_value",
-  "hud_widget_set_meter",
-  "hud_widget_set_icon",
-  "hud_widget_set_visibility",
-  "play_sound",
-  "object_set_scale",
-  "navpoint_set_text",
-  "object_get_shield",
-  "object_get_health",
-  "player_set_objective",
-  "player_set_objective_allegiance",
-  "player_set_objective_allegiance_icon",
-  "team_set_coop_spawning",
-  "team_set_primary_respawn_object",
-  "player_set_primary_respawn_object",
-  "player_get_fireteam_index",
-  "player_set_fireteam_index",
-  "object_adjust_shield",
-  "object_adjust_health",
-  "object_get_distance",
-  "object_adjust_maximum_shield",
-  "object_adjust_maximum_health",
-  "player_set_requisition_palette",
-  "device_set_power",
-  "device_get_power",
-  "device_set_position",
-  "device_get_position",
-  "adjust_grenades",
-  "submit_incident",
-  "submit_incident_with_custom_value",
-  "set_loadout_palette",
-  "device_set_position_track",
-  "device_animate_position",
-  "device_set_position_immediate",
-  "saved_film_insert_marker",
-  "respawn_zone_enable",
-  "player_get_weapon",
-  "player_get_equipment",
-  "object_set_never_garbage",
-  "player_get_target_object",
-  "create_tunnel",
-  "debug_force_player_view_count",
-  "player_pick_up_weapon",
-  "player_set_coop_spawning",
-  "object_set_orientation",
-  "object_face_object",
-  "biped_give_weapon",
-  "biped_drop_weapon",
-  "set_scenario_interpolator_state",
-  "get_random_object",
-  "game_grief_record_custom_penalty",
-  "boundary_set_player_color",
-  "begin",
-  "hs_function_call",
-  "get_button_time",
-  "team_set_vehicle_spawning",
-  "player_set_vehicle_spawning",
-  "set_player_respawn_vehicle",
-  "set_team_respawn_vehicle",
-  "hide_object"
-]);
-var ActionType = actionType.enum;
-var teamOrPlayerTarget = megaloEnum([
-  "everyone",
-  "player",
-  "team"
-]);
-var TeamOrPlayerTargetKind = teamOrPlayerTarget.enum;
-var mathOperation = megaloEnum([
-  "add",
-  { name: "+=", aliasOf: "add" },
-  "subtract",
-  { name: "-=", aliasOf: "subtract" },
-  "multiply",
-  { name: "*=", aliasOf: "multiply" },
-  "divide",
-  { name: "/=", aliasOf: "divide" },
-  "set_to",
-  { name: "=", aliasOf: "set_to" },
-  "modulo",
-  { name: "%=", aliasOf: "modulo" },
-  "and",
-  { name: "&=", aliasOf: "and" },
-  "or",
-  { name: "|=", aliasOf: "or" },
-  "xor",
-  { name: "^=", aliasOf: "xor" },
-  "not",
-  { name: "~=", aliasOf: "not" },
-  "lshift",
-  { name: "<<", aliasOf: "lshift" },
-  "rshift",
-  { name: ">>", aliasOf: "rshift" },
-  "abs"
-  // no alias?
-]);
-var MathOperation = mathOperation.enum;
-var navpointPriority = megaloEnum([
-  "low",
-  "normal",
-  "high",
-  "blink"
-]);
-var NavpointPriority = navpointPriority.enum;
-var boundaryShape = megaloEnum([
-  "none",
-  "sphere",
-  "cylinder",
-  "box"
-]);
-var BoundaryShape = boundaryShape.enum;
-var playerFilterType = megaloEnum([
-  "no_one",
-  "everyone",
-  "allies",
-  "enemies",
-  "player",
-  "all",
-  { name: "normal", aliasOf: "all" }
-]);
-var PlayerFilterType = playerFilterType.enum;
-var purchaseLifeState = megaloEnum(["alive", "dead", "both"]);
-var PurchaseLifeState = purchaseLifeState.enum;
-var purchaseCategory = megaloEnum([
-  "weapons",
-  "equipment",
-  "vehicles",
-  "all"
-]);
-var PurchaseCategory = purchaseCategory.enum;
-var fireteamFilterPreset = megaloEnum(["none", "all"]);
-var FireteamFilterPreset = fireteamFilterPreset.enum;
-var weaponSlot = megaloEnum(["primary", "secondary"]);
-var WeaponSlot = weaponSlot.enum;
-var weaponPickupPriority = megaloEnum([
-  "normal",
-  "special",
-  { name: "high", aliasOf: "special" },
-  "auto",
-  { name: "automatic", aliasOf: "auto" }
-]);
-var WeaponPickupPriority = weaponPickupPriority.enum;
-var grenadeType = megaloEnum(["frag", "plasma"]);
-var GrenadeType = grenadeType.enum;
-var bipedGiveWeaponMode = megaloEnum([
-  "primary",
-  "secondary",
-  "force"
-]);
-var BipedGiveWeaponMode = bipedGiveWeaponMode.enum;
-var scriptableGameButtons = megaloEnum([
-  "jump",
-  "grenade",
-  "switch_weapon",
-  "context_primary",
-  "melee_attack",
-  "equipment",
-  "throw_grenade",
-  "fire_primary",
-  "crouch",
-  "scope_zoom",
-  "night_vision",
-  "fire_secondary",
-  "fire_tertiary",
-  "vehicle_trick"
-]);
-var ScriptableGameButtons = scriptableGameButtons.enum;
-
 // ../megalo/src/frontend/abstract-syntax-tree/elements/trigger/action.ts
 var parseActionName = (ctx, anchor) => {
   const token = ctx.peekToken();
@@ -4782,7 +5152,7 @@ var parseAction = (ctx, actionToken) => {
     );
   }
   if (name.value === "for_each") {
-    return parseForEach(ctx, actionToken);
+    return parseForEach(ctx, actionToken, name);
   }
   const parser = ctx.actionParserRepository.getParser(name.value);
   let parameters = [];
@@ -5630,11 +6000,25 @@ var ActionParserRepository = class {
     );
     this.registerParser(
       "set_player_respawn_vehicle",
-      parameterParserBuilder([8 /* Object */, 7 /* Player */])
+      parameterParserBuilder([
+        [
+          ObjectListParameter("objects" /* Objects */),
+          3 /* QuotedString */,
+          0 /* Keyword */
+        ],
+        7 /* Player */
+      ])
     );
     this.registerParser(
       "set_team_respawn_vehicle",
-      parameterParserBuilder([8 /* Object */, 6 /* Team */])
+      parameterParserBuilder([
+        [
+          ObjectListParameter("objects" /* Objects */),
+          3 /* QuotedString */,
+          0 /* Keyword */
+        ],
+        6 /* Team */
+      ])
     );
     this.registerParser(
       "hide_object",
@@ -5926,7 +6310,7 @@ var TEMPORARY_STORAGE_NAMES = [
   "player"
 ];
 var isTemporaryStorageName = (value) => TEMPORARY_STORAGE_NAMES.includes(value);
-var isTriggerStatementBoundary = (token) => !token || token.kind === 1 /* Identifier */ && (token.value === "end" || token.value === "condition" || token.value === "action" || token.value === "begin" || token.value === "temporary");
+var isTriggerStatementBoundary2 = (token) => !token || token.kind === 1 /* Identifier */ && (token.value === "end" || token.value === "condition" || token.value === "action" || token.value === "begin" || token.value === "temporary");
 var parseTemporaryStorage = (ctx, anchor) => {
   const token = ctx.peekToken();
   if (token?.kind !== 1 /* Identifier */) {
@@ -5946,11 +6330,20 @@ var parseTemporaryStorage = (ctx, anchor) => {
       diagnosticMessages.expectedTemporaryStorage(storageToken.value),
       storageToken.location
     );
-    return;
+    return {
+      accepted: false,
+      storage: {
+        value: "number",
+        location: storageToken.location
+      }
+    };
   }
   return {
-    value: storageToken.value,
-    location: storageToken.location
+    accepted: true,
+    storage: {
+      value: storageToken.value,
+      location: storageToken.location
+    }
   };
 };
 var parseTemporaryName = (ctx, anchor) => {
@@ -5973,18 +6366,19 @@ var parseTemporaryName = (ctx, anchor) => {
   };
 };
 var parseTemporary = (ctx, temporaryToken) => {
-  const storage = parseTemporaryStorage(ctx, temporaryToken);
+  const parsedStorage = parseTemporaryStorage(ctx, temporaryToken);
+  const storage = parsedStorage?.storage;
   const name = parseTemporaryName(ctx, temporaryToken);
   let symbolId;
-  if (storage !== void 0 && name !== void 0) {
+  if (parsedStorage?.accepted === true && name !== void 0) {
     symbolId = ctx.symbolParser.addVariableToScope({
       name: name.value,
-      type: variableTypeFromName(storage.value),
+      type: variableTypeFromName(parsedStorage.storage.value),
       declaration: name.location,
       scope: 4 /* Temporary */
     });
   }
-  if (isTriggerStatementBoundary(ctx.peekToken())) {
+  if (isTriggerStatementBoundary2(ctx.peekToken())) {
     ctx.diagnostics.addError(
       diagnosticMessages.expectedTemporaryInitial(),
       name?.location ?? temporaryToken.location
@@ -6240,7 +6634,7 @@ var parseForEachTarget = (ctx, anchor) => {
     )
   };
 };
-var parseForEach = (ctx, actionToken) => {
+var parseForEach = (ctx, actionToken, name) => {
   const target = parseForEachTarget(ctx, actionToken);
   return withScope(
     ctx,
@@ -6255,6 +6649,7 @@ var parseForEach = (ctx, actionToken) => {
       );
       return {
         kind: 13 /* FOR_EACH */,
+        name,
         target: target ?? { value: "", location: actionToken.location },
         statements,
         location
@@ -6804,13 +7199,14 @@ var addBuiltInGameOptions = (megaloVersion, symbolParser) => {
     addBuiltInGameOption("tu1_magnum_fire_recovery_time_multiplier");
   }
 };
+var MEGACROW_VERSION_STRING_NAME = "megacrow_version";
 var addBuiltInStrings = (frontend, symbolParser) => {
   if (!frontend.megacrowExtensions.megacrowVersionString) {
     return;
   }
   for (const language of STRING_TABLE_LANGUAGES) {
     symbolParser.addStringToScope({
-      name: "megacrow_version",
+      name: MEGACROW_VERSION_STRING_NAME,
       language,
       content: MEGACROW_BUILD_STRING,
       declaration: BUILT_IN_LOCATION
@@ -6850,7 +7246,9 @@ var ParserSymbolContext = class {
   }
   registerObjectListItems(objectLists2, diagnostics) {
     for (const objectType of OBJECT_LIST_TYPES) {
-      const entries = objectLists2[objectType] ?? [];
+      const table = objectLists2[objectType];
+      const entries = objectListEntries(table);
+      const file = objectListSourceFile(table);
       const byName = /* @__PURE__ */ new Map();
       for (let i = 0; i < entries.length; i++) {
         const name = entries[i];
@@ -6860,7 +7258,7 @@ var ParserSymbolContext = class {
         if (byName.has(name)) {
           diagnostics.addError(
             `Duplicate object "${name}" in ${objectType} object list`,
-            objectListLocation(objectType, i)
+            objectListLocation(objectType, i, file)
           );
           continue;
         }
@@ -6868,7 +7266,7 @@ var ParserSymbolContext = class {
           name,
           objectType,
           index: i,
-          declaration: objectListLocation(objectType, i)
+          declaration: objectListLocation(objectType, i, file)
         });
         byName.set(name, id);
       }
@@ -7234,6 +7632,7 @@ var ParserSymbolContext = class {
 var ParserContext = class {
   tokens;
   tokenIndex = 0;
+  frontend;
   diagnostics;
   symbolParser;
   playerTraitParserRepository;
@@ -7244,6 +7643,7 @@ var ParserContext = class {
   actionParserRepository;
   conditionParserRepository;
   constructor(tokens, frontend, diagnostics, symbolTable, objectLists2 = {}, sharedSymbolParser) {
+    this.frontend = frontend;
     this.diagnostics = diagnostics;
     this.tokens = tokens;
     this.symbolParser = sharedSymbolParser ?? new ParserSymbolContext(frontend, diagnostics, symbolTable, objectLists2);
@@ -7460,6 +7860,18 @@ var Parser = class {
     }
     return elements;
   }
+  reportMissingInclude(kind, path, blameLocation, diagnostics, message) {
+    const resolvedMessage = message ?? (kind === "localized_include" ? diagnosticMessages.couldNotResolveLocalizedInclude(path) : diagnosticMessages.couldNotResolveInclude(path));
+    if (kind === "localized_include") {
+      if (this.frontend.compilerSettings.strictStringLiterals) {
+        diagnostics.addError(resolvedMessage, blameLocation);
+      } else {
+        diagnostics.addWarning(resolvedMessage, blameLocation);
+      }
+      return;
+    }
+    diagnostics.addError(resolvedMessage, blameLocation);
+  }
   async expandInclude(element, diagnostics, symbolBinder, objectLists2, options, sharedSymbolParser) {
     const blameLocation = element.location;
     if (element.file.kind !== 1 /* QUOTED_STRING */) {
@@ -7481,10 +7893,7 @@ var Parser = class {
       return [];
     }
     if (!options.resolveInclude) {
-      diagnostics.addError(
-        `Could not resolve include "${path}"`,
-        blameLocation
-      );
+      this.reportMissingInclude(kind, path, blameLocation, diagnostics);
       return [];
     }
     let resolved;
@@ -7494,17 +7903,18 @@ var Parser = class {
         fromUri: options.fromUri
       });
     } catch (error) {
-      diagnostics.addError(
-        error instanceof Error ? error.message : `Could not resolve include "${path}"`,
-        blameLocation
+      const message = error instanceof Error ? error.message : kind === "localized_include" ? diagnosticMessages.couldNotResolveLocalizedInclude(path) : diagnosticMessages.couldNotResolveInclude(path);
+      this.reportMissingInclude(
+        kind,
+        path,
+        blameLocation,
+        diagnostics,
+        message
       );
       return [];
     }
     if (resolved === null) {
-      diagnostics.addError(
-        `Could not resolve include "${path}"`,
-        blameLocation
-      );
+      this.reportMissingInclude(kind, path, blameLocation, diagnostics);
       return [];
     }
     const resolvedKey = resolved.uri.toLowerCase();
@@ -8623,8 +9033,12 @@ var loadObjectListsForVersion = (version2) => {
 };
 
 // ../megalo/src/language-service/analyze.ts
-var buildSnapshot = (source, version2, objectLists2) => {
-  const frontend = new MegaloCompilerContext(version2, ALL_MEGACROW_EXTENSIONS);
+var buildSnapshot = (source, version2, objectLists2, megacrowExtensions, compilerSettings) => {
+  const frontend = new MegaloCompilerContext(
+    version2,
+    resolveMegacrowExtensions(megacrowExtensions ?? ALL_MEGACROW_EXTENSIONS),
+    compilerSettings
+  );
   const diagnostics = new Diagnostics();
   const lists = objectLists2 ?? loadObjectListsForVersion(version2);
   const tokens = new Lexer(frontend).lex(source, diagnostics);
@@ -8641,7 +9055,159 @@ var buildSnapshot = (source, version2, objectLists2) => {
     version: version2
   };
 };
-var analyzeDocumentSync = (source, options) => buildSnapshot(source, options.version, options.objectLists);
+var analyzeDocumentSync = (source, options) => buildSnapshot(
+  source,
+  options.version,
+  options.objectLists,
+  options.megacrowExtensions,
+  options.compilerSettings
+);
+
+// ../megalo/src/frontend/intermediate-representation/diagnostics/isWritable.ts
+var WRITABLE_CUSTOM_VARIABLE_TYPES = /* @__PURE__ */ new Set([
+  1 /* PlayerNumber */,
+  2 /* ObjectNumber */,
+  3 /* TeamNumber */,
+  4 /* GlobalNumber */,
+  7 /* TeamScore */,
+  8 /* PlayerScore */,
+  9 /* PlayerMoney */,
+  11 /* PlayerStat */,
+  12 /* TeamStat */,
+  15 /* SymmetricGametypePregame */,
+  44 /* TemporaryNumber */
+]);
+
+// ../megalo/src/frontend/intermediate-representation/game/game_engine_default.ts
+var teamScoringMethod = megaloEnum([
+  "sum",
+  "minimum",
+  "maximum"
+]);
+var TeamScoringMethod = teamScoringMethod.enum;
+var multiplayerTeamDesignator = megaloEnum([
+  "none",
+  "defenders",
+  "attackers",
+  "third_party",
+  "fourth_party",
+  "fifth_party",
+  "sixth_party",
+  "seventh_party",
+  "eighth_party",
+  "neutral"
+]);
+var MultiplayerTeamDesignator = multiplayerTeamDesignator.enum;
+var playerModelChoice = megaloEnum(["spartan", "elite"]);
+var PlayerModelChoice = playerModelChoice.enum;
+var teamOptionsModelOverrideType = megaloEnum([
+  "none",
+  "spartan",
+  "elite",
+  "set_by_team",
+  "by_designator"
+]);
+var TeamOptionsModelOverrideType = teamOptionsModelOverrideType.enum;
+var designatorSwitchType = megaloEnum([
+  "none",
+  "random",
+  "rotate"
+]);
+var DesignatorSwitchType = designatorSwitchType.enum;
+
+// ../megalo/src/frontend/intermediate-representation/parameters/explicit.ts
+var PLAYER_EXPLICIT_NAMES = {
+  [0 /* None */]: "none",
+  [25 /* Current */]: "current_player",
+  [26 /* Hud */]: "local_player",
+  [27 /* HudTarget */]: "target_player",
+  // MegaloEdit: only valid inside an `object_death` trigger.
+  [28 /* Killer */]: "object_death_killing_player"
+};
+var OBJECT_EXPLICIT_NAMES = {
+  [0 /* None */]: "none",
+  [17 /* Current */]: "current_object",
+  [18 /* HudTarget */]: "target_object",
+  // MegaloEdit: only valid inside an `object_death` trigger.
+  [19 /* Killed */]: "object_death_dead_object",
+  [20 /* Killer */]: "object_death_killing_object"
+};
+var TEAM_EXPLICIT_NAMES = {
+  [0 /* None */]: "none",
+  [9 /* neutral */]: "neutral",
+  [18 /* CurrentTeam */]: "current_team",
+  [19 /* LocalTeam */]: "local_team",
+  // Megalo Headache #2: encoded as TargetTeam; MegaloEdit does not parse this name.
+  [20 /* TargetTeam */]: "target_team"
+};
+var TEAM_DESIGNATOR_INDICES = {
+  attackers: MultiplayerTeamDesignator.attackers,
+  defenders: MultiplayerTeamDesignator.defenders,
+  third_party: MultiplayerTeamDesignator.third_party,
+  fourth_party: MultiplayerTeamDesignator.fourth_party,
+  fifth_party: MultiplayerTeamDesignator.fifth_party,
+  sixth_party: MultiplayerTeamDesignator.sixth_party,
+  seventh_party: MultiplayerTeamDesignator.seventh_party,
+  eighth_party: MultiplayerTeamDesignator.eighth_party
+};
+var DESIGNATOR_TO_EXPLICIT_TEAM = {
+  defenders: 1 /* Team0 */,
+  attackers: 2 /* Team1 */,
+  third_party: 3 /* Team2 */,
+  fourth_party: 4 /* Team3 */,
+  fifth_party: 5 /* Team4 */,
+  sixth_party: 6 /* Team5 */,
+  seventh_party: 7 /* Team6 */,
+  eighth_party: 8 /* Team7 */
+};
+
+// ../megalo/src/frontend/intermediate-representation/parameters/gameOptionTypes.ts
+var GAME_OPTION_CUSTOM_VARIABLE_TYPE = {
+  round_index: 13 /* RoundIndex */,
+  symmetric_gametype: 14 /* SymmetricGametype */,
+  object_death_damage_type: 43 /* ObjectDeathDamageType */,
+  score_to_win_round: 16 /* ScoreToWinRound */,
+  fire_teams_enabled: 17 /* FireTeamsEnabled */,
+  teams_enabled: 18 /* TeamsEnabled */,
+  round_time_limit: 19 /* RoundTimeLimit */,
+  round_count: 20 /* RoundCount */,
+  perfection_enabled: 21 /* PerfectionEnabled */,
+  early_victory_win_count: 22 /* EarlyVictoryWinCount */,
+  sudden_death_time_limit: 23 /* SuddenDeathTimeLimit */,
+  grace_period_time_limit: 24 /* GracePeriodTimeLimit */,
+  lives_per_round: 25 /* LivesPerRound */,
+  team_lives_per_round: 26 /* TeamLivesPerRound */,
+  respawn_time: 27 /* RespawnTime */,
+  suicide_respawn_penalty: 28 /* SuicideRespawnPenalty */,
+  betrayal_respawn_penalty: 29 /* BetrayalRespawnPenalty */,
+  respawn_time_growth: 30 /* RespawnTimeGrowth */,
+  loadout_selection_time: 31 /* LoadoutSelectionTime */,
+  respawn_traits_duration: 32 /* RespawnTraitsDuration */,
+  friendly_fire_enabled: 33 /* friendly_fire_enabled */,
+  betrayal_booting_enabled: 34 /* BetrayalBootingEnabled */,
+  enemy_voice_enabled: 35 /* EnemyVoiceEnabled */,
+  open_channel_voice_enabled: 36 /* OpenChannelVoiceEnabled */,
+  dead_player_voice_enabled: 37 /* DeadPlayerVoiceEnabled */,
+  grenades_on_map: 38 /* GrenadesOnMap */,
+  indestructible_vehicles: 39 /* IndestructibleVehicles */,
+  red_powerup_duration: 40 /* RedPowerupDuration */,
+  blue_powerup_duration: 41 /* BluePowerupDuration */,
+  yellow_powerup_duration: 42 /* YellowPowerupDuration */
+};
+
+// ../megalo/src/language-service/completion/helpers.ts
+var snippetTabstop = (index, placeholder) => ` $${""}{${index}:${placeholder}}`;
+
+// ../megalo/src/language-service/completion/actions/create_object.ts
+var FLAGS = ["never_garbage", "suppress_effect", "absolute_orientation"];
+var OPTIONAL_KEYWORDS = [
+  "at",
+  "set",
+  "offset",
+  "label",
+  "variant",
+  ...FLAGS
+];
 
 // ../megalo/src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_sounds.ts
 var megaloSound = megaloEnum([
@@ -8744,6 +9310,4451 @@ var megaloSound = megaloEnum([
 ]);
 var MegaloSound = megaloSound.enum;
 
+// ../megalo/src/language-service/completion/context.ts
+var ELEMENT_KINDS_WITH_END = /* @__PURE__ */ new Set([
+  3 /* STRING_TABLE */,
+  4 /* CONSTANTS */,
+  5 /* VARIABLES */,
+  6 /* GAME_OPTIONS */,
+  7 /* HUD_WIDGETS */,
+  8 /* LOADOUT */,
+  9 /* LOADOUT_PALETTE */,
+  10 /* TEAMS */,
+  11 /* ENGINE_DATA */,
+  12 /* PLAYER_RATING */,
+  13 /* MAP_PERMISSIONS */,
+  14 /* GAME_STATS */,
+  15 /* MAP_OBJECT */,
+  16 /* REQUISITION_PALETTE */
+]);
+
+// ../megalo/src/frontend/intermediate-representation/game/game_engine_player_traits.ts
+var grenadeCountSetting = megaloEnum([
+  "none",
+  "default",
+  "1 frag",
+  "2 frag",
+  "3 frag",
+  "4 frag",
+  "1 plasma",
+  "2 plasma",
+  "3 plasma",
+  "4 plasma",
+  "1 each",
+  "2 each",
+  "3 each",
+  "4 each"
+]);
+var GrenadeCountSetting = grenadeCountSetting.enum;
+var vehicleUsage = megaloEnum([
+  "unchanged",
+  "none",
+  "passenger",
+  "driver",
+  "gunner",
+  "not_passenger",
+  "not_driver",
+  "not_gunner",
+  "full"
+]);
+var VehicleUsage = vehicleUsage.enum;
+var activeCamo = megaloEnum([
+  "off",
+  "on",
+  "poor",
+  "good",
+  "excellent",
+  "invisible"
+]);
+var ActiveCamo = activeCamo.enum;
+var waypointVisibility = megaloEnum([
+  "unchanged",
+  "off",
+  "allies",
+  "all"
+]);
+var WaypointVisibility = waypointVisibility.enum;
+var forcedChangeColor = megaloEnum([
+  "unchanged",
+  "off",
+  "red",
+  "blue",
+  "green",
+  "yellow",
+  "purple",
+  "orange",
+  "brown",
+  "pink",
+  "white",
+  "black",
+  "zombie",
+  "extra4"
+]);
+var ForcedChangeColor = forcedChangeColor.enum;
+var motionTrackerMode = megaloEnum([
+  "unchanged",
+  "off",
+  "allies",
+  "normal",
+  "enhanced"
+]);
+var MotionTrackerMode = motionTrackerMode.enum;
+
+// ../megalo/src/language-service/completion/elements/game_options.ts
+var OVERRIDE_NAMES = [
+  ...BUILT_IN_GAME_OPTION_NAMES,
+  ...PLAYER_TRAITS_OVERRIDE_OPTIONS,
+  "loadout_palette"
+];
+
+// ../megalo/src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_hud_widgets.ts
+var hudWidgetPosition = megaloEnum([
+  "top_left",
+  "top_center",
+  "top_right",
+  "high_left",
+  "high_center",
+  "high_right",
+  "low_left",
+  "low_center",
+  "low_right",
+  "bottom_left",
+  "bottom_center",
+  "bottom_right"
+]);
+var HudWidgetPosition = hudWidgetPosition.enum;
+var hudMeterInputType = megaloEnum([
+  "none",
+  { name: "off", aliasOf: "none" },
+  "number",
+  "timer"
+]);
+var HUDMeterInputType = hudMeterInputType.enum;
+
+// ../megalo/src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_map_objects.ts
+var objectTeamFilter = megaloEnum([
+  "none",
+  "defenders",
+  "attackers",
+  "third_party",
+  "fourth_party",
+  "fifth_party",
+  "sixth_party",
+  "seventh_party",
+  "eighth_party",
+  "neutral",
+  "each"
+]);
+var ObjectTeamFilter = objectTeamFilter.enum;
+
+// ../megalo/src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_variable_metadata.ts
+var megaloVariableNetworkState = megaloEnum([
+  "local",
+  "networked",
+  "networked_high"
+]);
+var MegaloVariableNetworkState = megaloVariableNetworkState.enum;
+
+// ../megalo/src/localization/hover.ts
+var import_rosetta2 = __toESM(require_dist());
+
+// ../megalo/src/localization/locales/hover/en.json
+var en_default2 = {
+  ui: {
+    parameters: "Parameters",
+    kind: {
+      action: "action",
+      condition: "condition",
+      element: "element",
+      keyword: "keyword",
+      param: "property"
+    },
+    symbol: {
+      built_in: "built-in",
+      object_list: "Object list",
+      constant: "constant",
+      string: "string",
+      game_option: "game option",
+      hud_widget: "hud widget",
+      loadout: "loadout",
+      loadout_palette: "loadout palette",
+      requisition_palette: "requisition palette",
+      object_filter: "object filter",
+      player_traits: "player traits",
+      game_stat: "game stat"
+    }
+  },
+  action: {
+    adjust_grenades: {
+      summary: "Modifies a player's grenade count by type using a math operation.",
+      params: {
+        player: "Player reference or variable.",
+        grenade_type: "Grenade type: frag, plasma.",
+        math_operation: "How to apply the value (set_to, add, subtract, \u2026).",
+        number: "Numeric amount or number variable."
+      }
+    },
+    apply_player_traits: {
+      summary: "Applies a named `player_traits` block to a player.",
+      params: {
+        player: "Player reference or variable.",
+        player_traits_name: "Name of a player_traits block."
+      }
+    },
+    begin: {
+      summary: "Marks the start of a nested sub-trigger block. While `begin` is technically an action, the language treats it more like an element. See the begin element page for more information."
+    },
+    biped_drop_weapon: {
+      summary: "Drops a weapon from a biped/player.",
+      params: {
+        biped: "Object or player that receives or drops the weapon.",
+        mode: "Equip / slot mode: primary, secondary."
+      }
+    },
+    biped_give_weapon: {
+      summary: "Gives a weapon to a biped/player.",
+      params: {
+        biped: "Object or player that receives the weapon.",
+        weapon: "Weapon type from the weapons object list (usually written in quotes).",
+        mode: "Equip mode: primary, secondary, or force."
+      }
+    },
+    boundary_set_player_color: {
+      summary: "Sets boundary tint color for a player.",
+      params: {
+        object: "Object reference or variable.",
+        player_variable_name: "Player member variable on the object."
+      }
+    },
+    boundary_set_visible: {
+      summary: "Shows or hides a boundary volume.",
+      params: {
+        object: "Object reference or variable.",
+        boolean: "true / false, or a boolean-like value."
+      }
+    },
+    break_into_debugger: {
+      summary: "Breaks into the script debugger when tracing is enabled."
+    },
+    create_object: {
+      summary: "Spawns an object of the given type, optionally placed and labeled.",
+      params: {
+        object_type: "Quoted type from the objects object list.",
+        at: "Optional placement object.",
+        set: "Optional object variable that receives the created instance."
+      }
+    },
+    create_tunnel: {
+      summary: "Places an object between two entities and gives that object a **cylinder** shape. The radius comes from the radius operand; if that value is **0**, the engine uses **5** instead. If both endpoints are the same object, the tunnel is placed **exactly** on that reference\u2014there is no collision check, unlike create_object. The spawned object also faces straight up.",
+      params: {
+        object_a: "First object reference.",
+        object_b: "Second object reference.",
+        object_type: "Quoted type from the objects object list.",
+        radius: "Cylinder radius (0 uses engine default 5).",
+        object_reference_out: "Object variable that receives the created instance."
+      }
+    },
+    debugging_enable_tracing: {
+      summary: "Enables or disables script tracing in the debugger.",
+      params: {
+        literal_boolean: "Literal true or false."
+      }
+    },
+    debug_force_player_view_count: {
+      summary: "Debug action to force player view count.",
+      params: {
+        splitscreen_count: "Forced splitscreen / view count."
+      }
+    },
+    delete_object: {
+      summary: "Removes an object reference from the map.",
+      params: {
+        object: "Object reference or variable."
+      }
+    },
+    device_animate_position: {
+      summary: "Animates a device between positions over time.",
+      params: {
+        object: "Object reference or variable.",
+        animation_target_fraction: "Target animation fraction.",
+        animation_duration_seconds: "Animation duration in seconds.",
+        acceleration_seconds: "Acceleration time in seconds.",
+        deceleration_seconds: "Deceleration time in seconds."
+      }
+    },
+    device_get_position: {
+      summary: "Reads device position into an out-variable.",
+      params: {
+        object: "Object reference or variable.",
+        number_out: "Number variable that receives a percent value."
+      }
+    },
+    device_get_power: {
+      summary: "Reads device power into an out-variable.",
+      params: {
+        object: "Object reference or variable.",
+        number_out: "Number variable that receives a percent value."
+      }
+    },
+    device_set_position: {
+      summary: "Sets a device's animation position (0\u2013100).",
+      params: {
+        object: "Object reference or variable.",
+        number: "Percent value (0\u2013100) or number variable."
+      }
+    },
+    device_set_position_immediate: {
+      summary: "Snaps a device to a position without animation.",
+      params: {
+        object: "Object reference or variable.",
+        number: "Percent value (0\u2013100) or number variable."
+      }
+    },
+    device_set_position_track: {
+      summary: "Assigns an animation track name to a device.",
+      params: {
+        object: "Object reference or variable.",
+        animation_name: "Animation track name.",
+        interpolation_time: "Interpolation duration."
+      }
+    },
+    device_set_power: {
+      summary: "Sets device power state.",
+      params: {
+        object: "Object reference or variable.",
+        number: "Percent value (0\u2013100) or number variable."
+      }
+    },
+    end_round: {
+      summary: "Ends the current round immediately."
+    },
+    for_each: {
+      summary: "Iterates over players, teams, or objects and runs nested trigger logic.",
+      params: {
+        trigger_type: "Nested trigger type (player, object, \u2026)."
+      }
+    },
+    game_grief_record_custom_penalty: {
+      summary: "Records a custom grief report penalty value.",
+      params: {
+        player: "Player reference or variable.",
+        penalty_amount: "Penalty amount to record."
+      }
+    },
+    get_button_time: {
+      summary: "Reads how long a scriptable button was held into a custom variable, in milliseconds (Reach MCC only).",
+      params: {
+        player: "Player reference or variable.",
+        scriptable_button: "Scriptable button keyword.",
+        milliseconds_out: "Number variable that receives milliseconds held."
+      }
+    },
+    get_player_holding_object: {
+      summary: "Writes the player holding an object into an out-variable.",
+      params: {
+        object: "Object reference or variable.",
+        player_out: "Player variable that receives the result."
+      }
+    },
+    get_random_object: {
+      summary: "Selects a random object matching criteria and writes it to an out-variable.",
+      params: {
+        filter_name: "Object filter / label name.",
+        ignore_object: "Object to exclude from the random pick.",
+        object_out: "Object variable that receives the result."
+      }
+    },
+    give_weapon: {
+      summary: "Gives a weapon to a player (legacy / partial availability; prefer biped_give_weapon).",
+      params: {
+        player: "Player reference or variable.",
+        weapon: "Weapon type or weapon object.",
+        mode: "Equip / slot mode: primary, secondary, force."
+      }
+    },
+    hide_object: {
+      summary: "Hides or shows an object for players (Reach MCC only).",
+      params: {
+        object: "Object reference or variable.",
+        should_hide: "Whether the object should be hidden."
+      }
+    },
+    hs_function_call: {
+      summary: "Calls a HaloScript function by index (Reach MCC only).",
+      params: {
+        function_name: "HaloScript function name."
+      }
+    },
+    hud_post_message: {
+      summary: "Posts a HUD message to a team or player target. The sound operand selects an e_megalo_sound token or `none`. The message is a dynamic string.",
+      params: {
+        team_or_player_target: "everyone, or a specific player / team.",
+        sound: "Sound name from the sounds object list.",
+        dynamic_string: "Quoted string or dynamic string expression."
+      }
+    },
+    hud_widget_set_icon: {
+      summary: "Sets the icon on a HUD widget.",
+      params: {
+        hud_widget_name: "Name of a hud_widget declared in the script.",
+        icon_name: "Icon name."
+      }
+    },
+    hud_widget_set_meter: {
+      summary: "Configures meter parameters on a HUD widget.",
+      params: {
+        hud_widget_name: "Name of a hud_widget declared in the script.",
+        meter: "Meter mode: off, two numbers, or a timer."
+      }
+    },
+    hud_widget_set_text: {
+      summary: "Updates text on a named HUD widget using a dynamic string.",
+      params: {
+        hud_widget_name: "Name of a hud_widget declared in the script.",
+        dynamic_string: "Quoted string or dynamic string expression."
+      }
+    },
+    hud_widget_set_value: {
+      summary: "Updates a numeric value displayed on a HUD widget using a dynamic string.",
+      params: {
+        hud_widget_name: "Name of a hud_widget declared in the script.",
+        dynamic_string: "Quoted string or dynamic string expression."
+      }
+    },
+    hud_widget_set_visibility: {
+      summary: "Shows or hides a HUD widget for a player reference.",
+      params: {
+        hud_widget_name: "Name of a hud_widget declared in the script.",
+        player: "Player reference or variable.",
+        literal_boolean: "Literal true or false."
+      }
+    },
+    navpoint_set_icon: {
+      summary: "Sets the navpoint icon displayed above an object. The ME name table ends with `coop spawning` (space). MegaloEdit cannot parse it (Megalo Headache #3); enable MegaCrow\u2019s `coopSpawning` extension to accept the two-token form.",
+      params: {
+        object: "Object reference or variable.",
+        icon: "Icon name or keyword.",
+        number: "Numeric icon value when icon is num."
+      }
+    },
+    navpoint_set_priority: {
+      summary: "Sets navpoint draw priority (`high`, `normal`, `low`, `blink`).",
+      params: {
+        object: "Object reference or variable.",
+        priority: "Priority: low, normal, high, blink."
+      }
+    },
+    navpoint_set_text: {
+      summary: "Sets navpoint label text from a dynamic string.",
+      params: {
+        object: "Object reference or variable.",
+        dynamic_string: "Quoted string or dynamic string expression."
+      }
+    },
+    navpoint_set_timer: {
+      summary: "Links a navpoint to a timer for countdown display.",
+      params: {
+        object: "Object reference or variable.",
+        timer_name: "Named timer to associate."
+      }
+    },
+    navpoint_set_visible: {
+      summary: "Controls navpoint visibility for a target audience (everyone, team, player, etc.).",
+      params: {
+        object: "Object reference or variable.",
+        audience: "Who is affected: no_one, everyone, allies, enemies, player (player form may take a player and boolean)."
+      }
+    },
+    navpoint_set_visible_range: {
+      summary: "Sets the distance at which a navpoint becomes visible.",
+      params: {
+        object: "Object reference or variable.",
+        min: "Minimum visible range in feet.",
+        max: "Maximum visible range in feet."
+      }
+    },
+    object_adjust_health: {
+      summary: "Modifies an object's current health with a math operation.",
+      params: {
+        object: "Object reference or variable.",
+        math_operation: "How to apply the value (set_to, add, subtract, \u2026).",
+        number: "Numeric amount or number variable."
+      }
+    },
+    object_adjust_maximum_health: {
+      summary: "Modifies an object's maximum health with a math operation.",
+      params: {
+        object: "Object reference or variable.",
+        math_operation: "How to apply the value (set_to, add, subtract, \u2026).",
+        number: "Numeric amount or number variable."
+      }
+    },
+    object_adjust_maximum_shield: {
+      summary: "Modifies an object's maximum shields with a math operation.",
+      params: {
+        object: "Object reference or variable.",
+        math_operation: "How to apply the value (set_to, add, subtract, \u2026).",
+        number: "Numeric amount or number variable."
+      }
+    },
+    object_adjust_shield: {
+      summary: "Modifies an object's current shields with a math operation.",
+      params: {
+        object: "Object reference or variable.",
+        math_operation: "How to apply the value (set_to, add, subtract, \u2026).",
+        number: "Numeric amount or number variable."
+      }
+    },
+    object_attach: {
+      summary: "Attaches one object to another with offset and constraint parameters.",
+      params: {
+        child_object: "Object to attach or detach.",
+        parent_object: "Object to attach to.",
+        offset_x: "X offset in feet.",
+        offset_y: "Y offset in feet.",
+        offset_z: "Z offset in feet."
+      }
+    },
+    object_bounce: {
+      summary: "Applies an upward impulse to an object.",
+      params: {
+        object: "Object reference or variable."
+      }
+    },
+    object_destroy: {
+      summary: "Destroys an object immediately (distinct from `delete_object` in engine handling).",
+      params: {
+        object: "Object reference or variable."
+      }
+    },
+    object_detach: {
+      summary: "Detaches a child object from its parent.",
+      params: {
+        child_object: "Object to attach or detach."
+      }
+    },
+    object_face_object: {
+      summary: "Rotates an object to face another object.",
+      params: {
+        object: "Object reference or variable.",
+        target: "Object to face toward.",
+        x: "Optional: X component in feet.",
+        y: "Optional: Y component in feet.",
+        z: "Optional: Z component in feet."
+      }
+    },
+    object_get_distance: {
+      summary: "Writes the distance between two objects into an out-variable.",
+      params: {
+        object_a: "First object reference.",
+        object_b: "Second object reference.",
+        distance_out: "Number variable that receives distance in feet."
+      }
+    },
+    object_get_health: {
+      summary: "Reads an object's current health into an out-variable.",
+      params: {
+        object: "Object reference or variable.",
+        vitality_out: "Number variable that receives vitality percent."
+      }
+    },
+    object_get_orientation: {
+      summary: "Reads an object's orientation into an out-variable.",
+      params: {
+        object: "Object reference or variable.",
+        orientation_out: "Number variable that receives orientation (1\u20136)."
+      }
+    },
+    object_get_shield: {
+      summary: "Reads an object's current shields into an out-variable.",
+      params: {
+        object: "Object reference or variable.",
+        vitality_out: "Number variable that receives vitality percent."
+      }
+    },
+    object_get_velocity: {
+      summary: "Reads an object's velocity into an out-variable.",
+      params: {
+        object: "Object reference or variable.",
+        number_out: "Number variable that receives velocity."
+      }
+    },
+    object_set_invincibility: {
+      summary: "Sets whether an object can take damage.",
+      params: {
+        object: "Object reference or variable.",
+        boolean: "true / false, or a boolean-like value."
+      }
+    },
+    object_set_minimap_icon: {
+      summary: "Sets an object's minimap icon. Compiles on Alpha Reach builds, but no known Reach build renders a working minimap.",
+      params: {
+        object: "Object reference or variable.",
+        icon: "Icon name or keyword."
+      }
+    },
+    object_set_minimap_priority: {
+      summary: "Sets an object's minimap priority. Compiles on Alpha Reach builds, but no known Reach build renders a working minimap.",
+      params: {
+        object: "Object reference or variable.",
+        priority: "Priority: low, normal, high, blink."
+      }
+    },
+    object_set_minimap_visibility: {
+      summary: "Shows or hides an object on the minimap. Compiles on Alpha Reach builds, but no known Reach build renders a working minimap.",
+      params: {
+        object: "Object reference or variable.",
+        boolean: "true / false, or a boolean-like value."
+      }
+    },
+    object_set_never_garbage: {
+      summary: "Prevents the engine from garbage-collecting an object.",
+      params: {
+        object: "Object reference or variable.",
+        boolean: "true / false, or a boolean-like value."
+      }
+    },
+    object_set_orientation: {
+      summary: "Sets an object's facing/orientation explicitly.",
+      params: {
+        object: "Object reference or variable.",
+        source: "Orientation source object."
+      }
+    },
+    object_set_scale: {
+      summary: "Scales an object by a multiplier.",
+      params: {
+        object: "Object reference or variable.",
+        number: "Percent value (0\u2013100) or number variable."
+      }
+    },
+    player_adjust_money: {
+      summary: "Modifies a player's requisition money with a math operation. `player_adjust_money` is part of the Requisition System that was scrapped before Halo: Reach's release. While much of the requisition functionality remains in the game to this day, the requisition menu is long gone, rendering this action effectively useless outside of early pre-release builds.",
+      params: {
+        player: "Player reference or variable.",
+        math_operation: "How to apply the value (set_to, add, subtract, \u2026).",
+        number: "Numeric amount or number variable."
+      }
+    },
+    player_death_get_damage_type: {
+      summary: "Writes the damage type from a death event into an out-variable.",
+      params: {
+        dead_player: "The player who died.",
+        number_out: "Number variable that receives the damage type."
+      }
+    },
+    player_death_get_killing_player: {
+      summary: "Writes the killing player from a death event into an out-variable.",
+      params: {
+        dead_player: "The player who died.",
+        killing_player: "Player variable that receives the killer."
+      }
+    },
+    player_death_get_special_type: {
+      summary: "Writes the special death type (melee, headshot, etc.) into an out-variable.",
+      params: {
+        dead_player: "The player who died.",
+        number_out: "Number variable that receives the special death type."
+      }
+    },
+    player_enable_purchases: {
+      summary: "Enables or disables requisition purchases by category and alive/dead state. `player_enable_purchases` is part of the Requisition System that was scrapped before Halo: Reach's release. While much of the requisition functionality remains in the game to this day, the requisition menu is long gone, rendering this action effectively useless outside of early pre-release builds.",
+      params: {
+        player: "Player reference or variable.",
+        when: "When purchases apply: alive, dead, both.",
+        boolean: "true / false, or a boolean-like value."
+      }
+    },
+    player_get_equipment: {
+      summary: "Reads a player's equipment into an out-variable.",
+      params: {
+        player: "Player reference or variable.",
+        equipment_out: "Object variable that receives the equipment."
+      }
+    },
+    player_get_fireteam_index: {
+      summary: "Reads or writes a player's fireteam index.",
+      params: {
+        player: "Player reference or variable.",
+        number_out: "Number variable that receives the result."
+      }
+    },
+    player_get_killing_spree_count: {
+      summary: "Reads a player's killstreak count into an out-variable.",
+      params: {
+        player: "Player reference or variable.",
+        number_out: "Number variable that receives the result."
+      }
+    },
+    player_get_place: {
+      summary: "Writes a player's scoreboard rank into an out-variable.",
+      params: {
+        player: "Player reference or variable.",
+        number_out: "Number variable that receives place/rank."
+      }
+    },
+    player_get_target_object: {
+      summary: "Reads a player's current target object into an out-variable.",
+      params: {
+        player: "Player reference or variable.",
+        object_out: "Object variable that receives the result."
+      }
+    },
+    player_get_vehicle: {
+      summary: "Writes the vehicle a player occupies into an out-variable.",
+      params: {
+        player: "Player reference or variable.",
+        vehicle_out: "Object variable that receives the vehicle."
+      }
+    },
+    player_get_weapon: {
+      summary: "Reads a player's current weapon into an out-variable.",
+      params: {
+        player: "Player reference or variable.",
+        mode: "Equip / slot mode: primary, secondary.",
+        weapon_out: "Object variable that receives the weapon."
+      }
+    },
+    player_pick_up_weapon: {
+      summary: "Forces a player to pick up a weapon object.",
+      params: {
+        player: "Player reference or variable.",
+        weapon_object: "Existing weapon object instance."
+      }
+    },
+    player_set_coop_spawning: {
+      summary: "Enables or disables cooperative spawning for a player.",
+      params: {
+        player: "Player reference or variable.",
+        literal_boolean: "Literal true or false."
+      }
+    },
+    player_set_fireteam_index: {
+      summary: "Assigns a player to a fireteam index.",
+      params: {
+        player: "Player reference or variable.",
+        number: "Numeric amount or number variable."
+      }
+    },
+    player_set_fireteam_tier: {
+      summary: "Sets a player's fireteam tier.",
+      params: {
+        player: "Player reference or variable.",
+        tier: "Fireteam tier value."
+      }
+    },
+    player_set_objective: {
+      summary: "Sets objective text shown to a player using a dynamic string.",
+      params: {
+        player: "Player reference or variable.",
+        dynamic_string: "Quoted string or dynamic string expression."
+      }
+    },
+    player_set_objective_allegiance: {
+      summary: "Sets objective allegiance text (friendly/enemy/neutral styling) using a dynamic string.",
+      params: {
+        player: "Player reference or variable.",
+        dynamic_string: "Quoted string or dynamic string expression."
+      }
+    },
+    player_set_objective_allegiance_icon: {
+      summary: "Sets the objective allegiance icon for a player. The icon is a constant integer (literal or number constant such as `k_engine_icon_elite`), in range `0`\u2013`127`, or `-1` for none.",
+      params: {
+        player: "Player reference or variable.",
+        constant_integer: "Engine icon index integer."
+      }
+    },
+    player_set_primary_respawn_object: {
+      summary: "Sets a player's primary respawn object.",
+      params: {
+        player: "Player reference or variable.",
+        object: "Object reference or variable."
+      }
+    },
+    player_set_requisition_palette: {
+      summary: "Assigns a requisition palette to a player. `player_set_requisition_palette` is part of the Requisition System that was scrapped before Halo: Reach's release. While much of the requisition functionality remains in the game to this day, the requisition menu is long gone, rendering this action effectively useless outside of early pre-release builds.",
+      params: {
+        player: "Player reference or variable.",
+        req_palette_name: "Requisition palette name."
+      }
+    },
+    player_set_unit: {
+      summary: "Megalo action `player_set_unit` with operands: player, object.",
+      params: {
+        player: "Player reference or variable.",
+        unit: "Unit object reference."
+      }
+    },
+    player_set_vehicle: {
+      summary: "Forces a player into a vehicle reference.",
+      params: {
+        player: "Player reference or variable.",
+        vehicle: "Vehicle object reference."
+      }
+    },
+    player_set_vehicle_spawning: {
+      summary: "Enables or disables vehicle spawning for a player (Reach MCC only).",
+      params: {
+        player: "Player reference or variable.",
+        literal_boolean: "Literal true or false."
+      }
+    },
+    play_sound: {
+      summary: "Plays a sound for a team or player target. Sound tokens are listed in Sounds.",
+      params: {
+        team_or_player_target: "everyone, or a specific player / team.",
+        sound: "Sound name from the sounds object list."
+      }
+    },
+    print_variable: {
+      summary: "Prints a dynamic string to the debug log.",
+      params: {
+        dynamic_string: "Quoted string or dynamic string expression."
+      }
+    },
+    random: {
+      summary: "Writes a random integer into an out-variable between the configured minimum and maximum. The minimum is **inclusive**; the maximum is **exclusive** (for example, `action random 0 5 x` yields 0\u20134).",
+      params: {
+        value_count: "Upper bound; result is in 0..(count-1).",
+        number_out: "Number variable that receives the random result."
+      }
+    },
+    respawn_zone_enable: {
+      summary: "Enables or disables a respawn zone object.",
+      params: {
+        object: "Object reference or variable.",
+        boolean: "true / false, or a boolean-like value."
+      }
+    },
+    saved_film_insert_marker: {
+      summary: "Inserts a marker into a saved film recording. The label operand is a dynamic string.",
+      params: {
+        offset: "Time offset in seconds.",
+        label: "Marker label string."
+      }
+    },
+    set: {
+      summary: "Modifies a variable using a math operation (`set_to`, `add`, `subtract`, `multiply`, `divide`, `modulo`, or `=`). The target can be a custom variable, member variable, or built-in global.",
+      params: {
+        var_a: "Destination variable (custom, member, or built-in).",
+        math_operation: "How to apply the value (set_to, add, subtract, \u2026).",
+        var_b: "Source value or variable."
+      }
+    },
+    set_boundary: {
+      summary: "Configures boundary shape parameters on an object.",
+      params: {
+        object: "Object reference or variable.",
+        shape: "Boundary shape: none, sphere, cylinder, box."
+      }
+    },
+    set_fireteam_respawn_filter: {
+      summary: "Restricts fireteam respawn permissions on an object.",
+      params: {
+        object: "Object reference or variable.",
+        fireteam_filter: "Fireteam filter: none, all, 0-3."
+      }
+    },
+    set_loadout: {
+      summary: "Assigns a named loadout to a player.",
+      params: {
+        player: "Player reference or variable.",
+        loadout_name: "Named loadout."
+      }
+    },
+    set_loadout_palette: {
+      summary: 'Assigns a loadout palette tier to a player or team. By default, the `loadout_selection_time` game option is set to zero. Using `set_loadout_palette` will set `loadout_selection_time`to 10 if: - You are not using the `base` element - ie. your script doesnt use `base "../file.mglo"` - You haven\'t set `loadout_selection_time` in your `game_options`.',
+      params: {
+        team_or_player: "Player or team target.",
+        loadout: "Loadout palette tier / name."
+      }
+    },
+    set_pickup_filter: {
+      summary: "Restricts who can pick up an object (`all`, `allies`, `enemies`, `no_one`).",
+      params: {
+        object: "Object reference or variable.",
+        audience: "Who is affected: no_one, everyone, allies, enemies, player (player form may take a player and boolean)."
+      }
+    },
+    set_player_respawn_vehicle: {
+      summary: "Sets the respawn vehicle type for a player (Reach MCC only).",
+      params: {
+        vehicle: "Vehicle object reference.",
+        player: "Player reference or variable."
+      }
+    },
+    set_progress_bar: {
+      summary: "Configures an object's progress bar display.",
+      params: {
+        object: "Object reference or variable.",
+        audience: "Who is affected: no_one, everyone, allies, enemies, player (player form may take a player and boolean).",
+        timer_name: "Named timer to associate."
+      }
+    },
+    set_respawn_filter: {
+      summary: "Restricts who can respawn at an object.",
+      params: {
+        object: "Object reference or variable.",
+        audience: "Who is affected: no_one, everyone, allies, enemies, player (player form may take a player and boolean)."
+      }
+    },
+    set_scenario_interpolator_state: {
+      summary: "Sets a scenario interpolator state index.",
+      params: {
+        interpolator_index: "Scenario interpolator index.",
+        boolean_active: "Whether the interpolator is active."
+      }
+    },
+    set_score: {
+      summary: "Changes score for a player, team, or everyone using a math operation.",
+      params: {
+        math_operation: "How to apply the value (set_to, add, \u2026).",
+        value: "Numeric amount or number variable.",
+        target: "everyone, or a specific player / team."
+      }
+    },
+    set_team_respawn_vehicle: {
+      summary: "Sets the respawn vehicle type for a team (Reach MCC only).",
+      params: {
+        vehicle: "Vehicle object reference.",
+        team: "Team reference or variable."
+      }
+    },
+    submit_incident: {
+      summary: "Fires a game incident with team or player target context for cause and effect (from `incidents.txt`).",
+      params: {
+        incident_name: "Incident name from the incidents object list.",
+        cause_team_or_player: "Cause side: everyone, or a specific player / team.",
+        effect_team_or_player: "Effect side: everyone, or a specific player / team."
+      }
+    },
+    submit_incident_with_custom_value: {
+      summary: "Fires a game incident and passes a custom numeric value.",
+      params: {
+        incident_name: "Incident name from the incidents object list.",
+        cause_team_or_player: "Cause side: everyone, or a specific player / team.",
+        effect_team_or_player: "Effect side: everyone, or a specific player / team.",
+        custom_value_such_as_territory_index: "Custom integer payload (e.g. territory index)."
+      }
+    },
+    team_get_place: {
+      summary: "Writes a team's scoreboard rank into an out-variable.",
+      params: {
+        team: "Team reference or variable.",
+        number_out: "Number variable that receives place/rank."
+      }
+    },
+    team_set_coop_spawning: {
+      summary: "Enables or disables cooperative spawning for a team.",
+      params: {
+        team: "Team reference or variable.",
+        literal_boolean: "Literal true or false."
+      }
+    },
+    team_set_primary_respawn_object: {
+      summary: "Sets a team's primary respawn object.",
+      params: {
+        team: "Team reference or variable.",
+        object: "Object reference or variable."
+      }
+    },
+    team_set_vehicle_spawning: {
+      summary: "Enables or disables vehicle spawning for a team (Reach MCC only).",
+      params: {
+        team: "Team reference or variable.",
+        literal_boolean: "Literal true or false."
+      }
+    },
+    timer_reset: {
+      summary: "Resets a timer to its initial value.",
+      params: {
+        timer: "Timer variable."
+      }
+    },
+    timer_set_rate: {
+      summary: "Sets a timer's tick rate. `0` pauses, `-1` counts down, `1` is normal speed.",
+      params: {
+        timer: "Timer variable.",
+        rate: "Timer rate keyword or value."
+      }
+    },
+    weapon_set_pickup_priority: {
+      summary: "Sets weapon pickup priority for an object.",
+      params: {
+        object: "Object reference or variable.",
+        priority: "Priority: normal, special, auto."
+      }
+    }
+  },
+  condition: {
+    object_is_type: {
+      summary: "True when an object matches the given object-list type.",
+      params: {
+        object: "Object reference to test.",
+        object_type: "Quoted name from the objects object list."
+      }
+    },
+    if: {
+      summary: "Compares two values with a numeric comparison operator.",
+      params: {
+        left: "Variable, constant, option, or literal.",
+        operator: "Comparison operator (symbolic or named).",
+        right: "Value compared against left."
+      }
+    },
+    object_in_area: {
+      summary: "True when an object is inside another object's area/boundary."
+    },
+    player_died: {
+      summary: "True when a player died by a matching killer type."
+    },
+    team_disposition: {
+      summary: "Tests the disposition relationship between two teams."
+    },
+    timer_expired: {
+      summary: "True when the given timer has reached zero / expired."
+    },
+    team_is_active: {
+      summary: "True when the team is currently active in the match."
+    },
+    object_out_of_bounds: {
+      summary: "True when an object is outside the playable map bounds."
+    },
+    player_is_fire_team_leader: {
+      summary: "True when the player is the leader of their fireteam."
+    },
+    player_assisted_with_kill: {
+      summary: "True when the player assisted with the current kill event."
+    },
+    object_matches_filter: {
+      summary: "True when an object matches a named object filter / label."
+    },
+    player_is_active: {
+      summary: "True when the player is currently active in the round."
+    },
+    equipment_is_active: {
+      summary: "True when the player's equipment ability is active."
+    },
+    player_is_spartan: {
+      summary: "True when the player is using the Spartan model."
+    },
+    player_is_elite: {
+      summary: "True when the player is using the Elite model."
+    },
+    player_is_editor: {
+      summary: "True when the player is in Forge editor mode."
+    },
+    game_is_forge: {
+      summary: "True when the current session is Forge (editor) mode."
+    }
+  },
+  element: {
+    game_options: {
+      summary: "Declares built-in and user-defined game options (overrides, options, traits)."
+    },
+    trigger: {
+      summary: "Defines a trigger that runs conditions and actions for an event or phase."
+    },
+    variables: {
+      summary: "Declares custom variables in a scope (global, team, player, or object)."
+    },
+    base: {
+      summary: "Declares that this script derives from a base Megalo script file."
+    },
+    include: {
+      summary: "Includes another Megalo script file into this compilation unit."
+    },
+    localized_include: {
+      summary: "Includes a locale-specific script fragment (strings / localization)."
+    },
+    string_table: {
+      summary: "Declares named string table entries used by HUD and messages."
+    },
+    constants: {
+      summary: "Declares compile-time numeric constants.",
+      params: {
+        number: "Declares a numeric constant: number <name> <value>."
+      }
+    },
+    hud_widgets: {
+      summary: "Declares named HUD widgets and their screen positions."
+    },
+    loadout: {
+      summary: "Defines a named loadout (weapons, equipment, grenades)."
+    },
+    loadout_palette: {
+      summary: "Groups loadout items into a selectable palette."
+    },
+    teams: {
+      summary: "Configures multiplayer team options, models, and designators."
+    },
+    engine_data: {
+      summary: "Sets engine-facing gametype metadata (name, description, icon, category)."
+    },
+    player_rating: {
+      summary: "Configures competitive player-rating / skill weights."
+    },
+    map_permissions: {
+      summary: "Restricts which maps this gametype may run on."
+    },
+    game_stats: {
+      summary: "Declares custom scoreboard / end-of-round game statistics."
+    },
+    map_object: {
+      summary: "Binds script metadata to a map object (label, type, team filter, \u2026)."
+    },
+    requisition_palette: {
+      summary: "Defines a requisition (purchase) palette and its items."
+    }
+  },
+  keyword: {
+    action: {
+      summary: "Introduces an action statement inside a trigger or begin block."
+    },
+    condition: {
+      summary: "Introduces a condition that gates later statements in the trigger."
+    },
+    temporary: {
+      summary: "Declares a temporary variable local to the current trigger block."
+    },
+    begin: {
+      summary: "Opens a nested statement block that ends with a matching end."
+    },
+    end: {
+      summary: "Closes the nearest open block (trigger, begin, element, \u2026)."
+    },
+    not: {
+      summary: "Negates the following condition."
+    }
+  },
+  param: {
+    variables: {
+      end: {
+        summary: "Closes the nearest open element or block."
+      },
+      global: {
+        summary: "Variable scope: script-wide globals."
+      },
+      team: {
+        summary: "Scope (`variables team`) or entry type (`\u2026 team <name> \u2026`): one team-scoped copy / team reference."
+      },
+      player: {
+        summary: "Scope (`variables player`) or entry type (`\u2026 player <name> \u2026`): one player-scoped copy / player reference."
+      },
+      object: {
+        summary: "Scope (`variables object`) or entry type (`\u2026 object <name> \u2026`): one object-scoped copy / object reference."
+      },
+      local: {
+        summary: "Network state: not replicated (local-only)."
+      },
+      networked: {
+        summary: "Network state: replicated to clients."
+      },
+      networked_high: {
+        summary: "Network state: high-priority replication."
+      },
+      number: {
+        summary: "Variable type: integer / numeric value."
+      },
+      timer: {
+        summary: "Variable type: countdown / stopwatch timer."
+      }
+    },
+    constants: {
+      end: {
+        summary: "Closes the nearest open element or block."
+      },
+      number: {
+        summary: "Declares a numeric constant."
+      }
+    },
+    game_options: {
+      end: {
+        summary: "Closes the nearest open element or block."
+      },
+      lock: {
+        summary: "Locks a game option so players cannot change it in the lobby."
+      },
+      hide: {
+        summary: "Hides a game option from the lobby UI."
+      },
+      override: {
+        summary: "Overrides a built-in option or traits block with a scripted value."
+      },
+      option: {
+        summary: "Declares a custom boolean/enum game option."
+      },
+      ranged_option: {
+        summary: "Declares a custom numeric ranged game option."
+      },
+      player_traits: {
+        summary: "Declares a named player_traits block used by overrides / apply_player_traits."
+      },
+      loadout_palette: {
+        summary: "Built-in override: which loadout palette is active."
+      },
+      damage_resistance: {
+        summary: "Multiplier / invulnerability for damage taken."
+      },
+      body_recharge: {
+        summary: "Body health recharge rate."
+      },
+      shield_recharge: {
+        summary: "Shield recharge rate."
+      },
+      vampirism: {
+        summary: "Health stolen on dealing damage."
+      },
+      headshot_immunity: {
+        summary: "Whether headshots are ignored."
+      },
+      body_multiplier: {
+        summary: "Body health multiplier."
+      },
+      shield_multiplier: {
+        summary: "Shield strength multiplier."
+      },
+      assassination_immunity: {
+        summary: "Whether assassinations are blocked."
+      },
+      damage_modifier: {
+        summary: "Outgoing damage multiplier (weapons)."
+      },
+      melee_damage_modifier: {
+        summary: "Outgoing melee damage multiplier."
+      },
+      initial_primary_weapon: {
+        summary: "Starting primary weapon (or none/default/random)."
+      },
+      initial_secondary_weapon: {
+        summary: "Starting secondary / backpack weapon (or none/default/random)."
+      },
+      initial_equipment: {
+        summary: "Starting equipment item (or none/default/random)."
+      },
+      initial_grenades: {
+        summary: "Starting grenade loadout."
+      },
+      recharging_grenades: {
+        summary: "Whether grenades recharge over time."
+      },
+      infinite_ammo: {
+        summary: "Unlimited ammunition."
+      },
+      bottomless_clip: {
+        summary: "Never reload (bottomless magazine)."
+      },
+      weapon_pickup: {
+        summary: "Whether the player can pick up weapons."
+      },
+      drop_equipment: {
+        summary: "Whether equipment is dropped on death."
+      },
+      infinite_equipment: {
+        summary: "Unlimited equipment uses."
+      },
+      speed: {
+        summary: "Movement speed multiplier."
+      },
+      gravity: {
+        summary: "Gravity scale for the player."
+      },
+      vehicle_usage: {
+        summary: "Which vehicles the player may enter."
+      },
+      jump_modifier: {
+        summary: "Jump height / strength multiplier."
+      },
+      sprinting: {
+        summary: "Whether sprinting is allowed."
+      },
+      equipment_usage: {
+        summary: "Whether equipment use is enabled."
+      },
+      active_camo: {
+        summary: "Active camouflage behavior."
+      },
+      waypoint: {
+        summary: "Waypoint visibility rules."
+      },
+      gamertag_visibility: {
+        summary: "When other players see this gamertag."
+      },
+      color: {
+        summary: "Forced player color."
+      },
+      tracker_mode: {
+        summary: "Motion tracker mode."
+      },
+      tracker_range: {
+        summary: "Motion tracker range."
+      },
+      score_to_win_round: {
+        summary: "Built-in game option / override target: `score_to_win_round`."
+      },
+      fire_teams_enabled: {
+        summary: "Built-in game option / override target: `fire_teams_enabled`."
+      },
+      teams_enabled: {
+        summary: "Built-in game option / override target: `teams_enabled`."
+      },
+      round_time_limit: {
+        summary: "Built-in game option / override target: `round_time_limit`."
+      },
+      round_count: {
+        summary: "Built-in game option / override target: `round_count`."
+      },
+      perfection_enabled: {
+        summary: "Built-in game option / override target: `perfection_enabled`."
+      },
+      early_victory_win_count: {
+        summary: "Built-in game option / override target: `early_victory_win_count`."
+      },
+      sudden_death_time_limit: {
+        summary: "Built-in game option / override target: `sudden_death_time_limit`."
+      },
+      grace_period_time_limit: {
+        summary: "Built-in game option / override target: `grace_period_time_limit`."
+      },
+      lives_per_round: {
+        summary: "Built-in game option / override target: `lives_per_round`."
+      },
+      team_lives_per_round: {
+        summary: "Built-in game option / override target: `team_lives_per_round`."
+      },
+      respawn_time: {
+        summary: "Built-in game option / override target: `respawn_time`."
+      },
+      suicide_respawn_penalty: {
+        summary: "Built-in game option / override target: `suicide_respawn_penalty`."
+      },
+      betrayal_respawn_penalty: {
+        summary: "Built-in game option / override target: `betrayal_respawn_penalty`."
+      },
+      respawn_time_growth: {
+        summary: "Built-in game option / override target: `respawn_time_growth`."
+      },
+      loadout_selection_time: {
+        summary: "Built-in game option / override target: `loadout_selection_time`."
+      },
+      respawn_traits_duration: {
+        summary: "Built-in game option / override target: `respawn_traits_duration`."
+      },
+      friendly_fire_enabled: {
+        summary: "Built-in game option / override target: `friendly_fire_enabled`."
+      },
+      betrayal_booting_enabled: {
+        summary: "Built-in game option / override target: `betrayal_booting_enabled`."
+      },
+      enemy_voice_enabled: {
+        summary: "Built-in game option / override target: `enemy_voice_enabled`."
+      },
+      open_channel_voice_enabled: {
+        summary: "Built-in game option / override target: `open_channel_voice_enabled`."
+      },
+      dead_player_voice_enabled: {
+        summary: "Built-in game option / override target: `dead_player_voice_enabled`."
+      },
+      grenades_on_map: {
+        summary: "Built-in game option / override target: `grenades_on_map`."
+      },
+      shortcuts_on_map: {
+        summary: "Built-in game option / override target: `shortcuts_on_map`."
+      },
+      equipment_on_map: {
+        summary: "Built-in game option / override target: `equipment_on_map`."
+      },
+      powerups_on_map: {
+        summary: "Built-in game option / override target: `powerups_on_map`."
+      },
+      turrets_on_map: {
+        summary: "Built-in game option / override target: `turrets_on_map`."
+      },
+      indestructible_vehicles: {
+        summary: "Built-in game option / override target: `indestructible_vehicles`."
+      },
+      weapon_set: {
+        summary: "Built-in game option / override target: `weapon_set`."
+      },
+      vehicle_set: {
+        summary: "Built-in game option / override target: `vehicle_set`."
+      },
+      red_powerup_duration: {
+        summary: "Built-in game option / override target: `red_powerup_duration`."
+      },
+      blue_powerup_duration: {
+        summary: "Built-in game option / override target: `blue_powerup_duration`."
+      },
+      yellow_powerup_duration: {
+        summary: "Built-in game option / override target: `yellow_powerup_duration`."
+      },
+      team_scoring_mode: {
+        summary: "Built-in game option / override target: `team_scoring_mode`."
+      },
+      tu1_always_spillover_damage: {
+        summary: "Built-in game option / override target: `tu1_always_spillover_damage`."
+      },
+      tu1_armor_lock_stickies_remain: {
+        summary: "Built-in game option / override target: `tu1_armor_lock_stickies_remain`."
+      },
+      tu1_attached_damage_bypass_shields: {
+        summary: "Built-in game option / override target: `tu1_attached_damage_bypass_shields`."
+      },
+      tu1_active_camo_override_energy_curve: {
+        summary: "Built-in game option / override target: `tu1_active_camo_override_energy_curve`."
+      },
+      tu1_sword_gun_clang_kills: {
+        summary: "Built-in game option / override target: `tu1_sword_gun_clang_kills`."
+      },
+      tu1_magnum_is_automatic: {
+        summary: "Built-in game option / override target: `tu1_magnum_is_automatic`."
+      },
+      tu1_headshot_weapon_reticule_bloom_multiplier: {
+        summary: "Built-in game option / override target: `tu1_headshot_weapon_reticule_bloom_multiplier`."
+      },
+      tu1_armor_lock_damage_to_energy_transfer: {
+        summary: "Built-in game option / override target: `tu1_armor_lock_damage_to_energy_transfer`."
+      },
+      tu1_armor_lock_damage_to_energy_cap: {
+        summary: "Built-in game option / override target: `tu1_armor_lock_damage_to_energy_cap`."
+      },
+      tu1_active_camo_override_energy_curve_min: {
+        summary: "Built-in game option / override target: `tu1_active_camo_override_energy_curve_min`."
+      },
+      tu1_active_camo_override_energy_curve_max: {
+        summary: "Built-in game option / override target: `tu1_active_camo_override_energy_curve_max`."
+      },
+      tu1_magnum_damage_multiplier: {
+        summary: "Built-in game option / override target: `tu1_magnum_damage_multiplier`."
+      },
+      tu1_magnum_fire_recovery_time_multiplier: {
+        summary: "Built-in game option / override target: `tu1_magnum_fire_recovery_time_multiplier`."
+      },
+      base_player_traits: {
+        summary: "Built-in player-traits override: `base_player_traits`."
+      },
+      respawn_traits: {
+        summary: "Built-in player-traits override: `respawn_traits`."
+      },
+      red_powerup_traits: {
+        summary: "Built-in player-traits override: `red_powerup_traits`."
+      },
+      blue_powerup_traits: {
+        summary: "Built-in player-traits override: `blue_powerup_traits`."
+      },
+      yellow_powerup_traits: {
+        summary: "Built-in player-traits override: `yellow_powerup_traits`."
+      }
+    },
+    hud_widgets: {
+      end: {
+        summary: "Closes the nearest open element or block."
+      }
+    },
+    loadout: {
+      end: {
+        summary: "Closes the nearest open element or block."
+      },
+      name: {
+        summary: "Loadout identity (object-list loadout name)."
+      },
+      primary_weapon: {
+        summary: "Primary weapon for this loadout."
+      },
+      backpack_weapon: {
+        summary: "Secondary / backpack weapon."
+      },
+      equipment: {
+        summary: "Equipment item for this loadout."
+      },
+      grenades: {
+        summary: "Grenade configuration for this loadout."
+      }
+    },
+    loadout_palette: {
+      end: {
+        summary: "Closes the nearest open element or block."
+      },
+      item: {
+        summary: "Adds a loadout entry to this palette."
+      }
+    },
+    teams: {
+      end: {
+        summary: "Closes the nearest open element or block."
+      },
+      model: {
+        summary: "Default / override player model for teams."
+      },
+      designator_switch_type: {
+        summary: "How team designators switch during the match."
+      },
+      team: {
+        summary: "Opens a per-team configuration block."
+      },
+      name: {
+        summary: "Display name string for a team."
+      },
+      designator: {
+        summary: "Multiplayer team designator."
+      },
+      color: {
+        summary: "Team color index."
+      },
+      fireteam_count: {
+        summary: "Number of fireteams on this team."
+      }
+    },
+    engine_data: {
+      end: {
+        summary: "Closes the nearest open element or block."
+      },
+      name: {
+        summary: "Gametype display name string."
+      },
+      description: {
+        summary: "Gametype description string."
+      },
+      icon: {
+        summary: "Gametype icon asset / string."
+      },
+      category: {
+        summary: "Lobby category for this gametype."
+      }
+    },
+    player_rating: {
+      end: {
+        summary: "Closes the nearest open element or block."
+      },
+      rating_scale: {
+        summary: "Overall rating scale factor."
+      },
+      kill_weight: {
+        summary: "Weight applied to kills."
+      },
+      assist_weight: {
+        summary: "Weight applied to assists."
+      },
+      betrayal_weight: {
+        summary: "Weight applied to betrayals."
+      },
+      death_weight: {
+        summary: "Weight applied to deaths."
+      },
+      normalize_by_max_kills: {
+        summary: "Normalize rating by max kills."
+      },
+      base_value: {
+        summary: "Base rating value."
+      },
+      range: {
+        summary: "Rating range."
+      },
+      loss_scalar: {
+        summary: "Loss scalar for rating adjustments."
+      },
+      custom_stat_0: {
+        summary: "Custom stat weight 0."
+      },
+      custom_stat_1: {
+        summary: "Custom stat weight 1."
+      },
+      custom_stat_2: {
+        summary: "Custom stat weight 2."
+      },
+      custom_stat_3: {
+        summary: "Custom stat weight 3."
+      },
+      expansion_0: {
+        summary: "Expansion slot 0."
+      },
+      expansion_1: {
+        summary: "Expansion slot 1."
+      },
+      show_in_scoreboard: {
+        summary: "Whether rating is shown on the scoreboard."
+      }
+    },
+    map_permissions: {
+      end: {
+        summary: "Closes the nearest open element or block."
+      },
+      default: {
+        summary: "Default allow/deny policy for maps."
+      },
+      exception: {
+        summary: "Per-map exception to the default policy."
+      }
+    },
+    game_stats: {
+      end: {
+        summary: "Closes the nearest open element or block."
+      },
+      number: {
+        summary: "Stat format: plain number."
+      },
+      timer: {
+        summary: "Stat format: timer display."
+      },
+      delta: {
+        summary: "Stat format: delta / difference."
+      },
+      percentage: {
+        summary: "Stat format: percentage."
+      },
+      none: {
+        summary: "Stat grouping: no grouping."
+      },
+      team: {
+        summary: "Stat grouping: group by team."
+      }
+    },
+    map_object: {
+      end: {
+        summary: "Closes the nearest open element or block."
+      },
+      label: {
+        summary: "Filter / label string bound to this map object."
+      },
+      type: {
+        summary: "Object type from the objects list."
+      },
+      team: {
+        summary: "Team filter for this map object."
+      },
+      user_data: {
+        summary: "Integer user-data payload."
+      },
+      min: {
+        summary: "Minimum count / threshold."
+      }
+    },
+    requisition_palette: {
+      end: {
+        summary: "Closes the nearest open element or block."
+      },
+      baseline: {
+        summary: "Baseline availability for the palette."
+      },
+      item: {
+        summary: "Adds a purchasable item to the palette."
+      },
+      enabled: {
+        summary: "Baseline state: palette enabled."
+      },
+      disabled: {
+        summary: "Baseline / item state: disabled."
+      },
+      available: {
+        summary: "Item state: available for purchase."
+      },
+      unavailable: {
+        summary: "Item state: temporarily unavailable."
+      }
+    },
+    string_table: {
+      end: {
+        summary: "Closes the nearest open element or block."
+      }
+    }
+  }
+};
+
+// ../megalo/src/localization/locales/hover/ja.json
+var ja_default2 = {
+  ui: {
+    parameters: "\u30D1\u30E9\u30E1\u30FC\u30BF",
+    kind: {
+      action: "\u30A2\u30AF\u30B7\u30E7\u30F3",
+      condition: "\u6761\u4EF6",
+      element: "\u8981\u7D20",
+      keyword: "\u30AD\u30FC\u30EF\u30FC\u30C9",
+      param: "\u30D7\u30ED\u30D1\u30C6\u30A3"
+    },
+    symbol: {
+      built_in: "\u7D44\u307F\u8FBC\u307F",
+      object_list: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u30EA\u30B9\u30C8",
+      constant: "\u5B9A\u6570",
+      string: "\u6587\u5B57\u5217",
+      game_option: "\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3",
+      hud_widget: "HUD \u30A6\u30A3\u30B8\u30A7\u30C3\u30C8",
+      loadout: "\u30ED\u30FC\u30C9\u30A2\u30A6\u30C8",
+      loadout_palette: "\u30ED\u30FC\u30C9\u30A2\u30A6\u30C8\u30D1\u30EC\u30C3\u30C8",
+      requisition_palette: "\u30EA\u30AF\u30A4\u30B8\u30B7\u30E7\u30F3\u30D1\u30EC\u30C3\u30C8",
+      object_filter: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u30D5\u30A3\u30EB\u30BF\u30FC",
+      player_traits: "\u30D7\u30EC\u30A4\u30E4\u30FC\u7279\u6027",
+      game_stat: "\u30B2\u30FC\u30E0\u7D71\u8A08"
+    }
+  },
+  action: {
+    adjust_grenades: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u624B\u69B4\u5F3E\u6570\u3092\u7A2E\u985E\u3054\u3068\u306B\u6F14\u7B97\u3067\u5909\u66F4\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        grenade_type: "\u624B\u69B4\u5F3E\u306E\u7A2E\u985E: frag\u3001plasma\u3002",
+        math_operation: "\u5024\u306E\u9069\u7528\u65B9\u6CD5\uFF08set_to\u3001add\u3001subtract \u306A\u3069\uFF09\u3002",
+        number: "\u6570\u5024\u307E\u305F\u306F number \u5909\u6570\u3002"
+      }
+    },
+    apply_player_traits: {
+      summary: "\u540D\u524D\u4ED8\u304D\u306E player_traits \u30D6\u30ED\u30C3\u30AF\u3092\u30D7\u30EC\u30A4\u30E4\u30FC\u306B\u9069\u7528\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        player_traits_name: "player_traits \u30D6\u30ED\u30C3\u30AF\u306E\u540D\u524D\u3002"
+      }
+    },
+    begin: {
+      summary: "\u5165\u308C\u5B50\u306E\u30B5\u30D6\u30C8\u30EA\u30AC\u30FC\u30D6\u30ED\u30C3\u30AF\u306E\u958B\u59CB\u3092\u793A\u3057\u307E\u3059\u3002"
+    },
+    biped_drop_weapon: {
+      summary: "\u30D0\u30A4\u30DA\u30C3\u30C9\uFF0F\u30D7\u30EC\u30A4\u30E4\u30FC\u304B\u3089\u6B66\u5668\u3092\u843D\u3068\u3057\u307E\u3059\u3002",
+      params: {
+        biped: "\u6B66\u5668\u3092\u53D7\u3051\u53D6\u308B\uFF0F\u843D\u3068\u3059\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u307E\u305F\u306F\u30D7\u30EC\u30A4\u30E4\u30FC\u3002",
+        mode: "\u88C5\u5099\uFF0F\u30B9\u30ED\u30C3\u30C8\u30E2\u30FC\u30C9: primary\u3001secondary\u3002"
+      }
+    },
+    biped_give_weapon: {
+      summary: "\u30D0\u30A4\u30DA\u30C3\u30C9\uFF0F\u30D7\u30EC\u30A4\u30E4\u30FC\u306B\u6B66\u5668\u3092\u4ED8\u4E0E\u3057\u307E\u3059\u3002",
+      params: {
+        biped: "\u6B66\u5668\u3092\u53D7\u3051\u53D6\u308B\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u307E\u305F\u306F\u30D7\u30EC\u30A4\u30E4\u30FC\u3002",
+        weapon: "weapons \u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u30EA\u30B9\u30C8\u306E\u6B66\u5668\u30BF\u30A4\u30D7\uFF08\u901A\u5E38\u306F\u5F15\u7528\u7B26\u4ED8\u304D\uFF09\u3002",
+        mode: "\u88C5\u5099\u30E2\u30FC\u30C9: primary\u3001secondary\u3001\u307E\u305F\u306F force\u3002"
+      }
+    },
+    boundary_set_player_color: {
+      summary: "\u5883\u754C\u30DC\u30EA\u30E5\u30FC\u30E0\u306E\u8272\u3092\u30D7\u30EC\u30A4\u30E4\u30FC\u57FA\u6E96\u3067\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        player_variable_name: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u4E0A\u306E\u30D7\u30EC\u30A4\u30E4\u30FC\u30E1\u30F3\u30D0\u30FC\u5909\u6570\u3002"
+      }
+    },
+    boundary_set_visible: {
+      summary: "\u5883\u754C\u30DC\u30EA\u30E5\u30FC\u30E0\u306E\u8868\u793A\uFF0F\u975E\u8868\u793A\u3092\u5207\u308A\u66FF\u3048\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        boolean: "true / false\u3001\u307E\u305F\u306F\u771F\u507D\u5024\u76F8\u5F53\u3002"
+      }
+    },
+    break_into_debugger: {
+      summary: "\u30C8\u30EC\u30FC\u30B7\u30F3\u30B0\u6709\u52B9\u6642\u306B\u30B9\u30AF\u30EA\u30D7\u30C8\u30C7\u30D0\u30C3\u30AC\u3078\u5272\u308A\u8FBC\u307F\u307E\u3059\u3002"
+    },
+    create_object: {
+      summary: "\u6307\u5B9A\u30BF\u30A4\u30D7\u306E\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3092\u751F\u6210\u3057\u307E\u3059\u3002",
+      params: {
+        object_type: "objects \u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u30EA\u30B9\u30C8\u306E\u5F15\u7528\u7B26\u4ED8\u304D\u30BF\u30A4\u30D7\u540D\u3002",
+        at: "\u914D\u7F6E\u5148\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\uFF08\u4EFB\u610F\uFF09\u3002",
+        set: "\u751F\u6210\u7D50\u679C\u3092\u53D7\u3051\u53D6\u308B\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u5909\u6570\uFF08\u4EFB\u610F\uFF09\u3002"
+      }
+    },
+    create_tunnel: {
+      summary: "2\u70B9\u9593\u306B\u30B7\u30EA\u30F3\u30C0\u30FC\u5F62\u72B6\u306E\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3092\u914D\u7F6E\u3057\u307E\u3059\u3002\u534A\u5F84\u304C0\u306E\u5834\u5408\u306F\u30A8\u30F3\u30B8\u30F3\u304C5\u3092\u4F7F\u3044\u307E\u3059\u3002",
+      params: {
+        object_a: "1\u3064\u76EE\u306E\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u3002",
+        object_b: "2\u3064\u76EE\u306E\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u3002",
+        object_type: "objects \u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u30EA\u30B9\u30C8\u306E\u5F15\u7528\u7B26\u4ED8\u304D\u30BF\u30A4\u30D7\u540D\u3002",
+        radius: "\u30B7\u30EA\u30F3\u30C0\u30FC\u534A\u5F84\uFF080 \u306E\u5834\u5408\u30A8\u30F3\u30B8\u30F3\u65E2\u5B9A\u5024 5\uFF09\u3002",
+        object_reference_out: "\u751F\u6210\u7D50\u679C\u3092\u53D7\u3051\u53D6\u308B\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u5909\u6570\u3002"
+      }
+    },
+    debugging_enable_tracing: {
+      summary: "\u30B9\u30AF\u30EA\u30D7\u30C8\u30C8\u30EC\u30FC\u30B7\u30F3\u30B0\u306E\u6709\u52B9\uFF0F\u7121\u52B9\u3092\u5207\u308A\u66FF\u3048\u307E\u3059\u3002",
+      params: {
+        literal_boolean: "\u30EA\u30C6\u30E9\u30EB\u306E true \u307E\u305F\u306F false\u3002"
+      }
+    },
+    debug_force_player_view_count: {
+      summary: "\u30C7\u30D0\u30C3\u30B0\u7528\u306B\u30D7\u30EC\u30A4\u30E4\u30FC\u8868\u793A\u6570\uFF08\u5206\u5272\u753B\u9762\uFF09\u3092\u5F37\u5236\u3057\u307E\u3059\u3002",
+      params: {
+        splitscreen_count: "\u5F37\u5236\u3059\u308B\u5206\u5272\u753B\u9762\uFF0F\u30D3\u30E5\u30FC\u6570\u3002"
+      }
+    },
+    delete_object: {
+      summary: "\u30DE\u30C3\u30D7\u4E0A\u306E\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u3092\u524A\u9664\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002"
+      }
+    },
+    device_animate_position: {
+      summary: "\u30C7\u30D0\u30A4\u30B9\u3092\u6642\u9593\u3092\u304B\u3051\u3066\u76EE\u6A19\u4F4D\u7F6E\u307E\u3067\u30A2\u30CB\u30E1\u30FC\u30B7\u30E7\u30F3\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        animation_target_fraction: "\u76EE\u6A19\u30A2\u30CB\u30E1\u30FC\u30B7\u30E7\u30F3\u5272\u5408\u3002",
+        animation_duration_seconds: "\u30A2\u30CB\u30E1\u30FC\u30B7\u30E7\u30F3\u6642\u9593\uFF08\u79D2\uFF09\u3002",
+        acceleration_seconds: "\u52A0\u901F\u6642\u9593\uFF08\u79D2\uFF09\u3002",
+        deceleration_seconds: "\u6E1B\u901F\u6642\u9593\uFF08\u79D2\uFF09\u3002"
+      }
+    },
+    device_get_position: {
+      summary: "\u30C7\u30D0\u30A4\u30B9\u4F4D\u7F6E\u3092\u51FA\u529B\u5909\u6570\u3078\u8AAD\u307F\u53D6\u308A\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        number_out: "\u30D1\u30FC\u30BB\u30F3\u30C8\u5024\u3092\u53D7\u3051\u53D6\u308B number \u5909\u6570\u3002"
+      }
+    },
+    device_get_power: {
+      summary: "\u30C7\u30D0\u30A4\u30B9\u96FB\u6E90\u3092\u51FA\u529B\u5909\u6570\u3078\u8AAD\u307F\u53D6\u308A\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        number_out: "\u30D1\u30FC\u30BB\u30F3\u30C8\u5024\u3092\u53D7\u3051\u53D6\u308B number \u5909\u6570\u3002"
+      }
+    },
+    device_set_position: {
+      summary: "\u30C7\u30D0\u30A4\u30B9\u306E\u30A2\u30CB\u30E1\u30FC\u30B7\u30E7\u30F3\u4F4D\u7F6E\uFF080\u2013100\uFF09\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        number: "\u30D1\u30FC\u30BB\u30F3\u30C8\u5024\uFF080\u2013100\uFF09\u307E\u305F\u306F number \u5909\u6570\u3002"
+      }
+    },
+    device_set_position_immediate: {
+      summary: "\u30A2\u30CB\u30E1\u30FC\u30B7\u30E7\u30F3\u306A\u3057\u3067\u30C7\u30D0\u30A4\u30B9\u3092\u4F4D\u7F6E\u306B\u30B9\u30CA\u30C3\u30D7\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        number: "\u30D1\u30FC\u30BB\u30F3\u30C8\u5024\uFF080\u2013100\uFF09\u307E\u305F\u306F number \u5909\u6570\u3002"
+      }
+    },
+    device_set_position_track: {
+      summary: "\u30C7\u30D0\u30A4\u30B9\u306B\u30A2\u30CB\u30E1\u30FC\u30B7\u30E7\u30F3\u30C8\u30E9\u30C3\u30AF\u540D\u3092\u5272\u308A\u5F53\u3066\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        animation_name: "\u30A2\u30CB\u30E1\u30FC\u30B7\u30E7\u30F3\u30C8\u30E9\u30C3\u30AF\u540D\u3002",
+        interpolation_time: "\u88DC\u9593\u6642\u9593\u3002"
+      }
+    },
+    device_set_power: {
+      summary: "\u30C7\u30D0\u30A4\u30B9\u306E\u96FB\u6E90\uFF08\u30D1\u30FC\u30BB\u30F3\u30C8\uFF09\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        number: "\u30D1\u30FC\u30BB\u30F3\u30C8\u5024\uFF080\u2013100\uFF09\u307E\u305F\u306F number \u5909\u6570\u3002"
+      }
+    },
+    end_round: {
+      summary: "\u30E9\u30A6\u30F3\u30C9\u3092\u7D42\u4E86\u3057\u307E\u3059\u3002"
+    },
+    for_each: {
+      summary: "\u6307\u5B9A\u30C8\u30EA\u30AC\u30FC\u30BF\u30A4\u30D7\u306E\u5BFE\u8C61\u3054\u3068\u306B\u5165\u308C\u5B50\u30D6\u30ED\u30C3\u30AF\u3092\u5B9F\u884C\u3057\u307E\u3059\u3002",
+      params: {
+        trigger_type: "\u5165\u308C\u5B50\u30C8\u30EA\u30AC\u30FC\u306E\u7A2E\u985E\uFF08player\u3001object \u306A\u3069\uFF09\u3002"
+      }
+    },
+    game_grief_record_custom_penalty: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306B\u30AB\u30B9\u30BF\u30E0Grief\u30DA\u30CA\u30EB\u30C6\u30A3\u3092\u8A18\u9332\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        penalty_amount: "\u8A18\u9332\u3059\u308B\u30DA\u30CA\u30EB\u30C6\u30A3\u91CF\u3002"
+      }
+    },
+    get_button_time: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u304C\u30DC\u30BF\u30F3\u3092\u62BC\u3057\u7D9A\u3051\u305F\u6642\u9593\uFF08\u30DF\u30EA\u79D2\uFF09\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        scriptable_button: "\u30B9\u30AF\u30EA\u30D7\u30C8\u53EF\u80FD\u30DC\u30BF\u30F3\u306E\u30AD\u30FC\u30EF\u30FC\u30C9\u3002",
+        milliseconds_out: "\u9577\u62BC\u3057\u6642\u9593\uFF08\u30DF\u30EA\u79D2\uFF09\u3092\u53D7\u3051\u53D6\u308B number \u5909\u6570\u3002"
+      }
+    },
+    get_player_holding_object: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3092\u4FDD\u6301\u3057\u3066\u3044\u308B\u30D7\u30EC\u30A4\u30E4\u30FC\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        player_out: "\u7D50\u679C\u3092\u53D7\u3051\u53D6\u308B player \u5909\u6570\u3002"
+      }
+    },
+    get_random_object: {
+      summary: "\u30D5\u30A3\u30EB\u30BF\u306B\u5408\u3046\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3092\u30E9\u30F3\u30C0\u30E0\u306B\u9078\u3073\u307E\u3059\u3002",
+      params: {
+        filter_name: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u30D5\u30A3\u30EB\u30BF\uFF0F\u30E9\u30D9\u30EB\u540D\u3002",
+        ignore_object: "\u30E9\u30F3\u30C0\u30E0\u9078\u629E\u304B\u3089\u9664\u5916\u3059\u308B\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3002",
+        object_out: "\u7D50\u679C\u3092\u53D7\u3051\u53D6\u308B object \u5909\u6570\u3002"
+      }
+    },
+    give_weapon: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306B\u6B66\u5668\u3092\u4ED8\u4E0E\u3057\u307E\u3059\uFF08\u30EC\u30AC\u30B7\u30FC\uFF0F\u90E8\u5206\u5BFE\u5FDC\u3002biped_give_weapon \u63A8\u5968\uFF09\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        weapon: "\u6B66\u5668\u30BF\u30A4\u30D7\u3001\u307E\u305F\u306F\u6B66\u5668\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3002",
+        mode: "\u88C5\u5099\uFF0F\u30B9\u30ED\u30C3\u30C8\u30E2\u30FC\u30C9: primary\u3001secondary\u3001force\u3002"
+      }
+    },
+    hide_object: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u8868\u793A\uFF0F\u975E\u8868\u793A\u3092\u5207\u308A\u66FF\u3048\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        should_hide: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3092\u96A0\u3059\u304B\u3069\u3046\u304B\u3002"
+      }
+    },
+    hs_function_call: {
+      summary: "HaloScript \u95A2\u6570\u3092\u540D\u524D\u3067\u547C\u3073\u51FA\u3057\u307E\u3059\u3002",
+      params: {
+        function_name: "HaloScript \u95A2\u6570\u540D\u3002"
+      }
+    },
+    hud_post_message: {
+      summary: "\u5BFE\u8C61\u3078\u30B5\u30A6\u30F3\u30C9\u4ED8\u304D\u306E HUD \u30E1\u30C3\u30BB\u30FC\u30B8\u3092\u8868\u793A\u3057\u307E\u3059\u3002",
+      params: {
+        team_or_player_target: "everyone\u3001\u307E\u305F\u306F\u7279\u5B9A\u306E\u30D7\u30EC\u30A4\u30E4\u30FC\uFF0F\u30C1\u30FC\u30E0\u3002",
+        sound: "sounds \u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u30EA\u30B9\u30C8\u306E\u30B5\u30A6\u30F3\u30C9\u540D\u3002",
+        dynamic_string: "\u5F15\u7528\u7B26\u4ED8\u304D\u6587\u5B57\u5217\u3001\u307E\u305F\u306F\u52D5\u7684\u6587\u5B57\u5217\u5F0F\u3002"
+      }
+    },
+    hud_widget_set_icon: {
+      summary: "HUD \u30A6\u30A3\u30B8\u30A7\u30C3\u30C8\u306E\u30A2\u30A4\u30B3\u30F3\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        hud_widget_name: "\u30B9\u30AF\u30EA\u30D7\u30C8\u3067\u5BA3\u8A00\u3057\u305F hud_widget \u306E\u540D\u524D\u3002",
+        icon_name: "\u30A2\u30A4\u30B3\u30F3\u540D\u3002"
+      }
+    },
+    hud_widget_set_meter: {
+      summary: "HUD \u30A6\u30A3\u30B8\u30A7\u30C3\u30C8\u306E\u30E1\u30FC\u30BF\u30FC\u8868\u793A\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        hud_widget_name: "\u30B9\u30AF\u30EA\u30D7\u30C8\u3067\u5BA3\u8A00\u3057\u305F hud_widget \u306E\u540D\u524D\u3002",
+        meter: "\u30E1\u30FC\u30BF\u30FC\u30E2\u30FC\u30C9: off\u30012 \u3064\u306E\u6570\u5024\u3001\u307E\u305F\u306F\u30BF\u30A4\u30DE\u30FC\u3002"
+      }
+    },
+    hud_widget_set_text: {
+      summary: "HUD \u30A6\u30A3\u30B8\u30A7\u30C3\u30C8\u306E\u30C6\u30AD\u30B9\u30C8\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        hud_widget_name: "\u30B9\u30AF\u30EA\u30D7\u30C8\u3067\u5BA3\u8A00\u3057\u305F hud_widget \u306E\u540D\u524D\u3002",
+        dynamic_string: "\u5F15\u7528\u7B26\u4ED8\u304D\u6587\u5B57\u5217\u3001\u307E\u305F\u306F\u52D5\u7684\u6587\u5B57\u5217\u5F0F\u3002"
+      }
+    },
+    hud_widget_set_value: {
+      summary: "HUD \u30A6\u30A3\u30B8\u30A7\u30C3\u30C8\u306E\u5024\u30C6\u30AD\u30B9\u30C8\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        hud_widget_name: "\u30B9\u30AF\u30EA\u30D7\u30C8\u3067\u5BA3\u8A00\u3057\u305F hud_widget \u306E\u540D\u524D\u3002",
+        dynamic_string: "\u5F15\u7528\u7B26\u4ED8\u304D\u6587\u5B57\u5217\u3001\u307E\u305F\u306F\u52D5\u7684\u6587\u5B57\u5217\u5F0F\u3002"
+      }
+    },
+    hud_widget_set_visibility: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u3054\u3068\u306E HUD \u30A6\u30A3\u30B8\u30A7\u30C3\u30C8\u8868\u793A\u3092\u5207\u308A\u66FF\u3048\u307E\u3059\u3002",
+      params: {
+        hud_widget_name: "\u30B9\u30AF\u30EA\u30D7\u30C8\u3067\u5BA3\u8A00\u3057\u305F hud_widget \u306E\u540D\u524D\u3002",
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        literal_boolean: "\u30EA\u30C6\u30E9\u30EB\u306E true \u307E\u305F\u306F false\u3002"
+      }
+    },
+    navpoint_set_icon: {
+      summary: "\u30CA\u30D3\u30DD\u30A4\u30F3\u30C8\u306E\u30A2\u30A4\u30B3\u30F3\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        icon: "\u30A2\u30A4\u30B3\u30F3\u540D\u307E\u305F\u306F\u30AD\u30FC\u30EF\u30FC\u30C9\u3002",
+        number: "icon \u304C num \u306E\u3068\u304D\u306E\u6570\u5024\u30A2\u30A4\u30B3\u30F3\u5024\u3002"
+      }
+    },
+    navpoint_set_priority: {
+      summary: "\u30CA\u30D3\u30DD\u30A4\u30F3\u30C8\u306E\u512A\u5148\u5EA6\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        priority: "\u512A\u5148\u5EA6: low\u3001normal\u3001high\u3001blink\u3002"
+      }
+    },
+    navpoint_set_text: {
+      summary: "\u30CA\u30D3\u30DD\u30A4\u30F3\u30C8\u306E\u30C6\u30AD\u30B9\u30C8\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        dynamic_string: "\u5F15\u7528\u7B26\u4ED8\u304D\u6587\u5B57\u5217\u3001\u307E\u305F\u306F\u52D5\u7684\u6587\u5B57\u5217\u5F0F\u3002"
+      }
+    },
+    navpoint_set_timer: {
+      summary: "\u30CA\u30D3\u30DD\u30A4\u30F3\u30C8\u306B\u30BF\u30A4\u30DE\u30FC\u3092\u95A2\u9023\u4ED8\u3051\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        timer_name: "\u95A2\u9023\u4ED8\u3051\u308B\u540D\u524D\u4ED8\u304D\u30BF\u30A4\u30DE\u30FC\u3002"
+      }
+    },
+    navpoint_set_visible: {
+      summary: "\u30CA\u30D3\u30DD\u30A4\u30F3\u30C8\u306E\u53EF\u8996\u5BFE\u8C61\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        audience: "\u5F71\u97FF\u3092\u53D7\u3051\u308B\u5BFE\u8C61: no_one\u3001everyone\u3001allies\u3001enemies\u3001player\uFF08player \u5F62\u306F\u30D7\u30EC\u30A4\u30E4\u30FC\u3068\u771F\u507D\u5024\u3092\u53D6\u308B\u5834\u5408\u3042\u308A\uFF09\u3002"
+      }
+    },
+    navpoint_set_visible_range: {
+      summary: "\u30CA\u30D3\u30DD\u30A4\u30F3\u30C8\u304C\u898B\u3048\u308B\u8DDD\u96E2\u7BC4\u56F2\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        min: "\u53EF\u8996\u7BC4\u56F2\u306E\u6700\u5C0F\u8DDD\u96E2\uFF08\u30D5\u30A3\u30FC\u30C8\uFF09\u3002",
+        max: "\u53EF\u8996\u7BC4\u56F2\u306E\u6700\u5927\u8DDD\u96E2\uFF08\u30D5\u30A3\u30FC\u30C8\uFF09\u3002"
+      }
+    },
+    object_adjust_health: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u4F53\u529B\u3092\u6F14\u7B97\u3067\u5909\u66F4\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        math_operation: "\u5024\u306E\u9069\u7528\u65B9\u6CD5\uFF08set_to\u3001add\u3001subtract \u306A\u3069\uFF09\u3002",
+        number: "\u6570\u5024\u307E\u305F\u306F number \u5909\u6570\u3002"
+      }
+    },
+    object_adjust_maximum_health: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u6700\u5927\u4F53\u529B\u3092\u6F14\u7B97\u3067\u5909\u66F4\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        math_operation: "\u5024\u306E\u9069\u7528\u65B9\u6CD5\uFF08set_to\u3001add\u3001subtract \u306A\u3069\uFF09\u3002",
+        number: "\u6570\u5024\u307E\u305F\u306F number \u5909\u6570\u3002"
+      }
+    },
+    object_adjust_maximum_shield: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u6700\u5927\u30B7\u30FC\u30EB\u30C9\u3092\u6F14\u7B97\u3067\u5909\u66F4\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        math_operation: "\u5024\u306E\u9069\u7528\u65B9\u6CD5\uFF08set_to\u3001add\u3001subtract \u306A\u3069\uFF09\u3002",
+        number: "\u6570\u5024\u307E\u305F\u306F number \u5909\u6570\u3002"
+      }
+    },
+    object_adjust_shield: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u30B7\u30FC\u30EB\u30C9\u3092\u6F14\u7B97\u3067\u5909\u66F4\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        math_operation: "\u5024\u306E\u9069\u7528\u65B9\u6CD5\uFF08set_to\u3001add\u3001subtract \u306A\u3069\uFF09\u3002",
+        number: "\u6570\u5024\u307E\u305F\u306F number \u5909\u6570\u3002"
+      }
+    },
+    object_attach: {
+      summary: "\u5B50\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3092\u89AA\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306B\u30AA\u30D5\u30BB\u30C3\u30C8\u4ED8\u304D\u3067\u53D6\u308A\u4ED8\u3051\u307E\u3059\u3002",
+      params: {
+        child_object: "\u63A5\u7D9A\uFF0F\u5207\u65AD\u3059\u308B\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3002",
+        parent_object: "\u63A5\u7D9A\u5148\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3002",
+        offset_x: "X \u30AA\u30D5\u30BB\u30C3\u30C8\uFF08\u30D5\u30A3\u30FC\u30C8\uFF09\u3002",
+        offset_y: "Y \u30AA\u30D5\u30BB\u30C3\u30C8\uFF08\u30D5\u30A3\u30FC\u30C8\uFF09\u3002",
+        offset_z: "Z \u30AA\u30D5\u30BB\u30C3\u30C8\uFF08\u30D5\u30A3\u30FC\u30C8\uFF09\u3002"
+      }
+    },
+    object_bounce: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3092\u30D0\u30A6\u30F3\u30B9\u3055\u305B\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002"
+      }
+    },
+    object_destroy: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3092\u7834\u58CA\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002"
+      }
+    },
+    object_detach: {
+      summary: "\u53D6\u308A\u4ED8\u3051\u3089\u308C\u305F\u5B50\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3092\u5207\u308A\u96E2\u3057\u307E\u3059\u3002",
+      params: {
+        child_object: "\u63A5\u7D9A\uFF0F\u5207\u65AD\u3059\u308B\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3002"
+      }
+    },
+    object_face_object: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3092\u5225\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u65B9\u5411\u3078\u5411\u3051\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        target: "\u5411\u3051\u308B\u5148\u306E\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3002",
+        x: "\u4EFB\u610F: X \u6210\u5206\uFF08\u30D5\u30A3\u30FC\u30C8\uFF09\u3002",
+        y: "\u4EFB\u610F: Y \u6210\u5206\uFF08\u30D5\u30A3\u30FC\u30C8\uFF09\u3002",
+        z: "\u4EFB\u610F: Z \u6210\u5206\uFF08\u30D5\u30A3\u30FC\u30C8\uFF09\u3002"
+      }
+    },
+    object_get_distance: {
+      summary: "2\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u9593\u306E\u8DDD\u96E2\uFF08\u30D5\u30A3\u30FC\u30C8\uFF09\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002",
+      params: {
+        object_a: "1\u3064\u76EE\u306E\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u3002",
+        object_b: "2\u3064\u76EE\u306E\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u3002",
+        distance_out: "\u8DDD\u96E2\uFF08\u30D5\u30A3\u30FC\u30C8\uFF09\u3092\u53D7\u3051\u53D6\u308B number \u5909\u6570\u3002"
+      }
+    },
+    object_get_health: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u4F53\u529B\uFF08\u30D1\u30FC\u30BB\u30F3\u30C8\uFF09\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        vitality_out: "\u30D0\u30A4\u30BF\u30EA\u30C6\u30A3\uFF08\uFF05\uFF09\u3092\u53D7\u3051\u53D6\u308B number \u5909\u6570\u3002"
+      }
+    },
+    object_get_orientation: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u5411\u304D\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        orientation_out: "\u5411\u304D\uFF081\u20136\uFF09\u3092\u53D7\u3051\u53D6\u308B number \u5909\u6570\u3002"
+      }
+    },
+    object_get_shield: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u30B7\u30FC\u30EB\u30C9\uFF08\u30D1\u30FC\u30BB\u30F3\u30C8\uFF09\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        vitality_out: "\u30D0\u30A4\u30BF\u30EA\u30C6\u30A3\uFF08\uFF05\uFF09\u3092\u53D7\u3051\u53D6\u308B number \u5909\u6570\u3002"
+      }
+    },
+    object_get_velocity: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u901F\u5EA6\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        number_out: "\u901F\u5EA6\u3092\u53D7\u3051\u53D6\u308B number \u5909\u6570\u3002"
+      }
+    },
+    object_set_invincibility: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u7121\u6575\u72B6\u614B\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        boolean: "true / false\u3001\u307E\u305F\u306F\u771F\u507D\u5024\u76F8\u5F53\u3002"
+      }
+    },
+    object_set_minimap_icon: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u30DF\u30CB\u30DE\u30C3\u30D7\u30A2\u30A4\u30B3\u30F3\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002Alpha Reach \u3067\u306F\u30B3\u30F3\u30D1\u30A4\u30EB\u3067\u304D\u307E\u3059\u304C\u3001\u52D5\u4F5C\u3059\u308B\u30DF\u30CB\u30DE\u30C3\u30D7\u306F\u3042\u308A\u307E\u305B\u3093\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        icon: "\u30A2\u30A4\u30B3\u30F3\u540D\u307E\u305F\u306F\u30AD\u30FC\u30EF\u30FC\u30C9\u3002"
+      }
+    },
+    object_set_minimap_priority: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u30DF\u30CB\u30DE\u30C3\u30D7\u512A\u5148\u5EA6\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002Alpha Reach \u3067\u306F\u30B3\u30F3\u30D1\u30A4\u30EB\u3067\u304D\u307E\u3059\u304C\u3001\u52D5\u4F5C\u3059\u308B\u30DF\u30CB\u30DE\u30C3\u30D7\u306F\u3042\u308A\u307E\u305B\u3093\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        priority: "\u512A\u5148\u5EA6: low\u3001normal\u3001high\u3001blink\u3002"
+      }
+    },
+    object_set_minimap_visibility: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u30DF\u30CB\u30DE\u30C3\u30D7\u8868\u793A\u3092\u5207\u308A\u66FF\u3048\u307E\u3059\u3002Alpha Reach \u3067\u306F\u30B3\u30F3\u30D1\u30A4\u30EB\u3067\u304D\u307E\u3059\u304C\u3001\u52D5\u4F5C\u3059\u308B\u30DF\u30CB\u30DE\u30C3\u30D7\u306F\u3042\u308A\u307E\u305B\u3093\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        boolean: "true / false\u3001\u307E\u305F\u306F\u771F\u507D\u5024\u76F8\u5F53\u3002"
+      }
+    },
+    object_set_never_garbage: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3092\u30AC\u30D9\u30FC\u30B8\u56DE\u53CE\u5BFE\u8C61\u5916\u306B\u3059\u308B\u304B\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        boolean: "true / false\u3001\u307E\u305F\u306F\u771F\u507D\u5024\u76F8\u5F53\u3002"
+      }
+    },
+    object_set_orientation: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u5411\u304D\u3092\u5225\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306B\u5408\u308F\u305B\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        source: "\u5411\u304D\u306E\u53C2\u7167\u5143\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3002"
+      }
+    },
+    object_set_scale: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u30B9\u30B1\u30FC\u30EB\uFF08\u30D1\u30FC\u30BB\u30F3\u30C8\uFF09\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        number: "\u30D1\u30FC\u30BB\u30F3\u30C8\u5024\uFF080\u2013100\uFF09\u307E\u305F\u306F number \u5909\u6570\u3002"
+      }
+    },
+    player_adjust_money: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u6240\u6301\u91D1\u3092\u6F14\u7B97\u3067\u5909\u66F4\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        math_operation: "\u5024\u306E\u9069\u7528\u65B9\u6CD5\uFF08set_to\u3001add\u3001subtract \u306A\u3069\uFF09\u3002",
+        number: "\u6570\u5024\u307E\u305F\u306F number \u5909\u6570\u3002"
+      }
+    },
+    player_death_get_damage_type: {
+      summary: "\u6B7B\u4EA1\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u30C0\u30E1\u30FC\u30B8\u7A2E\u5225\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002",
+      params: {
+        dead_player: "\u6B7B\u4EA1\u3057\u305F\u30D7\u30EC\u30A4\u30E4\u30FC\u3002",
+        number_out: "\u30C0\u30E1\u30FC\u30B8\u30BF\u30A4\u30D7\u3092\u53D7\u3051\u53D6\u308B number \u5909\u6570\u3002"
+      }
+    },
+    player_death_get_killing_player: {
+      summary: "\u6B7B\u4EA1\u30D7\u30EC\u30A4\u30E4\u30FC\u3092\u5012\u3057\u305F\u30D7\u30EC\u30A4\u30E4\u30FC\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002",
+      params: {
+        dead_player: "\u6B7B\u4EA1\u3057\u305F\u30D7\u30EC\u30A4\u30E4\u30FC\u3002",
+        killing_player: "\u30AD\u30EB\u3057\u305F\u30D7\u30EC\u30A4\u30E4\u30FC\u3092\u53D7\u3051\u53D6\u308B player \u5909\u6570\u3002"
+      }
+    },
+    player_death_get_special_type: {
+      summary: "\u6B7B\u4EA1\u306E\u7279\u6B8A\u7A2E\u5225\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002",
+      params: {
+        dead_player: "\u6B7B\u4EA1\u3057\u305F\u30D7\u30EC\u30A4\u30E4\u30FC\u3002",
+        number_out: "\u7279\u6B8A\u30C7\u30B9\u7A2E\u5225\u3092\u53D7\u3051\u53D6\u308B number \u5909\u6570\u3002"
+      }
+    },
+    player_enable_purchases: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u8CFC\u5165\u53EF\u5426\u3092\u751F\u6B7B\u72B6\u614B\u3054\u3068\u306B\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        when: "\u8CFC\u5165\u304C\u9069\u7528\u3055\u308C\u308B\u30BF\u30A4\u30DF\u30F3\u30B0: alive\u3001dead\u3001both\u3002",
+        boolean: "true / false\u3001\u307E\u305F\u306F\u771F\u507D\u5024\u76F8\u5F53\u3002"
+      }
+    },
+    player_get_equipment: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u88C5\u5099\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        equipment_out: "\u88C5\u5099\u3092\u53D7\u3051\u53D6\u308B object \u5909\u6570\u3002"
+      }
+    },
+    player_get_fireteam_index: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u30D5\u30A1\u30A4\u30A2\u30C1\u30FC\u30E0\u756A\u53F7\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        number_out: "\u7D50\u679C\u3092\u53D7\u3051\u53D6\u308B number \u5909\u6570\u3002"
+      }
+    },
+    player_get_killing_spree_count: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u9023\u7D9A\u30AD\u30EB\u6570\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        number_out: "\u7D50\u679C\u3092\u53D7\u3051\u53D6\u308B number \u5909\u6570\u3002"
+      }
+    },
+    player_get_place: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u9806\u4F4D\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        number_out: "\u9806\u4F4D\u3092\u53D7\u3051\u53D6\u308B number \u5909\u6570\u3002"
+      }
+    },
+    player_get_target_object: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u304C\u72D9\u3063\u3066\u3044\u308B\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        object_out: "\u7D50\u679C\u3092\u53D7\u3051\u53D6\u308B object \u5909\u6570\u3002"
+      }
+    },
+    player_get_vehicle: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u304C\u4E57\u3063\u3066\u3044\u308B\u8ECA\u4E21\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        vehicle_out: "\u8ECA\u4E21\u3092\u53D7\u3051\u53D6\u308B object \u5909\u6570\u3002"
+      }
+    },
+    player_get_weapon: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u4E3B\uFF0F\u526F\u6B66\u5668\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        mode: "\u88C5\u5099\uFF0F\u30B9\u30ED\u30C3\u30C8\u30E2\u30FC\u30C9: primary\u3001secondary\u3002",
+        weapon_out: "\u6B66\u5668\u3092\u53D7\u3051\u53D6\u308B object \u5909\u6570\u3002"
+      }
+    },
+    player_pick_up_weapon: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306B\u6B66\u5668\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3092\u62FE\u308F\u305B\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        weapon_object: "\u65E2\u5B58\u306E\u6B66\u5668\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3002"
+      }
+    },
+    player_set_coop_spawning: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u5354\u529B\u30B9\u30DD\u30FC\u30F3\u3092\u6709\u52B9\uFF0F\u7121\u52B9\u306B\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        literal_boolean: "\u30EA\u30C6\u30E9\u30EB\u306E true \u307E\u305F\u306F false\u3002"
+      }
+    },
+    player_set_fireteam_index: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u30D5\u30A1\u30A4\u30A2\u30C1\u30FC\u30E0\u756A\u53F7\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        number: "\u6570\u5024\u307E\u305F\u306F number \u5909\u6570\u3002"
+      }
+    },
+    player_set_fireteam_tier: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u30D5\u30A1\u30A4\u30A2\u30C1\u30FC\u30E0\u30C6\u30A3\u30A2\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        tier: "\u30D5\u30A1\u30A4\u30A2\u30C1\u30FC\u30E0\u306E tier \u5024\u3002"
+      }
+    },
+    player_set_objective: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u76EE\u6A19\u30C6\u30AD\u30B9\u30C8\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        dynamic_string: "\u5F15\u7528\u7B26\u4ED8\u304D\u6587\u5B57\u5217\u3001\u307E\u305F\u306F\u52D5\u7684\u6587\u5B57\u5217\u5F0F\u3002"
+      }
+    },
+    player_set_objective_allegiance: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u76EE\u6A19\u6240\u5C5E\u30C6\u30AD\u30B9\u30C8\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        dynamic_string: "\u5F15\u7528\u7B26\u4ED8\u304D\u6587\u5B57\u5217\u3001\u307E\u305F\u306F\u52D5\u7684\u6587\u5B57\u5217\u5F0F\u3002"
+      }
+    },
+    player_set_objective_allegiance_icon: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u76EE\u6A19\u6240\u5C5E\u30A2\u30A4\u30B3\u30F3\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        constant_integer: "\u30A8\u30F3\u30B8\u30F3\u306E\u30A2\u30A4\u30B3\u30F3 index\uFF08\u6574\u6570\uFF09\u3002"
+      }
+    },
+    player_set_primary_respawn_object: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u4E3B\u8981\u30EA\u30B9\u30DD\u30FC\u30F3\u5730\u70B9\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002"
+      }
+    },
+    player_set_requisition_palette: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u30EA\u30AF\u30A4\u30B8\u30B7\u30E7\u30F3\u30D1\u30EC\u30C3\u30C8\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        req_palette_name: "\u30EC\u30AF\u30A4\u30B8\u30B7\u30E7\u30F3\u30D1\u30EC\u30C3\u30C8\u540D\u3002"
+      }
+    },
+    player_set_unit: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u3092\u6307\u5B9A\u30E6\u30CB\u30C3\u30C8\u306B\u5272\u308A\u5F53\u3066\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        unit: "\u30E6\u30CB\u30C3\u30C8\u306E\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u3002"
+      }
+    },
+    player_set_vehicle: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u3092\u6307\u5B9A\u8ECA\u4E21\u306B\u4E57\u305B\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        vehicle: "\u8ECA\u4E21\u306E\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u3002"
+      }
+    },
+    player_set_vehicle_spawning: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u8ECA\u4E21\u30B9\u30DD\u30FC\u30F3\u3092\u6709\u52B9\uFF0F\u7121\u52B9\u306B\u3057\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        literal_boolean: "\u30EA\u30C6\u30E9\u30EB\u306E true \u307E\u305F\u306F false\u3002"
+      }
+    },
+    play_sound: {
+      summary: "\u5BFE\u8C61\u30D7\u30EC\u30A4\u30E4\u30FC\uFF0F\u30C1\u30FC\u30E0\u3078\u30B5\u30A6\u30F3\u30C9\u3092\u518D\u751F\u3057\u307E\u3059\u3002",
+      params: {
+        team_or_player_target: "everyone\u3001\u307E\u305F\u306F\u7279\u5B9A\u306E\u30D7\u30EC\u30A4\u30E4\u30FC\uFF0F\u30C1\u30FC\u30E0\u3002",
+        sound: "sounds \u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u30EA\u30B9\u30C8\u306E\u30B5\u30A6\u30F3\u30C9\u540D\u3002"
+      }
+    },
+    print_variable: {
+      summary: "\u52D5\u7684\u6587\u5B57\u5217\u3092\u30C7\u30D0\u30C3\u30B0\u51FA\u529B\u3057\u307E\u3059\u3002",
+      params: {
+        dynamic_string: "\u5F15\u7528\u7B26\u4ED8\u304D\u6587\u5B57\u5217\u3001\u307E\u305F\u306F\u52D5\u7684\u6587\u5B57\u5217\u5F0F\u3002"
+      }
+    },
+    random: {
+      summary: "0 \u304B\u3089 count-1 \u306E\u4E71\u6570\u3092\u51FA\u529B\u5909\u6570\u3078\u66F8\u304D\u8FBC\u307F\u307E\u3059\u3002",
+      params: {
+        value_count: "\u4E0A\u9650\u3002\u7D50\u679C\u306F 0..(count-1) \u306E\u7BC4\u56F2\u3002",
+        number_out: "\u4E71\u6570\u7D50\u679C\u3092\u53D7\u3051\u53D6\u308B number \u5909\u6570\u3002"
+      }
+    },
+    respawn_zone_enable: {
+      summary: "\u30EA\u30B9\u30DD\u30FC\u30F3\u30BE\u30FC\u30F3\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u6709\u52B9\uFF0F\u7121\u52B9\u3092\u5207\u308A\u66FF\u3048\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        boolean: "true / false\u3001\u307E\u305F\u306F\u771F\u507D\u5024\u76F8\u5F53\u3002"
+      }
+    },
+    saved_film_insert_marker: {
+      summary: "\u4FDD\u5B58\u30D5\u30A3\u30EB\u30E0\u306B\u30DE\u30FC\u30AB\u30FC\u3092\u633F\u5165\u3057\u307E\u3059\u3002",
+      params: {
+        offset: "\u6642\u9593\u30AA\u30D5\u30BB\u30C3\u30C8\uFF08\u79D2\uFF09\u3002",
+        label: "\u30DE\u30FC\u30AB\u30FC\u306E\u30E9\u30D9\u30EB\u6587\u5B57\u5217\u3002"
+      }
+    },
+    set: {
+      summary: "\u5909\u6570\u306B\u5BFE\u3057\u3066\u6570\u5B66\u6F14\u7B97\u3092\u9069\u7528\u3057\u307E\u3059\u3002",
+      params: {
+        var_a: "\u4EE3\u5165\u5148\u5909\u6570\uFF08\u30AB\u30B9\u30BF\u30E0\u3001\u30E1\u30F3\u30D0\u30FC\u3001\u307E\u305F\u306F\u7D44\u307F\u8FBC\u307F\uFF09\u3002",
+        math_operation: "\u5024\u306E\u9069\u7528\u65B9\u6CD5\uFF08set_to\u3001add\u3001subtract \u306A\u3069\uFF09\u3002",
+        var_b: "\u5165\u529B\u5024\u307E\u305F\u306F\u5909\u6570\u3002"
+      }
+    },
+    set_boundary: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u5883\u754C\u5F62\u72B6\u3068\u5BF8\u6CD5\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        shape: "\u5883\u754C\u306E\u5F62\u72B6: none\u3001sphere\u3001cylinder\u3001box\u3002"
+      }
+    },
+    set_fireteam_respawn_filter: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u4E0A\u306E\u30D5\u30A1\u30A4\u30A2\u30C1\u30FC\u30E0\u30EA\u30B9\u30DD\u30FC\u30F3\u6A29\u9650\u3092\u5236\u9650\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        fireteam_filter: "\u30D5\u30A1\u30A4\u30A2\u30C1\u30FC\u30E0\u30D5\u30A3\u30EB\u30BF: none\u3001all\u30010\u20133\u3002"
+      }
+    },
+    set_loadout: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306B\u540D\u524D\u4ED8\u304D\u30ED\u30FC\u30C9\u30A2\u30A6\u30C8\u3092\u5272\u308A\u5F53\u3066\u307E\u3059\u3002",
+      params: {
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        loadout_name: "\u540D\u524D\u4ED8\u304D\u30ED\u30FC\u30C9\u30A2\u30A6\u30C8\u3002"
+      }
+    },
+    set_loadout_palette: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u307E\u305F\u306F\u30C1\u30FC\u30E0\u306B\u30ED\u30FC\u30C9\u30A2\u30A6\u30C8\u30D1\u30EC\u30C3\u30C8\u3092\u5272\u308A\u5F53\u3066\u307E\u3059\u3002",
+      params: {
+        team_or_player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u307E\u305F\u306F\u30C1\u30FC\u30E0\u306E\u5BFE\u8C61\u3002",
+        loadout: "\u30ED\u30FC\u30C9\u30A2\u30A6\u30C8\u30D1\u30EC\u30C3\u30C8\u306E\u30C6\u30A3\u30A2\uFF0F\u540D\u524D\u3002"
+      }
+    },
+    set_pickup_filter: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u62FE\u5F97\u53EF\u80FD\u5BFE\u8C61\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        audience: "\u5F71\u97FF\u3092\u53D7\u3051\u308B\u5BFE\u8C61: no_one\u3001everyone\u3001allies\u3001enemies\u3001player\uFF08player \u5F62\u306F\u30D7\u30EC\u30A4\u30E4\u30FC\u3068\u771F\u507D\u5024\u3092\u53D6\u308B\u5834\u5408\u3042\u308A\uFF09\u3002"
+      }
+    },
+    set_player_respawn_vehicle: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u30EA\u30B9\u30DD\u30FC\u30F3\u8ECA\u4E21\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        vehicle: "\u8ECA\u4E21\u306E\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u3002",
+        player: "\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002"
+      }
+    },
+    set_progress_bar: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u9032\u6357\u30D0\u30FC\u8868\u793A\u5BFE\u8C61\u3068\u30BF\u30A4\u30DE\u30FC\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        audience: "\u5F71\u97FF\u3092\u53D7\u3051\u308B\u5BFE\u8C61: no_one\u3001everyone\u3001allies\u3001enemies\u3001player\uFF08player \u5F62\u306F\u30D7\u30EC\u30A4\u30E4\u30FC\u3068\u771F\u507D\u5024\u3092\u53D6\u308B\u5834\u5408\u3042\u308A\uFF09\u3002",
+        timer_name: "\u95A2\u9023\u4ED8\u3051\u308B\u540D\u524D\u4ED8\u304D\u30BF\u30A4\u30DE\u30FC\u3002"
+      }
+    },
+    set_respawn_filter: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u30EA\u30B9\u30DD\u30FC\u30F3\u53EF\u80FD\u5BFE\u8C61\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        audience: "\u5F71\u97FF\u3092\u53D7\u3051\u308B\u5BFE\u8C61: no_one\u3001everyone\u3001allies\u3001enemies\u3001player\uFF08player \u5F62\u306F\u30D7\u30EC\u30A4\u30E4\u30FC\u3068\u771F\u507D\u5024\u3092\u53D6\u308B\u5834\u5408\u3042\u308A\uFF09\u3002"
+      }
+    },
+    set_scenario_interpolator_state: {
+      summary: "\u30B7\u30CA\u30EA\u30AA\u88DC\u9593\u5668\u306E\u6709\u52B9\u72B6\u614B\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        interpolator_index: "\u30B7\u30CA\u30EA\u30AA\u88DC\u9593 index\u3002",
+        boolean_active: "\u88DC\u9593\u304C\u6709\u52B9\u304B\u3069\u3046\u304B\u3002"
+      }
+    },
+    set_score: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\uFF0F\u30C1\u30FC\u30E0\uFF0F\u5168\u54E1\u306E\u30B9\u30B3\u30A2\u3092\u6F14\u7B97\u3067\u5909\u66F4\u3057\u307E\u3059\u3002",
+      params: {
+        math_operation: "\u5024\u306E\u9069\u7528\u65B9\u6CD5\uFF08set_to\u3001add \u306A\u3069\uFF09\u3002",
+        value: "\u6570\u5024\u307E\u305F\u306F number \u5909\u6570\u3002",
+        target: "everyone\u3001\u307E\u305F\u306F\u7279\u5B9A\u306E\u30D7\u30EC\u30A4\u30E4\u30FC\uFF0F\u30C1\u30FC\u30E0\u3002"
+      }
+    },
+    set_team_respawn_vehicle: {
+      summary: "\u30C1\u30FC\u30E0\u306E\u30EA\u30B9\u30DD\u30FC\u30F3\u8ECA\u4E21\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        vehicle: "\u8ECA\u4E21\u306E\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u3002",
+        team: "\u30C1\u30FC\u30E0\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002"
+      }
+    },
+    submit_incident: {
+      summary: "\u30A4\u30F3\u30B7\u30C7\u30F3\u30C8\u3092\u539F\u56E0\uFF0F\u52B9\u679C\u306E\u5BFE\u8C61\u3068\u3068\u3082\u306B\u9001\u4FE1\u3057\u307E\u3059\u3002",
+      params: {
+        incident_name: "incidents \u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u30EA\u30B9\u30C8\u306E\u30A4\u30F3\u30B7\u30C7\u30F3\u30C8\u540D\u3002",
+        cause_team_or_player: "\u539F\u56E0\u5074: everyone\u3001\u307E\u305F\u306F\u7279\u5B9A\u306E\u30D7\u30EC\u30A4\u30E4\u30FC\uFF0F\u30C1\u30FC\u30E0\u3002",
+        effect_team_or_player: "\u52B9\u679C\u5074: everyone\u3001\u307E\u305F\u306F\u7279\u5B9A\u306E\u30D7\u30EC\u30A4\u30E4\u30FC\uFF0F\u30C1\u30FC\u30E0\u3002"
+      }
+    },
+    submit_incident_with_custom_value: {
+      summary: "\u30AB\u30B9\u30BF\u30E0\u5024\u4ED8\u304D\u3067\u30A4\u30F3\u30B7\u30C7\u30F3\u30C8\u3092\u9001\u4FE1\u3057\u307E\u3059\u3002",
+      params: {
+        incident_name: "incidents \u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u30EA\u30B9\u30C8\u306E\u30A4\u30F3\u30B7\u30C7\u30F3\u30C8\u540D\u3002",
+        cause_team_or_player: "\u539F\u56E0\u5074: everyone\u3001\u307E\u305F\u306F\u7279\u5B9A\u306E\u30D7\u30EC\u30A4\u30E4\u30FC\uFF0F\u30C1\u30FC\u30E0\u3002",
+        effect_team_or_player: "\u52B9\u679C\u5074: everyone\u3001\u307E\u305F\u306F\u7279\u5B9A\u306E\u30D7\u30EC\u30A4\u30E4\u30FC\uFF0F\u30C1\u30FC\u30E0\u3002",
+        custom_value_such_as_territory_index: "\u30AB\u30B9\u30BF\u30E0\u6574\u6570\u30DA\u30A4\u30ED\u30FC\u30C9\uFF08\u4F8B: \u30C6\u30EA\u30C8\u30EA\u30FC index\uFF09\u3002"
+      }
+    },
+    team_get_place: {
+      summary: "\u30C1\u30FC\u30E0\u306E\u9806\u4F4D\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002",
+      params: {
+        team: "\u30C1\u30FC\u30E0\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        number_out: "\u9806\u4F4D\u3092\u53D7\u3051\u53D6\u308B number \u5909\u6570\u3002"
+      }
+    },
+    team_set_coop_spawning: {
+      summary: "\u30C1\u30FC\u30E0\u306E\u5354\u529B\u30B9\u30DD\u30FC\u30F3\u3092\u6709\u52B9\uFF0F\u7121\u52B9\u306B\u3057\u307E\u3059\u3002",
+      params: {
+        team: "\u30C1\u30FC\u30E0\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        literal_boolean: "\u30EA\u30C6\u30E9\u30EB\u306E true \u307E\u305F\u306F false\u3002"
+      }
+    },
+    team_set_primary_respawn_object: {
+      summary: "\u30C1\u30FC\u30E0\u306E\u4E3B\u8981\u30EA\u30B9\u30DD\u30FC\u30F3\u5730\u70B9\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        team: "\u30C1\u30FC\u30E0\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002"
+      }
+    },
+    team_set_vehicle_spawning: {
+      summary: "\u30C1\u30FC\u30E0\u306E\u8ECA\u4E21\u30B9\u30DD\u30FC\u30F3\u3092\u6709\u52B9\uFF0F\u7121\u52B9\u306B\u3057\u307E\u3059\u3002",
+      params: {
+        team: "\u30C1\u30FC\u30E0\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        literal_boolean: "\u30EA\u30C6\u30E9\u30EB\u306E true \u307E\u305F\u306F false\u3002"
+      }
+    },
+    timer_reset: {
+      summary: "\u30BF\u30A4\u30DE\u30FC\u3092\u30EA\u30BB\u30C3\u30C8\u3057\u307E\u3059\u3002",
+      params: {
+        timer: "\u30BF\u30A4\u30DE\u30FC\u5909\u6570\u3002"
+      }
+    },
+    timer_set_rate: {
+      summary: "\u30BF\u30A4\u30DE\u30FC\u306E\u9032\u884C\u30EC\u30FC\u30C8\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        timer: "\u30BF\u30A4\u30DE\u30FC\u5909\u6570\u3002",
+        rate: "\u30BF\u30A4\u30DE\u30FC\u30EC\u30FC\u30C8\u306E\u30AD\u30FC\u30EF\u30FC\u30C9\u307E\u305F\u306F\u5024\u3002"
+      }
+    },
+    weapon_set_pickup_priority: {
+      summary: "\u6B66\u5668\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u62FE\u5F97\u512A\u5148\u5EA6\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002",
+      params: {
+        object: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u307E\u305F\u306F\u5909\u6570\u3002",
+        priority: "\u512A\u5148\u5EA6: normal\u3001special\u3001auto\u3002"
+      }
+    }
+  },
+  condition: {
+    object_is_type: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u304C\u6307\u5B9A\u306E\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u30EA\u30B9\u30C8\u7A2E\u5225\u3068\u4E00\u81F4\u3059\u308B\u3068\u304D\u771F\u3002",
+      params: {
+        object: "\u5224\u5B9A\u5BFE\u8C61\u306E\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u3002",
+        object_type: "objects \u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u30EA\u30B9\u30C8\u306E\u5F15\u7528\u7B26\u4ED8\u304D\u540D\u524D\u3002"
+      }
+    },
+    if: {
+      summary: "\u6570\u5024\u6BD4\u8F03\u6F14\u7B97\u5B50\u3067 2 \u3064\u306E\u5024\u3092\u6BD4\u8F03\u3057\u307E\u3059\u3002",
+      params: {
+        left: "\u5909\u6570\u3001\u5B9A\u6570\u3001\u30AA\u30D7\u30B7\u30E7\u30F3\u3001\u307E\u305F\u306F\u30EA\u30C6\u30E9\u30EB\u3002",
+        operator: "\u6BD4\u8F03\u6F14\u7B97\u5B50\uFF08\u8A18\u53F7\u307E\u305F\u306F\u540D\u524D\uFF09\u3002",
+        right: "\u5DE6\u8FBA\u3068\u6BD4\u8F03\u3059\u308B\u5024\u3002"
+      }
+    },
+    object_in_area: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u304C\u5225\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u9818\u57DF\uFF0F\u5883\u754C\u5185\u306B\u3042\u308B\u3068\u304D\u771F\u3002"
+    },
+    player_died: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u304C\u4E00\u81F4\u3059\u308B\u30AD\u30E9\u30FC\u30BF\u30A4\u30D7\u3067\u6B7B\u4EA1\u3057\u305F\u3068\u304D\u771F\u3002"
+    },
+    team_disposition: {
+      summary: "2 \u3064\u306E\u30C1\u30FC\u30E0\u9593\u306E\u95A2\u4FC2\uFF08\u30C7\u30A3\u30B9\u30DD\u30B8\u30B7\u30E7\u30F3\uFF09\u3092\u5224\u5B9A\u3057\u307E\u3059\u3002"
+    },
+    timer_expired: {
+      summary: "\u6307\u5B9A\u30BF\u30A4\u30DE\u30FC\u304C 0 \u306B\u9054\u3057\u305F\uFF0F\u671F\u9650\u5207\u308C\u306E\u3068\u304D\u771F\u3002"
+    },
+    team_is_active: {
+      summary: "\u30C1\u30FC\u30E0\u304C\u8A66\u5408\u4E2D\u306B\u30A2\u30AF\u30C6\u30A3\u30D6\u306A\u3068\u304D\u771F\u3002"
+    },
+    object_out_of_bounds: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u304C\u30D7\u30EC\u30A4\u53EF\u80FD\u30DE\u30C3\u30D7\u5883\u754C\u306E\u5916\u306B\u3042\u308B\u3068\u304D\u771F\u3002"
+    },
+    player_is_fire_team_leader: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u304C\u30D5\u30A1\u30A4\u30A2\u30C1\u30FC\u30E0\u306E\u30EA\u30FC\u30C0\u30FC\u3067\u3042\u308B\u3068\u304D\u771F\u3002"
+    },
+    player_assisted_with_kill: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u304C\u73FE\u5728\u306E\u30AD\u30EB\u30A4\u30D9\u30F3\u30C8\u3092\u30A2\u30B7\u30B9\u30C8\u3057\u305F\u3068\u304D\u771F\u3002"
+    },
+    object_matches_filter: {
+      summary: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u304C\u540D\u524D\u4ED8\u304D\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u30D5\u30A3\u30EB\u30BF\u30FC\uFF0F\u30E9\u30D9\u30EB\u306B\u4E00\u81F4\u3059\u308B\u3068\u304D\u771F\u3002"
+    },
+    player_is_active: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u304C\u30E9\u30A6\u30F3\u30C9\u4E2D\u306B\u30A2\u30AF\u30C6\u30A3\u30D6\u306A\u3068\u304D\u771F\u3002"
+    },
+    equipment_is_active: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u88C5\u5099\u30A2\u30D3\u30EA\u30C6\u30A3\u304C\u6709\u52B9\u306A\u3068\u304D\u771F\u3002"
+    },
+    player_is_spartan: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u304C\u30B9\u30D1\u30EB\u30BF\u30F3\u30E2\u30C7\u30EB\u3092\u4F7F\u7528\u3057\u3066\u3044\u308B\u3068\u304D\u771F\u3002"
+    },
+    player_is_elite: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u304C\u30A8\u30EA\u30FC\u30C8\u30E2\u30C7\u30EB\u3092\u4F7F\u7528\u3057\u3066\u3044\u308B\u3068\u304D\u771F\u3002"
+    },
+    player_is_editor: {
+      summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u304C Forge \u30A8\u30C7\u30A3\u30BF\u30E2\u30FC\u30C9\u306E\u3068\u304D\u771F\u3002"
+    },
+    game_is_forge: {
+      summary: "\u73FE\u5728\u306E\u30BB\u30C3\u30B7\u30E7\u30F3\u304C Forge\uFF08\u30A8\u30C7\u30A3\u30BF\uFF09\u30E2\u30FC\u30C9\u306E\u3068\u304D\u771F\u3002"
+    }
+  },
+  element: {
+    game_options: {
+      summary: "\u7D44\u307F\u8FBC\u307F\u304A\u3088\u3073\u30E6\u30FC\u30B6\u30FC\u5B9A\u7FA9\u306E\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF08\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u3001\u30AA\u30D7\u30B7\u30E7\u30F3\u3001\u7279\u6027\uFF09\u3092\u5BA3\u8A00\u3057\u307E\u3059\u3002"
+    },
+    trigger: {
+      summary: "\u30A4\u30D9\u30F3\u30C8\u3084\u30D5\u30A7\u30FC\u30BA\u5411\u3051\u306B\u6761\u4EF6\u3068\u30A2\u30AF\u30B7\u30E7\u30F3\u3092\u5B9F\u884C\u3059\u308B\u30C8\u30EA\u30AC\u30FC\u3092\u5B9A\u7FA9\u3057\u307E\u3059\u3002"
+    },
+    variables: {
+      summary: "\u30B9\u30B3\u30FC\u30D7\uFF08global\u3001team\u3001player\u3001object\uFF09\u5185\u306E\u30AB\u30B9\u30BF\u30E0\u5909\u6570\u3092\u5BA3\u8A00\u3057\u307E\u3059\u3002"
+    },
+    base: {
+      summary: "\u3053\u306E\u30B9\u30AF\u30EA\u30D7\u30C8\u304C\u30D9\u30FC\u30B9\u306E Megalo \u30B9\u30AF\u30EA\u30D7\u30C8\u30D5\u30A1\u30A4\u30EB\u304B\u3089\u6D3E\u751F\u3059\u308B\u3053\u3068\u3092\u5BA3\u8A00\u3057\u307E\u3059\u3002"
+    },
+    include: {
+      summary: "\u5225\u306E Megalo \u30B9\u30AF\u30EA\u30D7\u30C8\u30D5\u30A1\u30A4\u30EB\u3092\u3053\u306E\u30B3\u30F3\u30D1\u30A4\u30EB\u5358\u4F4D\u306B\u53D6\u308A\u8FBC\u307F\u307E\u3059\u3002"
+    },
+    localized_include: {
+      summary: "\u30ED\u30B1\u30FC\u30EB\u56FA\u6709\u306E\u30B9\u30AF\u30EA\u30D7\u30C8\u65AD\u7247\uFF08\u6587\u5B57\u5217\uFF0F\u30ED\u30FC\u30AB\u30E9\u30A4\u30BA\uFF09\u3092\u53D6\u308A\u8FBC\u307F\u307E\u3059\u3002"
+    },
+    string_table: {
+      summary: "HUD \u3084\u30E1\u30C3\u30BB\u30FC\u30B8\u3067\u4F7F\u3046\u540D\u524D\u4ED8\u304D\u6587\u5B57\u5217\u30C6\u30FC\u30D6\u30EB\u9805\u76EE\u3092\u5BA3\u8A00\u3057\u307E\u3059\u3002"
+    },
+    constants: {
+      summary: "\u30B3\u30F3\u30D1\u30A4\u30EB\u6642\u306E\u6570\u5024\u5B9A\u6570\u3092\u5BA3\u8A00\u3057\u307E\u3059\u3002",
+      params: {
+        number: "\u6570\u5024\u5B9A\u6570\u3092\u5BA3\u8A00\u3057\u307E\u3059: number <name> <value>\u3002"
+      }
+    },
+    hud_widgets: {
+      summary: "\u540D\u524D\u4ED8\u304D HUD \u30A6\u30A3\u30B8\u30A7\u30C3\u30C8\u3068\u305D\u306E\u753B\u9762\u4F4D\u7F6E\u3092\u5BA3\u8A00\u3057\u307E\u3059\u3002"
+    },
+    loadout: {
+      summary: "\u540D\u524D\u4ED8\u304D\u30ED\u30FC\u30C9\u30A2\u30A6\u30C8\uFF08\u6B66\u5668\u3001\u88C5\u5099\u3001\u624B\u69B4\u5F3E\uFF09\u3092\u5B9A\u7FA9\u3057\u307E\u3059\u3002"
+    },
+    loadout_palette: {
+      summary: "\u30ED\u30FC\u30C9\u30A2\u30A6\u30C8\u9805\u76EE\u3092\u9078\u629E\u53EF\u80FD\u306A\u30D1\u30EC\u30C3\u30C8\u306B\u307E\u3068\u3081\u307E\u3059\u3002"
+    },
+    teams: {
+      summary: "\u30DE\u30EB\u30C1\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u30C1\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\u3001\u30E2\u30C7\u30EB\u3001\u30C7\u30B6\u30A4\u30F3\u30CD\u30FC\u30BF\u30FC\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002"
+    },
+    engine_data: {
+      summary: "\u30A8\u30F3\u30B8\u30F3\u5411\u3051\u30B2\u30FC\u30E0\u30BF\u30A4\u30D7\u30E1\u30BF\u30C7\u30FC\u30BF\uFF08\u540D\u524D\u3001\u8AAC\u660E\u3001\u30A2\u30A4\u30B3\u30F3\u3001\u30AB\u30C6\u30B4\u30EA\uFF09\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002"
+    },
+    player_rating: {
+      summary: "\u7AF6\u6280\u5411\u3051\u30D7\u30EC\u30A4\u30E4\u30FC\u30EC\u30FC\u30C6\u30A3\u30F3\u30B0\uFF0F\u30B9\u30AD\u30EB\u91CD\u307F\u3092\u8A2D\u5B9A\u3057\u307E\u3059\u3002"
+    },
+    map_permissions: {
+      summary: "\u3053\u306E\u30B2\u30FC\u30E0\u30BF\u30A4\u30D7\u3092\u5B9F\u884C\u3067\u304D\u308B\u30DE\u30C3\u30D7\u3092\u5236\u9650\u3057\u307E\u3059\u3002"
+    },
+    game_stats: {
+      summary: "\u30B9\u30B3\u30A2\u30DC\u30FC\u30C9\uFF0F\u30E9\u30A6\u30F3\u30C9\u7D42\u4E86\u7528\u306E\u30AB\u30B9\u30BF\u30E0\u30B2\u30FC\u30E0\u7D71\u8A08\u3092\u5BA3\u8A00\u3057\u307E\u3059\u3002"
+    },
+    map_object: {
+      summary: "\u30DE\u30C3\u30D7\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306B\u30B9\u30AF\u30EA\u30D7\u30C8\u30E1\u30BF\u30C7\u30FC\u30BF\uFF08\u30E9\u30D9\u30EB\u3001\u7A2E\u5225\u3001\u30C1\u30FC\u30E0\u30D5\u30A3\u30EB\u30BF\u30FC\u306A\u3069\uFF09\u3092\u7D10\u4ED8\u3051\u307E\u3059\u3002"
+    },
+    requisition_palette: {
+      summary: "\u30EA\u30AF\u30A4\u30B8\u30B7\u30E7\u30F3\uFF08\u8CFC\u5165\uFF09\u30D1\u30EC\u30C3\u30C8\u3068\u305D\u306E\u9805\u76EE\u3092\u5B9A\u7FA9\u3057\u307E\u3059\u3002"
+    }
+  },
+  keyword: {
+    action: {
+      summary: "\u30C8\u30EA\u30AC\u30FC\u5185\u306E\u30A2\u30AF\u30B7\u30E7\u30F3\u6587\u3092\u958B\u59CB\u3057\u307E\u3059\u3002"
+    },
+    condition: {
+      summary: "\u5F8C\u7D9A\u30B9\u30C6\u30FC\u30C8\u30E1\u30F3\u30C8\u3092\u5236\u5FA1\u3059\u308B\u6761\u4EF6\u3092\u958B\u59CB\u3057\u307E\u3059\u3002"
+    },
+    temporary: {
+      summary: "\u73FE\u5728\u306E\u30C8\u30EA\u30AC\u30FC\u30D6\u30ED\u30C3\u30AF\u5185\u306E\u4E00\u6642\u5909\u6570\u3092\u5BA3\u8A00\u3057\u307E\u3059\u3002"
+    },
+    begin: {
+      summary: "\u5BFE\u5FDC\u3059\u308B end \u3067\u9589\u3058\u308B\u5165\u308C\u5B50\u30D6\u30ED\u30C3\u30AF\u3092\u958B\u59CB\u3057\u307E\u3059\u3002"
+    },
+    end: {
+      summary: "\u6700\u3082\u8FD1\u3044\u958B\u3044\u3066\u3044\u308B\u30D6\u30ED\u30C3\u30AF\u3092\u9589\u3058\u307E\u3059\u3002"
+    },
+    not: {
+      summary: "\u7D9A\u304F\u6761\u4EF6\u3092\u5426\u5B9A\u3057\u307E\u3059\u3002"
+    }
+  },
+  param: {
+    variables: {
+      end: {
+        summary: "\u6700\u3082\u8FD1\u3044\u958B\u3044\u3066\u3044\u308B\u8981\u7D20\u307E\u305F\u306F\u30D6\u30ED\u30C3\u30AF\u3092\u9589\u3058\u307E\u3059\u3002"
+      },
+      global: {
+        summary: "\u5909\u6570\u30B9\u30B3\u30FC\u30D7: \u30B9\u30AF\u30EA\u30D7\u30C8\u5168\u4F53\u306E\u30B0\u30ED\u30FC\u30D0\u30EB\u3002"
+      },
+      team: {
+        summary: "\u30B9\u30B3\u30FC\u30D7\uFF08`variables team`\uFF09\u307E\u305F\u306F\u30A8\u30F3\u30C8\u30EA\u7A2E\u5225\uFF08`\u2026 team <name> \u2026`\uFF09: \u30C1\u30FC\u30E0\u5358\u4F4D\u306E\u30B3\u30D4\u30FC\uFF0F\u30C1\u30FC\u30E0\u53C2\u7167\u3002"
+      },
+      player: {
+        summary: "\u30B9\u30B3\u30FC\u30D7\uFF08`variables player`\uFF09\u307E\u305F\u306F\u30A8\u30F3\u30C8\u30EA\u7A2E\u5225\uFF08`\u2026 player <name> \u2026`\uFF09: \u30D7\u30EC\u30A4\u30E4\u30FC\u5358\u4F4D\u306E\u30B3\u30D4\u30FC\uFF0F\u30D7\u30EC\u30A4\u30E4\u30FC\u53C2\u7167\u3002"
+      },
+      object: {
+        summary: "\u30B9\u30B3\u30FC\u30D7\uFF08`variables object`\uFF09\u307E\u305F\u306F\u30A8\u30F3\u30C8\u30EA\u7A2E\u5225\uFF08`\u2026 object <name> \u2026`\uFF09: \u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u5358\u4F4D\u306E\u30B3\u30D4\u30FC\uFF0F\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u3002"
+      },
+      local: {
+        summary: "\u30CD\u30C3\u30C8\u30EF\u30FC\u30AF\u72B6\u614B: \u8907\u88FD\u3055\u308C\u306A\u3044\uFF08\u30ED\u30FC\u30AB\u30EB\u306E\u307F\uFF09\u3002"
+      },
+      networked: {
+        summary: "\u30CD\u30C3\u30C8\u30EF\u30FC\u30AF\u72B6\u614B: \u30AF\u30E9\u30A4\u30A2\u30F3\u30C8\u3078\u8907\u88FD\u3055\u308C\u308B\u3002"
+      },
+      networked_high: {
+        summary: "\u30CD\u30C3\u30C8\u30EF\u30FC\u30AF\u72B6\u614B: \u9AD8\u512A\u5148\u5EA6\u3067\u8907\u88FD\u3055\u308C\u308B\u3002"
+      },
+      number: {
+        summary: "\u5909\u6570\u578B: \u6574\u6570\uFF0F\u6570\u5024\u3002"
+      },
+      timer: {
+        summary: "\u5909\u6570\u578B: \u30AB\u30A6\u30F3\u30C8\u30C0\u30A6\u30F3\uFF0F\u30B9\u30C8\u30C3\u30D7\u30A6\u30A9\u30C3\u30C1\u30BF\u30A4\u30DE\u30FC\u3002"
+      }
+    },
+    constants: {
+      end: {
+        summary: "\u6700\u3082\u8FD1\u3044\u958B\u3044\u3066\u3044\u308B\u8981\u7D20\u307E\u305F\u306F\u30D6\u30ED\u30C3\u30AF\u3092\u9589\u3058\u307E\u3059\u3002"
+      },
+      number: {
+        summary: "\u6570\u5024\u5B9A\u6570\u3092\u5BA3\u8A00\u3057\u307E\u3059\u3002"
+      }
+    },
+    game_options: {
+      end: {
+        summary: "\u6700\u3082\u8FD1\u3044\u958B\u3044\u3066\u3044\u308B\u8981\u7D20\u307E\u305F\u306F\u30D6\u30ED\u30C3\u30AF\u3092\u9589\u3058\u307E\u3059\u3002"
+      },
+      lock: {
+        summary: "\u30ED\u30D3\u30FC\u3067\u30D7\u30EC\u30A4\u30E4\u30FC\u304C\u5909\u66F4\u3067\u304D\u306A\u3044\u3088\u3046\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\u3092\u30ED\u30C3\u30AF\u3057\u307E\u3059\u3002"
+      },
+      hide: {
+        summary: "\u30ED\u30D3\u30FC UI \u304B\u3089\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\u3092\u975E\u8868\u793A\u306B\u3057\u307E\u3059\u3002"
+      },
+      override: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30AA\u30D7\u30B7\u30E7\u30F3\u307E\u305F\u306F traits \u30D6\u30ED\u30C3\u30AF\u3092\u30B9\u30AF\u30EA\u30D7\u30C8\u5024\u3067\u4E0A\u66F8\u304D\u3057\u307E\u3059\u3002"
+      },
+      option: {
+        summary: "\u30AB\u30B9\u30BF\u30E0\u306E\u771F\u507D\uFF0F\u5217\u6319\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\u3092\u5BA3\u8A00\u3057\u307E\u3059\u3002"
+      },
+      ranged_option: {
+        summary: "\u30AB\u30B9\u30BF\u30E0\u306E\u6570\u5024\u30EC\u30F3\u30B8\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\u3092\u5BA3\u8A00\u3057\u307E\u3059\u3002"
+      },
+      player_traits: {
+        summary: "override \u3084 apply_player_traits \u3067\u4F7F\u3046\u540D\u524D\u4ED8\u304D player_traits \u30D6\u30ED\u30C3\u30AF\u3092\u5BA3\u8A00\u3057\u307E\u3059\u3002"
+      },
+      loadout_palette: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9: \u6709\u52B9\u306A\u30ED\u30FC\u30C9\u30A2\u30A6\u30C8\u30D1\u30EC\u30C3\u30C8\u3002"
+      },
+      damage_resistance: {
+        summary: "\u88AB\u30C0\u30E1\u30FC\u30B8\u306E\u500D\u7387\uFF0F\u7121\u6575\u3002"
+      },
+      body_recharge: {
+        summary: "\u4F53\u529B\u306E\u56DE\u5FA9\u901F\u5EA6\u3002"
+      },
+      shield_recharge: {
+        summary: "\u30B7\u30FC\u30EB\u30C9\u306E\u56DE\u5FA9\u901F\u5EA6\u3002"
+      },
+      vampirism: {
+        summary: "\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u305F\u3068\u304D\u306B\u596A\u3046\u4F53\u529B\u3002"
+      },
+      headshot_immunity: {
+        summary: "\u30D8\u30C3\u30C9\u30B7\u30E7\u30C3\u30C8\u3092\u7121\u52B9\u306B\u3059\u308B\u304B\u3002"
+      },
+      body_multiplier: {
+        summary: "\u4F53\u529B\u500D\u7387\u3002"
+      },
+      shield_multiplier: {
+        summary: "\u30B7\u30FC\u30EB\u30C9\u5F37\u5EA6\u500D\u7387\u3002"
+      },
+      assassination_immunity: {
+        summary: "\u6697\u6BBA\u3092\u7121\u52B9\u306B\u3059\u308B\u304B\u3002"
+      },
+      damage_modifier: {
+        summary: "\u4E0E\u30C0\u30E1\u30FC\u30B8\u500D\u7387\uFF08\u6B66\u5668\uFF09\u3002"
+      },
+      melee_damage_modifier: {
+        summary: "\u8FD1\u63A5\u4E0E\u30C0\u30E1\u30FC\u30B8\u500D\u7387\u3002"
+      },
+      initial_primary_weapon: {
+        summary: "\u521D\u671F\u30E1\u30A4\u30F3\u6B66\u5668\uFF08none\uFF0Fdefault\uFF0Frandom \u53EF\uFF09\u3002"
+      },
+      initial_secondary_weapon: {
+        summary: "\u521D\u671F\u30B5\u30D6\uFF0F\u30D0\u30C3\u30AF\u30D1\u30C3\u30AF\u6B66\u5668\uFF08none\uFF0Fdefault\uFF0Frandom \u53EF\uFF09\u3002"
+      },
+      initial_equipment: {
+        summary: "\u521D\u671F\u88C5\u5099\u30A2\u30A4\u30C6\u30E0\uFF08none\uFF0Fdefault\uFF0Frandom \u53EF\uFF09\u3002"
+      },
+      initial_grenades: {
+        summary: "\u521D\u671F\u624B\u69B4\u5F3E\u69CB\u6210\u3002"
+      },
+      recharging_grenades: {
+        summary: "\u624B\u69B4\u5F3E\u304C\u6642\u9593\u7D4C\u904E\u3067\u56DE\u5FA9\u3059\u308B\u304B\u3002"
+      },
+      infinite_ammo: {
+        summary: "\u5F3E\u85AC\u7121\u9650\u3002"
+      },
+      bottomless_clip: {
+        summary: "\u30EA\u30ED\u30FC\u30C9\u4E0D\u8981\uFF08\u5F3E\u5009\u7121\u9650\uFF09\u3002"
+      },
+      weapon_pickup: {
+        summary: "\u6B66\u5668\u3092\u62FE\u3048\u308B\u304B\u3002"
+      },
+      drop_equipment: {
+        summary: "\u6B7B\u4EA1\u6642\u306B\u88C5\u5099\u3092\u843D\u3068\u3059\u304B\u3002"
+      },
+      infinite_equipment: {
+        summary: "\u88C5\u5099\u4F7F\u7528\u56DE\u6570\u7121\u9650\u3002"
+      },
+      speed: {
+        summary: "\u79FB\u52D5\u901F\u5EA6\u500D\u7387\u3002"
+      },
+      gravity: {
+        summary: "\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u91CD\u529B\u30B9\u30B1\u30FC\u30EB\u3002"
+      },
+      vehicle_usage: {
+        summary: "\u642D\u4E57\u53EF\u80FD\u306A\u8ECA\u4E21\u3002"
+      },
+      jump_modifier: {
+        summary: "\u30B8\u30E3\u30F3\u30D7\u9AD8\u3055\uFF0F\u529B\u306E\u500D\u7387\u3002"
+      },
+      sprinting: {
+        summary: "\u30B9\u30D7\u30EA\u30F3\u30C8\u3092\u8A31\u53EF\u3059\u308B\u304B\u3002"
+      },
+      equipment_usage: {
+        summary: "\u88C5\u5099\u4F7F\u7528\u3092\u6709\u52B9\u306B\u3059\u308B\u304B\u3002"
+      },
+      active_camo: {
+        summary: "\u30A2\u30AF\u30C6\u30A3\u30D6\u8FF7\u5F69\u306E\u6319\u52D5\u3002"
+      },
+      waypoint: {
+        summary: "\u30A6\u30A7\u30A4\u30DD\u30A4\u30F3\u30C8\u306E\u8868\u793A\u30EB\u30FC\u30EB\u3002"
+      },
+      gamertag_visibility: {
+        summary: "\u4ED6\u30D7\u30EC\u30A4\u30E4\u30FC\u304C\u3053\u306E\u30B2\u30FC\u30DE\u30FC\u30BF\u30B0\u3092\u898B\u308B\u6761\u4EF6\u3002"
+      },
+      color: {
+        summary: "\u5F37\u5236\u30D7\u30EC\u30A4\u30E4\u30FC\u30AB\u30E9\u30FC\u3002"
+      },
+      tracker_mode: {
+        summary: "\u30E2\u30FC\u30B7\u30E7\u30F3\u30C8\u30E9\u30C3\u30AB\u30FC\u306E\u30E2\u30FC\u30C9\u3002"
+      },
+      tracker_range: {
+        summary: "\u30E2\u30FC\u30B7\u30E7\u30F3\u30C8\u30E9\u30C3\u30AB\u30FC\u306E\u7BC4\u56F2\u3002"
+      },
+      score_to_win_round: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `score_to_win_round`\u3002"
+      },
+      fire_teams_enabled: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `fire_teams_enabled`\u3002"
+      },
+      teams_enabled: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `teams_enabled`\u3002"
+      },
+      round_time_limit: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `round_time_limit`\u3002"
+      },
+      round_count: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `round_count`\u3002"
+      },
+      perfection_enabled: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `perfection_enabled`\u3002"
+      },
+      early_victory_win_count: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `early_victory_win_count`\u3002"
+      },
+      sudden_death_time_limit: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `sudden_death_time_limit`\u3002"
+      },
+      grace_period_time_limit: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `grace_period_time_limit`\u3002"
+      },
+      lives_per_round: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `lives_per_round`\u3002"
+      },
+      team_lives_per_round: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `team_lives_per_round`\u3002"
+      },
+      respawn_time: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `respawn_time`\u3002"
+      },
+      suicide_respawn_penalty: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `suicide_respawn_penalty`\u3002"
+      },
+      betrayal_respawn_penalty: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `betrayal_respawn_penalty`\u3002"
+      },
+      respawn_time_growth: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `respawn_time_growth`\u3002"
+      },
+      loadout_selection_time: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `loadout_selection_time`\u3002"
+      },
+      respawn_traits_duration: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `respawn_traits_duration`\u3002"
+      },
+      friendly_fire_enabled: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `friendly_fire_enabled`\u3002"
+      },
+      betrayal_booting_enabled: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `betrayal_booting_enabled`\u3002"
+      },
+      enemy_voice_enabled: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `enemy_voice_enabled`\u3002"
+      },
+      open_channel_voice_enabled: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `open_channel_voice_enabled`\u3002"
+      },
+      dead_player_voice_enabled: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `dead_player_voice_enabled`\u3002"
+      },
+      grenades_on_map: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `grenades_on_map`\u3002"
+      },
+      shortcuts_on_map: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `shortcuts_on_map`\u3002"
+      },
+      equipment_on_map: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `equipment_on_map`\u3002"
+      },
+      powerups_on_map: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `powerups_on_map`\u3002"
+      },
+      turrets_on_map: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `turrets_on_map`\u3002"
+      },
+      indestructible_vehicles: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `indestructible_vehicles`\u3002"
+      },
+      weapon_set: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `weapon_set`\u3002"
+      },
+      vehicle_set: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `vehicle_set`\u3002"
+      },
+      red_powerup_duration: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `red_powerup_duration`\u3002"
+      },
+      blue_powerup_duration: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `blue_powerup_duration`\u3002"
+      },
+      yellow_powerup_duration: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `yellow_powerup_duration`\u3002"
+      },
+      team_scoring_mode: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `team_scoring_mode`\u3002"
+      },
+      tu1_always_spillover_damage: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `tu1_always_spillover_damage`\u3002"
+      },
+      tu1_armor_lock_stickies_remain: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `tu1_armor_lock_stickies_remain`\u3002"
+      },
+      tu1_attached_damage_bypass_shields: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `tu1_attached_damage_bypass_shields`\u3002"
+      },
+      tu1_active_camo_override_energy_curve: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `tu1_active_camo_override_energy_curve`\u3002"
+      },
+      tu1_sword_gun_clang_kills: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `tu1_sword_gun_clang_kills`\u3002"
+      },
+      tu1_magnum_is_automatic: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `tu1_magnum_is_automatic`\u3002"
+      },
+      tu1_headshot_weapon_reticule_bloom_multiplier: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `tu1_headshot_weapon_reticule_bloom_multiplier`\u3002"
+      },
+      tu1_armor_lock_damage_to_energy_transfer: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `tu1_armor_lock_damage_to_energy_transfer`\u3002"
+      },
+      tu1_armor_lock_damage_to_energy_cap: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `tu1_armor_lock_damage_to_energy_cap`\u3002"
+      },
+      tu1_active_camo_override_energy_curve_min: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `tu1_active_camo_override_energy_curve_min`\u3002"
+      },
+      tu1_active_camo_override_energy_curve_max: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `tu1_active_camo_override_energy_curve_max`\u3002"
+      },
+      tu1_magnum_damage_multiplier: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `tu1_magnum_damage_multiplier`\u3002"
+      },
+      tu1_magnum_fire_recovery_time_multiplier: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30B2\u30FC\u30E0\u30AA\u30D7\u30B7\u30E7\u30F3\uFF0F\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\u5BFE\u8C61: `tu1_magnum_fire_recovery_time_multiplier`\u3002"
+      },
+      base_player_traits: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30D7\u30EC\u30A4\u30E4\u30FC\u7279\u6027\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9: `base_player_traits`\u3002"
+      },
+      respawn_traits: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30D7\u30EC\u30A4\u30E4\u30FC\u7279\u6027\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9: `respawn_traits`\u3002"
+      },
+      red_powerup_traits: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30D7\u30EC\u30A4\u30E4\u30FC\u7279\u6027\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9: `red_powerup_traits`\u3002"
+      },
+      blue_powerup_traits: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30D7\u30EC\u30A4\u30E4\u30FC\u7279\u6027\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9: `blue_powerup_traits`\u3002"
+      },
+      yellow_powerup_traits: {
+        summary: "\u7D44\u307F\u8FBC\u307F\u30D7\u30EC\u30A4\u30E4\u30FC\u7279\u6027\u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9: `yellow_powerup_traits`\u3002"
+      }
+    },
+    hud_widgets: {
+      end: {
+        summary: "\u6700\u3082\u8FD1\u3044\u958B\u3044\u3066\u3044\u308B\u8981\u7D20\u307E\u305F\u306F\u30D6\u30ED\u30C3\u30AF\u3092\u9589\u3058\u307E\u3059\u3002"
+      }
+    },
+    loadout: {
+      end: {
+        summary: "\u6700\u3082\u8FD1\u3044\u958B\u3044\u3066\u3044\u308B\u8981\u7D20\u307E\u305F\u306F\u30D6\u30ED\u30C3\u30AF\u3092\u9589\u3058\u307E\u3059\u3002"
+      },
+      name: {
+        summary: "\u30ED\u30FC\u30C9\u30A2\u30A6\u30C8\u8B58\u5225\u5B50\uFF08\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u30EA\u30B9\u30C8\u306E\u30ED\u30FC\u30C9\u30A2\u30A6\u30C8\u540D\uFF09\u3002"
+      },
+      primary_weapon: {
+        summary: "\u3053\u306E\u30ED\u30FC\u30C9\u30A2\u30A6\u30C8\u306E\u30E1\u30A4\u30F3\u6B66\u5668\u3002"
+      },
+      backpack_weapon: {
+        summary: "\u30B5\u30D6\uFF0F\u30D0\u30C3\u30AF\u30D1\u30C3\u30AF\u6B66\u5668\u3002"
+      },
+      equipment: {
+        summary: "\u3053\u306E\u30ED\u30FC\u30C9\u30A2\u30A6\u30C8\u306E\u88C5\u5099\u30A2\u30A4\u30C6\u30E0\u3002"
+      },
+      grenades: {
+        summary: "\u3053\u306E\u30ED\u30FC\u30C9\u30A2\u30A6\u30C8\u306E\u624B\u69B4\u5F3E\u8A2D\u5B9A\u3002"
+      }
+    },
+    loadout_palette: {
+      end: {
+        summary: "\u6700\u3082\u8FD1\u3044\u958B\u3044\u3066\u3044\u308B\u8981\u7D20\u307E\u305F\u306F\u30D6\u30ED\u30C3\u30AF\u3092\u9589\u3058\u307E\u3059\u3002"
+      },
+      item: {
+        summary: "\u3053\u306E\u30D1\u30EC\u30C3\u30C8\u306B\u30ED\u30FC\u30C9\u30A2\u30A6\u30C8\u9805\u76EE\u3092\u8FFD\u52A0\u3057\u307E\u3059\u3002"
+      }
+    },
+    teams: {
+      end: {
+        summary: "\u6700\u3082\u8FD1\u3044\u958B\u3044\u3066\u3044\u308B\u8981\u7D20\u307E\u305F\u306F\u30D6\u30ED\u30C3\u30AF\u3092\u9589\u3058\u307E\u3059\u3002"
+      },
+      model: {
+        summary: "\u30C1\u30FC\u30E0\u306E\u30C7\u30D5\u30A9\u30EB\u30C8\uFF0F\u4E0A\u66F8\u304D\u30D7\u30EC\u30A4\u30E4\u30FC\u30E2\u30C7\u30EB\u3002"
+      },
+      designator_switch_type: {
+        summary: "\u8A66\u5408\u4E2D\u306E\u30C1\u30FC\u30E0\u30C7\u30B6\u30A4\u30F3\u30CD\u30FC\u30BF\u30FC\u5207\u66FF\u65B9\u6CD5\u3002"
+      },
+      team: {
+        summary: "\u30C1\u30FC\u30E0\u5358\u4F4D\u306E\u8A2D\u5B9A\u30D6\u30ED\u30C3\u30AF\u3092\u958B\u304D\u307E\u3059\u3002"
+      },
+      name: {
+        summary: "\u30C1\u30FC\u30E0\u306E\u8868\u793A\u540D\u6587\u5B57\u5217\u3002"
+      },
+      designator: {
+        summary: "\u30DE\u30EB\u30C1\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u30C1\u30FC\u30E0\u30C7\u30B6\u30A4\u30F3\u30CD\u30FC\u30BF\u30FC\u3002"
+      },
+      color: {
+        summary: "\u30C1\u30FC\u30E0\u30AB\u30E9\u30FC\u306E\u30A4\u30F3\u30C7\u30C3\u30AF\u30B9\u3002"
+      },
+      fireteam_count: {
+        summary: "\u3053\u306E\u30C1\u30FC\u30E0\u306E\u30D5\u30A1\u30A4\u30A2\u30C1\u30FC\u30E0\u6570\u3002"
+      }
+    },
+    engine_data: {
+      end: {
+        summary: "\u6700\u3082\u8FD1\u3044\u958B\u3044\u3066\u3044\u308B\u8981\u7D20\u307E\u305F\u306F\u30D6\u30ED\u30C3\u30AF\u3092\u9589\u3058\u307E\u3059\u3002"
+      },
+      name: {
+        summary: "\u30B2\u30FC\u30E0\u30BF\u30A4\u30D7\u306E\u8868\u793A\u540D\u6587\u5B57\u5217\u3002"
+      },
+      description: {
+        summary: "\u30B2\u30FC\u30E0\u30BF\u30A4\u30D7\u306E\u8AAC\u660E\u6587\u5B57\u5217\u3002"
+      },
+      icon: {
+        summary: "\u30B2\u30FC\u30E0\u30BF\u30A4\u30D7\u306E\u30A2\u30A4\u30B3\u30F3\u8CC7\u7523\uFF0F\u6587\u5B57\u5217\u3002"
+      },
+      category: {
+        summary: "\u3053\u306E\u30B2\u30FC\u30E0\u30BF\u30A4\u30D7\u306E\u30ED\u30D3\u30FC\u30AB\u30C6\u30B4\u30EA\u3002"
+      }
+    },
+    player_rating: {
+      end: {
+        summary: "\u6700\u3082\u8FD1\u3044\u958B\u3044\u3066\u3044\u308B\u8981\u7D20\u307E\u305F\u306F\u30D6\u30ED\u30C3\u30AF\u3092\u9589\u3058\u307E\u3059\u3002"
+      },
+      rating_scale: {
+        summary: "\u7DCF\u5408\u30EC\u30FC\u30C6\u30A3\u30F3\u30B0\u306E\u30B9\u30B1\u30FC\u30EB\u4FC2\u6570\u3002"
+      },
+      kill_weight: {
+        summary: "\u30AD\u30EB\u306B\u9069\u7528\u3059\u308B\u91CD\u307F\u3002"
+      },
+      assist_weight: {
+        summary: "\u30A2\u30B7\u30B9\u30C8\u306B\u9069\u7528\u3059\u308B\u91CD\u307F\u3002"
+      },
+      betrayal_weight: {
+        summary: "\u88CF\u5207\u308A\u306B\u9069\u7528\u3059\u308B\u91CD\u307F\u3002"
+      },
+      death_weight: {
+        summary: "\u30C7\u30B9\u306B\u9069\u7528\u3059\u308B\u91CD\u307F\u3002"
+      },
+      normalize_by_max_kills: {
+        summary: "\u6700\u5927\u30AD\u30EB\u6570\u3067\u30EC\u30FC\u30C6\u30A3\u30F3\u30B0\u3092\u6B63\u898F\u5316\u3057\u307E\u3059\u3002"
+      },
+      base_value: {
+        summary: "\u57FA\u672C\u30EC\u30FC\u30C6\u30A3\u30F3\u30B0\u5024\u3002"
+      },
+      range: {
+        summary: "\u30EC\u30FC\u30C6\u30A3\u30F3\u30B0\u7BC4\u56F2\u3002"
+      },
+      loss_scalar: {
+        summary: "\u30EC\u30FC\u30C6\u30A3\u30F3\u30B0\u8ABF\u6574\u306E\u640D\u5931\u30B9\u30AB\u30E9\u30FC\u3002"
+      },
+      custom_stat_0: {
+        summary: "\u30AB\u30B9\u30BF\u30E0\u7D71\u8A08\u306E\u91CD\u307F 0\u3002"
+      },
+      custom_stat_1: {
+        summary: "\u30AB\u30B9\u30BF\u30E0\u7D71\u8A08\u306E\u91CD\u307F 1\u3002"
+      },
+      custom_stat_2: {
+        summary: "\u30AB\u30B9\u30BF\u30E0\u7D71\u8A08\u306E\u91CD\u307F 2\u3002"
+      },
+      custom_stat_3: {
+        summary: "\u30AB\u30B9\u30BF\u30E0\u7D71\u8A08\u306E\u91CD\u307F 3\u3002"
+      },
+      expansion_0: {
+        summary: "\u62E1\u5F35\u30B9\u30ED\u30C3\u30C8 0\u3002"
+      },
+      expansion_1: {
+        summary: "\u62E1\u5F35\u30B9\u30ED\u30C3\u30C8 1\u3002"
+      },
+      show_in_scoreboard: {
+        summary: "\u30B9\u30B3\u30A2\u30DC\u30FC\u30C9\u306B\u30EC\u30FC\u30C6\u30A3\u30F3\u30B0\u3092\u8868\u793A\u3059\u308B\u304B\u3002"
+      }
+    },
+    map_permissions: {
+      end: {
+        summary: "\u6700\u3082\u8FD1\u3044\u958B\u3044\u3066\u3044\u308B\u8981\u7D20\u307E\u305F\u306F\u30D6\u30ED\u30C3\u30AF\u3092\u9589\u3058\u307E\u3059\u3002"
+      },
+      default: {
+        summary: "\u30DE\u30C3\u30D7\u306E\u30C7\u30D5\u30A9\u30EB\u30C8\u8A31\u53EF\uFF0F\u62D2\u5426\u30DD\u30EA\u30B7\u30FC\u3002"
+      },
+      exception: {
+        summary: "\u30C7\u30D5\u30A9\u30EB\u30C8\u30DD\u30EA\u30B7\u30FC\u306B\u5BFE\u3059\u308B\u30DE\u30C3\u30D7\u5358\u4F4D\u306E\u4F8B\u5916\u3002"
+      }
+    },
+    game_stats: {
+      end: {
+        summary: "\u6700\u3082\u8FD1\u3044\u958B\u3044\u3066\u3044\u308B\u8981\u7D20\u307E\u305F\u306F\u30D6\u30ED\u30C3\u30AF\u3092\u9589\u3058\u307E\u3059\u3002"
+      },
+      number: {
+        summary: "\u7D71\u8A08\u5F62\u5F0F: \u901A\u5E38\u306E\u6570\u5024\u3002"
+      },
+      timer: {
+        summary: "\u7D71\u8A08\u5F62\u5F0F: \u30BF\u30A4\u30DE\u30FC\u8868\u793A\u3002"
+      },
+      delta: {
+        summary: "\u7D71\u8A08\u5F62\u5F0F: \u5DEE\u5206\u3002"
+      },
+      percentage: {
+        summary: "\u7D71\u8A08\u5F62\u5F0F: \u30D1\u30FC\u30BB\u30F3\u30C8\u3002"
+      },
+      none: {
+        summary: "\u7D71\u8A08\u30B0\u30EB\u30FC\u30D7: \u306A\u3057\u3002"
+      },
+      team: {
+        summary: "\u7D71\u8A08\u30B0\u30EB\u30FC\u30D7: \u30C1\u30FC\u30E0\u3054\u3068\u3002"
+      }
+    },
+    map_object: {
+      end: {
+        summary: "\u6700\u3082\u8FD1\u3044\u958B\u3044\u3066\u3044\u308B\u8981\u7D20\u307E\u305F\u306F\u30D6\u30ED\u30C3\u30AF\u3092\u9589\u3058\u307E\u3059\u3002"
+      },
+      label: {
+        summary: "\u3053\u306E\u30DE\u30C3\u30D7\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306B\u7D10\u4ED8\u304F\u30D5\u30A3\u30EB\u30BF\u30FC\uFF0F\u30E9\u30D9\u30EB\u6587\u5B57\u5217\u3002"
+      },
+      type: {
+        summary: "objects \u30EA\u30B9\u30C8\u306E\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u7A2E\u5225\u3002"
+      },
+      team: {
+        summary: "\u3053\u306E\u30DE\u30C3\u30D7\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u306E\u30C1\u30FC\u30E0\u30D5\u30A3\u30EB\u30BF\u30FC\u3002"
+      },
+      user_data: {
+        summary: "\u6574\u6570\u306E\u30E6\u30FC\u30B6\u30FC\u30C7\u30FC\u30BF\u3002"
+      },
+      min: {
+        summary: "\u6700\u5C0F\u6570\uFF0F\u3057\u304D\u3044\u5024\u3002"
+      }
+    },
+    requisition_palette: {
+      end: {
+        summary: "\u6700\u3082\u8FD1\u3044\u958B\u3044\u3066\u3044\u308B\u8981\u7D20\u307E\u305F\u306F\u30D6\u30ED\u30C3\u30AF\u3092\u9589\u3058\u307E\u3059\u3002"
+      },
+      baseline: {
+        summary: "\u30D1\u30EC\u30C3\u30C8\u306E\u30D9\u30FC\u30B9\u30E9\u30A4\u30F3\u53EF\u7528\u6027\u3002"
+      },
+      item: {
+        summary: "\u30D1\u30EC\u30C3\u30C8\u306B\u8CFC\u5165\u53EF\u80FD\u30A2\u30A4\u30C6\u30E0\u3092\u8FFD\u52A0\u3057\u307E\u3059\u3002"
+      },
+      enabled: {
+        summary: "\u30D9\u30FC\u30B9\u30E9\u30A4\u30F3\u72B6\u614B: \u30D1\u30EC\u30C3\u30C8\u6709\u52B9\u3002"
+      },
+      disabled: {
+        summary: "\u30D9\u30FC\u30B9\u30E9\u30A4\u30F3\uFF0F\u30A2\u30A4\u30C6\u30E0\u72B6\u614B: \u7121\u52B9\u3002"
+      },
+      available: {
+        summary: "\u30A2\u30A4\u30C6\u30E0\u72B6\u614B: \u8CFC\u5165\u53EF\u80FD\u3002"
+      },
+      unavailable: {
+        summary: "\u30A2\u30A4\u30C6\u30E0\u72B6\u614B: \u4E00\u6642\u7684\u306B\u5229\u7528\u4E0D\u53EF\u3002"
+      }
+    },
+    string_table: {
+      end: {
+        summary: "\u6700\u3082\u8FD1\u3044\u958B\u3044\u3066\u3044\u308B\u8981\u7D20\u307E\u305F\u306F\u30D6\u30ED\u30C3\u30AF\u3092\u9589\u3058\u307E\u3059\u3002"
+      }
+    }
+  }
+};
+
+// ../megalo/src/localization/hover.ts
+var hoverI18n = (0, import_rosetta2.default)({ en: en_default2, ja: ja_default2 });
+
+// ../megalo/src/language-service/hover/registry.ts
+var contributions = /* @__PURE__ */ new Map();
+var keyFor = (kind, id) => `${kind}:${id}`;
+var registerHover = (contribution) => {
+  contributions.set(keyFor(contribution.kind, contribution.id), contribution);
+};
+var registerHovers = (entries) => {
+  for (const entry of entries) {
+    registerHover(entry);
+  }
+};
+var defineActionHover = (id, structure = {}) => ({ kind: "action", id, ...structure });
+var defineConditionHover = (id, structure = {}) => ({ kind: "condition", id, ...structure });
+var defineElementHover = (id, structure = {}) => ({ kind: "element", id, ...structure });
+var defineKeywordHover = (id, structure = {}) => ({ kind: "keyword", id, ...structure });
+var defineParamHover = (id, structure = {}) => ({ kind: "param", id, ...structure });
+
+// ../megalo/src/language-service/hover/actions/adjust_grenades.ts
+var adjustGrenadesHover = defineActionHover("adjust_grenades", {
+  grammar: "action adjust_grenades <player> {frag|plasma} <math_operation> <number>",
+  params: ["player", "grenade_type", "math_operation", "number"]
+});
+
+// ../megalo/src/language-service/hover/actions/apply_player_traits.ts
+var applyPlayerTraitsHover = defineActionHover("apply_player_traits", {
+  grammar: "action apply_player_traits <player> <player_traits_name>",
+  params: ["player", "player_traits_name"]
+});
+
+// ../megalo/src/language-service/hover/actions/begin.ts
+var beginHover = defineActionHover("begin", {
+  grammar: "action begin"
+});
+
+// ../megalo/src/language-service/hover/actions/biped_drop_weapon.ts
+var bipedDropWeaponHover = defineActionHover("biped_drop_weapon", {
+  grammar: "action biped_drop_weapon <biped> {primary|secondary} [delete_on_drop]",
+  params: ["biped", "mode"]
+});
+
+// ../megalo/src/language-service/hover/actions/biped_give_weapon.ts
+var bipedGiveWeaponHover = defineActionHover("biped_give_weapon", {
+  grammar: "action biped_give_weapon <biped> <weapon> {primary|secondary|force}",
+  params: ["biped", "weapon", "mode"]
+});
+
+// ../megalo/src/language-service/hover/actions/boundary_set_player_color.ts
+var boundarySetPlayerColorHover = defineActionHover(
+  "boundary_set_player_color",
+  {
+    grammar: "action boundary_set_player_color <object> <player variable name> (must be member of object)",
+    params: ["object", "player_variable_name"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/boundary_set_visible.ts
+var boundarySetVisibleHover = defineActionHover(
+  "boundary_set_visible",
+  {
+    grammar: "action boundary_set_visible <object> <boolean>",
+    params: ["object", "boolean"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/break_into_debugger.ts
+var breakIntoDebuggerHover = defineActionHover("break_into_debugger", {
+  grammar: "action break_into_debugger"
+});
+
+// ../megalo/src/language-service/hover/actions/create_object.ts
+var createObjectHover = defineActionHover("create_object", {
+  grammar: "action create_object <object_type> [at <object>] [set <object_out>] [label <filter>] [offset <x> <y> <z>] [variant <name>] [never_garbage] [suppress_effect] [absolute_orientation]",
+  params: ["object_type", "at", "set"]
+});
+
+// ../megalo/src/language-service/hover/actions/create_tunnel.ts
+var createTunnelHover = defineActionHover("create_tunnel", {
+  grammar: "action create_tunnel <object_a> <object_b> <object_type> <radius> <object_reference_out>",
+  params: [
+    "object_a",
+    "object_b",
+    "object_type",
+    "radius",
+    "object_reference_out"
+  ]
+});
+
+// ../megalo/src/language-service/hover/actions/debug_force_player_view_count.ts
+var debugForcePlayerViewCountHover = defineActionHover(
+  "debug_force_player_view_count",
+  {
+    grammar: "action debug_force_player_view_count <splitscreen_count>",
+    params: ["splitscreen_count"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/debugging_enable_tracing.ts
+var debuggingEnableTracingHover = defineActionHover(
+  "debugging_enable_tracing",
+  {
+    grammar: "action debugging_enable_tracing <literal_boolean>",
+    params: ["literal_boolean"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/delete_object.ts
+var deleteObjectHover = defineActionHover("delete_object", {
+  grammar: "action delete_object <object>",
+  params: ["object"]
+});
+
+// ../megalo/src/language-service/hover/actions/device_animate_position.ts
+var deviceAnimatePositionHover = defineActionHover(
+  "device_animate_position",
+  {
+    grammar: "action device_animate_position <object> <animation_target_fraction> <animation_duration_seconds> <acceleration_seconds> <deceleration_seconds>",
+    params: [
+      "object",
+      "animation_target_fraction",
+      "animation_duration_seconds",
+      "acceleration_seconds",
+      "deceleration_seconds"
+    ]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/device_get_position.ts
+var deviceGetPositionHover = defineActionHover("device_get_position", {
+  grammar: "action device_get_position <object> <number_out (percent)>",
+  params: ["object", "number_out"]
+});
+
+// ../megalo/src/language-service/hover/actions/device_get_power.ts
+var deviceGetPowerHover = defineActionHover("device_get_power", {
+  grammar: "action device_get_power <object> <number_out (percent)>",
+  params: ["object", "number_out"]
+});
+
+// ../megalo/src/language-service/hover/actions/device_set_position.ts
+var deviceSetPositionHover = defineActionHover("device_set_position", {
+  grammar: "action device_set_position <object> <number (percent)>",
+  params: ["object", "number"]
+});
+
+// ../megalo/src/language-service/hover/actions/device_set_position_immediate.ts
+var deviceSetPositionImmediateHover = defineActionHover(
+  "device_set_position_immediate",
+  {
+    grammar: "action device_set_position_immediate <object> <number (percent)>",
+    params: ["object", "number"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/device_set_position_track.ts
+var deviceSetPositionTrackHover = defineActionHover(
+  "device_set_position_track",
+  {
+    grammar: "action device_set_position_track <object> <animation name> <interpolation time>",
+    params: ["object", "animation_name", "interpolation_time"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/device_set_power.ts
+var deviceSetPowerHover = defineActionHover("device_set_power", {
+  grammar: "action device_set_power <object> <number (percent)>",
+  params: ["object", "number"]
+});
+
+// ../megalo/src/language-service/hover/actions/end_round.ts
+var endRoundHover = defineActionHover("end_round", {
+  grammar: "action end_round"
+});
+
+// ../megalo/src/language-service/hover/actions/for_each.ts
+var forEachHover = defineActionHover("for_each", {
+  grammar: "action for_each <trigger_type>",
+  params: ["trigger_type"]
+});
+
+// ../megalo/src/language-service/hover/actions/game_grief_record_custom_penalty.ts
+var gameGriefRecordCustomPenaltyHover = defineActionHover(
+  "game_grief_record_custom_penalty",
+  {
+    grammar: "action game_grief_record_custom_penalty <player> <penalty amount>",
+    params: ["player", "penalty_amount"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/get_button_time.ts
+var getButtonTimeHover = defineActionHover("get_button_time", {
+  grammar: "action get_button_time <player> <scriptable_button> <milliseconds_out>",
+  params: ["player", "scriptable_button", "milliseconds_out"]
+});
+
+// ../megalo/src/language-service/hover/actions/get_player_holding_object.ts
+var getPlayerHoldingObjectHover = defineActionHover(
+  "get_player_holding_object",
+  {
+    grammar: "action get_player_holding_object <object> <player_out>",
+    params: ["object", "player_out"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/get_random_object.ts
+var getRandomObjectHover = defineActionHover("get_random_object", {
+  grammar: "action get_random_object <filter name> <ignore object> <object out>",
+  params: ["filter_name", "ignore_object", "object_out"]
+});
+
+// ../megalo/src/language-service/hover/actions/give_weapon.ts
+var giveWeaponHover = defineActionHover("give_weapon", {
+  grammar: "action give_weapon <player> <weapon> {primary|secondary|force}",
+  params: ["player", "weapon", "mode"]
+});
+
+// ../megalo/src/language-service/hover/actions/hide_object.ts
+var hideObjectHover = defineActionHover("hide_object", {
+  grammar: "action hide_object <object> <should hide>",
+  params: ["object", "should_hide"]
+});
+
+// ../megalo/src/language-service/hover/actions/hs_function_call.ts
+var hsFunctionCallHover = defineActionHover("hs_function_call", {
+  grammar: "action hs_function_call <function name>",
+  params: ["function_name"]
+});
+
+// ../megalo/src/language-service/hover/actions/hud_post_message.ts
+var hudPostMessageHover = defineActionHover("hud_post_message", {
+  grammar: "action hud_post_message <team_or_player_target> <sound> <dynamic_string>",
+  params: ["team_or_player_target", "sound", "dynamic_string"]
+});
+
+// ../megalo/src/language-service/hover/actions/hud_widget_set_icon.ts
+var hudWidgetSetIconHover = defineActionHover("hud_widget_set_icon", {
+  grammar: "action hud_widget_set_icon <hud_widget_name> <icon name>",
+  params: ["hud_widget_name", "icon_name"]
+});
+
+// ../megalo/src/language-service/hover/actions/hud_widget_set_meter.ts
+var hudWidgetSetMeterHover = defineActionHover(
+  "hud_widget_set_meter",
+  {
+    grammar: "action hud_widget_set_meter <hud_widget_name> {off|<number> <number>|<timer>}",
+    params: ["hud_widget_name", "meter"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/hud_widget_set_text.ts
+var hudWidgetSetTextHover = defineActionHover("hud_widget_set_text", {
+  grammar: "action hud_widget_set_text <hud_widget_name> <dynamic_string>",
+  params: ["hud_widget_name", "dynamic_string"]
+});
+
+// ../megalo/src/language-service/hover/actions/hud_widget_set_value.ts
+var hudWidgetSetValueHover = defineActionHover(
+  "hud_widget_set_value",
+  {
+    grammar: "action hud_widget_set_value <hud_widget_name> <dynamic_string>",
+    params: ["hud_widget_name", "dynamic_string"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/hud_widget_set_visibility.ts
+var hudWidgetSetVisibilityHover = defineActionHover(
+  "hud_widget_set_visibility",
+  {
+    grammar: "action hud_widget_set_visibility <hud_widget_name> <player> <literal_boolean>",
+    params: ["hud_widget_name", "player", "literal_boolean"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/navpoint_set_icon.ts
+var navpointSetIconHover = defineActionHover("navpoint_set_icon", {
+  grammar: "action navpoint_set_icon <object> <icon> <number (only if icon==num)>",
+  params: ["object", "icon", "number"]
+});
+
+// ../megalo/src/language-service/hover/actions/navpoint_set_priority.ts
+var navpointSetPriorityHover = defineActionHover(
+  "navpoint_set_priority",
+  {
+    grammar: "action navpoint_set_priority <object> {low|normal|high|blink}",
+    params: ["object", "priority"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/navpoint_set_text.ts
+var navpointSetTextHover = defineActionHover("navpoint_set_text", {
+  grammar: "action navpoint_set_text <object> <dynamic_string>",
+  params: ["object", "dynamic_string"]
+});
+
+// ../megalo/src/language-service/hover/actions/navpoint_set_timer.ts
+var navpointSetTimerHover = defineActionHover("navpoint_set_timer", {
+  grammar: "action navpoint_set_timer <object> <timer_name>",
+  params: ["object", "timer_name"]
+});
+
+// ../megalo/src/language-service/hover/actions/navpoint_set_visible.ts
+var navpointSetVisibleHover = defineActionHover(
+  "navpoint_set_visible",
+  {
+    grammar: "action navpoint_set_visible <object> {no_one|everyone|allies|enemies|player <player_reference> <boolean>}",
+    params: ["object", "audience"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/navpoint_set_visible_range.ts
+var navpointSetVisibleRangeHover = defineActionHover(
+  "navpoint_set_visible_range",
+  {
+    grammar: "action navpoint_set_visible_range <object> <min (feet)> <max (feet)>",
+    params: ["object", "min", "max"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/object_adjust_health.ts
+var objectAdjustHealthHover = defineActionHover(
+  "object_adjust_health",
+  {
+    grammar: "action object_adjust_health <object> <math_operation> <number>",
+    params: ["object", "math_operation", "number"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/object_adjust_maximum_health.ts
+var objectAdjustMaximumHealthHover = defineActionHover(
+  "object_adjust_maximum_health",
+  {
+    grammar: "action object_adjust_maximum_health <object> <math_operation> <number>",
+    params: ["object", "math_operation", "number"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/object_adjust_maximum_shield.ts
+var objectAdjustMaximumShieldHover = defineActionHover(
+  "object_adjust_maximum_shield",
+  {
+    grammar: "action object_adjust_maximum_shield <object> <math_operation> <number>",
+    params: ["object", "math_operation", "number"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/object_adjust_shield.ts
+var objectAdjustShieldHover = defineActionHover(
+  "object_adjust_shield",
+  {
+    grammar: "action object_adjust_shield <object> <math_operation> <number>",
+    params: ["object", "math_operation", "number"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/object_attach.ts
+var objectAttachHover = defineActionHover("object_attach", {
+  grammar: "action object_attach <child_object> <parent_object> <offset_x> <offset_y> <offset_z> (feet) [absolute_orientation]",
+  params: ["child_object", "parent_object", "offset_x", "offset_y", "offset_z"]
+});
+
+// ../megalo/src/language-service/hover/actions/object_bounce.ts
+var objectBounceHover = defineActionHover("object_bounce", {
+  grammar: "action object_bounce <object>",
+  params: ["object"]
+});
+
+// ../megalo/src/language-service/hover/actions/object_destroy.ts
+var objectDestroyHover = defineActionHover("object_destroy", {
+  grammar: "action object_destroy <object> [no_statistics]",
+  params: ["object"]
+});
+
+// ../megalo/src/language-service/hover/actions/object_detach.ts
+var objectDetachHover = defineActionHover("object_detach", {
+  grammar: "action object_detach <child_object>",
+  params: ["child_object"]
+});
+
+// ../megalo/src/language-service/hover/actions/object_face_object.ts
+var objectFaceObjectHover = defineActionHover("object_face_object", {
+  grammar: "action object_face_object <object> <target> [offset <x> <y> <z> (feet)]",
+  params: ["object", "target", "x", "y", "z"]
+});
+
+// ../megalo/src/language-service/hover/actions/object_get_distance.ts
+var objectGetDistanceHover = defineActionHover("object_get_distance", {
+  grammar: "action object_get_distance <object_a> <object_b> <distance_out (feet)>",
+  params: ["object_a", "object_b", "distance_out"]
+});
+
+// ../megalo/src/language-service/hover/actions/object_get_health.ts
+var objectGetHealthHover = defineActionHover("object_get_health", {
+  grammar: "action object_get_health <object> <vitality_out (percent)>",
+  params: ["object", "vitality_out"]
+});
+
+// ../megalo/src/language-service/hover/actions/object_get_orientation.ts
+var objectGetOrientationHover = defineActionHover(
+  "object_get_orientation",
+  {
+    grammar: "action object_get_orientation <object> <orientation_out (1-6)>",
+    params: ["object", "orientation_out"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/object_get_shield.ts
+var objectGetShieldHover = defineActionHover("object_get_shield", {
+  grammar: "action object_get_shield <object> <vitality_out (percent)>",
+  params: ["object", "vitality_out"]
+});
+
+// ../megalo/src/language-service/hover/actions/object_get_velocity.ts
+var objectGetVelocityHover = defineActionHover("object_get_velocity", {
+  grammar: "action object_get_velocity <object> <number_out (ft/s)>",
+  params: ["object", "number_out"]
+});
+
+// ../megalo/src/language-service/hover/actions/object_set_invincibility.ts
+var objectSetInvincibilityHover = defineActionHover(
+  "object_set_invincibility",
+  {
+    grammar: "action object_set_invincibility <object> <boolean>",
+    params: ["object", "boolean"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/object_set_minimap_icon.ts
+var objectSetMinimapIconHover = defineActionHover(
+  "object_set_minimap_icon",
+  {
+    grammar: "action object_set_minimap_icon <object> <icon>",
+    params: ["object", "icon"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/object_set_minimap_priority.ts
+var objectSetMinimapPriorityHover = defineActionHover(
+  "object_set_minimap_priority",
+  {
+    grammar: "action object_set_minimap_priority <object> {low|normal|high|blink}",
+    params: ["object", "priority"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/object_set_minimap_visibility.ts
+var objectSetMinimapVisibilityHover = defineActionHover(
+  "object_set_minimap_visibility",
+  {
+    grammar: "action object_set_minimap_visibility <object> <boolean>",
+    params: ["object", "boolean"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/object_set_never_garbage.ts
+var objectSetNeverGarbageHover = defineActionHover(
+  "object_set_never_garbage",
+  {
+    grammar: "action object_set_never_garbage <object> <boolean>",
+    params: ["object", "boolean"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/object_set_orientation.ts
+var objectSetOrientationHover = defineActionHover(
+  "object_set_orientation",
+  {
+    grammar: "action object_set_orientation <object> <source> [absolute_orientation]",
+    params: ["object", "source"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/object_set_scale.ts
+var objectSetScaleHover = defineActionHover("object_set_scale", {
+  grammar: "action object_set_scale <object> <number (percent)>",
+  params: ["object", "number"]
+});
+
+// ../megalo/src/language-service/hover/actions/play_sound.ts
+var playSoundHover = defineActionHover("play_sound", {
+  grammar: "action play_sound <team_or_player_target> [immediate] <sound>",
+  params: ["team_or_player_target", "sound"]
+});
+
+// ../megalo/src/language-service/hover/actions/player_adjust_money.ts
+var playerAdjustMoneyHover = defineActionHover("player_adjust_money", {
+  grammar: "action player_adjust_money <player> <math_operation> <number>",
+  params: ["player", "math_operation", "number"]
+});
+
+// ../megalo/src/language-service/hover/actions/player_death_get_damage_type.ts
+var playerDeathGetDamageTypeHover = defineActionHover(
+  "player_death_get_damage_type",
+  {
+    grammar: "action player_death_get_damage_type <dead_player> <number_out (damage type)>",
+    params: ["dead_player", "number_out"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/player_death_get_killing_player.ts
+var playerDeathGetKillingPlayerHover = defineActionHover(
+  "player_death_get_killing_player",
+  {
+    grammar: "action player_death_get_killing_player <dead_player> <killing_player>",
+    params: ["dead_player", "killing_player"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/player_death_get_special_type.ts
+var playerDeathGetSpecialTypeHover = defineActionHover(
+  "player_death_get_special_type",
+  {
+    grammar: "action player_death_get_special_type <dead_player> <number_out (special type)>",
+    params: ["dead_player", "number_out"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/player_enable_purchases.ts
+var playerEnablePurchasesHover = defineActionHover(
+  "player_enable_purchases",
+  {
+    grammar: "action player_enable_purchases <player> {alive|dead|both} <boolean>",
+    params: ["player", "when", "boolean"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/player_get_equipment.ts
+var playerGetEquipmentHover = defineActionHover(
+  "player_get_equipment",
+  {
+    grammar: "action player_get_equipment <player> <equipment_out>",
+    params: ["player", "equipment_out"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/player_get_fireteam_index.ts
+var playerGetFireteamIndexHover = defineActionHover(
+  "player_get_fireteam_index",
+  {
+    grammar: "action player_get_fireteam_index <player> <number_out>",
+    params: ["player", "number_out"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/player_get_killing_spree_count.ts
+var playerGetKillingSpreeCountHover = defineActionHover(
+  "player_get_killing_spree_count",
+  {
+    grammar: "action player_get_killing_spree_count <player> <number_out>",
+    params: ["player", "number_out"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/player_get_place.ts
+var playerGetPlaceHover = defineActionHover("player_get_place", {
+  grammar: "action player_get_place <player> <number_out (place)>",
+  params: ["player", "number_out"]
+});
+
+// ../megalo/src/language-service/hover/actions/player_get_target_object.ts
+var playerGetTargetObjectHover = defineActionHover(
+  "player_get_target_object",
+  {
+    grammar: "action player_get_target_object <player> <object_out>",
+    params: ["player", "object_out"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/player_get_vehicle.ts
+var playerGetVehicleHover = defineActionHover("player_get_vehicle", {
+  grammar: "action player_get_vehicle <player> <vehicle_out>",
+  params: ["player", "vehicle_out"]
+});
+
+// ../megalo/src/language-service/hover/actions/player_get_weapon.ts
+var playerGetWeaponHover = defineActionHover("player_get_weapon", {
+  grammar: "action player_get_weapon <player> {primary|secondary} <weapon_out>",
+  params: ["player", "mode", "weapon_out"]
+});
+
+// ../megalo/src/language-service/hover/actions/player_pick_up_weapon.ts
+var playerPickUpWeaponHover = defineActionHover(
+  "player_pick_up_weapon",
+  {
+    grammar: "action player_pick_up_weapon <player> <weapon object>",
+    params: ["player", "weapon_object"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/player_set_coop_spawning.ts
+var playerSetCoopSpawningHover = defineActionHover(
+  "player_set_coop_spawning",
+  {
+    grammar: "action player_set_coop_spawning <player> <literal_boolean>",
+    params: ["player", "literal_boolean"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/player_set_fireteam_index.ts
+var playerSetFireteamIndexHover = defineActionHover(
+  "player_set_fireteam_index",
+  {
+    grammar: "action player_set_fireteam_index <player> <number>",
+    params: ["player", "number"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/player_set_fireteam_tier.ts
+var playerSetFireteamTierHover = defineActionHover(
+  "player_set_fireteam_tier",
+  {
+    grammar: "action player_set_fireteam_tier <player> <tier>",
+    params: ["player", "tier"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/player_set_objective.ts
+var playerSetObjectiveHover = defineActionHover(
+  "player_set_objective",
+  {
+    grammar: "action player_set_objective <player> <dynamic_string>",
+    params: ["player", "dynamic_string"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/player_set_objective_allegiance.ts
+var playerSetObjectiveAllegianceHover = defineActionHover(
+  "player_set_objective_allegiance",
+  {
+    grammar: "action player_set_objective_allegiance <player> <dynamic_string>",
+    params: ["player", "dynamic_string"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/player_set_objective_allegiance_icon.ts
+var playerSetObjectiveAllegianceIconHover = defineActionHover(
+  "player_set_objective_allegiance_icon",
+  {
+    grammar: "action player_set_objective_allegiance_icon <player> <constant_integer (engine icon index)>",
+    params: ["player", "constant_integer"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/player_set_primary_respawn_object.ts
+var playerSetPrimaryRespawnObjectHover = defineActionHover(
+  "player_set_primary_respawn_object",
+  {
+    grammar: "action player_set_primary_respawn_object <player> <object>",
+    params: ["player", "object"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/player_set_requisition_palette.ts
+var playerSetRequisitionPaletteHover = defineActionHover(
+  "player_set_requisition_palette",
+  {
+    grammar: "action player_set_requisition_palette <player> <req_palette_name>",
+    params: ["player", "req_palette_name"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/player_set_unit.ts
+var playerSetUnitHover = defineActionHover("player_set_unit", {
+  grammar: "action player_set_unit <player> <unit>",
+  params: ["player", "unit"]
+});
+
+// ../megalo/src/language-service/hover/actions/player_set_vehicle.ts
+var playerSetVehicleHover = defineActionHover("player_set_vehicle", {
+  grammar: "action player_set_vehicle <player> <vehicle>",
+  params: ["player", "vehicle"]
+});
+
+// ../megalo/src/language-service/hover/actions/player_set_vehicle_spawning.ts
+var playerSetVehicleSpawningHover = defineActionHover(
+  "player_set_vehicle_spawning",
+  {
+    grammar: "action player_set_vehicle_spawning <player> <literal_boolean>",
+    params: ["player", "literal_boolean"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/print_variable.ts
+var printVariableHover = defineActionHover("print_variable", {
+  grammar: "action print_variable <dynamic_string>",
+  params: ["dynamic_string"]
+});
+
+// ../megalo/src/language-service/hover/actions/random.ts
+var randomHover = defineActionHover("random", {
+  grammar: "action random <value_count> <number_out (0-count-1)>",
+  params: ["value_count", "number_out"]
+});
+
+// ../megalo/src/language-service/hover/actions/respawn_zone_enable.ts
+var respawnZoneEnableHover = defineActionHover("respawn_zone_enable", {
+  grammar: "action respawn_zone_enable <object> <boolean>",
+  params: ["object", "boolean"]
+});
+
+// ../megalo/src/language-service/hover/actions/saved_film_insert_marker.ts
+var savedFilmInsertMarkerHover = defineActionHover(
+  "saved_film_insert_marker",
+  {
+    grammar: "action saved_film_insert_marker <offset (s)> <label>",
+    params: ["offset", "label"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/set.ts
+var setHover = defineActionHover("set", {
+  grammar: "action set <var_a> <math_operation> <var_b>",
+  params: ["var_a", "math_operation", "var_b"]
+});
+
+// ../megalo/src/language-service/hover/actions/set_boundary.ts
+var setBoundaryHover = defineActionHover("set_boundary", {
+  grammar: "action set_boundary <object> {none|sphere|cylinder|box} [width/radius] [length (box)] [neg_height] [pos_height] (feet)",
+  params: ["object", "shape"]
+});
+
+// ../megalo/src/language-service/hover/actions/set_fireteam_respawn_filter.ts
+var setFireteamRespawnFilterHover = defineActionHover(
+  "set_fireteam_respawn_filter",
+  {
+    grammar: "action set_fireteam_respawn_filter <object> {none|all|0-3}",
+    params: ["object", "fireteam_filter"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/set_loadout.ts
+var setLoadoutHover = defineActionHover("set_loadout", {
+  grammar: "action set_loadout <player> <loadout_name>",
+  params: ["player", "loadout_name"]
+});
+
+// ../megalo/src/language-service/hover/actions/set_loadout_palette.ts
+var setLoadoutPaletteHover = defineActionHover("set_loadout_palette", {
+  grammar: "action set_loadout_palette <team_or_player> <loadout>",
+  params: ["team_or_player", "loadout"]
+});
+
+// ../megalo/src/language-service/hover/actions/set_pickup_filter.ts
+var setPickupFilterHover = defineActionHover("set_pickup_filter", {
+  grammar: "action set_pickup_filter <object> {no_one|everyone|allies|enemies|player <player_reference> <boolean>}",
+  params: ["object", "audience"]
+});
+
+// ../megalo/src/language-service/hover/actions/set_player_respawn_vehicle.ts
+var setPlayerRespawnVehicleHover = defineActionHover(
+  "set_player_respawn_vehicle",
+  {
+    grammar: "action set_player_respawn_vehicle <vehicle> <player>",
+    params: ["vehicle", "player"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/set_progress_bar.ts
+var setProgressBarHover = defineActionHover("set_progress_bar", {
+  grammar: "action set_progress_bar <object> {no_one|everyone|allies|enemies|player <player_reference> <boolean>} <timer_name>",
+  params: ["object", "audience", "timer_name"]
+});
+
+// ../megalo/src/language-service/hover/actions/set_respawn_filter.ts
+var setRespawnFilterHover = defineActionHover("set_respawn_filter", {
+  grammar: "action set_respawn_filter <object> {no_one|everyone|allies|enemies|player <player_reference> <boolean>}",
+  params: ["object", "audience"]
+});
+
+// ../megalo/src/language-service/hover/actions/set_scenario_interpolator_state.ts
+var setScenarioInterpolatorStateHover = defineActionHover(
+  "set_scenario_interpolator_state",
+  {
+    grammar: "action set_scenario_interpolator_state <interpolator index> <boolean active>",
+    params: ["interpolator_index", "boolean_active"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/set_score.ts
+var setScoreHover = defineActionHover("set_score", {
+  grammar: "action set_score <math_operation> <value> {everyone|player <player>|team <team>}",
+  params: ["math_operation", "value", "target"]
+});
+
+// ../megalo/src/language-service/hover/actions/set_team_respawn_vehicle.ts
+var setTeamRespawnVehicleHover = defineActionHover(
+  "set_team_respawn_vehicle",
+  {
+    grammar: "action set_team_respawn_vehicle <vehicle> <team>",
+    params: ["vehicle", "team"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/submit_incident.ts
+var submitIncidentHover = defineActionHover("submit_incident", {
+  grammar: "action submit_incident <incident_name> <cause_team_or_player> <effect_team_or_player>",
+  params: ["incident_name", "cause_team_or_player", "effect_team_or_player"]
+});
+
+// ../megalo/src/language-service/hover/actions/submit_incident_with_custom_value.ts
+var submitIncidentWithCustomValueHover = defineActionHover(
+  "submit_incident_with_custom_value",
+  {
+    grammar: "action submit_incident_with_custom_value <incident_name> <cause_team_or_player> <effect_team_or_player> <custom_value_such_as_territory_index>",
+    params: [
+      "incident_name",
+      "cause_team_or_player",
+      "effect_team_or_player",
+      "custom_value_such_as_territory_index"
+    ]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/team_get_place.ts
+var teamGetPlaceHover = defineActionHover("team_get_place", {
+  grammar: "action team_get_place <team> <number_out (place)>",
+  params: ["team", "number_out"]
+});
+
+// ../megalo/src/language-service/hover/actions/team_set_coop_spawning.ts
+var teamSetCoopSpawningHover = defineActionHover(
+  "team_set_coop_spawning",
+  {
+    grammar: "action team_set_coop_spawning <team> <literal_boolean>",
+    params: ["team", "literal_boolean"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/team_set_primary_respawn_object.ts
+var teamSetPrimaryRespawnObjectHover = defineActionHover(
+  "team_set_primary_respawn_object",
+  {
+    grammar: "action team_set_primary_respawn_object <team> <object>",
+    params: ["team", "object"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/team_set_vehicle_spawning.ts
+var teamSetVehicleSpawningHover = defineActionHover(
+  "team_set_vehicle_spawning",
+  {
+    grammar: "action team_set_vehicle_spawning <team> <literal_boolean>",
+    params: ["team", "literal_boolean"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/timer_reset.ts
+var timerResetHover = defineActionHover("timer_reset", {
+  grammar: "action timer_reset <timer>",
+  params: ["timer"]
+});
+
+// ../megalo/src/language-service/hover/actions/timer_set_rate.ts
+var timerSetRateHover = defineActionHover("timer_set_rate", {
+  grammar: "action timer_set_rate <timer> <rate>",
+  params: ["timer", "rate"]
+});
+
+// ../megalo/src/language-service/hover/actions/weapon_set_pickup_priority.ts
+var weaponSetPickupPriorityHover = defineActionHover(
+  "weapon_set_pickup_priority",
+  {
+    grammar: "action weapon_set_pickup_priority <object> {normal|special|auto}",
+    params: ["object", "priority"]
+  }
+);
+
+// ../megalo/src/language-service/hover/actions/catalog.ts
+var actionHovers = [
+  adjustGrenadesHover,
+  applyPlayerTraitsHover,
+  beginHover,
+  bipedDropWeaponHover,
+  bipedGiveWeaponHover,
+  boundarySetPlayerColorHover,
+  boundarySetVisibleHover,
+  breakIntoDebuggerHover,
+  createObjectHover,
+  createTunnelHover,
+  debugForcePlayerViewCountHover,
+  debuggingEnableTracingHover,
+  deleteObjectHover,
+  deviceAnimatePositionHover,
+  deviceGetPositionHover,
+  deviceGetPowerHover,
+  deviceSetPositionHover,
+  deviceSetPositionImmediateHover,
+  deviceSetPositionTrackHover,
+  deviceSetPowerHover,
+  endRoundHover,
+  forEachHover,
+  gameGriefRecordCustomPenaltyHover,
+  getButtonTimeHover,
+  getPlayerHoldingObjectHover,
+  getRandomObjectHover,
+  giveWeaponHover,
+  hideObjectHover,
+  hsFunctionCallHover,
+  hudPostMessageHover,
+  hudWidgetSetIconHover,
+  hudWidgetSetMeterHover,
+  hudWidgetSetTextHover,
+  hudWidgetSetValueHover,
+  hudWidgetSetVisibilityHover,
+  navpointSetIconHover,
+  navpointSetPriorityHover,
+  navpointSetTextHover,
+  navpointSetTimerHover,
+  navpointSetVisibleHover,
+  navpointSetVisibleRangeHover,
+  objectAdjustHealthHover,
+  objectAdjustMaximumHealthHover,
+  objectAdjustMaximumShieldHover,
+  objectAdjustShieldHover,
+  objectAttachHover,
+  objectBounceHover,
+  objectDestroyHover,
+  objectDetachHover,
+  objectFaceObjectHover,
+  objectGetDistanceHover,
+  objectGetHealthHover,
+  objectGetOrientationHover,
+  objectGetShieldHover,
+  objectGetVelocityHover,
+  objectSetInvincibilityHover,
+  objectSetMinimapIconHover,
+  objectSetMinimapPriorityHover,
+  objectSetMinimapVisibilityHover,
+  objectSetNeverGarbageHover,
+  objectSetOrientationHover,
+  objectSetScaleHover,
+  playSoundHover,
+  playerAdjustMoneyHover,
+  playerDeathGetDamageTypeHover,
+  playerDeathGetKillingPlayerHover,
+  playerDeathGetSpecialTypeHover,
+  playerEnablePurchasesHover,
+  playerGetEquipmentHover,
+  playerGetFireteamIndexHover,
+  playerGetKillingSpreeCountHover,
+  playerGetPlaceHover,
+  playerGetTargetObjectHover,
+  playerGetVehicleHover,
+  playerGetWeaponHover,
+  playerPickUpWeaponHover,
+  playerSetCoopSpawningHover,
+  playerSetFireteamIndexHover,
+  playerSetFireteamTierHover,
+  playerSetObjectiveHover,
+  playerSetObjectiveAllegianceHover,
+  playerSetObjectiveAllegianceIconHover,
+  playerSetPrimaryRespawnObjectHover,
+  playerSetRequisitionPaletteHover,
+  playerSetUnitHover,
+  playerSetVehicleHover,
+  playerSetVehicleSpawningHover,
+  printVariableHover,
+  randomHover,
+  respawnZoneEnableHover,
+  savedFilmInsertMarkerHover,
+  setHover,
+  setBoundaryHover,
+  setFireteamRespawnFilterHover,
+  setLoadoutHover,
+  setLoadoutPaletteHover,
+  setPickupFilterHover,
+  setPlayerRespawnVehicleHover,
+  setProgressBarHover,
+  setRespawnFilterHover,
+  setScenarioInterpolatorStateHover,
+  setScoreHover,
+  setTeamRespawnVehicleHover,
+  submitIncidentHover,
+  submitIncidentWithCustomValueHover,
+  teamGetPlaceHover,
+  teamSetCoopSpawningHover,
+  teamSetPrimaryRespawnObjectHover,
+  teamSetVehicleSpawningHover,
+  timerResetHover,
+  timerSetRateHover,
+  weaponSetPickupPriorityHover
+];
+
+// ../megalo/src/language-service/hover/conditions/catalog.ts
+var conditionHovers = [
+  defineConditionHover("if", {
+    grammar: "condition [not] if <left> {==|!=|<|=|>|>=|equal_to|\u2026} <right> [or]",
+    params: ["left", "operator", "right"]
+  }),
+  defineConditionHover("object_in_area", {
+    grammar: "condition [not] object_in_area <object> <area> [or]"
+  }),
+  defineConditionHover("player_died", {
+    grammar: "condition [not] player_died <player> {enemy|suicide|betrayal|environment|guardian|quit_game|any|none} [or]"
+  }),
+  defineConditionHover("team_disposition", {
+    grammar: "condition [not] team_disposition <team1> <disposition> <team2> [or]"
+  }),
+  defineConditionHover("timer_expired", {
+    grammar: "condition [not] timer_expired <timer> [or]"
+  }),
+  defineConditionHover("object_is_type", {
+    grammar: 'condition [not] object_is_type <object> "<object_type>" [or]',
+    params: ["object", "object_type"]
+  }),
+  defineConditionHover("team_is_active", {
+    grammar: "condition [not] team_is_active <team> [or]"
+  }),
+  defineConditionHover("object_out_of_bounds", {
+    grammar: "condition [not] object_out_of_bounds <object> [or]"
+  }),
+  defineConditionHover("player_is_fire_team_leader", {
+    grammar: "condition [not] player_is_fire_team_leader <player> [or]"
+  }),
+  defineConditionHover("player_assisted_with_kill", {
+    grammar: "condition [not] player_assisted_with_kill <player> [or]"
+  }),
+  defineConditionHover("object_matches_filter", {
+    grammar: "condition [not] object_matches_filter <object> <filter> [or]"
+  }),
+  defineConditionHover("player_is_active", {
+    grammar: "condition [not] player_is_active <player> [or]"
+  }),
+  defineConditionHover("equipment_is_active", {
+    grammar: "condition [not] equipment_is_active <player> [or]"
+  }),
+  defineConditionHover("player_is_spartan", {
+    grammar: "condition [not] player_is_spartan <player> [or]"
+  }),
+  defineConditionHover("player_is_elite", {
+    grammar: "condition [not] player_is_elite <player> [or]"
+  }),
+  defineConditionHover("player_is_editor", {
+    grammar: "condition [not] player_is_editor <player> [or]"
+  }),
+  defineConditionHover("game_is_forge", {
+    grammar: "condition [not] game_is_forge [or]"
+  })
+];
+
+// ../megalo/src/language-service/hover/conditions/object_is_type.ts
+var objectIsTypeHover = defineConditionHover("object_is_type", {
+  grammar: "condition object_is_type <object> <object_type>",
+  params: ["object", "object_type"]
+});
+
+// ../megalo/src/language-service/hover/elements/catalog.ts
+var elementHovers = [
+  defineElementHover("base", {
+    grammar: 'base "<path>"'
+  }),
+  defineElementHover("include", {
+    grammar: 'include "<path>"'
+  }),
+  defineElementHover("localized_include", {
+    grammar: 'localized_include "<path>"'
+  }),
+  defineElementHover("string_table", {
+    grammar: "string_table \u2026 end"
+  }),
+  defineElementHover("constants", {
+    grammar: "constants \u2026 end",
+    params: ["number"]
+  }),
+  defineElementHover("variables", {
+    grammar: "variables {global|team|player|object} \u2026 end"
+  }),
+  defineElementHover("game_options", {
+    grammar: "game_options \u2026 end"
+  }),
+  defineElementHover("hud_widgets", {
+    grammar: "hud_widgets \u2026 end"
+  }),
+  defineElementHover("loadout", {
+    grammar: "loadout \u2026 end"
+  }),
+  defineElementHover("loadout_palette", {
+    grammar: "loadout_palette \u2026 end"
+  }),
+  defineElementHover("teams", {
+    grammar: "teams \u2026 end"
+  }),
+  defineElementHover("engine_data", {
+    grammar: "engine_data \u2026 end"
+  }),
+  defineElementHover("player_rating", {
+    grammar: "player_rating \u2026 end"
+  }),
+  defineElementHover("map_permissions", {
+    grammar: "map_permissions \u2026 end"
+  }),
+  defineElementHover("game_stats", {
+    grammar: "game_stats \u2026 end"
+  }),
+  defineElementHover("map_object", {
+    grammar: "map_object \u2026 end"
+  }),
+  defineElementHover("requisition_palette", {
+    grammar: "requisition_palette \u2026 end"
+  }),
+  defineElementHover("trigger", {
+    grammar: "trigger {initialization|local_initialization|host_migration|double_host_migration|object_incident|incident|spawn|player|team|object|general|\u2026} \u2026 end"
+  })
+];
+
+// ../megalo/src/language-service/hover/elements/game_options.ts
+var gameOptionsHover = defineElementHover("game_options", {
+  grammar: "game_options \u2026 end"
+});
+
+// ../megalo/src/language-service/hover/elements/params.ts
+var p = (element, name, grammar) => defineParamHover(`${element}.${name}`, {
+  ...grammar === void 0 ? {} : { grammar }
+});
+var ELEMENTS_WITH_END = [
+  "variables",
+  "constants",
+  "game_options",
+  "hud_widgets",
+  "loadout",
+  "loadout_palette",
+  "teams",
+  "engine_data",
+  "player_rating",
+  "map_permissions",
+  "game_stats",
+  "map_object",
+  "requisition_palette",
+  "string_table"
+];
+var PLAYER_TRAIT_OPTION_NAMES = [
+  "damage_resistance",
+  "body_recharge",
+  "shield_recharge",
+  "vampirism",
+  "headshot_immunity",
+  "body_multiplier",
+  "shield_multiplier",
+  "assassination_immunity",
+  "damage_modifier",
+  "melee_damage_modifier",
+  "initial_primary_weapon",
+  "initial_secondary_weapon",
+  "initial_equipment",
+  "initial_grenades",
+  "recharging_grenades",
+  "infinite_ammo",
+  "bottomless_clip",
+  "weapon_pickup",
+  "drop_equipment",
+  "infinite_equipment",
+  "speed",
+  "gravity",
+  "vehicle_usage",
+  "jump_modifier",
+  "sprinting",
+  "equipment_usage",
+  "active_camo",
+  "waypoint",
+  "gamertag_visibility",
+  "color",
+  "tracker_mode",
+  "tracker_range"
+];
+var PLAYER_RATING_PARAM_NAMES = [
+  "rating_scale",
+  "kill_weight",
+  "assist_weight",
+  "betrayal_weight",
+  "death_weight",
+  "normalize_by_max_kills",
+  "base_value",
+  "range",
+  "loss_scalar",
+  "custom_stat_0",
+  "custom_stat_1",
+  "custom_stat_2",
+  "custom_stat_3",
+  "expansion_0",
+  "expansion_1",
+  "show_in_scoreboard"
+];
+var elementParamHovers = [
+  ...ELEMENTS_WITH_END.map((element) => p(element, "end", "end")),
+  p("variables", "global", "variables global"),
+  p("variables", "team", "variables team"),
+  p("variables", "player", "variables player"),
+  p("variables", "object", "variables object"),
+  p("variables", "local", "local <type> <name> <initial>"),
+  p("variables", "networked", "networked <type> <name> <initial>"),
+  p("variables", "networked_high", "networked_high <type> <name> <initial>"),
+  p("variables", "number"),
+  p("variables", "timer"),
+  p("constants", "number", "number <name> <value>"),
+  p("game_options", "lock", "lock <option_name>"),
+  p("game_options", "hide", "hide <option_name>"),
+  p("game_options", "override", "override <name> \u2026"),
+  p("game_options", "option", "option <name> \u2026"),
+  p("game_options", "ranged_option", "ranged_option <name> \u2026"),
+  p("game_options", "player_traits", "player_traits <name> \u2026 end"),
+  p("game_options", "loadout_palette"),
+  ...PLAYER_TRAIT_OPTION_NAMES.map((name) => p("game_options", name)),
+  ...BUILT_IN_GAME_OPTION_NAMES.map((name) => p("game_options", name)),
+  ...PLAYER_TRAITS_OVERRIDE_OPTIONS.map((name) => p("game_options", name)),
+  p("loadout", "name"),
+  p("loadout", "primary_weapon"),
+  p("loadout", "backpack_weapon"),
+  p("loadout", "equipment"),
+  p("loadout", "grenades"),
+  p("loadout_palette", "item", "item <loadout_name>"),
+  p("teams", "model"),
+  p("teams", "designator_switch_type"),
+  p("teams", "team", "team \u2026 end"),
+  p("teams", "name"),
+  p("teams", "designator"),
+  p("teams", "color"),
+  p("teams", "fireteam_count"),
+  p("engine_data", "name"),
+  p("engine_data", "description"),
+  p("engine_data", "icon"),
+  p("engine_data", "category"),
+  ...PLAYER_RATING_PARAM_NAMES.map((name) => p("player_rating", name)),
+  p("map_permissions", "default", "default {allow|deny}"),
+  p("map_permissions", "exception", "exception <map> \u2026"),
+  p("game_stats", "number"),
+  p("game_stats", "timer"),
+  p("game_stats", "delta"),
+  p("game_stats", "percentage"),
+  p("game_stats", "none"),
+  p("game_stats", "team"),
+  p("map_object", "label"),
+  p("map_object", "type"),
+  p("map_object", "team"),
+  p("map_object", "user_data"),
+  p("map_object", "min"),
+  p("requisition_palette", "baseline", "baseline {enabled|disabled}"),
+  p(
+    "requisition_palette",
+    "item",
+    "item <name> {available|unavailable|disabled}"
+  ),
+  p("requisition_palette", "enabled"),
+  p("requisition_palette", "disabled"),
+  p("requisition_palette", "available"),
+  p("requisition_palette", "unavailable")
+];
+
+// ../megalo/src/language-service/hover/elements/trigger.ts
+var triggerHover = defineElementHover("trigger", {
+  grammar: "trigger <name> \u2026 end"
+});
+
+// ../megalo/src/language-service/hover/elements/variables.ts
+var variablesHover = defineElementHover("variables", {
+  grammar: "variables {global|player|team|object} \u2026 end"
+});
+
+// ../megalo/src/language-service/hover/keywords.ts
+var keywordHovers = [
+  defineKeywordHover("action", {
+    grammar: "action <name> \u2026"
+  }),
+  defineKeywordHover("condition", {
+    grammar: "condition [not] <name> \u2026"
+  }),
+  defineKeywordHover("temporary", {
+    grammar: "temporary <storage> <name> <initial>"
+  }),
+  defineKeywordHover("begin", {
+    grammar: "begin \u2026 end"
+  }),
+  defineKeywordHover("end", {
+    grammar: "end"
+  }),
+  defineKeywordHover("not", {
+    grammar: "condition not <name> \u2026"
+  })
+];
+
+// ../megalo/src/language-service/hover/index.ts
+registerHovers([
+  ...actionHovers,
+  ...conditionHovers,
+  ...elementHovers,
+  ...elementParamHovers,
+  ...keywordHovers,
+  objectIsTypeHover,
+  gameOptionsHover,
+  variablesHover,
+  triggerHover
+]);
+
 // ../megalo/src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions.ts
 var numericComparison = megaloEnum([
   "less_than",
@@ -8786,6 +13797,17 @@ var disposition = megaloEnum([
   "enemy"
 ]);
 var Disposition = disposition.enum;
+
+// ../megalo/src/language-service/completion/suggest/top-level.ts
+var TOP_LEVEL_NAMED_HEADER = {
+  trigger: snippetTabstop(1, "general"),
+  variables: snippetTabstop(1, "global"),
+  loadout: snippetTabstop(1, "name"),
+  loadout_palette: snippetTabstop(1, "name"),
+  map_object: snippetTabstop(1, "name"),
+  requisition_palette: snippetTabstop(1, "name"),
+  string_table: snippetTabstop(1, "english")
+};
 
 // ../megalo/src/language-service/highlighting/emit.ts
 var emitLocation = (out, location, type, modifiers = []) => {
@@ -8841,6 +13863,57 @@ var highlightConstants = (out, element) => {
   }
 };
 
+// ../megalo/src/language-service/highlighting/session.ts
+var highlightVersion;
+var highlightSymbolTable;
+var runWithHighlightContext = (version2, symbolTable, fn) => {
+  const previousVersion = highlightVersion;
+  const previousTable = highlightSymbolTable;
+  highlightVersion = version2;
+  highlightSymbolTable = symbolTable;
+  try {
+    return fn();
+  } finally {
+    highlightVersion = previousVersion;
+    highlightSymbolTable = previousTable;
+  }
+};
+var getHighlightVersion = () => highlightVersion;
+var BUILTIN_MEMBER_NAMES = /* @__PURE__ */ new Set([
+  "score",
+  "user_data",
+  "team",
+  "player_score",
+  "player_money",
+  "player_rating",
+  "rating"
+]);
+var COMPILED_MEMBER_NAME = /^(?:number|timer|object|player|team|stat)_\d+$/;
+var shouldHighlightMemberName = (name) => {
+  if (name.length === 0) {
+    return false;
+  }
+  if (BUILTIN_MEMBER_NAMES.has(name) || COMPILED_MEMBER_NAME.test(name)) {
+    return true;
+  }
+  const table = highlightSymbolTable;
+  if (table === void 0) {
+    return false;
+  }
+  for (const entry of table.toArray()) {
+    if (entry.kind !== 1 /* Variable */) {
+      continue;
+    }
+    if (entry.name !== name) {
+      continue;
+    }
+    if (entry.scope === 3 /* Object */ || entry.scope === 2 /* Player */ || entry.scope === 1 /* Team */) {
+      return true;
+    }
+  }
+  return false;
+};
+
 // ../megalo/src/language-service/highlighting/helpers.ts
 var BOOLEAN_KEYWORDS = ["true", "false"];
 var isKeyword = (node, value) => node !== void 0 && node.kind === 5 /* KEYWORD */ && (value === void 0 || node.value === value);
@@ -8853,6 +13926,7 @@ var asSet = (allowed) => {
   }
   return new Set(allowed);
 };
+var isMegaloEnumDef = (allowed) => typeof allowed === "object" && allowed !== null && !(allowed instanceof Set) && !Array.isArray(allowed) && "supportedMembers" in allowed && "isDeprecated" in allowed && typeof allowed.supportedMembers === "function" && typeof allowed.isDeprecated === "function";
 var highlightEnumKeyword = (out, node, allowed) => {
   if (!isKeyword(node)) {
     return;
@@ -8860,7 +13934,19 @@ var highlightEnumKeyword = (out, node, allowed) => {
   if (!asSet(allowed).has(node.value)) {
     return;
   }
-  emitLocation(out, node.location, "enumMember");
+  const modifiers = [];
+  if (isMegaloEnumDef(allowed)) {
+    const version2 = getHighlightVersion();
+    if (version2 !== void 0) {
+      const canonical = allowed.parse(node.value) ?? node.value;
+      if (!allowed.supportedMembers(version2).has(canonical) || allowed.isDeprecated(node.value)) {
+        modifiers.push("deprecated");
+      }
+    } else if (allowed.isDeprecated(node.value)) {
+      modifiers.push("deprecated");
+    }
+  }
+  emitLocation(out, node.location, "enumMember", modifiers);
 };
 var highlightParameterKeyword = (out, node) => {
   if (!isKeyword(node)) {
@@ -8895,7 +13981,9 @@ var highlightStructural = (out, node) => {
   }
   switch (node.kind) {
     case 8 /* MEMBER_REFERENCE */:
-      emitLocation(out, node.member.location, "property");
+      if (shouldHighlightMemberName(node.member.value)) {
+        emitLocation(out, node.member.location, "property");
+      }
       break;
     case 15 /* GRENADE_COUNT */:
       if (node.form === "preset") {
@@ -9002,78 +14090,6 @@ var highlightEngineData = (out, element) => {
   }
 };
 
-// ../megalo/src/frontend/intermediate-representation/game/game_engine_player_traits.ts
-var grenadeCountSetting = megaloEnum([
-  "none",
-  "default",
-  "1 frag",
-  "2 frag",
-  "3 frag",
-  "4 frag",
-  "1 plasma",
-  "2 plasma",
-  "3 plasma",
-  "4 plasma",
-  "1 each",
-  "2 each",
-  "3 each",
-  "4 each"
-]);
-var GrenadeCountSetting = grenadeCountSetting.enum;
-var vehicleUsage = megaloEnum([
-  "unchanged",
-  "none",
-  "passenger",
-  "driver",
-  "gunner",
-  "not_passenger",
-  "not_driver",
-  "not_gunner",
-  "full"
-]);
-var VehicleUsage = vehicleUsage.enum;
-var activeCamo = megaloEnum([
-  "off",
-  "on",
-  "poor",
-  "good",
-  "excellent",
-  "invisible"
-]);
-var ActiveCamo = activeCamo.enum;
-var waypointVisibility = megaloEnum([
-  "unchanged",
-  "off",
-  "allies",
-  "all"
-]);
-var WaypointVisibility = waypointVisibility.enum;
-var forcedChangeColor = megaloEnum([
-  "unchanged",
-  "off",
-  "red",
-  "blue",
-  "green",
-  "yellow",
-  "purple",
-  "orange",
-  "brown",
-  "pink",
-  "white",
-  "black",
-  "zombie",
-  "extra4"
-]);
-var ForcedChangeColor = forcedChangeColor.enum;
-var motionTrackerMode = megaloEnum([
-  "unchanged",
-  "off",
-  "allies",
-  "normal",
-  "enhanced"
-]);
-var MotionTrackerMode = motionTrackerMode.enum;
-
 // ../megalo/src/language-service/highlighting/elements/game_options.ts
 var BOOLEAN_KEYWORDS2 = ["true", "false"];
 var OBJECT_LIST_SENTINELS = ["none", "default", "random"];
@@ -9137,7 +14153,9 @@ var highlightGameOptions = (out, element) => {
       } else if (entry.value.kind === 0 /* SIMPLE */) {
         const simple = entry.value.value;
         if (typeof simple === "object" && "kind" in simple && simple.kind === 5 /* KEYWORD */) {
-          highlightEnumKeyword(out, simple, BOOLEAN_KEYWORDS2);
+          const optionName = entry.name.kind === 4 /* REFERENCE */ ? entry.name.identifier : entry.name.kind === "player_traits_override" ? entry.name.option : void 0;
+          const allowed = optionName === "weapon_set" || optionName === "vehicle_set" ? OBJECT_LIST_SENTINELS : BOOLEAN_KEYWORDS2;
+          highlightEnumKeyword(out, simple, allowed);
         }
       } else if (entry.value.kind === 1 /* LOADOUT_PALETTE */) {
         if (!("kind" in entry.value.tier)) {
@@ -9200,6 +14218,9 @@ var highlightGameStats = (out, element) => {
 var highlightHudWidgets = (out, element) => {
   emitElementKeyword(out, element.keywordLocation);
   for (const entry of element.entries) {
+    if (entry.textKeyword !== void 0) {
+      emitLocation(out, entry.textKeyword.location, "enumMember");
+    }
     if (!isAstErrorNode(entry.name)) {
       emitLocation(out, entry.name.location, "variable");
     }
@@ -9303,43 +14324,6 @@ var highlightStringTable = (out, element) => {
   }
 };
 
-// ../megalo/src/frontend/intermediate-representation/game/game_engine_default.ts
-var teamScoringMethod = megaloEnum([
-  "sum",
-  "minimum",
-  "maximum"
-]);
-var TeamScoringMethod = teamScoringMethod.enum;
-var multiplayerTeamDesignator = megaloEnum([
-  "none",
-  "defenders",
-  "attackers",
-  "third_party",
-  "fourth_party",
-  "fifth_party",
-  "sixth_party",
-  "seventh_party",
-  "eighth_party",
-  "neutral"
-]);
-var MultiplayerTeamDesignator = multiplayerTeamDesignator.enum;
-var playerModelChoice = megaloEnum(["spartan", "elite"]);
-var PlayerModelChoice = playerModelChoice.enum;
-var teamOptionsModelOverrideType = megaloEnum([
-  "none",
-  "spartan",
-  "elite",
-  "set_by_team",
-  "by_designator"
-]);
-var TeamOptionsModelOverrideType = teamOptionsModelOverrideType.enum;
-var designatorSwitchType = megaloEnum([
-  "none",
-  "random",
-  "rotate"
-]);
-var DesignatorSwitchType = designatorSwitchType.enum;
-
 // ../megalo/src/language-service/highlighting/elements/teams.ts
 var allowedForBlockProperty = (key) => {
   switch (key) {
@@ -9386,55 +14370,55 @@ var highlightTeams = (out, element) => {
 
 // ../megalo/src/language-service/highlighting/actions/adjust_grenades.ts
 var highlightAdjustGrenades = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightEnumKeyword(out, p[1], grenadeType);
-  highlightOperatorKeyword(out, p[2]);
-  highlightStructural(out, p[3]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightEnumKeyword(out, p2[1], grenadeType);
+  highlightOperatorKeyword(out, p2[2]);
+  highlightStructural(out, p2[3]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/apply_player_traits.ts
 var highlightApplyPlayerTraits = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/biped_drop_weapon.ts
 var highlightBipedDropWeapon = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightEnumKeyword(out, p[1], weaponSlot);
-  highlightStructural(out, p[2]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightEnumKeyword(out, p2[1], weaponSlot);
+  highlightOptionalEnum(out, p2, 2, "delete_on_drop");
 };
 
 // ../megalo/src/language-service/highlighting/actions/biped_give_weapon.ts
 var highlightBipedGiveWeapon = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
-  highlightEnumKeyword(out, p[2], bipedGiveWeaponMode);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
+  highlightEnumKeyword(out, p2[2], bipedGiveWeaponMode);
 };
 
 // ../megalo/src/language-service/highlighting/actions/boundary_set_player_color.ts
 var highlightBoundarySetPlayerColor = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/boundary_set_visible.ts
 var highlightBoundarySetVisible = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightPlayerFilter(out, p, 1);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightPlayerFilter(out, p2, 1);
 };
 
 // ../megalo/src/language-service/highlighting/actions/break_into_debugger.ts
 var highlightBreakIntoDebugger = (out, statement) => {
-  const p = statement.parameters;
+  const p2 = statement.parameters;
   void out;
-  void p;
+  void p2;
 };
 
 // ../megalo/src/language-service/highlighting/actions/create_object.ts
@@ -9451,10 +14435,10 @@ var CREATE_OBJECT_FLAG_KEYWORDS = [
   "absolute_orientation"
 ];
 var highlightCreateObject = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  for (let i = 1; i < p.length; i++) {
-    const node = p[i];
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  for (let i = 1; i < p2.length; i++) {
+    const node = p2[i];
     if (node.kind !== 5 /* KEYWORD */) {
       highlightStructural(out, node);
       continue;
@@ -9462,7 +14446,7 @@ var highlightCreateObject = (out, statement) => {
     if (PARAMETER_INTRODUCERS.has(node.value)) {
       highlightParameterKeyword(out, node);
       if (node.value === "variant") {
-        const value = p[i + 1];
+        const value = p2[i + 1];
         if (value === void 0) {
           continue;
         }
@@ -9477,190 +14461,190 @@ var highlightCreateObject = (out, statement) => {
 
 // ../megalo/src/language-service/highlighting/actions/create_tunnel.ts
 var highlightCreateTunnel = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
-  highlightParameterOrStructural(out, p[2]);
-  highlightStructural(out, p[3]);
-  highlightStructural(out, p[4]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
+  highlightParameterOrStructural(out, p2[2]);
+  highlightStructural(out, p2[3]);
+  highlightStructural(out, p2[4]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/debug_force_player_view_count.ts
 var highlightDebugForcePlayerViewCount = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/debugging_enable_tracing.ts
 var highlightDebuggingEnableTracing = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/delete_object.ts
 var highlightDeleteObject = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/device_animate_position.ts
 var highlightDeviceAnimatePosition = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
-  highlightStructural(out, p[2]);
-  highlightStructural(out, p[3]);
-  highlightStructural(out, p[4]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
+  highlightStructural(out, p2[2]);
+  highlightStructural(out, p2[3]);
+  highlightStructural(out, p2[4]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/device_get_position.ts
 var highlightDeviceGetPosition = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/device_get_power.ts
 var highlightDeviceGetPower = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/device_set_position.ts
 var highlightDeviceSetPosition = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/device_set_position_immediate.ts
 var highlightDeviceSetPositionImmediate = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/device_set_position_track.ts
 var highlightDeviceSetPositionTrack = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightParameterOrStructural(out, p[1]);
-  highlightStructural(out, p[2]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightParameterOrStructural(out, p2[1]);
+  highlightStructural(out, p2[2]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/device_set_power.ts
 var highlightDeviceSetPower = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/end_round.ts
 var highlightEndRound = (out, statement) => {
-  const p = statement.parameters;
+  const p2 = statement.parameters;
   void out;
-  void p;
+  void p2;
 };
 
 // ../megalo/src/language-service/highlighting/actions/for_each.ts
 var highlightForEach = (out, statement) => {
-  const p = statement.parameters;
+  const p2 = statement.parameters;
   void out;
-  void p;
+  void p2;
 };
 
 // ../megalo/src/language-service/highlighting/actions/game_grief_record_custom_penalty.ts
 var highlightGameGriefRecordCustomPenalty = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/get_button_time.ts
 var highlightGetButtonTime = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightEnumKeyword(out, p[1], scriptableGameButtons);
-  highlightStructural(out, p[2]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightEnumKeyword(out, p2[1], scriptableGameButtons);
+  highlightStructural(out, p2[2]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/get_player_holding_object.ts
 var highlightGetPlayerHoldingObject = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/get_random_object.ts
 var highlightGetRandomObject = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
-  highlightStructural(out, p[2]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
+  highlightStructural(out, p2[2]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/hide_object.ts
 var highlightHideObject = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/hs_function_call.ts
 var highlightHsFunctionCall = (out, statement) => {
-  const p = statement.parameters;
-  highlightParameterKeyword(out, p[0]);
+  const p2 = statement.parameters;
+  highlightParameterKeyword(out, p2[0]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/hud_post_message.ts
 var highlightHudPostMessage = (out, statement) => {
-  const p = statement.parameters;
-  const i = highlightTeamOrPlayerTarget(out, p, 0);
-  highlightEnumOrStructural(out, p[i], megaloSound);
-  highlightStructural(out, p[i + 1]);
+  const p2 = statement.parameters;
+  const i = highlightTeamOrPlayerTarget(out, p2, 0);
+  highlightEnumOrStructural(out, p2[i], megaloSound);
+  highlightStructural(out, p2[i + 1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/hud_widget_set_icon.ts
 var highlightHudWidgetSetIcon = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightEnumOrStructural(out, p[1], ["none"]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightEnumOrStructural(out, p2[1], ["none"]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/hud_widget_set_meter.ts
 var highlightHudWidgetSetMeter = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  const second = p[1];
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  const second = p2[1];
   if (second !== void 0 && second.kind === 5 /* KEYWORD */ && second.value === "off") {
     highlightEnumKeyword(out, second, ["off"]);
     return;
   }
   highlightStructural(out, second);
-  highlightStructural(out, p[2]);
+  highlightStructural(out, p2[2]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/hud_widget_set_text.ts
 var highlightHudWidgetSetText = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/hud_widget_set_value.ts
 var highlightHudWidgetSetValue = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/hud_widget_set_visibility.ts
 var highlightHudWidgetSetVisibility = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
-  highlightStructural(out, p[2]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
+  highlightStructural(out, p2[2]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/navpoint_set_icon.ts
@@ -9688,34 +14672,34 @@ var NAVPOINT_ICON_KEYWORDS = [
   "coop spawning"
 ];
 var highlightNavpointSetIcon = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightEnumKeyword(out, p[1], NAVPOINT_ICON_KEYWORDS);
-  const icon = p[1];
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightEnumKeyword(out, p2[1], NAVPOINT_ICON_KEYWORDS);
+  const icon = p2[1];
   if (icon !== void 0 && icon.kind === 5 /* KEYWORD */ && icon.value === "num") {
-    highlightStructural(out, p[2]);
+    highlightStructural(out, p2[2]);
   }
 };
 
 // ../megalo/src/language-service/highlighting/actions/navpoint_set_priority.ts
 var highlightNavpointSetPriority = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightEnumKeyword(out, p[1], navpointPriority);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightEnumKeyword(out, p2[1], navpointPriority);
 };
 
 // ../megalo/src/language-service/highlighting/actions/navpoint_set_text.ts
 var highlightNavpointSetText = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/navpoint_set_timer.ts
 var highlightNavpointSetTimer = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  const timer = p[1];
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  const timer = p2[1];
   if (timer !== void 0 && timer.kind === 5 /* KEYWORD */ && timer.value === "none") {
     highlightEnumKeyword(out, timer, ["none"]);
     return;
@@ -9725,164 +14709,164 @@ var highlightNavpointSetTimer = (out, statement) => {
 
 // ../megalo/src/language-service/highlighting/actions/navpoint_set_visible.ts
 var highlightNavpointSetVisible = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightPlayerFilter(out, p, 1);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightPlayerFilter(out, p2, 1);
 };
 
 // ../megalo/src/language-service/highlighting/actions/navpoint_set_visible_range.ts
 var highlightNavpointSetVisibleRange = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
-  highlightStructural(out, p[2]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
+  highlightStructural(out, p2[2]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/object_adjust_health.ts
 var highlightObjectAdjustHealth = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightOperatorKeyword(out, p[1]);
-  highlightStructural(out, p[2]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightOperatorKeyword(out, p2[1]);
+  highlightStructural(out, p2[2]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/object_adjust_maximum_health.ts
 var highlightObjectAdjustMaximumHealth = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightOperatorKeyword(out, p[1]);
-  highlightStructural(out, p[2]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightOperatorKeyword(out, p2[1]);
+  highlightStructural(out, p2[2]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/object_adjust_maximum_shield.ts
 var highlightObjectAdjustMaximumShield = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightOperatorKeyword(out, p[1]);
-  highlightStructural(out, p[2]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightOperatorKeyword(out, p2[1]);
+  highlightStructural(out, p2[2]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/object_adjust_shield.ts
 var highlightObjectAdjustShield = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightOperatorKeyword(out, p[1]);
-  highlightStructural(out, p[2]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightOperatorKeyword(out, p2[1]);
+  highlightStructural(out, p2[2]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/object_attach.ts
 var highlightObjectAttach = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
-  highlightTrailingOptionals(out, p, 2, ["offset", "absolute_orientation"]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
+  highlightTrailingOptionals(out, p2, 2, ["offset", "absolute_orientation"]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/object_bounce.ts
 var highlightObjectBounce = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/object_destroy.ts
 var highlightObjectDestroy = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightOptionalEnum(out, p, 1, "no_statistics");
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightOptionalEnum(out, p2, 1, "no_statistics");
 };
 
 // ../megalo/src/language-service/highlighting/actions/object_detach.ts
 var highlightObjectDetach = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/object_face_object.ts
 var highlightObjectFaceObject = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
-  highlightTrailingOptionals(out, p, 2, ["offset"]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
+  highlightTrailingOptionals(out, p2, 2, ["offset"]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/object_get_distance.ts
 var highlightObjectGetDistance = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
-  highlightStructural(out, p[2]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
+  highlightStructural(out, p2[2]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/object_get_health.ts
 var highlightObjectGetHealth = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/object_get_orientation.ts
 var highlightObjectGetOrientation = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/object_get_shield.ts
 var highlightObjectGetShield = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/object_get_velocity.ts
 var highlightObjectGetVelocity = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/object_set_invincibility.ts
 var highlightObjectSetInvincibility = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/object_set_never_garbage.ts
 var highlightObjectSetNeverGarbage = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/object_set_orientation.ts
 var highlightObjectSetOrientation = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
-  highlightOptionalEnum(out, p, 2, "absolute_orientation");
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
+  highlightOptionalEnum(out, p2, 2, "absolute_orientation");
 };
 
 // ../megalo/src/language-service/highlighting/actions/object_set_scale.ts
 var highlightObjectSetScale = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/play_sound.ts
 var highlightPlaySound = (out, statement) => {
-  const p = statement.parameters;
-  if (p.length === 0) {
+  const p2 = statement.parameters;
+  if (p2.length === 0) {
     return;
   }
-  const sound = p.at(-1);
+  const sound = p2.at(-1);
   let i = 0;
-  const first = p[0];
+  const first = p2[0];
   if (first !== void 0 && first.kind === 5 /* KEYWORD */ && (first.value === "everyone" || first.value === "player" || first.value === "team")) {
-    i = highlightTeamOrPlayerTarget(out, p, 0);
+    i = highlightTeamOrPlayerTarget(out, p2, 0);
   }
-  highlightOptionalEnum(out, p, i, "immediate");
+  highlightOptionalEnum(out, p2, i, "immediate");
   if (sound !== void 0 && (sound.kind === 5 /* KEYWORD */ || sound.kind === 4 /* REFERENCE */)) {
     emitLocation(out, sound.location, "enumMember");
   } else {
@@ -9892,202 +14876,202 @@ var highlightPlaySound = (out, statement) => {
 
 // ../megalo/src/language-service/highlighting/actions/player_adjust_money.ts
 var highlightPlayerAdjustMoney = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightOperatorKeyword(out, p[1]);
-  highlightStructural(out, p[2]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightOperatorKeyword(out, p2[1]);
+  highlightStructural(out, p2[2]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_death_get_damage_type.ts
 var highlightPlayerDeathGetDamageType = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_death_get_killing_player.ts
 var highlightPlayerDeathGetKillingPlayer = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_death_get_special_type.ts
 var highlightPlayerDeathGetSpecialType = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_enable_purchases.ts
 var highlightPlayerEnablePurchases = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightEnumKeyword(out, p[1], purchaseLifeState);
-  highlightEnumKeyword(out, p[2], purchaseCategory);
-  highlightStructural(out, p[3]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightEnumKeyword(out, p2[1], purchaseLifeState);
+  highlightEnumKeyword(out, p2[2], purchaseCategory);
+  highlightStructural(out, p2[3]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_get_equipment.ts
 var highlightPlayerGetEquipment = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_get_fireteam_index.ts
 var highlightPlayerGetFireteamIndex = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_get_killing_spree_count.ts
 var highlightPlayerGetKillingSpreeCount = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_get_place.ts
 var highlightPlayerGetPlace = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_get_target_object.ts
 var highlightPlayerGetTargetObject = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_get_vehicle.ts
 var highlightPlayerGetVehicle = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_get_weapon.ts
 var highlightPlayerGetWeapon = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightEnumKeyword(out, p[1], weaponSlot);
-  highlightStructural(out, p[2]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightEnumKeyword(out, p2[1], weaponSlot);
+  highlightStructural(out, p2[2]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_pick_up_weapon.ts
 var highlightPlayerPickUpWeapon = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_set_coop_spawning.ts
 var highlightPlayerSetCoopSpawning = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_set_fireteam_index.ts
 var highlightPlayerSetFireteamIndex = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_set_objective.ts
 var highlightPlayerSetObjective = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_set_objective_allegiance.ts
 var highlightPlayerSetObjectiveAllegiance = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_set_objective_allegiance_icon.ts
 var highlightPlayerSetObjectiveAllegianceIcon = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_set_primary_respawn_object.ts
 var highlightPlayerSetPrimaryRespawnObject = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_set_requisition_palette.ts
 var highlightPlayerSetRequisitionPalette = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightParameterOrStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightParameterOrStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_set_unit.ts
 var highlightPlayerSetUnit = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_set_vehicle.ts
 var highlightPlayerSetVehicle = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/player_set_vehicle_spawning.ts
 var highlightPlayerSetVehicleSpawning = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/print_variable.ts
 var highlightPrintVariable = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/random.ts
 var highlightRandom = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/respawn_zone_enable.ts
 var highlightRespawnZoneEnable = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/saved_film_insert_marker.ts
 var highlightSavedFilmInsertMarker = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/set.ts
 var highlightSet = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightOperatorKeyword(out, p[1]);
-  highlightStructural(out, p[2]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightOperatorKeyword(out, p2[1]);
+  highlightStructural(out, p2[2]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/set_boundary.ts
@@ -10101,140 +15085,140 @@ var BOUNDARY_DIMENSION_KEYWORDS = [
   "height"
 ];
 var highlightSetBoundary = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightEnumKeyword(out, p[1], boundaryShape);
-  highlightTrailingOptionals(out, p, 2, BOUNDARY_DIMENSION_KEYWORDS);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightEnumKeyword(out, p2[1], boundaryShape);
+  highlightTrailingOptionals(out, p2, 2, BOUNDARY_DIMENSION_KEYWORDS);
 };
 
 // ../megalo/src/language-service/highlighting/actions/set_fireteam_respawn_filter.ts
 var highlightSetFireteamRespawnFilter = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightEnumKeyword(out, p[1], fireteamFilterPreset);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightEnumKeyword(out, p2[1], fireteamFilterPreset);
 };
 
 // ../megalo/src/language-service/highlighting/actions/set_loadout_palette.ts
 var highlightSetLoadoutPalette = (out, statement) => {
-  const p = statement.parameters;
-  const i = highlightTeamOrPlayerTarget(out, p, 0);
-  highlightEnumKeyword(out, p[i], loadoutPaletteType);
+  const p2 = statement.parameters;
+  const i = highlightTeamOrPlayerTarget(out, p2, 0);
+  highlightEnumKeyword(out, p2[i], loadoutPaletteType);
 };
 
 // ../megalo/src/language-service/highlighting/actions/set_pickup_filter.ts
 var highlightSetPickupFilter = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightPlayerFilter(out, p, 1);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightPlayerFilter(out, p2, 1);
 };
 
 // ../megalo/src/language-service/highlighting/actions/set_player_respawn_vehicle.ts
 var highlightSetPlayerRespawnVehicle = (out, statement) => {
-  const p = statement.parameters;
-  highlightParameterOrStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/set_progress_bar.ts
 var highlightSetProgressBar = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  const afterFilter = highlightPlayerFilter(out, p, 1);
-  highlightStructural(out, p[afterFilter]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  const afterFilter = highlightPlayerFilter(out, p2, 1);
+  highlightStructural(out, p2[afterFilter]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/set_respawn_filter.ts
 var highlightSetRespawnFilter = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightPlayerFilter(out, p, 1);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightPlayerFilter(out, p2, 1);
 };
 
 // ../megalo/src/language-service/highlighting/actions/set_scenario_interpolator_state.ts
 var highlightSetScenarioInterpolatorState = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/set_score.ts
 var highlightSetScore = (out, statement) => {
-  const p = statement.parameters;
-  highlightOperatorKeyword(out, p[0]);
-  highlightStructural(out, p[1]);
-  highlightTeamOrPlayerTarget(out, p, 2);
+  const p2 = statement.parameters;
+  highlightOperatorKeyword(out, p2[0]);
+  highlightStructural(out, p2[1]);
+  highlightTeamOrPlayerTarget(out, p2, 2);
 };
 
 // ../megalo/src/language-service/highlighting/actions/set_team_respawn_vehicle.ts
 var highlightSetTeamRespawnVehicle = (out, statement) => {
-  const p = statement.parameters;
-  highlightParameterOrStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/submit_incident.ts
 var highlightSubmitIncident = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  const i = highlightTeamOrPlayerTarget(out, p, 1);
-  highlightTeamOrPlayerTarget(out, p, i);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  const i = highlightTeamOrPlayerTarget(out, p2, 1);
+  highlightTeamOrPlayerTarget(out, p2, i);
 };
 
 // ../megalo/src/language-service/highlighting/actions/submit_incident_with_custom_value.ts
 var highlightSubmitIncidentWithCustomValue = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  let i = highlightTeamOrPlayerTarget(out, p, 1);
-  i = highlightTeamOrPlayerTarget(out, p, i);
-  highlightStructural(out, p[i]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  let i = highlightTeamOrPlayerTarget(out, p2, 1);
+  i = highlightTeamOrPlayerTarget(out, p2, i);
+  highlightStructural(out, p2[i]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/team_get_place.ts
 var highlightTeamGetPlace = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/team_set_coop_spawning.ts
 var highlightTeamSetCoopSpawning = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/team_set_primary_respawn_object.ts
 var highlightTeamSetPrimaryRespawnObject = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/team_set_vehicle_spawning.ts
 var highlightTeamSetVehicleSpawning = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/timer_reset.ts
 var highlightTimerReset = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/timer_set_rate.ts
 var highlightTimerSetRate = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightStructural(out, p[1]);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightStructural(out, p2[1]);
 };
 
 // ../megalo/src/language-service/highlighting/actions/weapon_set_pickup_priority.ts
 var highlightWeaponSetPickupPriority = (out, statement) => {
-  const p = statement.parameters;
-  highlightStructural(out, p[0]);
-  highlightEnumKeyword(out, p[1], weaponPickupPriority);
+  const p2 = statement.parameters;
+  highlightStructural(out, p2[0]);
+  highlightEnumKeyword(out, p2[1], weaponPickupPriority);
 };
 
 // ../megalo/src/language-service/highlighting/actions.ts
@@ -10387,6 +15371,7 @@ var VARIABLE_TYPE_TRIGGER_KINDS = /* @__PURE__ */ new Set([
   "team",
   "object"
 ]);
+var TRIGGER_EXECUTION_KIND_SET = new Set(TRIGGER_EXECUTION_KINDS);
 var highlightAction = (out, statement) => {
   if (statement.name.value === "") {
     emitLocation(out, statement.location, "keyword");
@@ -10417,7 +15402,15 @@ var highlightBegin = (out, statement) => {
 };
 var highlightForEach2 = (out, statement) => {
   emitKeywordRange(out, statement.location, statement.target.location);
-  emitLocation(out, statement.target.location, "variable");
+  if (statement.target.value.length > 0) {
+    const tokenType = triggerNameTokenType(
+      statement.target.value,
+      statement.target.symbolId !== void 0
+    );
+    if (tokenType !== void 0) {
+      emitLocation(out, statement.target.location, tokenType);
+    }
+  }
   highlightTriggerStatements(out, statement.statements);
 };
 var highlightTemporary = (out, statement) => {
@@ -10451,22 +15444,25 @@ var triggerNameTokenType = (name, hasSymbol) => {
   if (hasSymbol) {
     return "variable";
   }
-  if (VARIABLE_TYPE_TRIGGER_KINDS.has(name.toLowerCase())) {
+  const lower = name.toLowerCase();
+  if (VARIABLE_TYPE_TRIGGER_KINDS.has(lower)) {
     return "type";
   }
-  return "enumMember";
+  if (TRIGGER_EXECUTION_KIND_SET.has(lower)) {
+    return "enumMember";
+  }
+  return;
 };
 var highlightTrigger = (out, element) => {
   emitElementKeyword(out, element.keywordLocation);
   if (element.name.value.length > 0) {
-    emitLocation(
-      out,
-      element.name.location,
-      triggerNameTokenType(
-        element.name.value,
-        element.name.symbolId !== void 0
-      )
+    const tokenType = triggerNameTokenType(
+      element.name.value,
+      element.name.symbolId !== void 0
     );
+    if (tokenType !== void 0) {
+      emitLocation(out, element.name.location, tokenType);
+    }
   }
   highlightTriggerStatements(out, element.statements);
 };
@@ -10656,7 +15652,8 @@ var SEMANTIC_TOKEN_TYPES = [
 var SEMANTIC_TOKEN_MODIFIERS = [
   "readonly",
   "defaultLibrary",
-  "declaration"
+  "declaration",
+  "deprecated"
 ];
 var TYPE_INDEX = Object.fromEntries(
   SEMANTIC_TOKEN_TYPES.map((type, index) => [type, index])
@@ -10792,7 +15789,7 @@ var highlightSymbol = (out, entry) => {
 };
 
 // ../megalo/src/language-service/highlighting/index.ts
-var getSemanticTokens = (snapshot) => {
+var getSemanticTokens = (snapshot) => runWithHighlightContext(snapshot.version, snapshot.ast.symbolTable, () => {
   const out = [];
   highlightLexicalTokens(out, snapshot);
   for (const entry of snapshot.ast.symbolTable.toArray()) {
@@ -10802,7 +15799,7 @@ var getSemanticTokens = (snapshot) => {
     highlightElement(out, element);
   }
   return clipTokensToSource(snapshot.source, mergeTokens(out));
-};
+});
 
 // ../megalo/src/version.ts
 function version(v, flavour) {
