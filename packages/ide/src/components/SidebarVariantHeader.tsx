@@ -69,19 +69,23 @@ export function SidebarVariantHeader({
     );
   }
 
-  const showIcon =
-    Boolean(compiledMetadata) || variantIdentity.kind === "object-list";
+  const iconUrl = variantIdentity.iconUrl;
 
   return (
     <div className="sidebar-variant">
-      <div aria-hidden={!showIcon} className="sidebar-variant-icon-slot">
-        {showIcon ? (
-          <img
-            alt=""
-            className="sidebar-variant-icon"
-            src={variantIdentity.iconUrl}
-          />
-        ) : null}
+      <div className="sidebar-variant-icon-slot">
+        {iconUrl ? (
+          <img alt="" className="sidebar-variant-icon" src={iconUrl} />
+        ) : (
+          <div
+            className="sidebar-variant-icon-placeholder"
+            title={t("sidebar_variant_no_icon")}
+          >
+            <span className="sidebar-variant-icon-placeholder-label">
+              {t("sidebar_variant_no_icon")}
+            </span>
+          </div>
+        )}
       </div>
       <div className="sidebar-variant-text">
         <h2 className="sidebar-variant-name">{variantIdentity.name}</h2>

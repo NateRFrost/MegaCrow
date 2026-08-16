@@ -1821,6 +1821,32 @@ body {
   image-rendering: auto;
 }
 
+.sidebar-variant-icon-placeholder {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 4px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1.5px dashed var(--text-muted);
+  border-radius: 8px;
+}
+
+.sidebar-variant-icon-placeholder-label {
+  display: block;
+  max-width: 100%;
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.15;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  word-break: break-word;
+}
+
 .sidebar-variant-name {
   margin: 0;
   overflow: hidden;

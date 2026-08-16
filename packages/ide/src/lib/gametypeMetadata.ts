@@ -29,8 +29,10 @@ export type MegaloVersionProfileId = "107-mcc" | "107";
 
 export interface VariantIdentity {
   description: string | null;
-  iconIndex: number;
-  iconUrl: string;
+  /** Engine icon index, or `null` when unset (do not treat as CTF/0). */
+  iconIndex: number | null;
+  /** Reach fileshare icon URL, or `null` when no icon should be shown. */
+  iconUrl: string | null;
   /** Document kind — object lists always show their sidebar icon. */
   kind?: "gametype" | "object-list";
   name: string;
@@ -185,10 +187,19 @@ function resolveStringSymbol(
   return trimmed.replace(/^["']|["']$/g, "");
 }
 
+function normalizeEngineIconIndex(
+  icon: number | null | undefined
+): number | null {
+  if (icon === null || icon === undefined || icon < 0) {
+    return null;
+  }
+  return icon;
+}
+
 function readBinaryVariantIdentity(fileBytes: Uint8Array | null): {
   name: string;
   description: string;
-  iconIndex: number;
+  iconIndex: number | null;
 } | null {
   if (!fileBytes) {
     return null;
@@ -196,7 +207,7 @@ function readBinaryVariantIdentity(fileBytes: Uint8Array | null): {
   try {
     const variant = extractGvarFromBlf(fileBytes);
     const custom = variant.m_custom_variant;
-    const iconIndex = custom?.m_engine_icon ?? 0;
+    const iconIndex = normalizeEngineIconIndex(custom?.m_engine_icon);
     const languageRow = preferredStringTableRowIndex();
     const localizedName =
       custom?.m_localized_name.strings[languageRow]?.[0]?.trim() ||
@@ -230,7 +241,7 @@ function resolveVariantIdentity(options: {
   const engineData = findEngineData(program);
   const binary = readBinaryVariantIdentity(fileBytes);
 
-  let iconIndex = binary?.iconIndex ?? 0;
+  let iconIndex: number | null = binary?.iconIndex ?? null;
   if (engineData?.icon) {
     iconIndex = megaloIconSymbolToIndex(engineData.icon);
   }
@@ -343,13 +354,15 @@ export function buildVariantIdentity(options: {
       kind: "object-list",
       name,
       description: "object list",
-      iconIndex: -1,
+      iconIndex: null,
       iconUrl: getObjectListIconUrl(),
     };
   }
 
   if (options.compiledMetadata) {
-    const iconIndex = options.compiledMetadata.engineIcon ?? 0;
+    const iconIndex = normalizeEngineIconIndex(
+      options.compiledMetadata.engineIcon
+    );
     const name =
       displayLocalizedString(options.compiledMetadata.name) ||
       displayFileStem(options.fileName) ||

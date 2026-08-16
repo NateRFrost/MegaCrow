@@ -209,6 +209,7 @@
   "editor_command_toggle_word_wrap": "表示: 折り返しの切り替え",
 
   "sidebar_variant_empty_hint": "バリアント詳細を見るにはファイルを開いてください",
+  "sidebar_variant_no_icon": "アイコンなし",
 
   "status_no_gametype_loaded": "ゲームタイプが読み込まれていません",
   "status_compiling_megalo_source": "Megalo ソースをコンパイル中…",

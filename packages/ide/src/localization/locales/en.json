@@ -209,6 +209,7 @@
   "editor_command_toggle_word_wrap": "View: Toggle Word Wrap",
 
   "sidebar_variant_empty_hint": "Open a file to see variant details",
+  "sidebar_variant_no_icon": "No icon",
 
   "status_no_gametype_loaded": "No gametype loaded",
   "status_compiling_megalo_source": "Compiling Megalo source…",

@@ -63,8 +63,18 @@ export function megaloIconSymbolToIndex(symbol: string): number {
   return index >= 0 ? index : 0;
 }
 
-export function getReachGametypeIconUrl(iconIndex: number): string {
-  const index = Math.max(0, Math.min(38, iconIndex));
+export function getReachGametypeIconUrl(
+  iconIndex: number | null | undefined
+): string | null {
+  if (
+    iconIndex === null ||
+    iconIndex === undefined ||
+    !Number.isInteger(iconIndex) ||
+    iconIndex < 0
+  ) {
+    return null;
+  }
+  const index = Math.min(38, iconIndex);
   const name = ENGINE_ICON_SUFFIXES[index] ?? String(index).padStart(2, "0");
   return `${FILESHARE_BASE}/gametypes/reach_gametypes_${name}.png`;
 }
