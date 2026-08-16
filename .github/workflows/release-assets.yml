@@ -1,0 +1,177 @@
+# Attach Build workflow artifacts to a GitHub Release.
+#
+# On release (including pre-release):
+#   1. Resolve the release tag → commit → Build workflow run
+#   2. Download CI artifacts (unzipped by `gh run download`)
+#   3. Upload product files as release assets
+#
+# Uploaded:
+#   - Tauri installers (.msi, .exe, .dmg, .deb, .rpm, .AppImage, .app.tar.gz, …)
+#   - VS Code .vsix
+#   - Web dist as megacrow-web.zip (too many files to attach individually)
+
+name: Release assets
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: release-assets-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  attach:
+    name: Attach build artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve Build run for release tag
+        id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ github.event.release.tag_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${TAG:-}" ]]; then
+            echo "Release has no tag_name"
+            exit 1
+          fi
+
+          echo "Resolving commit for tag: $TAG"
+          REF_JSON=$(gh api "repos/${REPO}/git/ref/tags/${TAG}")
+          OBJECT_TYPE=$(printf '%s' "$REF_JSON" | jq -r .object.type)
+          OBJECT_SHA=$(printf '%s' "$REF_JSON" | jq -r .object.sha)
+          if [[ "$OBJECT_TYPE" == "tag" ]]; then
+            COMMIT_SHA=$(gh api "repos/${REPO}/git/tags/${OBJECT_SHA}" --jq .object.sha)
+          else
+            COMMIT_SHA="$OBJECT_SHA"
+          fi
+          echo "Tag $TAG → commit $COMMIT_SHA"
+
+          # Prefer a fully successful Build; otherwise take the latest completed run
+          # (Build still tags when some matrix jobs fail via `if: always()`).
+          RUN_ID=$(gh run list \
+            --repo "$REPO" \
+            --workflow build.yml \
+            --commit "$COMMIT_SHA" \
+            --status completed \
+            --limit 30 \
+            --json databaseId,conclusion,createdAt \
+            --jq '
+              (
+                [.[] | select(.conclusion == "success")]
+                | sort_by(.createdAt)
+                | reverse
+                | .[0].databaseId
+              )
+              // (
+                [.[] ]
+                | sort_by(.createdAt)
+                | reverse
+                | .[0].databaseId
+              )
+              // empty
+            ')
+
+          if [[ -z "$RUN_ID" ]]; then
+            echo "No completed Build workflow run found for commit $COMMIT_SHA"
+            exit 1
+          fi
+          echo "Using Build run id: $RUN_ID"
+          echo "commit_sha=$COMMIT_SHA" >> "$GITHUB_OUTPUT"
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Download Build artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ steps.resolve.outputs.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          if ! gh run download "$RUN_ID" --repo "$REPO" --dir artifacts; then
+            echo "Failed to download artifacts from run $RUN_ID"
+            exit 1
+          fi
+          echo "Downloaded artifacts:"
+          find artifacts -maxdepth 2 -type d | sort
+          find artifacts -type f | head -n 80 || true
+
+      - name: Collect release assets
+        id: collect
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upload
+
+          # --- VS Code extension ---
+          if [[ -d artifacts/megacrow-vscode-extension ]]; then
+            while IFS= read -r -d '' f; do
+              name=$(basename "$f")
+              cp -f "$f" "upload/$name"
+              echo "Queued $name"
+            done < <(find artifacts/megacrow-vscode-extension -type f -name '*.vsix' -print0)
+          fi
+
+          # --- Tauri installers (unique names via artifact folder prefix) ---
+          is_installer() {
+            case "$1" in
+              *.msi|*.exe|*.dmg|*.deb|*.rpm|*.AppImage|*.app.tar.gz|*.tar.gz|*.apk)
+                return 0
+                ;;
+              *)
+                return 1
+                ;;
+            esac
+          }
+
+          for dir in artifacts/megacrow-tauri-*; do
+            [[ -d "$dir" ]] || continue
+            platform=${dir#artifacts/megacrow-tauri-}
+            while IFS= read -r -d '' f; do
+              base=$(basename "$f")
+              if ! is_installer "$base"; then
+                continue
+              fi
+              # Skip updater blockmaps / signatures unless you need them later.
+              case "$base" in
+                *.blockmap|*.sig) continue ;;
+              esac
+              dest="upload/${platform}__${base}"
+              cp -f "$f" "$dest"
+              echo "Queued $(basename "$dest")"
+            done < <(find "$dir" -type f -print0)
+          done
+
+          # --- Web: single zip (too many files for individual assets) ---
+          if [[ -d artifacts/megacrow-web ]] && [[ -f artifacts/megacrow-web/index.html ]]; then
+            (cd artifacts/megacrow-web && zip -qr ../../upload/megacrow-web.zip .)
+            echo "Queued megacrow-web.zip ($(du -sh upload/megacrow-web.zip | cut -f1))"
+          fi
+
+          count=$(find upload -type f | wc -l | tr -d ' ')
+          echo "asset_count=$count" >> "$GITHUB_OUTPUT"
+          if [[ "$count" -eq 0 ]]; then
+            echo "No release assets found in Build artifacts."
+            exit 1
+          fi
+          echo "Prepared $count asset(s):"
+          ls -lh upload
+
+      - name: Upload assets to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # --clobber replaces assets with the same name on re-run.
+          gh release upload "$TAG" upload/* --clobber
+          echo "Uploaded assets to release $TAG"
