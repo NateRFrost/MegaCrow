@@ -5,6 +5,9 @@ import { isTauriRuntime } from "./tauriRuntime";
 const GITHUB_REPO = "craftycodie/MegaCrow";
 const LATEST_RELEASE_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
 
+/** Latest GitHub Release page (redirects to the newest non-prerelease). */
+export const GITHUB_LATEST_RELEASE_PAGE = `https://github.com/${GITHUB_REPO}/releases/latest`;
+
 export interface GithubReleaseInfo {
   htmlUrl: string;
   name: string;

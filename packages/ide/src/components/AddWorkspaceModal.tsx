@@ -2,6 +2,7 @@ import { join } from "@tauri-apps/api/path";
 import { exists, readTextFile } from "@tauri-apps/plugin-fs";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { StoredWorkspace } from "../lib/megacrowSettings";
+import { getLabel, MEGALO_VERSIONS } from "../lib/megaloShim";
 import { pickTauriFolder } from "../lib/tauriDisk";
 import {
   guessHrekRootFromScripts,
@@ -225,7 +226,7 @@ export function AddWorkspaceModal({
               disabled
               readOnly
               type="text"
-              value={t("workspace_modal_megalo_version_value")}
+              value={getLabel(MEGALO_VERSIONS["107-mcc"])}
             />
           </label>
         </div>

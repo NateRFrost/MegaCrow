@@ -58,9 +58,15 @@
   "megacrow_extension_required": "'{{sourceName}}' には MegaCrow 拡張 '{{extension}}' が必要です（MegaloEdit では未対応）",
   "timer_rate_snapped": "タイマーレート {{got}} はサポートされていません。{{used}} を使用します",
   "team_color_overrides_do_not_apply_in_mcc_menus": "チームカラーの上書きは MCC メニューには反映されません。選択した色はゲーム内でのみ表示されます",
-  "version_label_107_mcc": "Halo: Reach - Master Chief Collection",
-  "version_label_107": "Halo: Reach - タイトルアップデート1",
-  "version_label_106": "Halo: Reach - 製品版",
-  "version_label_73": "Halo: Reach - ベータ",
-  "version_label_49": "Halo: Reach - アルファ"
+  "version_game_halo_reach": "Halo: Reach",
+  "version_short_107_mcc": "MCC",
+  "version_short_107": "TU 1",
+  "version_short_106": "製品版",
+  "version_short_73": "パブリックベータ",
+  "version_short_49": "プライベートアルファ",
+  "version_full_107_mcc": "Master Chief Collection",
+  "version_full_107": "タイトルアップデート1",
+  "version_full_106": "製品版",
+  "version_full_73": "パブリックベータ",
+  "version_full_49": "プライベートアルファ"
 }

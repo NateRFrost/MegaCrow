@@ -44,6 +44,8 @@ interface Props {
   onSourceDebounced?: (source: string) => void;
   /** Object lists and other non-Megalo text — no compile / LSP. */
   plainText?: boolean;
+  /** When true, the buffer cannot be edited (e.g. browser bundled object lists). */
+  readOnly?: boolean;
   /** Bumps on load to push documentContent into the model without remounting. */
   syncRevision: number;
 }
@@ -72,6 +74,7 @@ export const MegaloEditor = memo(function MegaloEditor({
   onRegisterNavigate,
   hoverContext,
   plainText = false,
+  readOnly = false,
   editorTheme = DEFAULT_EDITOR_THEME_ID,
   editorWordWrap = true,
   onEditorWordWrapChange,
@@ -238,6 +241,10 @@ export const MegaloEditor = memo(function MegaloEditor({
       wordWrap: editorWordWrap ? "on" : "off",
     });
   }, [editorWordWrap]);
+
+  useEffect(() => {
+    editorRef.current?.updateOptions({ readOnly });
+  }, [readOnly]);
 
   useEffect(() => {
     if (plainText) {
@@ -431,6 +438,7 @@ export const MegaloEditor = memo(function MegaloEditor({
         disableMonospaceOptimizations: true,
         minimap: { enabled: false },
         wordWrap: editorWordWrap ? "on" : "off",
+        readOnly,
         scrollBeyondLastLine: false,
         padding: { top: 10, bottom: 8 },
         // Keep suggest/hover widgets from being clipped by the problems pane.

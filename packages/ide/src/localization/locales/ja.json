@@ -47,6 +47,8 @@
   "toolbar_build_need_output": "ビルドを有効にするにはワークスペースの出力フォルダを設定してください",
   "toolbar_docs": "ドキュメント",
   "toolbar_docs_title": "Megalo ドキュメントを開く",
+  "toolbar_download": "MegaCrow をダウンロード",
+  "toolbar_download_title": "GitHub Releases からデスクトップアプリをダウンロード",
 
   "about_tagline": "Halo ゲームタイプ向け Megalo スクリプト IDE",
   "about_publisher": "発行元",
@@ -130,6 +132,12 @@
   "files_delete_opfs_confirm": "ブラウザストレージから「{{name}}」を削除しますか？この操作は取り消せません。",
   "files_rename_aria_label": "ファイル名を変更",
 
+  "files_object_lists": "オブジェクトリスト",
+  "files_object_lists_read_only": "読み取り専用",
+  "megalo_version_select_title": "Megalo バージョンを選択",
+  "megalo_version_aria_label": "Megalo バージョン",
+  "megalo_version_title": "Megalo バージョン",
+
   "workspace_select_title": "ワークスペースを選択",
   "workspace_no_workspace": "ワークスペースなし",
   "workspace_aria_label": "ワークスペース",
@@ -147,7 +155,6 @@
   "workspace_modal_name": "名前",
   "workspace_modal_name_placeholder": "マイワークスペース",
   "workspace_modal_megalo_version": "Megalo バージョン",
-  "workspace_modal_megalo_version_value": "107 MCC (Halo Reach)",
   "workspace_modal_scripts_folder": "スクリプトフォルダ",
   "workspace_modal_scripts_placeholder": "…\\data\\multiplayer\\megalo",
   "workspace_modal_output_folder": "出力フォルダ（任意）",

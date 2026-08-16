@@ -55,6 +55,7 @@ import {
   lspAnalyzeObjectList,
   lspConfigureResolveContext,
   lspResetSession,
+  lspSetMegaloVersion,
   lspSetObjectLists,
   lspVersionConfiguration,
 } from "./lib/lspClient";
@@ -78,6 +79,7 @@ import {
   MEGACROW_BUILD_STRING,
   MEGACROW_SHOW_WATERMARK,
   type MegaloProgram,
+  type MegaloVersionId,
   tryParse,
 } from "./lib/megaloShim";
 import {
@@ -635,6 +637,23 @@ export function App() {
     [clearWorkspace, commitSettings, megacrowSettings]
   );
 
+  const handleSelectMegaloVersion = useCallback(
+    async (version: MegaloVersionId) => {
+      if (!activeWorkspace || activeWorkspace.megaloVersion === version) {
+        return;
+      }
+      applyWorkspace({ ...activeWorkspace, megaloVersion: version });
+      try {
+        await lspSetMegaloVersion(version);
+        const config = await lspVersionConfiguration();
+        setObjectListNames(config.objectListNames);
+      } catch (error) {
+        console.error("Failed to switch Megalo version:", error);
+      }
+    },
+    [activeWorkspace, applyWorkspace]
+  );
+
   const handleDeleteWorkspace = useCallback(
     (id: string) => {
       if (!megacrowSettings) {
@@ -1083,6 +1102,10 @@ export function App() {
     const name = fileNameRef.current;
     const opfs = activeWorkspaceRef.current?.type === "opfs";
     if (!(absoluteFilePath || (opfs && name))) {
+      return;
+    }
+    // Browser bundled object lists are read-only — never write into OPFS.
+    if (!isTauriRuntime() && isObjectListsPath(absoluteFilePath ?? name)) {
       return;
     }
     if (text === lastPersistedSourceRef.current) {
@@ -1789,6 +1812,9 @@ export function App() {
                   handleMissingObjectListNamesChange
                 }
                 onOpenSource={loadMegaloSource}
+                onSelectMegaloVersion={
+                  isTauriRuntime() ? undefined : handleSelectMegaloVersion
+                }
                 onSelectWorkspace={handleSelectWorkspace}
                 onWorkspaceObjectListsChange={handleWorkspaceObjectListsChange}
                 opfsRevision={opfsRevision}
@@ -1834,6 +1860,7 @@ export function App() {
                   onRegisterNavigate={handleRegisterNavigate}
                   onSourceDebounced={handleSourceDebounced}
                   plainText={isPlainTextDocument}
+                  readOnly={!isTauriRuntime() && isObjectListDocumentOpen}
                   syncRevision={syncRevision}
                 />
               ) : (

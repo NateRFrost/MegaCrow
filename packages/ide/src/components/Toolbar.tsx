@@ -4,7 +4,9 @@ import type { AppSettings } from "../lib/appSettings";
 import { detectMccInstall, launchMcc } from "../lib/mccInstall";
 import type { GametypeSaveFormat } from "../lib/megaloShim";
 import { openDocs } from "../lib/openDocs";
+import { openExternalUrl } from "../lib/openExternalUrl";
 import { isTauriRuntime } from "../lib/tauriRuntime";
+import { GITHUB_LATEST_RELEASE_PAGE } from "../lib/updateCheck";
 import type { Workspace } from "../lib/workspace";
 import { useT } from "../localization";
 import { AboutDialog } from "./AboutDialog";
@@ -238,21 +240,23 @@ export function Toolbar({
               </button>
             ) : null}
 
-            <button
-              className="toolbar-btn toolbar-btn--primary"
-              disabled={!canBuild}
-              onClick={onBuild}
-              title={
-                canBuild
-                  ? t("toolbar_build_title")
-                  : workspace?.outputPath?.trim()
-                    ? t("toolbar_build_need_script")
-                    : t("toolbar_build_need_output")
-              }
-              type="button"
-            >
-              {t("toolbar_build")}
-            </button>
+            {frameless ? (
+              <button
+                className="toolbar-btn toolbar-btn--primary"
+                disabled={!canBuild}
+                onClick={onBuild}
+                title={
+                  canBuild
+                    ? t("toolbar_build_title")
+                    : workspace?.outputPath?.trim()
+                      ? t("toolbar_build_need_script")
+                      : t("toolbar_build_need_output")
+                }
+                type="button"
+              >
+                {t("toolbar_build")}
+              </button>
+            ) : null}
             <SaveAsMenu
               disabled={!(fileName && canExport)}
               onSave={onCompile}
@@ -282,6 +286,19 @@ export function Toolbar({
         </div>
 
         <div className="toolbar-trailing">
+          {frameless ? null : (
+            <button
+              aria-label={t("toolbar_download_title")}
+              className="toolbar-btn toolbar-btn--download"
+              onClick={() => {
+                void openExternalUrl(GITHUB_LATEST_RELEASE_PAGE);
+              }}
+              title={t("toolbar_download_title")}
+              type="button"
+            >
+              {t("toolbar_download")}
+            </button>
+          )}
           <button
             aria-label={t("toolbar_docs_title")}
             className="toolbar-menu toolbar-menu--label"

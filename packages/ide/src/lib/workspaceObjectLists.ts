@@ -154,6 +154,13 @@ export function objectListsFolderIsEmpty(nodes: LocalDiskNode[]): boolean {
   return children.every((child) => child.virtual === true);
 }
 
+/** Virtual `object_lists/` tree of bundled defaults (browser / no workspace disk). */
+export function browserDefaultObjectListsTree(
+  objectListNames: readonly string[]
+): LocalDiskNode[] {
+  return withObjectListsFolder([], objectListNames).nodes;
+}
+
 /** Locate a node by relative path segments. */
 export function findLocalDiskNode(
   nodes: readonly LocalDiskNode[],

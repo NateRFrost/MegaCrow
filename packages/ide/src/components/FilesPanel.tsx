@@ -2,6 +2,7 @@ import {
   type MouseEvent,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -19,6 +20,8 @@ import {
 } from "../lib/localFolder";
 import type { StoredWorkspace } from "../lib/megacrowSettings";
 import type { MegaloIncludeRoot } from "../lib/megaloIncludes";
+import type { MegaloVersionId } from "../lib/megaloShim";
+import { isObjectListsPath } from "../lib/objectListsPath";
 import {
   createOpfsGametype,
   deleteOpfsGametype,
@@ -65,6 +68,7 @@ import {
   findLocalDiskNode,
   loadWorkspaceObjectLists,
   objectListsFolderIsEmpty,
+  withObjectListsFolder,
 } from "../lib/workspaceObjectLists";
 import { useT } from "../localization";
 import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
@@ -75,13 +79,13 @@ import {
   type FilesContextSource,
   type FilesContextTarget,
 } from "./FilesContextMenu";
-import { FilesRenameInput } from "./FilesRenameInput";
 import {
   isMegacrowTreeDragActive,
   LocalDiskTree,
   MEGACROW_TREE_PATH_MIME,
   pruneNestedPaths,
 } from "./LocalDiskTree";
+import { MegaloVersionMenu } from "./MegaloVersionMenu";
 import { WorkspaceMenu } from "./WorkspaceMenu";
 
 interface Props {
@@ -107,6 +111,7 @@ interface Props {
     name: string,
     includeRoot?: MegaloIncludeRoot
   ) => void;
+  onSelectMegaloVersion?: (version: MegaloVersionId) => void;
   onSelectWorkspace?: (id: string) => void;
   /** Workspace object lists loaded from disk (`null` → use bundled defaults). */
   onWorkspaceObjectListsChange?: (
@@ -118,13 +123,9 @@ interface Props {
   workspaces?: StoredWorkspace[];
 }
 
-function FileGlyph() {
+function NewFileGlyph() {
   return (
-    <svg
-      aria-hidden="true"
-      className="files-glyph files-glyph--source"
-      viewBox="0 0 16 16"
-    >
+    <svg aria-hidden="true" height="14" viewBox="0 0 16 16" width="14">
       <path
         d="M3.5 1.5h6l3 3V14.5h-9z"
         fill="none"
@@ -140,11 +141,11 @@ function FileGlyph() {
         strokeWidth="1.2"
       />
       <path
-        d="M5.5 7.5h5M5.5 9.5h5M5.5 11.5h3.5"
+        d="M8 7.5v4M6 9.5h4"
         fill="none"
         stroke="currentColor"
         strokeLinecap="round"
-        strokeWidth="1.1"
+        strokeWidth="1.2"
       />
     </svg>
   );
@@ -208,34 +209,6 @@ function BuiltGametypeGlyph() {
   );
 }
 
-function NewFileGlyph() {
-  return (
-    <svg aria-hidden="true" height="14" viewBox="0 0 16 16" width="14">
-      <path
-        d="M3.5 1.5h6l3 3V14.5h-9z"
-        fill="none"
-        stroke="currentColor"
-        strokeLinejoin="round"
-        strokeWidth="1.2"
-      />
-      <path
-        d="M9.5 1.5V4.5H12.5"
-        fill="none"
-        stroke="currentColor"
-        strokeLinejoin="round"
-        strokeWidth="1.2"
-      />
-      <path
-        d="M8 7.5v4M6 9.5h4"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.2"
-      />
-    </svg>
-  );
-}
-
 function NewFolderGlyph() {
   return (
     <svg aria-hidden="true" height="14" viewBox="0 0 16 16" width="14">
@@ -261,6 +234,7 @@ export function FilesPanel({
   workspace,
   workspaces = [],
   onSelectWorkspace,
+  onSelectMegaloVersion,
   onAddWorkspace,
   onEditWorkspace,
   onDeleteWorkspace,
@@ -300,7 +274,6 @@ export function FilesPanel({
     toParentPath: string[];
   } | null>(null);
   const [renamingPathKey, setRenamingPathKey] = useState<string | null>(null);
-  const [renamingOpfsName, setRenamingOpfsName] = useState<string | null>(null);
   const [ensureExpandedKeys, setEnsureExpandedKeys] = useState<string[]>([]);
   const [pastePayload, setPastePayload] = useState<FileClipboardPayload | null>(
     null
@@ -325,6 +298,21 @@ export function FilesPanel({
   const opfsAvailable = isOpfsSupported() && !isTauriRuntime();
   const tauriAvailable = isTauriRuntime();
   const localDiskAvailable = isSystemFolderSupported();
+  /** Browser: OPFS gametypes + virtual `object_lists/` (same shape as desktop). */
+  const browserTree = useMemo(() => {
+    if (!opfsAvailable) {
+      return [];
+    }
+    const opfsNodes: LocalDiskNode[] = opfsFiles.map((entry) => ({
+      type: "file" as const,
+      name: entry.name,
+      path: [entry.name],
+    }));
+    if (objectListNames.length === 0) {
+      return opfsNodes;
+    }
+    return withObjectListsFolder(opfsNodes, objectListNames).nodes;
+  }, [objectListNames, opfsAvailable, opfsFiles]);
   const outputPath =
     workspace?.type === "tauri" && workspace.outputPath?.trim()
       ? workspace.outputPath.trim()
@@ -565,7 +553,7 @@ export function FilesPanel({
       setOpfsError(null);
       const name = await createOpfsGametype();
       await refreshOpfs();
-      setRenamingOpfsName(name);
+      setRenamingPathKey(pathKey([name]));
       const source = (await readOpfsGametypeSource(name)) ?? "";
       onOpenSource(source, name);
     } catch (error) {
@@ -578,7 +566,7 @@ export function FilesPanel({
       try {
         setOpfsError(null);
         const toName = await renameOpfsGametype(fromName, newName);
-        setRenamingOpfsName(null);
+        setRenamingPathKey(null);
         await refreshOpfs();
         if (
           fromName.localeCompare(toName, undefined, {
@@ -589,7 +577,7 @@ export function FilesPanel({
         }
       } catch (error) {
         setOpfsError(String(error));
-        setRenamingOpfsName(null);
+        setRenamingPathKey(null);
       }
     },
     [onFileRenamed, refreshOpfs]
@@ -608,7 +596,7 @@ export function FilesPanel({
       try {
         setOpfsError(null);
         await deleteOpfsGametype(name);
-        setRenamingOpfsName(null);
+        setRenamingPathKey(null);
         await refreshOpfs();
         onFileDeleted(name);
       } catch (error) {
@@ -636,7 +624,7 @@ export function FilesPanel({
         setOpfsError(null);
         const name = await duplicateOpfsGametype(payload.name);
         await refreshOpfs();
-        setRenamingOpfsName(name);
+        setRenamingPathKey(pathKey([name]));
         await openOpfsFile(name);
       } catch (error) {
         setOpfsError(String(error));
@@ -644,6 +632,7 @@ export function FilesPanel({
     },
     [openOpfsFile, refreshOpfs]
   );
+
   const openLocalFile = useCallback(
     async (path: string[]) => {
       if (!localRoot) {
@@ -673,6 +662,34 @@ export function FilesPanel({
     [localRoot, localTree, onOpenSource, workspace?.megaloVersion]
   );
 
+  const openBrowserTreeFile = useCallback(
+    (path: string[]) => {
+      const node = findLocalDiskNode(browserTree, path);
+      if (!(node && node.type === "file")) {
+        return;
+      }
+      if (node.virtual || isObjectListsPath(path)) {
+        const text = defaultObjectListText(
+          node.name,
+          workspace?.megaloVersion ?? "107-mcc"
+        );
+        onOpenSource(text, formatLocalDiskPath(path));
+        return;
+      }
+      void openOpfsFile(node.name);
+    },
+    [browserTree, onOpenSource, openOpfsFile, workspace?.megaloVersion]
+  );
+
+  useEffect(() => {
+    if (!(opfsAvailable && objectListNames.length > 0)) {
+      return;
+    }
+    setEnsureExpandedKeys((keys) =>
+      keys.includes("object_lists") ? keys : [...keys, "object_lists"]
+    );
+  }, [objectListNames.length, opfsAvailable]);
+
   useEffect(() => {
     const next = [
       ...flattenSourceFileNodes(localTree).map((node) => {
@@ -687,16 +704,25 @@ export function FilesPanel({
           open: () => void openLocalFile(node.path),
         };
       }),
-      ...opfsFiles.map((entry) => ({
-        id: `opfs:${entry.name}`,
-        label: entry.name,
-        description: "Browser storage",
-        open: () => void openOpfsFile(entry.name),
+      ...flattenSourceFileNodes(browserTree).map((node) => ({
+        id: `browser:${pathKey(node.path)}`,
+        label: node.name,
+        description: isObjectListsPath(node.path)
+          ? t("files_object_lists")
+          : t("files_browser_saves"),
+        open: () => openBrowserTreeFile(node.path),
       })),
     ];
     setSourceFileQuickOpenEntries(next);
     return () => setSourceFileQuickOpenEntries([]);
-  }, [localTree, opfsFiles, openLocalFile, openOpfsFile, workspace?.name]);
+  }, [
+    browserTree,
+    localTree,
+    openBrowserTreeFile,
+    openLocalFile,
+    t,
+    workspace?.name,
+  ]);
 
   const createLocalFile = useCallback(
     async (parentSegments: string[] = []) => {
@@ -986,11 +1012,6 @@ export function FilesPanel({
     [localRoot, outputPath]
   );
 
-  const isActive = (name: string) =>
-    activeFileName !== null &&
-    activeFileName.localeCompare(name, undefined, { sensitivity: "accent" }) ===
-      0;
-
   return (
     <section
       aria-label={t("files_aria_label")}
@@ -1040,6 +1061,11 @@ export function FilesPanel({
             workspace={workspace}
             workspaces={workspaces}
           />
+        ) : onSelectMegaloVersion && workspace ? (
+          <MegaloVersionMenu
+            megaloVersion={workspace.megaloVersion}
+            onSelectVersion={onSelectMegaloVersion}
+          />
         ) : (
           <div className="files-panel-heading">
             <h2 className="files-panel-title">
@@ -1075,83 +1101,48 @@ export function FilesPanel({
               {opfsError ? (
                 <p className="files-hint files-hint--error">{opfsError}</p>
               ) : null}
-              {opfsFiles.length === 0 && !opfsError ? (
+              {browserTree.length === 0 && !opfsError ? (
                 <div className="files-empty">
                   <p>{t("files_no_saved_files")}</p>
                   <span>{t("files_use_new_file_hint")}</span>
                 </div>
-              ) : opfsFiles.length > 0 ? (
-                <ul className="files-tree">
-                  {opfsFiles.map((entry) => {
-                    const isRenaming = renamingOpfsName === entry.name;
-                    return (
-                      <li className="files-tree-node" key={entry.name}>
-                        <div
-                          className={`files-row${isActive(entry.name) ? " files-row--active" : ""}`}
-                        >
-                          {isRenaming ? (
-                            <div
-                              className={`files-row-btn files-row-btn--renaming${isActive(entry.name) ? " files-row-btn--active" : ""}`}
-                            >
-                              <FileGlyph />
-                              <FilesRenameInput
-                                initialName={entry.name}
-                                onCancel={() => setRenamingOpfsName(null)}
-                                onCommit={(value) =>
-                                  void commitOpfsRename(entry.name, value)
-                                }
-                              />
-                            </div>
-                          ) : (
-                            <button
-                              className={`files-row-btn${isActive(entry.name) ? " files-row-btn--active" : ""}`}
-                              onClick={() => void openOpfsFile(entry.name)}
-                              onContextMenu={(event) =>
-                                onOpfsContextMenu(event, entry.name)
-                              }
-                              onKeyDown={(event) => {
-                                if (event.key === "F2") {
-                                  event.preventDefault();
-                                  setRenamingOpfsName(entry.name);
-                                }
-                              }}
-                              title={entry.name}
-                              type="button"
-                            >
-                              <FileGlyph />
-                              <span className="files-row-label">
-                                {entry.name}
-                              </span>
-                            </button>
-                          )}
-                          {isRenaming ? null : (
-                            <button
-                              aria-label={t("files_delete_named", {
-                                name: entry.name,
-                              })}
-                              className="files-row-delete"
-                              onClick={() => void deleteOpfsFile(entry.name)}
-                              title={t("files_delete_named", {
-                                name: entry.name,
-                              })}
-                              type="button"
-                            >
-                              <svg aria-hidden="true" viewBox="0 0 16 16">
-                                <path
-                                  d="M4.5 4.5l7 7M11.5 4.5l-7 7"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeLinecap="round"
-                                  strokeWidth="1.3"
-                                />
-                              </svg>
-                            </button>
-                          )}
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
+              ) : browserTree.length > 0 ? (
+                <LocalDiskTree
+                  activeFileName={activeFileName}
+                  ensureExpandedKeys={ensureExpandedKeys}
+                  key={`browser-${workspace?.megaloVersion ?? "107-mcc"}`}
+                  nodes={browserTree}
+                  objectListNames={objectListNames}
+                  onBeginRename={(path) => {
+                    const node = findLocalDiskNode(browserTree, path);
+                    if (node?.virtual || isObjectListsPath(path)) {
+                      return;
+                    }
+                    setRenamingPathKey(pathKey(path));
+                  }}
+                  onCancelRename={() => setRenamingPathKey(null)}
+                  onCommitRename={(path, name) => {
+                    const fromName = path.at(-1);
+                    if (!fromName || isObjectListsPath(path)) {
+                      setRenamingPathKey(null);
+                      return;
+                    }
+                    void commitOpfsRename(fromName, name);
+                  }}
+                  onContextMenu={(event, target) => {
+                    if (target.virtual || isObjectListsPath(target.path)) {
+                      event.preventDefault();
+                      return;
+                    }
+                    const name = target.path.at(-1);
+                    if (name) {
+                      onOpfsContextMenu(event, name);
+                    }
+                  }}
+                  onMoveEntries={() => {}}
+                  onOpenFile={openBrowserTreeFile}
+                  renamingPathKey={renamingPathKey}
+                />
               ) : null}
             </div>
           </div>
@@ -1467,10 +1458,10 @@ export function FilesPanel({
         }}
         onRename={(path, source) => {
           if (source === "opfs") {
-            const name = path[0];
-            if (name) {
-              setRenamingOpfsName(name);
+            if (isObjectListsPath(path)) {
+              return;
             }
+            setRenamingPathKey(pathKey(path));
             return;
           }
           if (source === "builds") {

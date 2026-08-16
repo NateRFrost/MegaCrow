@@ -40,25 +40,69 @@ export function isMegaloVersionId(value: string): value is MegaloVersionId {
   return Object.hasOwn(MEGALO_VERSIONS, value);
 }
 
-/** Localized human-readable label for a supported Megalo version. */
-export function getLabel({ version, flavour }: SupportedMegaloVersion): string {
+/** Game title for a Megalo version (e.g. Halo: Reach). */
+export function getGameName(_version: SupportedMegaloVersion): string {
+  // All currently supported encodings are Halo: Reach builds.
+  return translate("version_game_halo_reach");
+}
+
+/** Compact build tag (e.g. MCC, TU 1, Public Beta). */
+export function getShortDescription({
+  version,
+  flavour,
+}: SupportedMegaloVersion): string {
   switch (version) {
     case 107:
       switch (flavour) {
         case "mcc":
-          return translate("version_label_107_mcc");
+          return translate("version_short_107_mcc");
         default:
-          return translate("version_label_107");
+          return translate("version_short_107");
       }
     case 106:
-      return translate("version_label_106");
+      return translate("version_short_106");
     case 73:
-      return translate("version_label_73");
+      return translate("version_short_73");
     case 49:
-      return translate("version_label_49");
+      return translate("version_short_49");
     default: {
       const _exhaustive: never = version;
       throw new Error(`Unsupported version: ${_exhaustive}`);
     }
   }
+}
+
+/** Longer build name (e.g. The Master Chief Collection, Title Update 1). */
+export function getFullDescription({
+  version,
+  flavour,
+}: SupportedMegaloVersion): string {
+  switch (version) {
+    case 107:
+      switch (flavour) {
+        case "mcc":
+          return translate("version_full_107_mcc");
+        default:
+          return translate("version_full_107");
+      }
+    case 106:
+      return translate("version_full_106");
+    case 73:
+      return translate("version_full_73");
+    case 49:
+      return translate("version_full_49");
+    default: {
+      const _exhaustive: never = version;
+      throw new Error(`Unsupported version: ${_exhaustive}`);
+    }
+  }
+}
+
+/**
+ * Localized human-readable label: "{game} - {full description}".
+ * Prefer {@link getGameName} / {@link getShortDescription} / {@link getFullDescription}
+ * when composing UI.
+ */
+export function getLabel(version: SupportedMegaloVersion): string {
+  return `${getGameName(version)} - ${getFullDescription(version)}`;
 }

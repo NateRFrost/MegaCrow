@@ -47,6 +47,8 @@
   "toolbar_build_need_output": "Set a workspace output folder to enable Build",
   "toolbar_docs": "Docs",
   "toolbar_docs_title": "Open Megalo documentation",
+  "toolbar_download": "Download MegaCrow",
+  "toolbar_download_title": "Download the desktop app from GitHub Releases",
 
   "about_tagline": "Megalo script IDE for Halo gametypes",
   "about_publisher": "Publisher",
@@ -130,6 +132,12 @@
   "files_delete_opfs_confirm": "Delete \"{{name}}\" from browser storage? This cannot be undone.",
   "files_rename_aria_label": "Rename file",
 
+  "files_object_lists": "Object lists",
+  "files_object_lists_read_only": "Read-only",
+  "megalo_version_select_title": "Select Megalo version",
+  "megalo_version_aria_label": "Megalo versions",
+  "megalo_version_title": "Megalo version",
+
   "workspace_select_title": "Select a workspace",
   "workspace_no_workspace": "No workspace",
   "workspace_aria_label": "Workspaces",
@@ -147,7 +155,6 @@
   "workspace_modal_name": "Name",
   "workspace_modal_name_placeholder": "My workspace",
   "workspace_modal_megalo_version": "Megalo version",
-  "workspace_modal_megalo_version_value": "107 MCC (Halo Reach)",
   "workspace_modal_scripts_folder": "Scripts folder",
   "workspace_modal_scripts_placeholder": "…\\data\\multiplayer\\megalo",
   "workspace_modal_output_folder": "Output folder (optional)",

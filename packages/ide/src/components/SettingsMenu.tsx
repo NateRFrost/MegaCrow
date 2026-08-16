@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { AppSettings, CompilerProfile } from "../lib/appSettings";
+import { isTauriRuntime } from "../lib/tauriRuntime";
 import { useT } from "../localization";
 import { EDITOR_THEME_OPTIONS } from "../monaco/theme";
 import { DOCS_PATHS, DocsHelpButton } from "./DocsHelpButton";
@@ -204,23 +205,25 @@ export function SettingsMenu({ settings, onChange }: Props) {
                   </select>
                 </label>
 
-                <label className="settings-toggle">
-                  <input
-                    checked={settings.discordRichPresence}
-                    onChange={(event) =>
-                      onChange({ discordRichPresence: event.target.checked })
-                    }
-                    type="checkbox"
-                  />
-                  <span className="settings-toggle-text">
-                    <span className="settings-toggle-label">
-                      {t("settings_discord")}
+                {isTauriRuntime() ? (
+                  <label className="settings-toggle">
+                    <input
+                      checked={settings.discordRichPresence}
+                      onChange={(event) =>
+                        onChange({ discordRichPresence: event.target.checked })
+                      }
+                      type="checkbox"
+                    />
+                    <span className="settings-toggle-text">
+                      <span className="settings-toggle-label">
+                        {t("settings_discord")}
+                      </span>
+                      <span className="settings-toggle-hint">
+                        {t("settings_discord_hint")}
+                      </span>
                     </span>
-                    <span className="settings-toggle-hint">
-                      {t("settings_discord_hint")}
-                    </span>
-                  </span>
-                </label>
+                  </label>
+                ) : null}
               </section>
             </div>
 

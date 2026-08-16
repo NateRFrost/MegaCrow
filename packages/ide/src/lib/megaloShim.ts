@@ -7,6 +7,10 @@ import type { CompileSourceOptions } from "@megacrow/megalo";
 import {
   ALL_MEGACROW_EXTENSIONS,
   DiagnosticSeverity,
+  getFullDescription,
+  getGameName,
+  getLabel,
+  getShortDescription,
   isMegaloVersionId,
   MEGACROW_BUILD_STRING,
   MEGACROW_SHOW_WATERMARK,
@@ -18,11 +22,18 @@ import {
   compileSource as megaloCompileSource,
   computeVariantLimitUsage as megaloComputeVariantLimitUsage,
   SourceLocationType,
-  type SupportedMegaloVersion,
 } from "@megacrow/megalo";
 import { translate } from "../localization";
 
-export { MEGACROW_BUILD_STRING, MEGACROW_SHOW_WATERMARK };
+export {
+  getFullDescription,
+  getGameName,
+  getLabel,
+  getShortDescription,
+  MEGACROW_BUILD_STRING,
+  MEGACROW_SHOW_WATERMARK,
+  MEGALO_VERSIONS,
+};
 
 const DEFAULT_COMPILE_VERSION = MEGALO_VERSIONS["107-mcc"];
 
@@ -424,25 +435,17 @@ export function computeVariantLimitUsage(
   }
 }
 
-function getVersionLabel(info: SupportedMegaloVersion) {
-  switch (info.version) {
-    case 107:
-      switch (info.flavour) {
-        case "mcc":
-          return "MCC";
-        default:
-          return "360 TU1";
-      }
-    default:
-      return String(info.version);
-  }
-}
-
 export function getVersionInfo(version: MegaloVersionId = "107-mcc") {
   const info = MEGALO_VERSIONS[version];
   return {
     id: version,
-    label: getVersionLabel(info),
+    /** Compact build tag from `@megacrow/megalo` (e.g. MCC, TU 1). */
+    label: getShortDescription(info),
+    /** Localized "{game} - {full description}". */
+    fullLabel: getLabel(info),
+    gameName: getGameName(info),
+    shortDescription: getShortDescription(info),
+    fullDescription: getFullDescription(info),
     encoding: info.version,
   };
 }

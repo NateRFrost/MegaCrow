@@ -58,9 +58,15 @@
   "megacrow_extension_required": "'{{sourceName}}' requires MegaCrow extension '{{extension}}' (not supported by MegaloEdit)",
   "timer_rate_snapped": "Timer rate {{got}} is not a supported rate; using {{used}}",
   "team_color_overrides_do_not_apply_in_mcc_menus": "team color overrides do not apply in the MCC menus, your chosen color will only be visible in-game",
-  "version_label_107_mcc": "Halo: Reach - The Master Chief Collection",
-  "version_label_107": "Halo: Reach - Title Update 1",
-  "version_label_106": "Halo: Reach - Release",
-  "version_label_73": "Halo: Reach - Beta",
-  "version_label_49": "Halo: Reach - Alpha"
+  "version_game_halo_reach": "Halo: Reach",
+  "version_short_107_mcc": "MCC",
+  "version_short_107": "TU 1",
+  "version_short_106": "Release",
+  "version_short_73": "Public Beta",
+  "version_short_49": "Private Alpha",
+  "version_full_107_mcc": "The Master Chief Collection",
+  "version_full_107": "Title Update 1",
+  "version_full_106": "Release",
+  "version_full_73": "Public Beta",
+  "version_full_49": "Private Alpha"
 }

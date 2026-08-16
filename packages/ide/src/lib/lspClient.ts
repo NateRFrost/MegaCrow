@@ -24,6 +24,7 @@ export const MEGACROW_VERSION_CONFIGURATION_METHOD =
   "megacrow/versionConfiguration";
 export const MEGACROW_ANALYZE_OBJECT_LIST_METHOD = "megacrow/analyzeObjectList";
 export const MEGACROW_SET_OBJECT_LISTS_METHOD = "megacrow/setObjectLists";
+export const MEGACROW_SET_MEGALO_VERSION_METHOD = "megacrow/setMegaloVersion";
 export const MEGACROW_SET_RESOLVE_BASE_FILE_METHOD =
   "megacrow/setResolveBaseFile";
 export const MEGACROW_SET_LOCALE_METHOD = "megacrow/setLocale";
@@ -680,6 +681,16 @@ export async function lspSetObjectLists(
   const connection = await getConnection();
   connection.sendNotification(MEGACROW_SET_OBJECT_LISTS_METHOD, {
     objectLists,
+  });
+}
+
+/** Switch the LSP session Megalo engine profile. */
+export async function lspSetMegaloVersion(
+  megaloVersion: import("./megaloShim").MegaloVersionId
+): Promise<void> {
+  const connection = await getConnection();
+  connection.sendNotification(MEGACROW_SET_MEGALO_VERSION_METHOD, {
+    megaloVersion,
   });
 }
 

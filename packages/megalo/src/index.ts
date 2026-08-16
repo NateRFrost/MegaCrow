@@ -132,7 +132,10 @@ export {
   type VariantLimitUsage,
 } from "src/variant-limit-usage";
 export {
+  getFullDescription,
+  getGameName,
   getLabel,
+  getShortDescription,
   isMegaloVersionId,
   MEGALO_VERSIONS,
   type MegaloVersionId,
