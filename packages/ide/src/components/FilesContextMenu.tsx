@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { fileManagerRevealLabel } from "../lib/revealInFileManager";
+import { useT } from "../localization";
 
 export type FilesContextTarget =
   | { type: "file"; path: string[]; virtual?: boolean }
@@ -48,6 +49,7 @@ export function FilesContextMenu({
   onCopyPath,
   onReveal,
 }: Props) {
+  const t = useT();
   const panelRef = useRef<HTMLDivElement>(null);
   const revealLabel = fileManagerRevealLabel();
 
@@ -147,7 +149,7 @@ export function FilesContextMenu({
             role="menuitem"
             type="button"
           >
-            New File
+            {t("context_new_file")}
           </button>
           {onNewFolder ? (
             <button
@@ -159,7 +161,7 @@ export function FilesContextMenu({
               role="menuitem"
               type="button"
             >
-              New Folder
+              {t("context_new_folder")}
             </button>
           ) : null}
         </>
@@ -174,7 +176,7 @@ export function FilesContextMenu({
           role="menuitem"
           type="button"
         >
-          Copy
+          {t("common_copy")}
         </button>
       ) : null}
       {canPaste && source !== "builds" ? (
@@ -187,7 +189,7 @@ export function FilesContextMenu({
           role="menuitem"
           type="button"
         >
-          Paste
+          {t("common_paste")}
         </button>
       ) : null}
       {canRename ? (
@@ -200,7 +202,7 @@ export function FilesContextMenu({
           role="menuitem"
           type="button"
         >
-          Rename
+          {t("common_rename")}
         </button>
       ) : null}
       <button
@@ -215,7 +217,7 @@ export function FilesContextMenu({
         role="menuitem"
         type="button"
       >
-        {multiSelect ? "Copy Paths" : "Copy Path"}
+        {multiSelect ? t("context_copy_paths") : t("context_copy_path")}
       </button>
       {canReveal ? (
         <button
@@ -241,8 +243,8 @@ export function FilesContextMenu({
           type="button"
         >
           {deleteTargets.length > 1
-            ? `Delete ${deleteTargets.length} Items`
-            : "Delete"}
+            ? t("context_delete_n_items", { count: deleteTargets.length })
+            : t("common_delete")}
         </button>
       ) : null}
     </div>,

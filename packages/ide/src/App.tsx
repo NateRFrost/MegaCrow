@@ -133,23 +133,24 @@ import {
 import { workspaceUnexpectedFailure } from "./lib/workspaceBase";
 import { prepareWorkspaceCompileContext } from "./lib/workspaceCompileContext";
 import { materializeObjectListsOnFirstSave } from "./lib/workspaceObjectLists";
+import { IdeLocaleProvider, setIdeLocale, translate } from "./localization";
 import type { MegaloHoverContext } from "./monaco/megalo-language";
 import {
   setMegaloDefinitionOpenHandler,
   setMegaloPathOpenHandler,
 } from "./monaco/megalo-language";
 
-const idleAnalysis: SourceAnalysis = {
+const idleAnalysis = (): SourceAnalysis => ({
   compileState: "idle",
   errorCount: 0,
-  message: "No gametype loaded",
+  message: translate("status_no_gametype_loaded"),
   byteIdentical: null,
   byteDiffCount: null,
   compiledByteLength: null,
   mgloBytes: null,
   compileTiming: null,
   diagnostics: [],
-};
+});
 
 export function App() {
   const [megacrowSettings, setMegacrowSettings] =
@@ -265,7 +266,7 @@ export function App() {
   const [originalBytes, setOriginalBytes] = useState<Uint8Array | null>(null);
   const [baseProgram, setBaseProgram] = useState<MegaloProgram | null>(null);
   const [baselineSource, setBaselineSource] = useState<string | null>(null);
-  const [analysis, setAnalysis] = useState<SourceAnalysis>(idleAnalysis);
+  const [analysis, setAnalysis] = useState<SourceAnalysis>(idleAnalysis());
   const [objectListNames, setObjectListNames] = useState<readonly string[]>([]);
   const [missingObjectListNames, setMissingObjectListNames] = useState<
     readonly string[]
@@ -346,7 +347,7 @@ export function App() {
             ? {
                 ...current,
                 compileState: "parsing",
-                message: "Compiling Megalo source…",
+                message: translate("status_compiling_megalo_source"),
               }
             : current
         );
@@ -429,10 +430,12 @@ export function App() {
   useEffect(() => {
     const compilerSettings = compilerSettingsFromApp(settings);
     syncMegaloCompilerSettings(compilerSettings);
-    setLocale(settings.locale === "ja" ? "ja" : "en");
+    const locale = settings.locale === "ja" ? "ja" : "en";
+    setLocale(locale);
+    setIdeLocale(locale);
     void import("./lib/lspClient").then(
       ({ lspSetLocale, lspSetMegacrowExtensions, lspSetCompilerSettings }) => {
-        void lspSetLocale(settings.locale === "ja" ? "ja" : "en");
+        void lspSetLocale(locale);
         void lspSetMegacrowExtensions(compilerSettings.megacrowExtensions);
         void lspSetCompilerSettings({
           strictStringLiterals: compilerSettings.strictStringLiterals,
@@ -453,20 +456,23 @@ export function App() {
     }
 
     const details = fileName ?? "MegaCrow";
-    let state = "Editing Halo Reach gametypes";
+    let state = translate("discord_editing_halo_reach");
     if (fileName) {
       if (compileState === "ok" || compileState === "warn") {
-        state = compileState === "warn" ? "Compile warning" : "Script compiled";
+        state =
+          compileState === "warn"
+            ? translate("discord_compile_warning")
+            : translate("discord_script_compiled");
       } else if (compileState === "error") {
-        state = "Compile errors";
+        state = translate("discord_compile_errors");
       } else if (compileState === "parsing") {
-        state = "Compiling…";
+        state = translate("discord_compiling");
       } else {
-        state = "Editing gametype";
+        state = translate("discord_editing_gametype");
       }
     }
     void updateDiscordPresence({ details, state });
-  }, [compileState, fileName, settings.discordRichPresence]);
+  }, [compileState, fileName, settings.discordRichPresence, settings.locale]);
 
   const handleCursorChange = useCallback((line: number, column: number) => {
     setCursorLine(line);
@@ -504,8 +510,8 @@ export function App() {
         trayOnly: true,
         message:
           missingObjectListNames.length === 1
-            ? `Missing object list file object_lists/${listed}`
-            : `Missing object list files in object_lists/: ${listed}`,
+            ? translate("status_missing_object_list_one", { names: listed })
+            : translate("status_missing_object_lists", { names: listed }),
       },
     ];
   }, [missingObjectListNames]);
@@ -595,7 +601,7 @@ export function App() {
     setSyncRevision((n) => n + 1);
     compileParsingRef.current = false;
     setLoadError(null);
-    setAnalysis(idleAnalysis);
+    setAnalysis(idleAnalysis());
     setCompileState("idle");
     setCompiledSize(null);
     setFileNav(EMPTY_FILE_NAV);
@@ -785,13 +791,18 @@ export function App() {
     }));
     const errorCount = diagnostics.filter((d) => d.severity === "error").length;
     return {
-      ...idleAnalysis,
+      ...idleAnalysis(),
       compileState: (errorCount > 0 ? "error" : "ok") as CompileState,
       errorCount,
       message:
         errorCount > 0
-          ? `Object list: ${errorCount} error${errorCount === 1 ? "" : "s"}`
-          : "Object list",
+          ? translate(
+              errorCount === 1
+                ? "status_object_list_errors_one"
+                : "status_object_list_errors_other",
+              { count: errorCount }
+            )
+          : translate("status_object_list"),
       diagnostics,
     } satisfies SourceAnalysis;
   }, []);
@@ -825,9 +836,9 @@ export function App() {
         skipBaselineCompileRef.current = true;
         setCompileState("parsing");
         setAnalysis({
-          ...idleAnalysis,
+          ...idleAnalysis(),
           compileState: "parsing",
-          message: "Analyzing object list…",
+          message: translate("status_analyzing_object_list"),
         });
         initMegaloWorkerContext(null, null, text);
         void (async () => {
@@ -846,9 +857,9 @@ export function App() {
         skipBaselineCompileRef.current = true;
         setCompileState("ok");
         setAnalysis({
-          ...idleAnalysis,
+          ...idleAnalysis(),
           compileState: "ok",
-          message: "Text file",
+          message: translate("status_text_file"),
         });
         initMegaloWorkerContext(null, null, text);
         return;
@@ -859,9 +870,9 @@ export function App() {
       const compileId = ++compileRunRef.current;
       setCompileState("parsing");
       setAnalysis({
-        ...idleAnalysis,
+        ...idleAnalysis(),
         compileState: "parsing",
-        message: "Parsing Megalo source…",
+        message: translate("status_parsing_megalo_source"),
       });
       initMegaloWorkerContext(null, null, text);
       lspConfigureResolveContext({
@@ -1337,9 +1348,9 @@ export function App() {
       const isSourceOnly = originalBytes === null;
       if (!((isSourceOnly || baseProgram) && (fileName || source.trim()))) {
         setAnalysis({
-          ...idleAnalysis,
+          ...idleAnalysis(),
           compileState: "error",
-          message: "Load a gametype or Megalo source first",
+          message: translate("status_load_gametype_or_source_first"),
           errorCount: 1,
         });
         setCompileState("error");
@@ -1351,7 +1362,7 @@ export function App() {
       setAnalysis((current) => ({
         ...current,
         compileState: "parsing",
-        message: "Compiling for export…",
+        message: translate("status_compiling_for_export"),
       }));
 
       void (async () => {
@@ -1402,14 +1413,16 @@ export function App() {
             setAnalysis({
               ...analysis,
               message: saveResult.path
-                ? `Saved to ${saveResult.path}`
-                : `Saved ${downloadName} to Downloads`,
+                ? translate("status_saved_to_path", { path: saveResult.path })
+                : translate("status_saved_to_downloads", {
+                    name: downloadName,
+                  }),
             });
           } else {
             setAnalysis({
               ...analysis,
               compileState: "idle",
-              message: "Save cancelled",
+              message: translate("status_save_cancelled"),
             });
           }
           setCompileState(saveResult.saved ? analysis.compileState : "idle");
@@ -1445,7 +1458,7 @@ export function App() {
     setAnalysis((current) => ({
       ...current,
       compileState: "parsing",
-      message: "Building .mglo + .bin…",
+      message: translate("status_building_mglo_bin"),
     }));
 
     void (async () => {
@@ -1496,7 +1509,10 @@ export function App() {
         setCompiledSize(output.length);
         setAnalysis({
           ...analysis,
-          message: `Built ${gametypeSaveFileName(fileName, "mglo")} and ${gametypeSaveFileName(fileName, "gvar")}`,
+          message: translate("status_built_outputs", {
+            mglo: gametypeSaveFileName(fileName, "mglo"),
+            gvar: gametypeSaveFileName(fileName, "gvar"),
+          }),
         });
         setCompileState(analysis.compileState);
         setLocalDiskRevision((value) => value + 1);
@@ -1683,185 +1699,187 @@ export function App() {
   }, []);
 
   return (
-    <div className="app">
-      {MEGACROW_SHOW_WATERMARK ? <PreReleaseWatermark /> : null}
-      <MotdDialog onDismiss={handleMotdDismiss} open={motdOpen} />
-      <IdePalette
-        mode={idePaletteMode}
-        onClose={() => setIdePaletteOpen(false)}
-        open={idePaletteOpen}
-      />
-      <UpdateAvailableDialog
-        currentBuildString={MEGACROW_BUILD_STRING}
-        onDismiss={handleUpdateDismiss}
-        onSkip={handleUpdateSkip}
-        open={updateOpen}
-        release={updateRelease}
-      />
-      <AddWorkspaceModal
-        initialWorkspace={
-          editingWorkspaceId
-            ? (megacrowSettings?.workspaces.find(
-                (workspace) => workspace.id === editingWorkspaceId
-              ) ?? null)
-            : null
-        }
-        onCancel={() => {
-          setAddWorkspaceOpen(false);
-          setAddWorkspaceRequired(false);
-          setEditingWorkspaceId(null);
-        }}
-        onSave={handleSaveWorkspace}
-        open={addWorkspaceOpen && workspacesReady}
-        required={addWorkspaceRequired}
-      />
-      <Toolbar
-        canBuild={
-          !!fileName &&
-          activeWorkspace?.type === "tauri" &&
-          !!activeWorkspace.outputPath?.trim() &&
-          !isPlainTextDocument
-        }
-        canExport={!isPlainTextDocument}
-        canNavigateBack={canNavigateFileNavBack(fileNav)}
-        canNavigateForward={canNavigateFileNavForward(fileNav)}
-        fileName={fileName}
-        onBuild={buildVariant}
-        onCompile={compileDownload}
-        onNavigateBack={handleNavigateBack}
-        onNavigateForward={handleNavigateForward}
-        onSettingsChange={handleSettingsChange}
-        onShowMotd={showMotdPreview}
-        onToggleSidebar={toggleSidebar}
-        settings={settings}
-        sidebarOpen={sidebarOpen}
-        workspace={activeWorkspace}
-      />
-      <div
-        className={`main${sidebarOpen ? "" : " main--sidebar-collapsed"}`}
-        style={{ "--sidebar-width": `${sidebarWidth}px` } as CSSProperties}
-      >
-        <aside
-          aria-hidden={!sidebarOpen}
-          className="sidebar"
-          inert={sidebarOpen ? undefined : true}
-        >
-          <SidebarVariantHeader
-            absoluteFilePath={includeRoot?.absoluteFilePath ?? null}
-            baselineSource={baselineSource}
-            baseProgram={baseProgram}
-            compiledMetadata={analysis.compiledMetadata}
-            fileBytes={originalBytes}
-            fileName={fileName}
-            includeCache={includeFileCache}
-            objectListNames={objectListNames}
-            source={outlineSource}
-          />
-          <div className="sidebar-body">
-            <FilesPanel
-              activeFileName={fileName}
-              localDiskRevision={localDiskRevision}
-              objectListNames={objectListNames}
-              onAddWorkspace={handleAddWorkspace}
-              onClearEditor={clearWorkspace}
-              onDeleteWorkspace={handleDeleteWorkspace}
-              onEditWorkspace={handleEditWorkspace}
-              onFileDeleted={handleFileDeleted}
-              onFileRenamed={handleFileRenamed}
-              onMissingObjectListNamesChange={
-                handleMissingObjectListNamesChange
-              }
-              onOpenSource={loadMegaloSource}
-              onSelectWorkspace={handleSelectWorkspace}
-              onWorkspaceObjectListsChange={handleWorkspaceObjectListsChange}
-              opfsRevision={opfsRevision}
-              workspace={activeWorkspace}
-              workspaceSwitcher={isTauriRuntime()}
-              workspaces={megacrowSettings?.workspaces ?? []}
-            />
-          </div>
-        </aside>
-        <div
-          aria-hidden={!sidebarOpen}
-          aria-label="Resize sidebar"
-          aria-orientation="vertical"
-          aria-valuemax={SIDEBAR_MAX_WIDTH}
-          aria-valuemin={SIDEBAR_MIN_WIDTH}
-          aria-valuenow={sidebarWidth}
-          className="sidebar-resizer"
-          inert={sidebarOpen ? undefined : true}
-          onPointerDown={sidebarOpen ? onSidebarResizeStart : undefined}
-          role="separator"
+    <IdeLocaleProvider locale={settings.locale}>
+      <div className="app">
+        {MEGACROW_SHOW_WATERMARK ? <PreReleaseWatermark /> : null}
+        <MotdDialog onDismiss={handleMotdDismiss} open={motdOpen} />
+        <IdePalette
+          mode={idePaletteMode}
+          onClose={() => setIdePaletteOpen(false)}
+          open={idePaletteOpen}
         />
-        <section className="editor-pane">
-          <div className="editor-pane-main">
-            {fileName ? (
-              <Editor
-                diagnostics={analysis.diagnostics}
-                documentContent={documentContent}
-                editorTheme={settings.editorTheme}
-                editorWordWrap={settings.editorWordWrap}
-                hoverContext={editorHoverContext}
-                onCompileDebounced={
-                  isObjectListDocumentOpen
-                    ? handleObjectListAnalyzeDebounced
-                    : isPlainTextDocument
-                      ? undefined
-                      : handleCompileDebounced
+        <UpdateAvailableDialog
+          currentBuildString={MEGACROW_BUILD_STRING}
+          onDismiss={handleUpdateDismiss}
+          onSkip={handleUpdateSkip}
+          open={updateOpen}
+          release={updateRelease}
+        />
+        <AddWorkspaceModal
+          initialWorkspace={
+            editingWorkspaceId
+              ? (megacrowSettings?.workspaces.find(
+                  (workspace) => workspace.id === editingWorkspaceId
+                ) ?? null)
+              : null
+          }
+          onCancel={() => {
+            setAddWorkspaceOpen(false);
+            setAddWorkspaceRequired(false);
+            setEditingWorkspaceId(null);
+          }}
+          onSave={handleSaveWorkspace}
+          open={addWorkspaceOpen && workspacesReady}
+          required={addWorkspaceRequired}
+        />
+        <Toolbar
+          canBuild={
+            !!fileName &&
+            activeWorkspace?.type === "tauri" &&
+            !!activeWorkspace.outputPath?.trim() &&
+            !isPlainTextDocument
+          }
+          canExport={!isPlainTextDocument}
+          canNavigateBack={canNavigateFileNavBack(fileNav)}
+          canNavigateForward={canNavigateFileNavForward(fileNav)}
+          fileName={fileName}
+          onBuild={buildVariant}
+          onCompile={compileDownload}
+          onNavigateBack={handleNavigateBack}
+          onNavigateForward={handleNavigateForward}
+          onSettingsChange={handleSettingsChange}
+          onShowMotd={showMotdPreview}
+          onToggleSidebar={toggleSidebar}
+          settings={settings}
+          sidebarOpen={sidebarOpen}
+          workspace={activeWorkspace}
+        />
+        <div
+          className={`main${sidebarOpen ? "" : " main--sidebar-collapsed"}`}
+          style={{ "--sidebar-width": `${sidebarWidth}px` } as CSSProperties}
+        >
+          <aside
+            aria-hidden={!sidebarOpen}
+            className="sidebar"
+            inert={sidebarOpen ? undefined : true}
+          >
+            <SidebarVariantHeader
+              absoluteFilePath={includeRoot?.absoluteFilePath ?? null}
+              baselineSource={baselineSource}
+              baseProgram={baseProgram}
+              compiledMetadata={analysis.compiledMetadata}
+              fileBytes={originalBytes}
+              fileName={fileName}
+              includeCache={includeFileCache}
+              objectListNames={objectListNames}
+              source={outlineSource}
+            />
+            <div className="sidebar-body">
+              <FilesPanel
+                activeFileName={fileName}
+                localDiskRevision={localDiskRevision}
+                objectListNames={objectListNames}
+                onAddWorkspace={handleAddWorkspace}
+                onClearEditor={clearWorkspace}
+                onDeleteWorkspace={handleDeleteWorkspace}
+                onEditWorkspace={handleEditWorkspace}
+                onFileDeleted={handleFileDeleted}
+                onFileRenamed={handleFileRenamed}
+                onMissingObjectListNamesChange={
+                  handleMissingObjectListNamesChange
                 }
-                onCursorChange={handleCursorChange}
-                onEditorWordWrapChange={(wordWrap) =>
-                  handleSettingsChange({ editorWordWrap: wordWrap })
-                }
-                onRegisterGetValue={handleRegisterGetValue}
-                onRegisterNavigate={handleRegisterNavigate}
-                onSourceDebounced={handleSourceDebounced}
-                plainText={isPlainTextDocument}
-                syncRevision={syncRevision}
+                onOpenSource={loadMegaloSource}
+                onSelectWorkspace={handleSelectWorkspace}
+                onWorkspaceObjectListsChange={handleWorkspaceObjectListsChange}
+                opfsRevision={opfsRevision}
+                workspace={activeWorkspace}
+                workspaceSwitcher={isTauriRuntime()}
+                workspaces={megacrowSettings?.workspaces ?? []}
               />
-            ) : (
-              <EditorEmptyState />
+            </div>
+          </aside>
+          <div
+            aria-hidden={!sidebarOpen}
+            aria-label={translate("app_resize_sidebar")}
+            aria-orientation="vertical"
+            aria-valuemax={SIDEBAR_MAX_WIDTH}
+            aria-valuemin={SIDEBAR_MIN_WIDTH}
+            aria-valuenow={sidebarWidth}
+            className="sidebar-resizer"
+            inert={sidebarOpen ? undefined : true}
+            onPointerDown={sidebarOpen ? onSidebarResizeStart : undefined}
+            role="separator"
+          />
+          <section className="editor-pane">
+            <div className="editor-pane-main">
+              {fileName ? (
+                <Editor
+                  diagnostics={analysis.diagnostics}
+                  documentContent={documentContent}
+                  editorTheme={settings.editorTheme}
+                  editorWordWrap={settings.editorWordWrap}
+                  hoverContext={editorHoverContext}
+                  onCompileDebounced={
+                    isObjectListDocumentOpen
+                      ? handleObjectListAnalyzeDebounced
+                      : isPlainTextDocument
+                        ? undefined
+                        : handleCompileDebounced
+                  }
+                  onCursorChange={handleCursorChange}
+                  onEditorWordWrapChange={(wordWrap) =>
+                    handleSettingsChange({ editorWordWrap: wordWrap })
+                  }
+                  onRegisterGetValue={handleRegisterGetValue}
+                  onRegisterNavigate={handleRegisterNavigate}
+                  onSourceDebounced={handleSourceDebounced}
+                  plainText={isPlainTextDocument}
+                  syncRevision={syncRevision}
+                />
+              ) : (
+                <EditorEmptyState />
+              )}
+            </div>
+            {fileName && diagnosticsOpen && (
+              <>
+                <div
+                  aria-label={translate("app_resize_problems_pane")}
+                  aria-orientation="horizontal"
+                  aria-valuemax={PROBLEMS_PANE_MAX_HEIGHT}
+                  aria-valuemin={PROBLEMS_PANE_MIN_HEIGHT}
+                  aria-valuenow={problemsPaneHeight}
+                  className="problems-pane-resizer"
+                  onPointerDown={onProblemsPaneResizeStart}
+                  role="separator"
+                />
+                <DiagnosticsTray
+                  diagnostics={displayDiagnostics}
+                  height={problemsPaneHeight}
+                  onClose={() => setDiagnosticsOpen(false)}
+                  onNavigate={handleNavigateToDiagnostic}
+                />
+              </>
             )}
-          </div>
-          {fileName && diagnosticsOpen && (
-            <>
-              <div
-                aria-label="Resize problems pane"
-                aria-orientation="horizontal"
-                aria-valuemax={PROBLEMS_PANE_MAX_HEIGHT}
-                aria-valuemin={PROBLEMS_PANE_MIN_HEIGHT}
-                aria-valuenow={problemsPaneHeight}
-                className="problems-pane-resizer"
-                onPointerDown={onProblemsPaneResizeStart}
-                role="separator"
-              />
-              <DiagnosticsTray
-                diagnostics={displayDiagnostics}
-                height={problemsPaneHeight}
-                onClose={() => setDiagnosticsOpen(false)}
-                onNavigate={handleNavigateToDiagnostic}
-              />
-            </>
-          )}
-        </section>
+          </section>
+        </div>
+        <StatusBar
+          byteDiffCount={analysis.byteDiffCount}
+          byteIdentical={analysis.byteIdentical}
+          column={cursorColumn}
+          compileState={compileState}
+          diagnosticsOpen={diagnosticsOpen}
+          errorCount={analysis.errorCount}
+          line={cursorLine}
+          megaCrowVersion={MEGACROW_BUILD_STRING}
+          megaloVersionId={megaloVersionId}
+          message={statusMessage}
+          onToggleDiagnostics={handleToggleDiagnostics}
+          variantBytes={variantBytes}
+          variantCapacity={variantCapacity}
+          variantLimitUsage={variantLimitUsage}
+          warningCount={warningCount}
+        />
       </div>
-      <StatusBar
-        byteDiffCount={analysis.byteDiffCount}
-        byteIdentical={analysis.byteIdentical}
-        column={cursorColumn}
-        compileState={compileState}
-        diagnosticsOpen={diagnosticsOpen}
-        errorCount={analysis.errorCount}
-        line={cursorLine}
-        megaCrowVersion={MEGACROW_BUILD_STRING}
-        megaloVersionId={megaloVersionId}
-        message={statusMessage}
-        onToggleDiagnostics={handleToggleDiagnostics}
-        variantBytes={variantBytes}
-        variantCapacity={variantCapacity}
-        variantLimitUsage={variantLimitUsage}
-        warningCount={warningCount}
-      />
-    </div>
+    </IdeLocaleProvider>
   );
 }

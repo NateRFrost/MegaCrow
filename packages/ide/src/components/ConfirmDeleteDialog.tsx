@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useT } from "../localization";
 
 interface Props {
   /** When > 1, show a multi-item delete prompt. */
@@ -21,6 +22,7 @@ export function ConfirmDeleteDialog({
   onCancel,
   onConfirm,
 }: Props) {
+  const t = useT();
   const confirmRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -46,15 +48,15 @@ export function ConfirmDeleteDialog({
 
   const multi = count > 1;
   const title = multi
-    ? "Delete items"
+    ? t("delete_items_title")
     : targetKind === "directory"
-      ? "Delete folder"
-      : "Delete file";
+      ? t("delete_folder_title")
+      : t("delete_file_title");
   const body = multi
-    ? `Delete ${count} selected items? This cannot be undone.`
+    ? t("delete_items_body", { count })
     : targetKind === "directory"
-      ? `Delete “${name}” and everything inside it? This cannot be undone.`
-      : `Delete “${name}”? This cannot be undone.`;
+      ? t("delete_folder_body", { name })
+      : t("delete_file_body", { name });
 
   return createPortal(
     <div
@@ -85,7 +87,7 @@ export function ConfirmDeleteDialog({
             onClick={onCancel}
             type="button"
           >
-            Cancel
+            {t("common_cancel")}
           </button>
           <button
             className="confirm-delete-danger"
@@ -93,7 +95,7 @@ export function ConfirmDeleteDialog({
             ref={confirmRef}
             type="button"
           >
-            Delete
+            {t("common_delete")}
           </button>
         </div>
       </div>

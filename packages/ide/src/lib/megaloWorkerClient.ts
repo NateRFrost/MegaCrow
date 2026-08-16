@@ -1,3 +1,4 @@
+import { translate } from "../localization";
 import type {
   MegaloWorkerRequest,
   MegaloWorkerResponse,
@@ -40,7 +41,7 @@ function gametypeSaveFormatLabel(format: GametypeSaveFormat): string {
     case "mpvr":
       return "mpvr";
     case "asq":
-      return "Autosave Queue";
+      return translate("status_format_asq");
   }
 }
 
@@ -228,7 +229,7 @@ let sourceOnlyBusy = false;
 const supersededSourceAnalysis = (): SourceAnalysis => ({
   compileState: "parsing",
   errorCount: 0,
-  message: "Compiling…",
+  message: translate("status_compiling"),
   byteIdentical: null,
   byteDiffCount: null,
   compiledByteLength: null,
@@ -264,7 +265,10 @@ async function runSourceOnlyCompileOnce(
     return {
       compileState: "error",
       errorCount: Math.max(errorCount, 1),
-      message: result.error ?? diagnostics[0]?.message ?? "Compilation failed",
+      message:
+        result.error ??
+        diagnostics[0]?.message ??
+        translate("status_compilation_failed"),
       byteIdentical: null,
       byteDiffCount: null,
       compiledByteLength: null,
@@ -278,7 +282,7 @@ async function runSourceOnlyCompileOnce(
       ? "warn"
       : "ok",
     errorCount: 0,
-    message: formatMegaloCompileTiming(timing) || "Compiled",
+    message: formatMegaloCompileTiming(timing) || translate("status_compiled"),
     byteIdentical: null,
     byteDiffCount: null,
     compiledByteLength: result.bytes.length,
@@ -339,7 +343,10 @@ function parseMegaloSourceFallback(source: string): {
 } {
   const parsed = tryParse(source);
   if (!parsed.ok) {
-    const message = `Parse error at line ${parsed.line}: ${parsed.message}`;
+    const message = translate("status_parse_error", {
+      line: parsed.line,
+      message: parsed.message,
+    });
     return {
       program: null,
       analysis: {
@@ -384,8 +391,10 @@ function parseMegaloSourceFallback(source: string): {
       errorCount: 0,
       message:
         warningDiagnostics.length > 0
-          ? `Parsed with ${warningDiagnostics.length} warning(s) — compiling…`
-          : "Parsed — compiling…",
+          ? translate("status_parsed_with_warnings", {
+              count: warningDiagnostics.length,
+            })
+          : translate("status_parsed_compiling"),
       byteIdentical: null,
       byteDiffCount: null,
       compiledByteLength: null,
@@ -437,7 +446,7 @@ async function compileDownloadFallback(
       analysis: {
         compileState: "error",
         errorCount: 1,
-        message: "Load a gametype first",
+        message: translate("status_load_gametype_first"),
         byteIdentical: null,
         byteDiffCount: null,
         compiledByteLength: null,
@@ -475,8 +484,12 @@ async function compileDownloadFallback(
         compileState: "ok",
         errorCount: 0,
         message: identical
-          ? `Saved ${formatLabel} — byte-identical to original`
-          : `Saved ${formatLabel} gametype`,
+          ? translate("status_saved_format_identical", {
+              format: formatLabel,
+            })
+          : translate("status_saved_format_gametype", {
+              format: formatLabel,
+            }),
         byteIdentical: originalBytes ? identical : null,
         byteDiffCount: identical ? 0 : null,
         compiledByteLength: output.length,
@@ -530,7 +543,7 @@ export async function requestCompileDownloadInWorker(
         analysis: {
           compileState: "error",
           errorCount: diagnostics.filter((d) => d.severity === "error").length,
-          message: result.error ?? "Compilation failed",
+          message: result.error ?? translate("status_compilation_failed"),
           byteIdentical: null,
           byteDiffCount: null,
           compiledByteLength: null,

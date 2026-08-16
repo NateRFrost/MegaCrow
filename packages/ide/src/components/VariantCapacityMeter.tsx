@@ -11,6 +11,7 @@ import {
   formatVariantBytes,
   variantCapacityLevel,
 } from "../lib/variantCapacity";
+import { type IdeMessageKey, useT } from "../localization";
 
 const PANEL_WIDTH = 360;
 const PANEL_MAX_HEIGHT = 520;
@@ -22,6 +23,20 @@ const VARIABLE_SCOPE_ORDER = [
   "Object",
   "Temporary",
 ] as const;
+
+const SCOPE_LABEL_KEYS: Record<
+  (typeof VARIABLE_SCOPE_ORDER)[number] | "Other",
+  IdeMessageKey
+> = {
+  Global: "variant_scope_global",
+  Player: "variant_scope_player",
+  Team: "variant_scope_team",
+  Object: "variant_scope_object",
+  Temporary: "variant_scope_temporary",
+  Other: "variant_scope_other",
+};
+
+type Translate = ReturnType<typeof useT>;
 
 type PopoverSection =
   | {
@@ -52,7 +67,15 @@ function splitVariableLabel(label: string): { scope: string; type: string } {
   };
 }
 
-function buildPopoverSections(items: VariantLimitItem[]): PopoverSection[] {
+function localizeScope(scope: string, t: Translate): string {
+  const key = SCOPE_LABEL_KEYS[scope as keyof typeof SCOPE_LABEL_KEYS];
+  return key ? t(key) : scope;
+}
+
+function buildPopoverSections(
+  items: VariantLimitItem[],
+  t: Translate
+): PopoverSection[] {
   const bySection = {
     storage: items.filter((item) => item.section === "storage"),
     script: items.filter((item) => item.section === "script"),
@@ -67,7 +90,7 @@ function buildPopoverSections(items: VariantLimitItem[]): PopoverSection[] {
     sections.push({
       id: "storage",
       kind: "meters",
-      title: "Storage",
+      title: t("variant_section_storage"),
       items: bySection.storage,
     });
   }
@@ -75,7 +98,7 @@ function buildPopoverSections(items: VariantLimitItem[]): PopoverSection[] {
     sections.push({
       id: "script",
       kind: "meters",
-      title: "Script",
+      title: t("variant_section_script"),
       items: bySection.script,
     });
   }
@@ -83,7 +106,7 @@ function buildPopoverSections(items: VariantLimitItem[]): PopoverSection[] {
     sections.push({
       id: "strings",
       kind: "meters",
-      title: "Strings",
+      title: t("variant_section_strings"),
       items: bySection.strings,
     });
   }
@@ -107,7 +130,9 @@ function buildPopoverSections(items: VariantLimitItem[]): PopoverSection[] {
     sections.push({
       id: `variables-${scope}`,
       kind: "variables",
-      title: `${scope} Variables`,
+      title: t("variant_section_variables", {
+        scope: localizeScope(scope, t),
+      }),
       items: scopeItems,
     });
     varsByScope.delete(scope);
@@ -116,7 +141,9 @@ function buildPopoverSections(items: VariantLimitItem[]): PopoverSection[] {
     sections.push({
       id: `variables-${scope}`,
       kind: "variables",
-      title: `${scope} Variables`,
+      title: t("variant_section_variables", {
+        scope: localizeScope(scope, t),
+      }),
       items: scopeItems,
     });
   }
@@ -125,7 +152,7 @@ function buildPopoverSections(items: VariantLimitItem[]): PopoverSection[] {
     sections.push({
       id: "declarations",
       kind: "meters",
-      title: "Declarations",
+      title: t("variant_section_declarations"),
       items: bySection.declarations,
     });
   }
@@ -167,6 +194,7 @@ export function VariantCapacityMeter({
   capacityBytes,
   limitUsage,
 }: Props) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [panelPos, setPanelPos] = useState<{ bottom: number; left: number }>({
     bottom: 0,
@@ -244,16 +272,20 @@ export function VariantCapacityMeter({
   const fillPercent = Math.min(100, (usedBytes / capacityBytes) * 100);
   const over = usedBytes > capacityBytes;
 
-  const items = (limitUsage?.items ?? []).filter(
-    (item: VariantLimitItem) => item.max > 0
-  );
+  const items = (limitUsage?.items ?? [])
+    .filter((item: VariantLimitItem) => item.max > 0)
+    .map((item: VariantLimitItem) =>
+      item.id === "storage"
+        ? { ...item, label: t("variant_encoded_size") }
+        : item
+    );
   const fallbackItems: VariantLimitItem[] =
     items.length > 0
       ? items
       : [
           {
             id: "storage",
-            label: "Encoded size",
+            label: t("variant_encoded_size"),
             used: usedBytes,
             max: capacityBytes,
             section: "storage",
@@ -261,18 +293,18 @@ export function VariantCapacityMeter({
           },
         ];
 
-  const sections = buildPopoverSections(fallbackItems);
+  const sections = buildPopoverSections(fallbackItems, t);
 
   return (
     <div className="variant-capacity-root" ref={rootRef}>
       <button
         aria-expanded={open}
         aria-haspopup="dialog"
-        aria-label={`Variant storage ${percent} percent full. Show limits breakdown.`}
+        aria-label={t("variant_storage_aria", { percent })}
         className={`variant-capacity variant-capacity--${level}`}
         onClick={() => setOpen((value) => !value)}
         ref={triggerRef}
-        title="Show variant limits"
+        title={t("variant_show_limits")}
         type="button"
       >
         <div aria-hidden className="variant-capacity-track">
@@ -289,7 +321,7 @@ export function VariantCapacityMeter({
       {open
         ? createPortal(
             <div
-              aria-label="Variant limits"
+              aria-label={t("variant_limits_aria")}
               className="variant-limits-popover"
               ref={panelRef}
               role="dialog"
@@ -300,7 +332,9 @@ export function VariantCapacityMeter({
                 maxHeight: PANEL_MAX_HEIGHT,
               }}
             >
-              <div className="variant-limits-popover-title">Variant limits</div>
+              <div className="variant-limits-popover-title">
+                {t("variant_limits_title")}
+              </div>
               <div className="variant-limits-body">
                 {sections.map((section) => (
                   <section

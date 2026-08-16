@@ -66,6 +66,7 @@ import {
   loadWorkspaceObjectLists,
   objectListsFolderIsEmpty,
 } from "../lib/workspaceObjectLists";
+import { useT } from "../localization";
 import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
 import { ConfirmReplaceDialog } from "./ConfirmReplaceDialog";
 import {
@@ -275,6 +276,7 @@ export function FilesPanel({
   opfsRevision,
   localDiskRevision,
 }: Props) {
+  const t = useT();
   const [opfsFiles, setOpfsFiles] = useState<OpfsGametypeEntry[]>([]);
   const [opfsError, setOpfsError] = useState<string | null>(null);
   const [localTree, setLocalTree] = useState<LocalDiskNode[]>([]);
@@ -503,12 +505,10 @@ export function FilesPanel({
       if (tauriAvailable || !name.toLowerCase().endsWith(".txt")) {
         return false;
       }
-      setOpfsError(
-        "Megalo .txt source files must be opened in the desktop app. In the browser, use New File or open a saved file from the list below."
-      );
+      setOpfsError(t("files_browser_txt_desktop_only"));
       return true;
     },
-    [tauriAvailable]
+    [t, tauriAvailable]
   );
 
   const openDroppedFile = useCallback(
@@ -520,9 +520,7 @@ export function FilesPanel({
         setOpfsError(null);
         const lower = file.name.toLowerCase();
         if (lower.endsWith(".bin") || lower.endsWith(".blf")) {
-          setOpfsError(
-            "Opening compiled .bin / .blf gametypes is not supported yet."
-          );
+          setOpfsError(t("files_compiled_open_unsupported"));
           return;
         }
         if (lower.endsWith(".txt")) {
@@ -530,12 +528,12 @@ export function FilesPanel({
           onOpenSource(text, file.name);
           return;
         }
-        setOpfsError(`Unsupported file type: ${file.name}`);
+        setOpfsError(t("files_unsupported_file_type", { name: file.name }));
       } catch (error) {
         setOpfsError(String(error));
       }
     },
-    [onOpenSource, rejectBrowserMegaloSource]
+    [onOpenSource, rejectBrowserMegaloSource, t]
   );
 
   const handleDroppedFiles = useCallback(
@@ -602,9 +600,7 @@ export function FilesPanel({
       if (
         !(
           options?.skipConfirm ||
-          window.confirm(
-            `Delete "${name}" from browser storage? This cannot be undone.`
-          )
+          window.confirm(t("files_delete_opfs_confirm", { name }))
         )
       ) {
         return;
@@ -619,7 +615,7 @@ export function FilesPanel({
         setOpfsError(String(error));
       }
     },
-    [onFileDeleted, refreshOpfs]
+    [onFileDeleted, refreshOpfs, t]
   );
 
   const copyOpfsPath = useCallback(async (name: string) => {
@@ -997,7 +993,7 @@ export function FilesPanel({
 
   return (
     <section
-      aria-label="Files"
+      aria-label={t("files_aria_label")}
       className={`files-panel${dragActive ? " files-panel--drag" : ""}`}
       onDragLeave={(event) => {
         if (
@@ -1047,7 +1043,7 @@ export function FilesPanel({
         ) : (
           <div className="files-panel-heading">
             <h2 className="files-panel-title">
-              {workspace ? workspace.name : "Explorer"}
+              {workspace ? workspace.name : t("files_explorer_title")}
             </h2>
           </div>
         )}
@@ -1057,18 +1053,18 @@ export function FilesPanel({
         {opfsAvailable ? (
           <div className="files-section">
             <div className="files-section-label">
-              <span>Browser saves</span>
+              <span>{t("files_browser_saves")}</span>
               <div className="files-section-label-end">
                 {opfsFiles.length > 0 ? (
                   <span className="files-section-count">
-                    {opfsFiles.length} files
+                    {t("files_count", { count: opfsFiles.length })}
                   </span>
                 ) : null}
                 <button
-                  aria-label="New File"
+                  aria-label={t("files_new_file")}
                   className="files-panel-icon-action"
                   onClick={() => void createOpfsFile()}
-                  title="New File"
+                  title={t("files_new_file")}
                   type="button"
                 >
                   <NewFileGlyph />
@@ -1081,8 +1077,8 @@ export function FilesPanel({
               ) : null}
               {opfsFiles.length === 0 && !opfsError ? (
                 <div className="files-empty">
-                  <p>No saved files</p>
-                  <span>Use New File to create one</span>
+                  <p>{t("files_no_saved_files")}</p>
+                  <span>{t("files_use_new_file_hint")}</span>
                 </div>
               ) : opfsFiles.length > 0 ? (
                 <ul className="files-tree">
@@ -1130,10 +1126,14 @@ export function FilesPanel({
                           )}
                           {isRenaming ? null : (
                             <button
-                              aria-label={`Delete ${entry.name}`}
+                              aria-label={t("files_delete_named", {
+                                name: entry.name,
+                              })}
                               className="files-row-delete"
                               onClick={() => void deleteOpfsFile(entry.name)}
-                              title={`Delete ${entry.name}`}
+                              title={t("files_delete_named", {
+                                name: entry.name,
+                              })}
                               type="button"
                             >
                               <svg aria-hidden="true" viewBox="0 0 16 16">
@@ -1165,23 +1165,23 @@ export function FilesPanel({
                 <div className="files-section-label-end">
                   {localTree.length > 0 ? (
                     <span className="files-section-count">
-                      {countFiles(localTree)} files
+                      {t("files_count", { count: countFiles(localTree) })}
                     </span>
                   ) : null}
                   <button
-                    aria-label="New File"
+                    aria-label={t("files_new_file")}
                     className="files-panel-icon-action"
                     onClick={() => void createLocalFile([])}
-                    title="New File"
+                    title={t("files_new_file")}
                     type="button"
                   >
                     <NewFileGlyph />
                   </button>
                   <button
-                    aria-label="New Folder"
+                    aria-label={t("files_new_folder")}
                     className="files-panel-icon-action"
                     onClick={() => void createLocalFolder([])}
-                    title="New Folder"
+                    title={t("files_new_folder")}
                     type="button"
                   >
                     <NewFolderGlyph />
@@ -1198,8 +1198,8 @@ export function FilesPanel({
                   ) : null}
                   {localTree.length === 0 ? (
                     <div className="files-empty">
-                      <p>No Megalo scripts</p>
-                      <span>Add a .txt file or use New File</span>
+                      <p>{t("files_no_megalo_scripts")}</p>
+                      <span>{t("files_add_txt_or_new_file")}</span>
                     </div>
                   ) : (
                     <LocalDiskTree
@@ -1230,11 +1230,11 @@ export function FilesPanel({
                 </>
               ) : (
                 <div className="files-empty">
-                  <p>No workspace</p>
+                  <p>{t("files_no_workspace")}</p>
                   <span>
                     {onAddWorkspace
-                      ? "Add a workspace to browse Megalo scripts"
-                      : "Select a workspace to browse Megalo scripts"}
+                      ? t("files_add_workspace_hint")
+                      : t("files_select_workspace_hint")}
                   </span>
                 </div>
               )}
@@ -1268,7 +1268,9 @@ export function FilesPanel({
                   strokeWidth="1.4"
                 />
               </svg>
-              <span className="files-builds-title">Built gametypes</span>
+              <span className="files-builds-title">
+                {t("files_built_gametypes")}
+              </span>
               {buildOutputs.length > 0 ? (
                 <span className="files-section-count">
                   {buildOutputs.length}
@@ -1278,7 +1280,7 @@ export function FilesPanel({
             {buildsOpen ? (
               <>
                 <div
-                  aria-label="Resize built gametypes pane"
+                  aria-label={t("files_resize_built_gametypes_pane")}
                   aria-orientation="horizontal"
                   aria-valuemax={BUILDS_PANE_MAX_HEIGHT}
                   aria-valuemin={BUILDS_PANE_MIN_HEIGHT}
@@ -1298,8 +1300,8 @@ export function FilesPanel({
                   ) : null}
                   {buildOutputs.length === 0 && !buildsError ? (
                     <div className="files-empty files-empty--compact">
-                      <p>No built gametypes yet</p>
-                      <span>Use Build to write .mglo files here</span>
+                      <p>{t("files_no_built_gametypes_yet")}</p>
+                      <span>{t("files_use_build_hint")}</span>
                     </div>
                   ) : (
                     <ul className="files-tree">
@@ -1335,8 +1337,8 @@ export function FilesPanel({
 
         {opfsAvailable || localDiskAvailable ? null : (
           <div className="files-empty">
-            <p>No file sources available</p>
-            <span>Drop a gametype onto this panel to open it</span>
+            <p>{t("files_no_file_sources")}</p>
+            <span>{t("files_drop_gametype_hint")}</span>
           </div>
         )}
       </div>

@@ -1,8 +1,10 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useState } from "react";
 import { isTauriRuntime } from "../lib/tauriRuntime";
+import { useT } from "../localization";
 
 export function WindowControls() {
+  const t = useT();
   const [maximized, setMaximized] = useState(false);
 
   useEffect(() => {
@@ -39,9 +41,13 @@ export function WindowControls() {
   const appWindow = getCurrentWindow();
 
   return (
-    <div aria-label="Window controls" className="window-controls" role="group">
+    <div
+      aria-label={t("window_controls")}
+      className="window-controls"
+      role="group"
+    >
       <button
-        aria-label="Minimize"
+        aria-label={t("window_minimize")}
         className="window-control"
         onClick={() => void appWindow.minimize()}
         type="button"
@@ -51,7 +57,7 @@ export function WindowControls() {
         </svg>
       </button>
       <button
-        aria-label={maximized ? "Restore" : "Maximize"}
+        aria-label={maximized ? t("window_restore") : t("window_maximize")}
         className="window-control"
         onClick={() => void appWindow.toggleMaximize()}
         type="button"
@@ -92,7 +98,7 @@ export function WindowControls() {
         )}
       </button>
       <button
-        aria-label="Close"
+        aria-label={t("window_close")}
         className="window-control window-control-close"
         onClick={() => void appWindow.close()}
         type="button"

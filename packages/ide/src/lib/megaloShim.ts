@@ -20,6 +20,7 @@ import {
   SourceLocationType,
   type SupportedMegaloVersion,
 } from "@megacrow/megalo";
+import { translate } from "../localization";
 
 export { MEGACROW_BUILD_STRING, MEGACROW_SHOW_WATERMARK };
 
@@ -459,9 +460,11 @@ export function formatMegaloCompileTiming(
       seconds >= 10
         ? seconds.toFixed(0)
         : seconds.toFixed(2).replace(/\.?0+$/, "");
-    return `Compiled in ${rounded}s`;
+    return translate("status_compiled_in_seconds", { time: rounded });
   }
-  return `Compiled in ${Math.max(0, Math.round(ms))}ms`;
+  return translate("status_compiled_in_ms", {
+    time: Math.max(0, Math.round(ms)),
+  });
 }
 
 export function autosaveQueueFileName(name: string): string {

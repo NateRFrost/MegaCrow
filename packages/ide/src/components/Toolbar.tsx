@@ -6,6 +6,7 @@ import type { GametypeSaveFormat } from "../lib/megaloShim";
 import { openDocs } from "../lib/openDocs";
 import { isTauriRuntime } from "../lib/tauriRuntime";
 import type { Workspace } from "../lib/workspace";
+import { useT } from "../localization";
 import { AboutDialog } from "./AboutDialog";
 import { SaveAsMenu } from "./SaveAsMenu";
 import { SettingsMenu } from "./SettingsMenu";
@@ -47,6 +48,7 @@ export function Toolbar({
   onNavigateBack,
   onNavigateForward,
 }: Props) {
+  const t = useT();
   const frameless = isTauriRuntime();
   const [aboutOpen, setAboutOpen] = useState(false);
   const [mccInstalled, setMccInstalled] = useState(false);
@@ -114,7 +116,7 @@ export function Toolbar({
           <button
             className="brand"
             onClick={() => setAboutOpen(true)}
-            title="About MegaCrow"
+            title={t("toolbar_about")}
             type="button"
           >
             <img
@@ -131,11 +133,19 @@ export function Toolbar({
           <div aria-hidden="true" className="toolbar-divider" />
 
           <button
-            aria-label={sidebarOpen ? "Hide left pane" : "Show left pane"}
+            aria-label={
+              sidebarOpen
+                ? t("toolbar_hide_left_pane")
+                : t("toolbar_show_left_pane")
+            }
             aria-pressed={sidebarOpen}
             className="toolbar-menu"
             onClick={onToggleSidebar}
-            title={sidebarOpen ? "Hide left pane" : "Show left pane"}
+            title={
+              sidebarOpen
+                ? t("toolbar_hide_left_pane")
+                : t("toolbar_show_left_pane")
+            }
             type="button"
           >
             <svg aria-hidden="true" viewBox="0 0 16 16">
@@ -161,13 +171,17 @@ export function Toolbar({
             </svg>
           </button>
 
-          <div aria-label="File history" className="toolbar-nav" role="group">
+          <div
+            aria-label={t("toolbar_file_history")}
+            className="toolbar-nav"
+            role="group"
+          >
             <button
-              aria-label="Back"
+              aria-label={t("toolbar_back")}
               className="toolbar-menu"
               disabled={!canNavigateBack}
               onClick={onNavigateBack}
-              title="Back"
+              title={t("toolbar_back")}
               type="button"
             >
               <svg aria-hidden="true" viewBox="0 0 16 16">
@@ -182,11 +196,11 @@ export function Toolbar({
               </svg>
             </button>
             <button
-              aria-label="Forward"
+              aria-label={t("toolbar_forward")}
               className="toolbar-menu"
               disabled={!canNavigateForward}
               onClick={onNavigateForward}
-              title="Forward"
+              title={t("toolbar_forward")}
               type="button"
             >
               <svg aria-hidden="true" viewBox="0 0 16 16">
@@ -202,7 +216,10 @@ export function Toolbar({
             </button>
           </div>
 
-          <nav aria-label="Editor actions" className="toolbar-actions">
+          <nav
+            aria-label={t("toolbar_editor_actions")}
+            className="toolbar-actions"
+          >
             {showMccLaunch ? (
               <button
                 className="toolbar-btn toolbar-btn--launch"
@@ -210,12 +227,14 @@ export function Toolbar({
                 onClick={() => void handleLaunchMcc()}
                 title={
                   mccInstalled
-                    ? "Launch Halo: The Master Chief Collection"
-                    : "Halo MCC not detected on this PC (Steam or Microsoft Store)"
+                    ? t("toolbar_launch_halo_title")
+                    : t("toolbar_launch_halo_missing")
                 }
                 type="button"
               >
-                {launchingMcc ? "Launching…" : "Launch Halo"}
+                {launchingMcc
+                  ? t("toolbar_launching")
+                  : t("toolbar_launch_halo")}
               </button>
             ) : null}
 
@@ -225,14 +244,14 @@ export function Toolbar({
               onClick={onBuild}
               title={
                 canBuild
-                  ? "Compile and write .mglo to the workspace output folder"
+                  ? t("toolbar_build_title")
                   : workspace?.outputPath?.trim()
-                    ? "Open a script in the workspace to build"
-                    : "Set a workspace output folder to enable Build"
+                    ? t("toolbar_build_need_script")
+                    : t("toolbar_build_need_output")
               }
               type="button"
             >
-              Build
+              {t("toolbar_build")}
             </button>
             <SaveAsMenu
               disabled={!(fileName && canExport)}
@@ -264,17 +283,17 @@ export function Toolbar({
 
         <div className="toolbar-trailing">
           <button
-            aria-label="Open Megalo documentation"
+            aria-label={t("toolbar_docs_title")}
             className="toolbar-menu toolbar-menu--label"
             onClick={() => {
               void openDocs().catch((error) => {
                 console.error("Failed to open docs:", error);
               });
             }}
-            title="Open Megalo documentation"
+            title={t("toolbar_docs_title")}
             type="button"
           >
-            Docs
+            {t("toolbar_docs")}
           </button>
           <SettingsMenu onChange={onSettingsChange} settings={settings} />
           <WindowControls />

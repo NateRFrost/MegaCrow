@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import type { CompileState } from "../lib/analyzeSource";
 import type { VariantLimitUsage } from "../lib/megaloShim";
+import { type IdeMessageKey, useT } from "../localization";
 import { StatusIcon } from "./StatusIcon";
 import { VariantCapacityMeter } from "./VariantCapacityMeter";
 
@@ -36,28 +37,42 @@ function useBarColorState(compileState: CompileState): CompileState {
     : compileState;
 }
 
-function formatCount(count: number, singular: string, plural: string): string {
-  return `${count} ${count === 1 ? singular : plural}`;
+type Translate = (
+  key: IdeMessageKey,
+  params?: Record<string, string | number>
+) => string;
+
+function formatWarningCount(t: Translate, count: number): string {
+  return t(count === 1 ? "status_warning_one" : "status_warning_other", {
+    count,
+  });
+}
+
+function formatErrorCount(t: Translate, count: number): string {
+  return t(count === 1 ? "status_error_one" : "status_error_other", {
+    count,
+  });
 }
 
 function statusToggleLabel(
+  t: Translate,
   state: CompileState,
   errorCount: number,
   warningCount: number
 ): string {
   switch (state) {
     case "idle":
-      return "Ready";
+      return t("status_ready");
     case "parsing":
-      return "Compiling…";
+      return t("status_compiling_ellipsis");
     case "ok":
-      return "Ok";
+      return t("status_ok");
     case "warn":
-      return formatCount(warningCount, "Warning", "Warnings");
+      return formatWarningCount(t, warningCount);
     case "error": {
-      const errors = formatCount(errorCount, "Error", "Errors");
+      const errors = formatErrorCount(t, errorCount);
       if (warningCount > 0) {
-        return `${errors} ${formatCount(warningCount, "Warning", "Warnings")}`;
+        return `${errors} ${formatWarningCount(t, warningCount)}`;
       }
       return errors;
     }
@@ -81,8 +96,9 @@ export function StatusBar({
   diagnosticsOpen,
   onToggleDiagnostics,
 }: Props) {
+  const t = useT();
   const barColorState = useBarColorState(compileState);
-  const label = statusToggleLabel(compileState, errorCount, warningCount);
+  const label = statusToggleLabel(t, compileState, errorCount, warningCount);
 
   return (
     <footer className={`status-bar status-bar--${barColorState}`}>
@@ -91,7 +107,11 @@ export function StatusBar({
           aria-pressed={diagnosticsOpen}
           className="status-problems"
           onClick={onToggleDiagnostics}
-          title={diagnosticsOpen ? "Hide problems" : "Show problems"}
+          title={
+            diagnosticsOpen
+              ? t("status_hide_problems")
+              : t("status_show_problems")
+          }
           type="button"
         >
           <StatusIcon state={compileState} />
@@ -100,13 +120,15 @@ export function StatusBar({
           </span>
         </button>
         {byteIdentical === true && (
-          <span className="status-chip status-chip--ok">byte-identical</span>
+          <span className="status-chip status-chip--ok">
+            {t("status_byte_identical")}
+          </span>
         )}
         {byteIdentical === false &&
           byteDiffCount !== null &&
           byteDiffCount > 0 && (
             <span className="status-chip status-chip--warn">
-              {byteDiffCount} byte diff
+              {t("status_byte_diff", { count: byteDiffCount })}
             </span>
           )}
       </div>
@@ -119,9 +141,7 @@ export function StatusBar({
           limitUsage={variantLimitUsage}
           usedBytes={variantBytes}
         />
-        <span>
-          Ln {line}, Col {column}
-        </span>
+        <span>{t("status_ln_col", { line, column })}</span>
         <span title={`MegaCrow ${megaCrowVersion}`}>
           MegaCrow {megaCrowVersion}
         </span>

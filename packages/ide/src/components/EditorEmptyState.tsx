@@ -1,4 +1,8 @@
+import { useT } from "../localization";
+
 export function EditorEmptyState() {
+  const t = useT();
+
   return (
     <div className="editor-empty" role="status">
       <div className="editor-empty-content">
@@ -22,10 +26,8 @@ export function EditorEmptyState() {
             strokeWidth="1.4"
           />
         </svg>
-        <h2 className="editor-empty-title">Open a file</h2>
-        <p className="editor-empty-hint">
-          Select a Megalo script from the file tree to start editing.
-        </p>
+        <h2 className="editor-empty-title">{t("editor_empty_title")}</h2>
+        <p className="editor-empty-hint">{t("editor_empty_hint")}</p>
       </div>
     </div>
   );

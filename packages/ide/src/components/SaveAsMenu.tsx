@@ -7,37 +7,36 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import type { GametypeSaveFormat } from "../lib/megaloShim";
+import { type IdeMessageKey, useT } from "../localization";
 
 interface SaveOption {
-  description: string;
+  descriptionKey: IdeMessageKey;
   format: GametypeSaveFormat;
   label: string;
+  labelKey?: IdeMessageKey;
 }
 
 const SAVE_OPTIONS: SaveOption[] = [
   {
     format: "mglo",
     label: ".mglo",
-    description:
-      "Hot reload and maps/megalo variants. Smallest gametype file format.",
+    descriptionKey: "export_mglo_desc",
   },
   {
     format: "gvar",
     label: "gvar",
-    description:
-      "BLF format for Xbox 360 matchmaking. Load in debug builds with net_load_and_use_game_variant.",
+    descriptionKey: "export_gvar_desc",
   },
   {
     format: "mpvr",
     label: "mpvr",
-    description:
-      "Standard BLF format for in-game saves, File Share, and Xbox/PC gametypes.",
+    descriptionKey: "export_mpvr_desc",
   },
   {
     format: "asq",
     label: "Autosave Queue",
-    description:
-      "Save the gametype as an Autosave Queue file. You can place these files in your autosave format to have them appear in your Recent Games list.",
+    labelKey: "export_asq_label",
+    descriptionKey: "export_asq_desc",
   },
 ];
 
@@ -49,6 +48,7 @@ interface Props {
 }
 
 export function SaveAsMenu({ disabled = false, onSave }: Props) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [panelPos, setPanelPos] = useState<{ top: number; left: number }>({
     top: 0,
@@ -133,7 +133,7 @@ export function SaveAsMenu({ disabled = false, onSave }: Props) {
         ref={triggerRef}
         type="button"
       >
-        Export
+        {t("export_button")}
         <svg
           aria-hidden="true"
           className="save-as-menu-chevron"
@@ -153,7 +153,7 @@ export function SaveAsMenu({ disabled = false, onSave }: Props) {
       {open
         ? createPortal(
             <div
-              aria-label="Export format"
+              aria-label={t("export_format_aria")}
               className="save-as-menu-panel"
               ref={panelRef}
               role="menu"
@@ -163,7 +163,7 @@ export function SaveAsMenu({ disabled = false, onSave }: Props) {
                 width: Math.min(window.innerWidth - 24, PANEL_WIDTH),
               }}
             >
-              <p className="save-as-menu-title">Export as</p>
+              <p className="save-as-menu-title">{t("export_as")}</p>
               {SAVE_OPTIONS.map((option) => (
                 <button
                   className="save-as-menu-item"
@@ -174,10 +174,10 @@ export function SaveAsMenu({ disabled = false, onSave }: Props) {
                 >
                   <span className="save-as-menu-item-text">
                     <span className="save-as-menu-item-label">
-                      {option.label}
+                      {option.labelKey ? t(option.labelKey) : option.label}
                     </span>
                     <span className="save-as-menu-item-hint">
-                      {option.description}
+                      {t(option.descriptionKey)}
                     </span>
                   </span>
                 </button>

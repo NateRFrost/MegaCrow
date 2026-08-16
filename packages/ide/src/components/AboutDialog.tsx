@@ -2,6 +2,7 @@ import { type MouseEvent, useEffect, useRef } from "react";
 import blfPackageJson from "../../../../node_modules/@blamnetwork/blf/package.json";
 import { MEGACROW_BUILD_STRING } from "../lib/megaloShim";
 import { openExternalUrl } from "../lib/openExternalUrl";
+import { useT } from "../localization";
 
 interface Props {
   onClose: () => void;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function AboutDialog({ open, onClose, onVersionClick }: Props) {
+  const t = useT();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleExternalLink = (
@@ -73,7 +75,7 @@ export function AboutDialog({ open, onClose, onVersionClick }: Props) {
         </div>
 
         <p className="about-tagline" id="about-description">
-          Megalo script IDE for Halo gametypes
+          {t("about_tagline")}
         </p>
 
         <dl className="about-details">
@@ -94,7 +96,7 @@ export function AboutDialog({ open, onClose, onVersionClick }: Props) {
             <dd>{blfPackageJson.version}</dd>
           </div>
           <div className="about-detail">
-            <dt>Publisher</dt>
+            <dt>{t("about_publisher")}</dt>
             <dd>
               <a
                 className="about-link"
@@ -116,10 +118,10 @@ export function AboutDialog({ open, onClose, onVersionClick }: Props) {
           className="about-credits"
         >
           <h3 className="about-credits-title" id="about-credits-title">
-            Credits
+            {t("about_credits")}
           </h3>
           <div className="about-credits-group">
-            <h4 className="about-credits-heading">Testers</h4>
+            <h4 className="about-credits-heading">{t("about_testers")}</h4>
             <p className="about-credits-names">
               General Izna, spartan 566, Matthew
             </p>
@@ -127,7 +129,7 @@ export function AboutDialog({ open, onClose, onVersionClick }: Props) {
         </section>
 
         <p className="about-credit">
-          Made with &lt;3 by{" "}
+          {t("about_made_with")}{" "}
           <a
             className="about-link"
             href="https://github.com/craftycodie"
@@ -148,7 +150,7 @@ export function AboutDialog({ open, onClose, onVersionClick }: Props) {
             ref={closeButtonRef}
             type="button"
           >
-            Close
+            {t("common_close")}
           </button>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useT } from "../localization";
 
 interface Props {
   /** File or folder name shown in the prompt. */
@@ -18,6 +19,7 @@ export function ConfirmReplaceDialog({
   onCancel,
   onConfirm,
 }: Props) {
+  const t = useT();
   const confirmRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -41,11 +43,14 @@ export function ConfirmReplaceDialog({
     return null;
   }
 
-  const title = targetKind === "directory" ? "Replace folder" : "Replace file";
+  const title =
+    targetKind === "directory"
+      ? t("replace_folder_title")
+      : t("replace_file_title");
   const body =
     targetKind === "directory"
-      ? `A folder named “${name}” already exists in the destination. Replace it and everything inside?`
-      : `A file named “${name}” already exists in the destination. Replace it?`;
+      ? t("replace_folder_body", { name })
+      : t("replace_file_body", { name });
 
   return createPortal(
     <div
@@ -76,7 +81,7 @@ export function ConfirmReplaceDialog({
             onClick={onCancel}
             type="button"
           >
-            Cancel
+            {t("common_cancel")}
           </button>
           <button
             className="confirm-delete-danger"
@@ -84,7 +89,7 @@ export function ConfirmReplaceDialog({
             ref={confirmRef}
             type="button"
           >
-            Replace
+            {t("common_replace")}
           </button>
         </div>
       </div>

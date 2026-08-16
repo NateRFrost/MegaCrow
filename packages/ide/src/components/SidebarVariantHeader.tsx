@@ -3,6 +3,7 @@ import type { SourceAnalysis } from "../lib/analyzeSource";
 import { buildVariantIdentity } from "../lib/gametypeMetadata";
 import type { MegaloIncludeFileCache } from "../lib/includeDiagnostics";
 import type { MegaloProgram } from "../lib/megaloShim";
+import { useIdeLocale, useT } from "../localization";
 
 interface Props {
   absoluteFilePath?: string | null;
@@ -27,6 +28,8 @@ export function SidebarVariantHeader({
   objectListNames = [],
   compiledMetadata,
 }: Props) {
+  const t = useT();
+  const { locale } = useIdeLocale();
   const variantIdentity = useMemo(
     () =>
       buildVariantIdentity({
@@ -50,6 +53,7 @@ export function SidebarVariantHeader({
       fileBytes,
       includeCache,
       compiledMetadata,
+      locale,
     ]
   );
 
@@ -58,7 +62,7 @@ export function SidebarVariantHeader({
       <div className="sidebar-variant sidebar-variant--empty">
         <div className="sidebar-variant-text">
           <p className="sidebar-variant-hint">
-            Open a file to see variant details
+            {t("sidebar_variant_empty_hint")}
           </p>
         </div>
       </div>

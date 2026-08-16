@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useT } from "../localization";
 
 /** Inline rename field shared by disk tree and OPFS browser saves. */
 export function FilesRenameInput({
@@ -15,6 +16,7 @@ export function FilesRenameInput({
   onCommit: (value: string) => void;
   onCancel: () => void;
 }) {
+  const t = useT();
   const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState(initialName);
   const committedRef = useRef(false);
@@ -57,7 +59,7 @@ export function FilesRenameInput({
 
   return (
     <input
-      aria-label="Rename file"
+      aria-label={t("files_rename_aria_label")}
       className="files-rename-input"
       onBlur={commit}
       onChange={(event) => setValue(event.target.value)}

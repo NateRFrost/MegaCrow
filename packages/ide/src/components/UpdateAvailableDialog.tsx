@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { openExternalUrl } from "../lib/openExternalUrl";
 import type { GithubReleaseInfo } from "../lib/updateCheck";
+import { useT } from "../localization";
 
 interface Props {
   currentBuildString: string;
@@ -17,6 +18,7 @@ export function UpdateAvailableDialog({
   onDismiss,
   onSkip,
 }: Props) {
+  const t = useT();
   const downloadButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -41,6 +43,10 @@ export function UpdateAvailableDialog({
   }
 
   const availableVersion = release.tagName;
+  const descriptionLines = t("update_description", {
+    version: availableVersion,
+    current: currentBuildString,
+  }).split("\n");
 
   return (
     <div
@@ -60,17 +66,20 @@ export function UpdateAvailableDialog({
         role="dialog"
       >
         <h2 className="update-title" id="update-title">
-          Update Available
+          {t("update_title")}
         </h2>
         <p className="update-description" id="update-description">
-          MegaCrow {availableVersion} is available.
-          <br />
-          You are on {currentBuildString}.
+          {descriptionLines.map((line, index) => (
+            <span key={index}>
+              {index > 0 ? <br /> : null}
+              {line}
+            </span>
+          ))}
         </p>
 
         <div className="update-actions">
           <button className="update-skip" onClick={onSkip} type="button">
-            Skip this update
+            {t("update_skip")}
           </button>
           <button
             className="update-download"
@@ -80,7 +89,7 @@ export function UpdateAvailableDialog({
             ref={downloadButtonRef}
             type="button"
           >
-            Download
+            {t("update_download")}
           </button>
         </div>
       </div>

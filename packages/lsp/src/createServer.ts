@@ -1,5 +1,5 @@
 import type { ObjectLists, SupportedLocale } from "@megacrow/megalo";
-import { MEGALO_VERSIONS, setLocale } from "@megacrow/megalo";
+import { setLocale } from "@megacrow/megalo";
 import type {
   Connection,
   DidChangeTextDocumentParams,
@@ -18,6 +18,7 @@ import {
   completionsFromSnapshot,
   definitionFromSnapshot,
   getQuotedPathCompletionQuery,
+  getSessionMegaloVersion,
   hoverFromSnapshot,
   MEGACROW_ANALYZE_OBJECT_LIST_METHOD,
   MEGACROW_COMPILE_METHOD,
@@ -29,6 +30,7 @@ import {
   MEGACROW_SET_COMPILER_SETTINGS_METHOD,
   MEGACROW_SET_LOCALE_METHOD,
   MEGACROW_SET_MEGACROW_EXTENSIONS_METHOD,
+  MEGACROW_SET_MEGALO_VERSION_METHOD,
   MEGACROW_SET_OBJECT_LISTS_METHOD,
   MEGACROW_SET_RESOLVE_BASE_FILE_METHOD,
   MEGACROW_VERSION_CONFIGURATION_METHOD,
@@ -47,6 +49,7 @@ import {
   type MegacrowSetCompilerSettingsParams,
   type MegacrowSetLocaleParams,
   type MegacrowSetMegacrowExtensionsParams,
+  type MegacrowSetMegaloVersionParams,
   type MegacrowSetObjectListsParams,
   type MegacrowSetResolveBaseFileParams,
   type MegacrowVersionConfigurationResult,
@@ -57,10 +60,9 @@ import {
   semanticTokensFromSnapshot,
   setSessionCompilerSettings,
   setSessionMegacrowExtensions,
+  setSessionMegaloVersion,
   versionConfigurationFor,
 } from "./core";
-
-const DEFAULT_VERSION = MEGALO_VERSIONS["107-mcc"];
 
 /**
  * Bind Megalo language-server handlers to an already-created LSP connection
@@ -217,7 +219,7 @@ export const startMegacrowLanguageServer = (connection: Connection): void => {
 
     const promise = (async () => {
       const snapshot = await analyzeDocumentSnapshot(text, {
-        version: DEFAULT_VERSION,
+        version: getSessionMegaloVersion(),
         objectLists: workspaceObjectLists,
         fromUri: uri,
         resolvers: createResolvers(),
@@ -560,7 +562,7 @@ export const startMegacrowLanguageServer = (connection: Connection): void => {
   connection.onRequest(
     MEGACROW_VERSION_CONFIGURATION_METHOD,
     (): MegacrowVersionConfigurationResult =>
-      versionConfigurationFor(DEFAULT_VERSION)
+      versionConfigurationFor(getSessionMegaloVersion())
   );
 
   connection.onRequest(
@@ -568,7 +570,7 @@ export const startMegacrowLanguageServer = (connection: Connection): void => {
     (
       params: MegacrowAnalyzeObjectListParams
     ): MegacrowAnalyzeObjectListResult =>
-      analyzeObjectListFor(params.text, DEFAULT_VERSION)
+      analyzeObjectListFor(params.text, getSessionMegaloVersion())
   );
 
   connection.onRequest(
@@ -617,7 +619,7 @@ export const startMegacrowLanguageServer = (connection: Connection): void => {
       }
 
       const result = await analyzeAndCompile(text, {
-        version: DEFAULT_VERSION,
+        version: getSessionMegaloVersion(),
         objectLists,
         fromUri: uri,
         resolvers: createResolvers(),
@@ -684,6 +686,23 @@ export const startMegacrowLanguageServer = (connection: Connection): void => {
     MEGACROW_SET_COMPILER_SETTINGS_METHOD,
     (params: MegacrowSetCompilerSettingsParams) => {
       setSessionCompilerSettings(params.compilerSettings);
+      snapshotCache.clear();
+      snapshotInflight.clear();
+      for (const [uri, doc] of documents) {
+        schedulePublish(uri, doc.getText(), doc.version);
+      }
+    }
+  );
+
+  connection.onNotification(
+    MEGACROW_SET_MEGALO_VERSION_METHOD,
+    (params: MegacrowSetMegaloVersionParams) => {
+      if (!setSessionMegaloVersion(params.megaloVersion)) {
+        console.warn(
+          `[megacrow-lsp] ignored unknown megaloVersion: ${params.megaloVersion}`
+        );
+        return;
+      }
       snapshotCache.clear();
       snapshotInflight.clear();
       for (const [uri, doc] of documents) {

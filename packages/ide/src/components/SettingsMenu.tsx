@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { AppSettings, CompilerProfile } from "../lib/appSettings";
+import { useT } from "../localization";
 import { EDITOR_THEME_OPTIONS } from "../monaco/theme";
 
 interface Props {
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export function SettingsMenu({ settings, onChange }: Props) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -33,13 +35,13 @@ export function SettingsMenu({ settings, onChange }: Props) {
       <button
         aria-expanded={open}
         aria-haspopup="dialog"
-        aria-label="Settings"
+        aria-label={t("settings_aria")}
         className="toolbar-menu toolbar-menu--label"
         onClick={() => setOpen(true)}
-        title="Settings"
+        title={t("settings_title")}
         type="button"
       >
-        Settings
+        {t("settings_title")}
       </button>
 
       {open ? (
@@ -59,7 +61,7 @@ export function SettingsMenu({ settings, onChange }: Props) {
             role="dialog"
           >
             <h2 className="settings-modal-title" id="settings-modal-title">
-              Settings
+              {t("settings_title")}
             </h2>
 
             <div className="settings-modal-body">
@@ -71,16 +73,16 @@ export function SettingsMenu({ settings, onChange }: Props) {
                   className="settings-section-title"
                   id="settings-compiler-heading"
                 >
-                  Compiler Settings
+                  {t("settings_compiler_heading")}
                 </h3>
 
                 <label className="settings-field">
                   <span className="settings-toggle-text">
                     <span className="settings-toggle-label">
-                      Gametype Author
+                      {t("settings_gametype_author")}
                     </span>
                     <span className="settings-toggle-hint">
-                      Creator written into the gametype, 16 characters maximum
+                      {t("settings_gametype_author_hint")}
                     </span>
                   </span>
                   <input
@@ -89,7 +91,7 @@ export function SettingsMenu({ settings, onChange }: Props) {
                     onChange={(event) =>
                       onChange({ gamertag: event.target.value })
                     }
-                    placeholder="(empty)"
+                    placeholder={t("settings_gamertag_placeholder")}
                     spellCheck={false}
                     type="text"
                     value={settings.gamertag}
@@ -99,10 +101,10 @@ export function SettingsMenu({ settings, onChange }: Props) {
                 <label className="settings-field">
                   <span className="settings-toggle-text">
                     <span className="settings-toggle-label">
-                      Compiler profile
+                      {t("settings_compiler_profile")}
                     </span>
                     <span className="settings-toggle-hint">
-                      MegaloEdit disables MegaCrow language extensions
+                      {t("settings_compiler_profile_hint")}
                     </span>
                   </span>
                   <select
@@ -129,11 +131,10 @@ export function SettingsMenu({ settings, onChange }: Props) {
                   />
                   <span className="settings-toggle-text">
                     <span className="settings-toggle-label">
-                      Compiler strictness
+                      {t("settings_compiler_strictness")}
                     </span>
                     <span className="settings-toggle-hint">
-                      Enforce localization — quoted string literals become
-                      errors
+                      {t("settings_compiler_strictness_hint")}
                     </span>
                   </span>
                 </label>
@@ -147,14 +148,16 @@ export function SettingsMenu({ settings, onChange }: Props) {
                   className="settings-section-title"
                   id="settings-editor-heading"
                 >
-                  Editor Settings
+                  {t("settings_editor_heading")}
                 </h3>
 
                 <label className="settings-field">
                   <span className="settings-toggle-text">
-                    <span className="settings-toggle-label">Language</span>
+                    <span className="settings-toggle-label">
+                      {t("settings_language")}
+                    </span>
                     <span className="settings-toggle-hint">
-                      Language for diagnostics and hover help
+                      {t("settings_language_hint")}
                     </span>
                   </span>
                   <select
@@ -173,9 +176,11 @@ export function SettingsMenu({ settings, onChange }: Props) {
 
                 <label className="settings-field">
                   <span className="settings-toggle-text">
-                    <span className="settings-toggle-label">Editor theme</span>
+                    <span className="settings-toggle-label">
+                      {t("settings_editor_theme")}
+                    </span>
                     <span className="settings-toggle-hint">
-                      Color theme for the Megalo editor
+                      {t("settings_editor_theme_hint")}
                     </span>
                   </span>
                   <select
@@ -203,10 +208,10 @@ export function SettingsMenu({ settings, onChange }: Props) {
                   />
                   <span className="settings-toggle-text">
                     <span className="settings-toggle-label">
-                      Discord rich presence
+                      {t("settings_discord")}
                     </span>
                     <span className="settings-toggle-hint">
-                      Show what you are editing in Discord
+                      {t("settings_discord_hint")}
                     </span>
                   </span>
                 </label>
@@ -220,7 +225,7 @@ export function SettingsMenu({ settings, onChange }: Props) {
                 ref={closeButtonRef}
                 type="button"
               >
-                Close
+                {t("common_close")}
               </button>
             </div>
           </div>

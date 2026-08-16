@@ -14,6 +14,7 @@ import {
   type IdePaletteMode,
   type SourceFileQuickOpenEntry,
 } from "../lib/sourceFileQuickOpen";
+import { useT } from "../localization";
 
 interface Props {
   mode: IdePaletteMode;
@@ -38,6 +39,7 @@ function filterItems(items: PaletteItem[], query: string): PaletteItem[] {
 }
 
 export function IdePalette({ open, mode, onClose }: Props) {
+  const t = useT();
   const inputRef = useRef<HTMLInputElement>(null);
   const listId = useId();
   const [query, setQuery] = useState("");
@@ -151,19 +153,19 @@ export function IdePalette({ open, mode, onClose }: Props) {
 
   const placeholder = isCommands
     ? commandsLoading
-      ? "Loading commands…"
+      ? t("palette_placeholder_loading")
       : commands.length === 0
-        ? "Open a file to use editor commands"
-        : "Type a command name (clear > for files)"
-    : "Search files by name (prefix > for commands)";
+        ? t("palette_placeholder_no_editor")
+        : t("palette_placeholder_commands")
+    : t("palette_placeholder_files");
 
   const emptyLabel = isCommands
     ? commandsLoading
-      ? "Loading…"
+      ? t("palette_empty_loading")
       : commands.length === 0
-        ? "No editor open — open a file for Monaco commands"
-        : "No matching commands"
-    : "No matching files";
+        ? t("palette_empty_no_editor")
+        : t("palette_empty_no_commands")
+    : t("palette_empty_no_files");
 
   return (
     <div
@@ -176,7 +178,9 @@ export function IdePalette({ open, mode, onClose }: Props) {
       role="presentation"
     >
       <div
-        aria-label={isCommands ? "Command palette" : "Go to file"}
+        aria-label={
+          isCommands ? t("palette_command_aria") : t("palette_goto_file_aria")
+        }
         className="ide-palette-dialog"
         role="dialog"
       >

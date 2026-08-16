@@ -50,6 +50,10 @@ export {
   summarizeIncludeDiagnostics,
 } from "src/diagnostics/summarizeInclude";
 export type { ResolveIncludeFn } from "src/frontend/abstract-syntax-tree";
+export {
+  STRING_TABLE_LANGUAGES,
+  type StringTableLanguage,
+} from "src/frontend/language-configuration/omni/strings";
 export type {
   ObjectListData,
   ObjectListEntries,
@@ -100,9 +104,16 @@ export {
 export { loadObjectListsForVersion } from "src/load-object-lists";
 export {
   getLocale,
+  isLocaleWithStringTable,
+  LOCALE_TO_STRING_TABLE_LANGUAGE,
+  type LocaleWithStringTable,
+  pickLocalizedStringTableText,
+  pickStringTableText,
   SUPPORTED_LOCALES,
   type SupportedLocale,
   setLocale,
+  stringTableLanguageForLocale,
+  stringTableLanguageIndex,
 } from "src/localization";
 export {
   ALL_MEGACROW_EXTENSIONS,

@@ -8,6 +8,7 @@ import {
 import { createPortal } from "react-dom";
 import { writeClipboardText } from "../lib/clipboard";
 import type { MegaloDiagnostic } from "../lib/diagnostics";
+import { translate, useT } from "../localization";
 
 interface Props {
   diagnostics: MegaloDiagnostic[];
@@ -27,11 +28,22 @@ function severityOf(d: MegaloDiagnostic): "error" | "warning" {
 }
 
 function formatDiagnosticCopy(diagnostic: MegaloDiagnostic): string {
-  const severity = severityOf(diagnostic);
+  const severity =
+    severityOf(diagnostic) === "warning"
+      ? translate("diagnostics_severity_warning")
+      : translate("diagnostics_severity_error");
   if (diagnostic.trayOnly) {
-    return `${severity}: ${diagnostic.message}`;
+    return translate("diagnostics_copy_tray_only", {
+      severity,
+      message: diagnostic.message,
+    });
   }
-  return `${severity}: Ln ${diagnostic.line}, Col ${diagnostic.column}: ${diagnostic.message}`;
+  return translate("diagnostics_copy_line", {
+    severity,
+    line: diagnostic.line,
+    column: diagnostic.column,
+    message: diagnostic.message,
+  });
 }
 
 function formatAllDiagnosticsCopy(diagnostics: MegaloDiagnostic[]): string {
@@ -74,6 +86,7 @@ function DiagnosticsContextMenu({
   menu: ContextMenuState | null;
   onClose: () => void;
 }) {
+  const t = useT();
   const panelRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -142,7 +155,7 @@ function DiagnosticsContextMenu({
         role="menuitem"
         type="button"
       >
-        Copy
+        {t("common_copy")}
       </button>
     </div>,
     document.body
@@ -155,6 +168,7 @@ export function DiagnosticsTray({
   onClose,
   height,
 }: Props) {
+  const t = useT();
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const errorCount = diagnostics.filter(
     (d) => severityOf(d) === "error"
@@ -191,48 +205,60 @@ export function DiagnosticsTray({
 
   return (
     <div
-      aria-label="Problems"
+      aria-label={t("diagnostics_aria_label")}
       className="diagnostics-tray"
       role="region"
       style={height === undefined ? undefined : { height }}
     >
       <div className="diagnostics-tray-header">
         <div className="diagnostics-tray-title">
-          <span>Problems</span>
+          <span>{t("diagnostics_title")}</span>
           <span className="diagnostics-tray-counts">
             {errorCount > 0 && (
               <span className="diagnostics-tray-count diagnostics-tray-count--error">
-                {errorCount} error{errorCount === 1 ? "" : "s"}
+                {t(
+                  errorCount === 1
+                    ? "diagnostics_error_one"
+                    : "diagnostics_error_other",
+                  { count: errorCount }
+                )}
               </span>
             )}
             {warningCount > 0 && (
               <span className="diagnostics-tray-count diagnostics-tray-count--warn">
-                {warningCount} warning{warningCount === 1 ? "" : "s"}
+                {t(
+                  warningCount === 1
+                    ? "diagnostics_warning_one"
+                    : "diagnostics_warning_other",
+                  { count: warningCount }
+                )}
               </span>
             )}
             {diagnostics.length === 0 && (
-              <span className="diagnostics-tray-count">No problems</span>
+              <span className="diagnostics-tray-count">
+                {t("diagnostics_no_problems")}
+              </span>
             )}
           </span>
         </div>
         <div className="diagnostics-tray-actions">
           <button
-            aria-label="Copy all problems"
+            aria-label={t("diagnostics_copy_all_aria")}
             className="diagnostics-tray-action"
             disabled={sorted.length === 0}
             onClick={() => {
               void writeClipboardText(formatAllDiagnosticsCopy(sorted));
             }}
-            title="Copy all"
+            title={t("diagnostics_copy_all")}
             type="button"
           >
-            Copy all
+            {t("diagnostics_copy_all")}
           </button>
           <button
-            aria-label="Close problems"
+            aria-label={t("diagnostics_close_aria")}
             className="diagnostics-tray-close"
             onClick={onClose}
-            title="Close"
+            title={t("diagnostics_close")}
             type="button"
           >
             ×
@@ -241,7 +267,7 @@ export function DiagnosticsTray({
       </div>
       <ul className="diagnostics-tray-list">
         {sorted.length === 0 ? (
-          <li className="diagnostics-tray-empty">No problems detected.</li>
+          <li className="diagnostics-tray-empty">{t("diagnostics_empty")}</li>
         ) : (
           sorted.map((diagnostic, index) => {
             const severity = severityOf(diagnostic);
@@ -269,7 +295,10 @@ export function DiagnosticsTray({
                   </span>
                   {canNavigate ? (
                     <span className="diagnostics-tray-location">
-                      Ln {diagnostic.line}, Col {diagnostic.column}
+                      {t("diagnostics_location", {
+                        line: diagnostic.line,
+                        column: diagnostic.column,
+                      })}
                     </span>
                   ) : null}
                 </button>

@@ -10,6 +10,7 @@ import {
   showCommandPalette,
   showSourceFileQuickOpen,
 } from "../lib/sourceFileQuickOpen";
+import { useT } from "../localization";
 import {
   MEGALO_LANGUAGE_ID,
   type MegaloDiagnostic,
@@ -75,6 +76,9 @@ export const MegaloEditor = memo(function MegaloEditor({
   editorWordWrap = true,
   onEditorWordWrapChange,
 }: Props) {
+  const t = useT();
+  const tRef = useRef(t);
+  tRef.current = t;
   const editorRef = useRef<Monaco["editor"]["IStandaloneCodeEditor"] | null>(
     null
   );
@@ -283,7 +287,7 @@ export const MegaloEditor = memo(function MegaloEditor({
       // Ctrl/Cmd+P, Shift+P, and F1 are handled app-wide (printShortcut → IdePalette).
       editor.addAction({
         id: "megacrow.goToFile",
-        label: "Go to File...",
+        label: tRef.current("editor_command_go_to_file"),
         run: () => {
           showSourceFileQuickOpen(editor);
         },
@@ -291,7 +295,7 @@ export const MegaloEditor = memo(function MegaloEditor({
 
       editor.addAction({
         id: "megacrow.commandPalette",
-        label: "Show All Commands",
+        label: tRef.current("editor_command_show_all_commands"),
         run: () => {
           showCommandPalette(editor);
         },
@@ -299,7 +303,7 @@ export const MegaloEditor = memo(function MegaloEditor({
 
       editor.addAction({
         id: "megacrow.toggleWordWrap",
-        label: "View: Toggle Word Wrap",
+        label: tRef.current("editor_command_toggle_word_wrap"),
         keybindings: [monaco.KeyMod.Alt | monaco.KeyCode.KeyZ],
         run: () => {
           const next = !editorWordWrapRef.current;

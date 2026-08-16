@@ -9,6 +9,7 @@ import { createPortal } from "react-dom";
 import type { StoredWorkspace } from "../lib/megacrowSettings";
 import { getVersionInfo, type MegaloVersionId } from "../lib/megaloShim";
 import type { Workspace } from "../lib/workspace";
+import { useT } from "../localization";
 
 const PANEL_WIDTH = 380;
 
@@ -87,6 +88,7 @@ export function WorkspaceMenu({
   onEditWorkspace,
   onDeleteWorkspace,
 }: Props) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [panelPos, setPanelPos] = useState<{ top: number; left: number }>({
     top: 0,
@@ -163,7 +165,7 @@ export function WorkspaceMenu({
         className="workspace-menu-trigger"
         onClick={() => setOpen((value) => !value)}
         ref={triggerRef}
-        title={workspace?.inputPath ?? "Select a workspace"}
+        title={workspace?.inputPath ?? t("workspace_select_title")}
         type="button"
       >
         <span className="workspace-menu-label">
@@ -173,7 +175,7 @@ export function WorkspaceMenu({
               name={workspace.name}
             />
           ) : (
-            "No workspace"
+            t("workspace_no_workspace")
           )}
         </span>
         <svg
@@ -195,7 +197,7 @@ export function WorkspaceMenu({
       {open
         ? createPortal(
             <div
-              aria-label="Workspaces"
+              aria-label={t("workspace_aria_label")}
               className="workspace-menu-panel"
               ref={panelRef}
               role="menu"
@@ -207,17 +209,17 @@ export function WorkspaceMenu({
             >
               {workspaces.length === 0 ? (
                 <>
-                  <p className="workspace-menu-title">Workspaces</p>
+                  <p className="workspace-menu-title">{t("workspace_title")}</p>
                   <p className="workspace-menu-empty">
-                    No workspaces configured
+                    {t("workspace_none_configured")}
                   </p>
                 </>
               ) : (
                 <div className="workspace-menu-table">
                   <div aria-hidden="true" className="workspace-menu-columns">
-                    <span>Workspaces</span>
+                    <span>{t("workspace_title")}</span>
                     <span className="workspace-menu-columns-actions">
-                      Actions
+                      {t("workspace_actions")}
                     </span>
                   </div>
                   <ul className="workspace-menu-list">
@@ -242,7 +244,7 @@ export function WorkspaceMenu({
                           >
                             {active ? (
                               <span className="workspace-menu-item-active-label">
-                                Active
+                                {t("workspace_active")}
                               </span>
                             ) : null}
                             <span className="workspace-menu-item-title">
@@ -264,25 +266,33 @@ export function WorkspaceMenu({
                           </button>
                           <div className="workspace-menu-item-actions">
                             <button
-                              aria-label={`Edit ${entry.name}`}
+                              aria-label={t("workspace_edit_named", {
+                                name: entry.name,
+                              })}
                               className="workspace-menu-item-action"
                               onClick={() => {
                                 setOpen(false);
                                 onEditWorkspace(entry);
                               }}
-                              title={`Edit ${entry.name}`}
+                              title={t("workspace_edit_named", {
+                                name: entry.name,
+                              })}
                               type="button"
                             >
                               <EditIcon />
                             </button>
                             <button
-                              aria-label={`Delete ${entry.name}`}
+                              aria-label={t("workspace_delete_named", {
+                                name: entry.name,
+                              })}
                               className="workspace-menu-item-action workspace-menu-item-action--danger"
                               onClick={() => {
                                 setOpen(false);
                                 onDeleteWorkspace(entry.id);
                               }}
-                              title={`Delete ${entry.name}`}
+                              title={t("workspace_delete_named", {
+                                name: entry.name,
+                              })}
                               type="button"
                             >
                               <DeleteIcon />
@@ -303,7 +313,7 @@ export function WorkspaceMenu({
                 role="menuitem"
                 type="button"
               >
-                Add workspace…
+                {t("workspace_add")}
               </button>
             </div>,
             document.body

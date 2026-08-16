@@ -1,4 +1,10 @@
-import type { CompiledMegaloMetadata } from "@megacrow/megalo";
+import {
+  type CompiledMegaloMetadata,
+  pickLocalizedStringTableText,
+  stringTableLanguageForLocale,
+  stringTableLanguageIndex,
+} from "@megacrow/megalo";
+import { getIdeLocale } from "../localization";
 import {
   getObjectListIconUrl,
   getReachGametypeIconUrl,
@@ -191,12 +197,17 @@ function readBinaryVariantIdentity(fileBytes: Uint8Array | null): {
     const variant = extractGvarFromBlf(fileBytes);
     const custom = variant.m_custom_variant;
     const iconIndex = custom?.m_engine_icon ?? 0;
+    const languageRow = preferredStringTableRowIndex();
     const localizedName =
-      custom?.m_localized_name.strings[0]?.[0]?.trim() ?? "";
+      custom?.m_localized_name.strings[languageRow]?.[0]?.trim() ||
+      custom?.m_localized_name.strings[0]?.[0]?.trim() ||
+      "";
     const metadataName = variant.get_metadata().name?.trim() ?? "";
     const name = localizedName || metadataName;
     const localizedDescription =
-      custom?.m_localized_description.strings[0]?.[0]?.trim() ?? "";
+      custom?.m_localized_description.strings[languageRow]?.[0]?.trim() ||
+      custom?.m_localized_description.strings[0]?.[0]?.trim() ||
+      "";
     const metadataDescription =
       variant.get_metadata().description?.trim() ?? "";
     const description = localizedDescription || metadataDescription;
@@ -292,16 +303,13 @@ function sourceByteLength(source: string): number {
 function displayLocalizedString(
   value: CompiledMegaloMetadata["name"] | undefined
 ): string {
-  if (!value) {
-    return "";
-  }
-  return (
-    value.english?.trim() ||
-    Object.values(value)
-      .find((text) => text.trim())
-      ?.trim() ||
-    ""
-  );
+  return pickLocalizedStringTableText(value);
+}
+
+function preferredStringTableRowIndex(): number {
+  const language = stringTableLanguageForLocale(getIdeLocale());
+  const index = stringTableLanguageIndex(language);
+  return index >= 0 ? index : 0;
 }
 
 export function buildVariantIdentity(options: {

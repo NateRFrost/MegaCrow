@@ -8,6 +8,7 @@ import {
   guessOutputPathFromScripts,
   parseProjectXmlDisplayName,
 } from "../lib/workspacePaths";
+import { useT } from "../localization";
 
 export interface WorkspaceDraft {
   inputPath: string;
@@ -32,6 +33,7 @@ export function AddWorkspaceModal({
   onCancel,
   onSave,
 }: Props) {
+  const t = useT();
   const nameRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState("");
   const [inputPath, setInputPath] = useState("");
@@ -130,12 +132,12 @@ export function AddWorkspaceModal({
     const trimmedName = name.trim();
     const trimmedInput = inputPath.trim();
     if (!trimmedName) {
-      setError("Enter a workspace name.");
+      setError(t("workspace_modal_error_name"));
       nameRef.current?.focus();
       return;
     }
     if (!trimmedInput) {
-      setError("Choose a scripts folder.");
+      setError(t("workspace_modal_error_scripts"));
       return;
     }
     setBusy(true);
@@ -166,13 +168,15 @@ export function AddWorkspaceModal({
       >
         <div className="workspace-modal-header">
           <h2 className="workspace-modal-title" id="workspace-modal-title">
-            {isEdit ? "Edit workspace" : "Add workspace"}
+            {isEdit
+              ? t("workspace_modal_edit_title")
+              : t("workspace_modal_add_title")}
           </h2>
           <button
-            aria-label="Close"
+            aria-label={t("common_close")}
             className="workspace-modal-close"
             onClick={dismiss}
-            title="Close"
+            title={t("common_close")}
             type="button"
           >
             <svg aria-hidden="true" viewBox="0 0 16 16">
@@ -188,14 +192,15 @@ export function AddWorkspaceModal({
         </div>
         <p className="workspace-modal-hint">
           {required
-            ? "No workspace was found automatically. Point MegaCrow at a Halo Reach Editing Kit scripts folder (and optionally a maps/megalo output folder), or close and add one later."
-            : "Point MegaCrow at a Halo Reach Editing Kit scripts folder. An output folder is optional and enables Build."}
+            ? t("workspace_modal_hint_required")
+            : t("workspace_modal_hint")}
         </p>
 
         <div className="workspace-modal-field-row">
           <label className="workspace-modal-field">
             <span>
-              Name <span className="workspace-modal-required">*</span>
+              {t("workspace_modal_name")}{" "}
+              <span className="workspace-modal-required">*</span>
             </span>
             <input
               maxLength={64}
@@ -206,7 +211,7 @@ export function AddWorkspaceModal({
                   handleSave();
                 }
               }}
-              placeholder="My workspace"
+              placeholder={t("workspace_modal_name_placeholder")}
               ref={nameRef}
               required
               type="text"
@@ -215,14 +220,20 @@ export function AddWorkspaceModal({
           </label>
 
           <label className="workspace-modal-field">
-            <span>Megalo version</span>
-            <input disabled readOnly type="text" value="107 MCC (Halo Reach)" />
+            <span>{t("workspace_modal_megalo_version")}</span>
+            <input
+              disabled
+              readOnly
+              type="text"
+              value={t("workspace_modal_megalo_version_value")}
+            />
           </label>
         </div>
 
         <div className="workspace-modal-field">
           <span>
-            Scripts folder <span className="workspace-modal-required">*</span>
+            {t("workspace_modal_scripts_folder")}{" "}
+            <span className="workspace-modal-required">*</span>
           </span>
           <div className="workspace-modal-path-row">
             <input
@@ -233,7 +244,7 @@ export function AddWorkspaceModal({
                   handleSave();
                 }
               }}
-              placeholder="…\data\multiplayer\megalo"
+              placeholder={t("workspace_modal_scripts_placeholder")}
               required
               type="text"
               value={inputPath}
@@ -243,17 +254,17 @@ export function AddWorkspaceModal({
               onClick={() => void pickScripts()}
               type="button"
             >
-              Browse…
+              {t("workspace_modal_browse")}
             </button>
           </div>
         </div>
 
         <div className="workspace-modal-field">
-          <span>Output folder (optional)</span>
+          <span>{t("workspace_modal_output_folder")}</span>
           <div className="workspace-modal-path-row">
             <input
               onChange={(event) => setOutputPath(event.target.value)}
-              placeholder="…\maps\megalo"
+              placeholder={t("workspace_modal_output_placeholder")}
               type="text"
               value={outputPath}
             />
@@ -262,7 +273,7 @@ export function AddWorkspaceModal({
               onClick={() => void pickOutput()}
               type="button"
             >
-              Browse…
+              {t("workspace_modal_browse")}
             </button>
           </div>
         </div>
@@ -275,7 +286,7 @@ export function AddWorkspaceModal({
             onClick={dismiss}
             type="button"
           >
-            Cancel
+            {t("common_cancel")}
           </button>
           <button
             className="workspace-modal-primary"
@@ -283,7 +294,9 @@ export function AddWorkspaceModal({
             onClick={handleSave}
             type="button"
           >
-            {isEdit ? "Save workspace" : "Add workspace"}
+            {isEdit
+              ? t("workspace_modal_save_button")
+              : t("workspace_modal_add_button")}
           </button>
         </div>
       </div>
