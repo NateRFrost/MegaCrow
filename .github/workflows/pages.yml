@@ -2,12 +2,12 @@
 #
 # Branch previews are deployed from the Build workflow after megacrow-web uploads.
 # This workflow covers:
-#   - GitHub Release → site root (/)
+#   - Full (non-prerelease) GitHub Release → site root (/)
 #   - Branch deletion → remove /<branch>/
 #   - Manual workflow_dispatch → redeploy from an existing Build artifact
 #
 # Layout (https://<owner>.github.io/<repo>/):
-#   /              ← release
+#   /              ← full release only (prereleases do not deploy here)
 #   /<branch>/     ← branch preview (from Build)
 #
 # Setup (once):
@@ -50,7 +50,7 @@ jobs:
   fetch:
     name: Fetch Build artifact
     if: |
-      (github.event_name == 'release' && github.event.action == 'published') ||
+      (github.event_name == 'release' && github.event.action == 'published' && !github.event.release.prerelease) ||
       (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     outputs:
