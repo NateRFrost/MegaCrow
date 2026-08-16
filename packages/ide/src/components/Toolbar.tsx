@@ -240,7 +240,7 @@ export function Toolbar({
               </button>
             ) : null}
 
-            {frameless ? (
+            {frameless && workspace?.outputPath?.trim() ? (
               <button
                 className="toolbar-btn toolbar-btn--primary"
                 disabled={!canBuild}
@@ -248,9 +248,7 @@ export function Toolbar({
                 title={
                   canBuild
                     ? t("toolbar_build_title")
-                    : workspace?.outputPath?.trim()
-                      ? t("toolbar_build_need_script")
-                      : t("toolbar_build_need_output")
+                    : t("toolbar_build_need_script")
                 }
                 type="button"
               >
