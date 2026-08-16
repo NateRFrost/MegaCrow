@@ -212,6 +212,17 @@ export const diagnosticMessages = {
     return translate("too_many_hud_widgets");
   },
 
+  variantEncodedTooLarge(encoded: number, max: number): string {
+    return translate("variant_encoded_too_large", {
+      encoded: String(encoded),
+      max: String(max),
+    });
+  },
+
+  failedToWriteGametypeFile(): string {
+    return translate("failed_to_write_gametype_file");
+  },
+
   tooManyTeamEntries(): string {
     return translate("too_many_team_entries");
   },

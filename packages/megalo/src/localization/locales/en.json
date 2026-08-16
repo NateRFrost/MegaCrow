@@ -21,6 +21,8 @@
   "invalid_parameter_count": "Expected {{expected}} parameters but got {{got}}",
   "too_many_variables": "Too many {{scope}} {{type}} variables (limit {{limit}})",
   "too_many_hud_widgets": "Too many hud widgets",
+  "variant_encoded_too_large": "Variant encoded too large!! encoded {{encoded}} max {{max}}",
+  "failed_to_write_gametype_file": "Failed to write gametype file. Your file may be too large.",
   "too_many_team_entries": "Too many team entries!",
   "too_many_map_permission_exceptions": "Too many map permission exceptions",
   "map_id_out_of_range": "map id out of range (-32k, +32k)",

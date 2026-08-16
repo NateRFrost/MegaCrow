@@ -1,14 +1,17 @@
 import { getCompilerForVersion } from "src/backend/compile";
 import type { CompiledMegaloMetadata } from "src/backend/compile/compiler";
+import { assertEncodedSize } from "src/backend/compile/diagnostics/assertEncodedSize";
 import type { CompilerSettings } from "src/compiler-settings";
 import { MegaloCompilerContext } from "src/context";
 import {
+  BUILT_IN_LOCATION,
   type Diagnostic,
   DiagnosticSeverity,
   Diagnostics,
   UNKNOWN_LOCATION,
 } from "src/diagnostics";
 import { CompilerError } from "src/diagnostics/error";
+import { diagnosticMessages } from "src/diagnostics/messages";
 import {
   type AST,
   Parser,
@@ -357,7 +360,31 @@ export const compileFromAst = async (
       };
     }
 
-    const { data, metadata } = compiler.writeMegaloFile(ir, diagnostics);
+    let data: Uint8Array;
+    let metadata: CompiledMegaloMetadata;
+    try {
+      ({ data, metadata } = compiler.writeMegaloFile(ir, diagnostics));
+    } catch (error) {
+      // Encode/write failures (incl. BLF) — size is the usual cause.
+      if (!(error instanceof CompilerError)) {
+        diagnostics.addError(
+          diagnosticMessages.failedToWriteGametypeFile(),
+          BUILT_IN_LOCATION
+        );
+        return {
+          diagnostics: [
+            ...diagnostics.getErrors(),
+            ...diagnostics.getWarnings(),
+          ],
+        };
+      }
+      throw error;
+    }
+    assertEncodedSize(
+      data.length,
+      frontend.versionConfiguration.limits.encodedSize,
+      diagnostics
+    );
     const ok = !diagnostics.hasErrors();
     return {
       diagnostics: [...diagnostics.getErrors(), ...diagnostics.getWarnings()],

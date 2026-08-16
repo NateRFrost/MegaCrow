@@ -20,6 +20,8 @@
   "invalid_parameter_count": "{{expected}} パラメータが必要ですが、{{got}} パラメータが見つかりました",
   "too_many_variables": "{{scope}} {{type}} 変数が多すぎます（上限 {{limit}}）",
   "too_many_hud_widgets": "hud widget が多すぎます",
+  "variant_encoded_too_large": "バリアントのエンコードサイズが大きすぎます!! encoded {{encoded}} max {{max}}",
+  "failed_to_write_gametype_file": "ゲームタイプファイルの書き込みに失敗しました。ファイルが大きすぎる可能性があります。",
   "too_many_team_entries": "team エントリが多すぎます！",
   "too_many_map_permission_exceptions": "map permission の exception が多すぎます",
   "map_id_out_of_range": "map id が範囲外です（-32k～+32k）",
