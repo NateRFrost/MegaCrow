@@ -73,6 +73,19 @@ export class VersionConfiguration107MCC extends VersionConfiguration {
       conditions: 512,
       actions: 1024,
       userDefinedOptions: 16,
+      encodedSize: 0x5000,
+      strings: 112,
+      stringBytes: 0x4c00,
+      hudWidgets: 4,
+      gameStatistics: 4,
+      objectFilters: 16,
+      loadouts: 32,
+      loadoutPalettes: 16,
+      // Requisition was cut before Reach shipped; MCC does not use palettes.
+      requisitionPalettes: 0,
+      playerTraitSets: 16,
+      teams: 8,
+      mapPermissionExceptions: 32,
     };
   }
 

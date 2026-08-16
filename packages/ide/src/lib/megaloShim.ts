@@ -11,8 +11,11 @@ import {
   MEGACROW_BUILD_STRING,
   MEGACROW_SHOW_WATERMARK,
   MEGALO_VERSIONS,
+  type VariantLimitItem as MegaloVariantLimitItem,
+  type VariantLimitUsage as MegaloVariantLimitUsage,
   type MegaloVersionId,
   compileSource as megaloCompileSource,
+  computeVariantLimitUsage as megaloComputeVariantLimitUsage,
   SourceLocationType,
   type SupportedMegaloVersion,
 } from "@megacrow/megalo";
@@ -31,14 +34,8 @@ export interface MegaloCompileTiming {
   totalMs: number;
 }
 
-export interface VariantLimitItem {
-  max: number;
-  name: string;
-  used: number;
-}
-export interface VariantLimitUsage {
-  items: VariantLimitItem[];
-}
+export type VariantLimitItem = MegaloVariantLimitItem;
+export type VariantLimitUsage = MegaloVariantLimitUsage;
 
 export interface ParseWarning {
   column: number;
@@ -382,9 +379,21 @@ export function analyzeProgram(_program: MegaloProgram) {
 }
 
 export function computeVariantLimitUsage(
-  _program: MegaloProgram
+  source: string,
+  usedBytes: number | null = null,
+  version: MegaloVersionId = "107-mcc"
 ): VariantLimitUsage {
-  return { items: [] };
+  const info = isMegaloVersionId(version)
+    ? MEGALO_VERSIONS[version]
+    : DEFAULT_COMPILE_VERSION;
+  try {
+    return megaloComputeVariantLimitUsage(source, {
+      version: info,
+      usedBytes,
+    });
+  } catch {
+    return { items: [] };
+  }
 }
 
 function getVersionLabel(info: SupportedMegaloVersion) {

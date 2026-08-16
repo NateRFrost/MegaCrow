@@ -46,7 +46,6 @@ import {
 } from "./lib/fileNavigation";
 import { installFileNavShortcuts } from "./lib/fileNavShortcuts";
 import { createPlatformFileProvider } from "./lib/fileProvider";
-import { resolveProgram } from "./lib/gametypeMetadata";
 import {
   includeCompileFailureAnalysis,
   type MegaloIncludeFileCache,
@@ -1486,23 +1485,15 @@ export function App() {
     (originalBytes === null ? null : originalBytes.length);
 
   const variantLimitUsage = useMemo(() => {
-    const program = resolveProgram(
-      outlineSource,
-      baseProgram,
-      baselineSource,
-      includeFileCache
-    );
-    if (!program) {
+    if (!outlineSource.trim()) {
       return null;
     }
-    return computeVariantLimitUsage(program, variantBytes);
-  }, [
-    outlineSource,
-    baseProgram,
-    baselineSource,
-    includeFileCache,
-    variantBytes,
-  ]);
+    return computeVariantLimitUsage(
+      outlineSource,
+      variantBytes,
+      megaloVersionId
+    );
+  }, [outlineSource, variantBytes, megaloVersionId]);
 
   const editorHoverContext = useMemo(
     (): MegaloHoverContext => ({

@@ -34,6 +34,10 @@ export {
   DEFAULT_COMPILER_SETTINGS,
   resolveCompilerSettings,
 } from "src/compiler-settings";
+export {
+  type ComputeVariantLimitUsageOptions,
+  computeVariantLimitUsage,
+} from "src/compute-variant-limit-usage";
 export { decodeMglo, readMgloEncodingVersion } from "src/decode-mglo";
 export {
   type Diagnostic,
@@ -110,6 +114,12 @@ export {
   MegaloCompiler as Frontend,
   MegaloCompilerContext,
 } from "src/megalo-compiler";
+export {
+  buildVariantLimitUsage,
+  type VariantLimitItem,
+  type VariantLimitSection,
+  type VariantLimitUsage,
+} from "src/variant-limit-usage";
 export {
   getLabel,
   isMegaloVersionId,
