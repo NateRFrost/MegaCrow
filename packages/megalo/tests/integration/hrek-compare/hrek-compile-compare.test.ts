@@ -183,6 +183,8 @@ describe.runIf(run)("HREK root gametype MegaCrow vs MegaloEdit", () => {
           fromUri: sourcePath,
           resolveInclude,
           resolveBaseFile,
+          // megacrow_test.txt (and similar) reference the seeded builtin.
+          megacrowExtensions: { megacrowVersionString: true },
         });
         const crowErrors = crowResult.diagnostics
           .filter((d) => d.severity === 0)

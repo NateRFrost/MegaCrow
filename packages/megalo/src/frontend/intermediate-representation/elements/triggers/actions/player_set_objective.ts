@@ -31,7 +31,9 @@ export const lowerPlayerSetObjective = (
         asParameterLoweringContext(ctx)
       ),
 
-      objective: lowerDynamicString(parameters[1]!, ctx),
+      objective: lowerDynamicString(parameters[1]!, ctx, {
+        requirePersistence: true,
+      }),
     },
   };
 };

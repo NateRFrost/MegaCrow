@@ -384,9 +384,9 @@ export const MegaloEditor = memo(function MegaloEditor({
                 const before = model
                   .getLineContent(position.lineNumber)
                   .slice(0, position.column - 1);
-                // Backspace/delete with only whitespace (or nothing) left of the
-                // cursor should not reopen the suggest widget.
-                if (before.length === 0 || /\s$/.test(before)) {
+                // Only reopen while mid-identifier. After whitespace, `"`, or
+                // other completed tokens, leave suggest closed.
+                if (!/[A-Za-z0-9_]$/.test(before)) {
                   return;
                 }
               }

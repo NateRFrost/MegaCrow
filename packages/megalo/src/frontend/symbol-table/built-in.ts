@@ -153,6 +153,8 @@ export const addBuiltInGameOptions = (
 };
 
 /** Undocumented MegaCrow builtin string carrying the app build identity. */
+export const MEGACROW_VERSION_STRING_NAME = "megacrow_version";
+
 export const addBuiltInStrings = (
   frontend: MegaloCompilerContext,
   symbolParser: ParserSymbolContext
@@ -163,7 +165,7 @@ export const addBuiltInStrings = (
 
   for (const language of STRING_TABLE_LANGUAGES) {
     symbolParser.addStringToScope({
-      name: "mc_version",
+      name: MEGACROW_VERSION_STRING_NAME,
       language,
       content: MEGACROW_BUILD_STRING,
       declaration: BUILT_IN_LOCATION,

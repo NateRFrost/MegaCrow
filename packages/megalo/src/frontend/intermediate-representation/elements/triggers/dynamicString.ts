@@ -2,6 +2,7 @@ import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import type { ASTDynamicStringNode } from "src/frontend/abstract-syntax-tree/parameters/types/dynamic-string";
+import { isTransientVariantVariable } from "src/frontend/intermediate-representation/diagnostics/isTransientInPersistentString";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import { CustomVariableType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import type { DynamicString } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_text";
@@ -18,6 +19,16 @@ import {
   asParameterLoweringContext,
   type ElementLowerContext,
 } from "src/frontend/intermediate-representation/parameters/context";
+import { splitParameterMember } from "src/frontend/intermediate-representation/parameters/references/helpers";
+import { VariableScope, VariableType } from "src/frontend/symbol-table";
+
+export interface LowerDynamicStringOptions {
+  /**
+   * Persistent HUD / navpoint / objective strings: MegaloEdit rejects transient
+   * replacements (`temporary` object/player/team, `current_*`, death refs).
+   */
+  requirePersistence?: boolean;
+}
 
 const describeReplacementOperand = (node: ASTParameterNode): string => {
   switch (node.kind) {
@@ -40,9 +51,26 @@ const describeReplacementOperand = (node: ASTParameterNode): string => {
   }
 };
 
-const lowerReplacement = (
+/** Spilled temps compile to GlobalN; MegaloEdit still treats the declaration as transient. */
+const isSpilledTemporaryNonNumber = (
   node: ASTParameterNode,
   ctx: ElementLowerContext
+): boolean => {
+  try {
+    const { baseSymbol } = splitParameterMember(node, ctx.symbolTable);
+    return (
+      baseSymbol?.scope === VariableScope.Temporary &&
+      baseSymbol.type !== VariableType.Number
+    );
+  } catch {
+    return false;
+  }
+};
+
+const lowerReplacement = (
+  node: ASTParameterNode,
+  ctx: ElementLowerContext,
+  options?: LowerDynamicStringOptions
 ): ReplaceableToken => {
   const paramCtx = asParameterLoweringContext(ctx);
 
@@ -62,6 +90,16 @@ const lowerReplacement = (
     node.kind === SyntaxKind.MEMBER_REFERENCE
   ) {
     const variant = resolveVariantVariable(node, paramCtx);
+    if (
+      options?.requirePersistence === true &&
+      (isSpilledTemporaryNonNumber(node, ctx) ||
+        isTransientVariantVariable(variant))
+    ) {
+      throw new LowerError(
+        diagnosticMessages.transientVariableInPersistentString(),
+        node.location
+      );
+    }
     switch (variant.type) {
       case VariantVariableType.CustomVariable:
         return {
@@ -101,7 +139,8 @@ const lowerReplacement = (
 
 export const lowerDynamicString = (
   node: ASTParameterNode,
-  ctx: ElementLowerContext
+  ctx: ElementLowerContext,
+  options?: LowerDynamicStringOptions
 ): DynamicString => {
   if (node.kind !== SyntaxKind.DYNAMIC_STRING) {
     return {
@@ -122,7 +161,7 @@ export const lowerDynamicString = (
       ctx.symbolTable
     ),
     tokens: dynamic.replacements.map((replacement) =>
-      lowerReplacement(replacement, ctx)
+      lowerReplacement(replacement, ctx, options)
     ),
   };
 };

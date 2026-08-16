@@ -8,7 +8,7 @@ export interface MegacrowExtensions {
   // Solve Megalo Headache #3
   coopSpawningWaypointIcon: boolean;
   /**
-   * Seed undocumented builtin string `mc_version` with the MegaCrow build string.
+   * Seed undocumented builtin string `megacrow_version` with the MegaCrow build string.
    */
   megacrowVersionString: boolean;
   // Built-in gametypes are not labelled built-in.

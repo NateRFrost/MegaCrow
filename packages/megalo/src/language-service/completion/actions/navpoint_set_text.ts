@@ -12,7 +12,9 @@ export const completeNavpointSetText = (
 ): CompletionItem[] => {
   switch (ctx.slotIndex) {
     case 0:
-      return suggestTyped(ctx, ParameterType.Object);
+      return suggestTyped(ctx, ParameterType.Object, {
+        continueCompletion: true,
+      });
     case 1:
       return suggestTyped(ctx, ParameterType.DynamicString);
     default:

@@ -2,6 +2,7 @@ import type { EngineDataElementNode } from "src/frontend/abstract-syntax-tree/el
 import { ENGINE_CATEGORY_STRING_PREFIX } from "src/frontend/language-configuration/omni/engine_data";
 import {
   focusNamedPropertyAllowingEmptyValue,
+  isPastCompletedPropertyValue,
   isSameLineAs,
   type NamedPropertyLike,
 } from "src/language-service/completion/elements/property";
@@ -76,6 +77,13 @@ export const completeEngineData = (
   );
   if (focus?.kind === "value") {
     return completeValue(ctx, focus.key);
+  }
+  if (
+    isPastCompletedPropertyValue(element.properties, ctx.offset, (property) =>
+      sameLineAfter(ctx, property)
+    )
+  ) {
+    return [];
   }
   return suggestKeywords(ctx, KEYS, "property");
 };

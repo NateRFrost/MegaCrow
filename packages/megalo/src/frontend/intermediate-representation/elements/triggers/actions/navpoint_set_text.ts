@@ -31,7 +31,9 @@ export const lowerNavpointSetText = (
         asParameterLoweringContext(ctx)
       ),
 
-      string: lowerDynamicString(parameters[1]!, ctx),
+      string: lowerDynamicString(parameters[1]!, ctx, {
+        requirePersistence: true,
+      }),
     },
   };
 };

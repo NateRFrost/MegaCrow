@@ -12,7 +12,9 @@ export const completePlayerSetObjective = (
 ): CompletionItem[] => {
   switch (ctx.slotIndex) {
     case 0:
-      return suggestTyped(ctx, ParameterType.Player);
+      return suggestTyped(ctx, ParameterType.Player, {
+        continueCompletion: true,
+      });
     case 1:
       return suggestTyped(ctx, ParameterType.DynamicString);
     default:

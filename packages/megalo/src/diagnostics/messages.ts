@@ -346,4 +346,9 @@ export const diagnosticMessages = {
   unsupportedDynamicStringReplacement(got: string): string {
     return translate("unsupported_dynamic_string_replacement", { got });
   },
+
+  transientVariableInPersistentString(): string {
+    // MegaloEdit.exe: Can't use transient variables when reading a persistent string
+    return translate("transient_variable_in_persistent_string");
+  },
 };

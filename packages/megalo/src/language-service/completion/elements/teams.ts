@@ -7,6 +7,7 @@ import {
 } from "src/frontend/intermediate-representation/game/game_engine_default";
 import {
   focusNamedPropertyAllowingEmptyValue,
+  isPastCompletedPropertyValue,
   isSameLineAs,
   type NamedPropertyLike,
 } from "src/language-service/completion/elements/property";
@@ -90,6 +91,13 @@ export const completeTeams = (
     if (focus?.kind === "value") {
       return completeTeamValue(ctx, focus.key);
     }
+    if (
+      isPastCompletedPropertyValue(team.properties, ctx.offset, (property) =>
+        sameLineAfter(ctx, property)
+      )
+    ) {
+      return [];
+    }
     return suggestKeywords(ctx, TEAM_KEYS, "property");
   }
 
@@ -100,6 +108,13 @@ export const completeTeams = (
   );
   if (focus?.kind === "value") {
     return completeBlockValue(ctx, focus.key);
+  }
+  if (
+    isPastCompletedPropertyValue(element.properties, ctx.offset, (property) =>
+      sameLineAfter(ctx, property)
+    )
+  ) {
+    return [];
   }
   return suggestKeywords(ctx, BLOCK_KEYS, "property").map((entry) =>
     entry.label === "team" ? withBlockEndSnippet(entry) : entry

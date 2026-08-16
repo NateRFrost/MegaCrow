@@ -75,7 +75,9 @@ export const lowerHudWidgetSetText = (
     type: ActionType.hud_widget_set_text,
     parameters: {
       widgetIndex: resolveHudWidgetIndex(parameters[0]!, ctx, location),
-      string: lowerDynamicString(parameters[1]!, ctx),
+      string: lowerDynamicString(parameters[1]!, ctx, {
+        requirePersistence: true,
+      }),
     },
   };
 };

@@ -38,6 +38,7 @@
   "duplicate_declaration_name_ignored": "重複する {{kind}} 名 '{{name}}' は名前解決では無視されます（MegaloEdit は最初の定義を使用します）",
   "legacy_hud_widget_text_keyword": "hud_widgets エントリの先頭にある古い 'text' 接頭辞は旧構文です。MegaloEdit ではコンパイルできません",
   "unsupported_dynamic_string_replacement": "'{{got}}' は dynamic-string の置換として無効です。プレースホルダに合う宣言済み参照を使ってください（%n 数値、%p プレイヤー、%t チーム、%o オブジェクト、%s タイマー）。",
+  "transient_variable_in_persistent_string": "永続文字列を読むときは一時変数を使えません",
   "element_not_allowed_in_base_derived": "base 派生スクリプトでは '{{element}}' は使用できません",
   "action_not_allowed_in_pregame": "このアクションは pregame トリガー内では使用できません",
   "object_reference_must_be_writable": "オブジェクト参照は書き込み可能である必要があります",

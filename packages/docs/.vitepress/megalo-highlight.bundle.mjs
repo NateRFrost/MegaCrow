@@ -6810,7 +6810,7 @@ var addBuiltInStrings = (frontend, symbolParser) => {
   }
   for (const language of STRING_TABLE_LANGUAGES) {
     symbolParser.addStringToScope({
-      name: "mc_version",
+      name: "megacrow_version",
       language,
       content: MEGACROW_BUILD_STRING,
       declaration: BUILT_IN_LOCATION

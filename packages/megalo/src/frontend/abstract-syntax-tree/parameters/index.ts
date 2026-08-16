@@ -728,6 +728,9 @@ const parseSlot = (
   anchor: SourceCodeLocation
 ): ASTParameterNode[] => {
   if (slot === ParameterType.DynamicString) {
+    if (isTriggerStatementBoundary(ctx.peekToken())) {
+      return [];
+    }
     return [
       parseDynamicString(
         ctx,

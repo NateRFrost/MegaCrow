@@ -31,6 +31,7 @@ import {
   VariableScope,
   VariableType,
 } from "src/frontend/symbol-table";
+import { MEGACROW_VERSION_STRING_NAME } from "src/frontend/symbol-table/built-in";
 import type {
   ActionCompletionContext,
   CompletionContextBase,
@@ -346,6 +347,11 @@ export const forReplacingToken = (
 };
 
 export interface SuggestOptions {
+  /**
+   * More operands follow on this statement: append a trailing space and reopen
+   * suggest after accept.
+   */
+  continueCompletion?: boolean;
   /** Include symbols declared later in the file (forward references). */
   ignoreVisibility?: boolean;
   /** Offer all candidates while the cursor is inside/replacing a value token. */
@@ -468,10 +474,14 @@ const finalizeSuggestions = (
   items: CompletionItem[],
   options?: SuggestOptions
 ): CompletionItem[] => {
-  if (options?.replacingToken === true) {
-    return forReplacingToken(ctx, items);
+  const filtered =
+    options?.replacingToken === true
+      ? forReplacingToken(ctx, items)
+      : filterByPrefix(items, ctx.prefix.text);
+  if (options?.continueCompletion === true) {
+    return filtered.map(withContinueCompletion);
   }
-  return filterByPrefix(items, ctx.prefix.text);
+  return filtered;
 };
 
 const item = (
@@ -662,6 +672,13 @@ export const suggestTyped = (
     if (!isVisibleAt(entry, ctx.offset)) {
       continue;
     }
+    // Internal MegaCrow identity string — usable in scripts, not in suggest.
+    if (
+      entry.kind === SymbolKind.String &&
+      entry.name === MEGACROW_VERSION_STRING_NAME
+    ) {
+      continue;
+    }
     if (requireWritable) {
       if (!matchesWritableParameterType(entry, types)) {
         continue;
@@ -721,6 +738,12 @@ export const suggestSymbolKind = (
   const seen = new Set<string>();
   for (const entry of ctx.snapshot.ast.symbolTable.toArray()) {
     if (entry.kind !== kind) {
+      continue;
+    }
+    if (
+      entry.kind === SymbolKind.String &&
+      entry.name === MEGACROW_VERSION_STRING_NAME
+    ) {
       continue;
     }
     if (options?.ignoreVisibility !== true && !isVisibleAt(entry, ctx.offset)) {

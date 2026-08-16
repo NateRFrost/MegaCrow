@@ -46,7 +46,9 @@ export const focusNamedProperty = (
       if (offset > property.location.end.localOffset && offset < valueStart) {
         return { kind: "value", key: property.identifier, slotIndex: 0 };
       }
-      if (offset >= valueStart && offset <= valueEnd) {
+      // `end` is exclusive — standing at the end of a finished value is not
+      // still editing that token (avoids suggest-after-`"` / completed ids).
+      if (offset >= valueStart && offset < valueEnd) {
         return {
           kind: "value",
           key: property.identifier,
@@ -80,6 +82,14 @@ export const focusNamedPropertyAllowingEmptyValue = (
       offset > property.location.end.localOffset &&
       sameLineAfterKey(property)
     ) {
+      // Finished value(s) already occupy the line — don't reopen value suggest
+      // when the caret sits after them (e.g. after a closing `"`).
+      if (property.parameters.length > 0) {
+        const last = property.parameters.at(-1)!;
+        if (offset >= last.location.end.localOffset) {
+          continue;
+        }
+      }
       return {
         kind: "value",
         key: property.identifier,
@@ -88,4 +98,28 @@ export const focusNamedPropertyAllowingEmptyValue = (
     }
   }
   return;
+};
+
+/** True when the caret is on the same line after a property's finished value. */
+export const isPastCompletedPropertyValue = (
+  properties: readonly NamedPropertyLike[],
+  offset: number,
+  sameLineAfterKey: (property: NamedPropertyLike) => boolean
+): boolean => {
+  for (const property of properties) {
+    if (property.parameters.length === 0) {
+      continue;
+    }
+    if (
+      offset <= property.location.end.localOffset ||
+      !sameLineAfterKey(property)
+    ) {
+      continue;
+    }
+    const last = property.parameters.at(-1)!;
+    if (offset >= last.location.end.localOffset) {
+      return true;
+    }
+  }
+  return false;
 };

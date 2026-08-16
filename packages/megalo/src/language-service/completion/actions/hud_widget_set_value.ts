@@ -12,7 +12,9 @@ export const completeHudWidgetSetValue = (
 ): CompletionItem[] => {
   switch (ctx.slotIndex) {
     case 0:
-      return suggestTyped(ctx, ParameterType.HudWidget);
+      return suggestTyped(ctx, ParameterType.HudWidget, {
+        continueCompletion: true,
+      });
     case 1:
       return suggestTyped(ctx, ParameterType.DynamicString);
     default:

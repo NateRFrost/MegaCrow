@@ -1,6 +1,7 @@
 import type { LoadoutPaletteElementNode } from "src/frontend/abstract-syntax-tree/elements/loadout_palette";
 import {
   focusNamedPropertyAllowingEmptyValue,
+  isPastCompletedPropertyValue,
   isSameLineAs,
   type NamedPropertyLike,
 } from "src/language-service/completion/elements/property";
@@ -33,6 +34,13 @@ export const completeLoadoutPalette = (
   );
   if (focus?.kind === "value") {
     return suggestSymbolKind(ctx, SymbolKind.Loadout);
+  }
+  if (
+    isPastCompletedPropertyValue(element.items, ctx.offset, (property) =>
+      sameLineAfter(ctx, property)
+    )
+  ) {
+    return [];
   }
   return suggestKeywords(ctx, KEYS, "property");
 };

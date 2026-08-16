@@ -90,23 +90,23 @@ describe("megacrowExtensions.coopSpawning", () => {
 });
 
 describe("megacrowExtensions.megacrowVersionString", () => {
-  it("does not seed mc_version without the extension", () => {
+  it("does not seed megacrow_version without the extension", () => {
     const diagnostics = new Diagnostics();
     const frontend = new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"]);
     const binder = new SymbolBinder(frontend, diagnostics);
     const parser = new ParserSymbolContext(frontend, diagnostics, binder);
-    expect(parser.lookupString("mc_version")).toBeUndefined();
+    expect(parser.lookupString("megacrow_version")).toBeUndefined();
   });
 
-  it("seeds mc_version with the build string when enabled", () => {
+  it("seeds megacrow_version with the build string when enabled", () => {
     const diagnostics = new Diagnostics();
     const frontend = new MegaloCompilerContext(MEGALO_VERSIONS["107-mcc"], {
       megacrowVersionString: true,
     });
     const binder = new SymbolBinder(frontend, diagnostics);
     const parser = new ParserSymbolContext(frontend, diagnostics, binder);
-    expect(parser.lookupString("mc_version")).toBeDefined();
-    expect(parser.lookupStringContent("mc_version")).toBe(
+    expect(parser.lookupString("megacrow_version")).toBeDefined();
+    expect(parser.lookupStringContent("megacrow_version")).toBe(
       MEGACROW_BUILD_STRING
     );
   });

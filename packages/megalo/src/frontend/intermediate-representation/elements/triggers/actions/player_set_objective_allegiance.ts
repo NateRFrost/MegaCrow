@@ -38,7 +38,9 @@ export const lowerPlayerSetObjectiveAllegiance = (
         asParameterLoweringContext(ctx)
       ),
 
-      allegiance: lowerDynamicString(parameters[1]!, ctx),
+      allegiance: lowerDynamicString(parameters[1]!, ctx, {
+        requirePersistence: true,
+      }),
     },
   };
 };
