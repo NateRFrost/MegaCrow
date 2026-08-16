@@ -1,3 +1,5 @@
+import type { SupportedMegaloVersion } from "src/version";
+
 export interface MegaloEnumMemberOptions {
   /** Accept this name when parsing, but resolve to the canonical `aliasOf` member. */
   aliasOf?: string;
@@ -39,6 +41,13 @@ export interface MegaloEnumDef<Name extends string> {
   readonly names: readonly Name[];
   /** Accepts canonical names and aliases; returns the canonical name. */
   readonly parse: (name: string) => Name | undefined;
+  /**
+   * Canonical members available on `version`. Lazily computed once per
+   * distinct version (full set when no availability callback was provided).
+   */
+  readonly supportedMembers: (
+    version: SupportedMegaloVersion
+  ) => ReadonlySet<Name>;
 }
 
 const normalizeMember = (
@@ -57,11 +66,19 @@ const normalizeMember = (
 /**
  * Closed Megalo vocabulary, similar to `z.enum` without pulling in Zod.
  * Game-specific values are mapped at compile time via {@link mapMegaloEnum}.
+ *
+ * Optional `allowedForVersion` returns the allowed canonical names for a
+ * version. When omitted, the full canonical set is used. Either way it is
+ * invoked lazily once per distinct version on first
+ * {@link MegaloEnumDef.supportedMembers} lookup and cached thereafter.
  */
 export const megaloEnum = <
   const Members extends readonly (string | MegaloEnumMemberOptions)[],
 >(
-  members: Members
+  members: Members,
+  allowedForVersion?: (
+    version: SupportedMegaloVersion
+  ) => ReadonlySet<CanonicalMemberName<Members[number]>>
 ): MegaloEnumDef<CanonicalMemberName<Members[number]>> => {
   type Name = CanonicalMemberName<Members[number]>;
 
@@ -80,6 +97,11 @@ export const megaloEnum = <
   const canonicalNames = new Set<string>();
   const deprecatedNames = new Set<string>();
   const resolve = new Map<string, Name>();
+  const allowedByVersion = new Map<SupportedMegaloVersion, ReadonlySet<Name>>();
+  /** Explicit gate, or full canonical set when omitted (still lazy per version). */
+  const resolveAllowed =
+    allowedForVersion ??
+    ((_version: SupportedMegaloVersion): ReadonlySet<Name> => new Set(names));
 
   for (const member of normalized) {
     if (member.aliasOf !== undefined) {
@@ -119,6 +141,14 @@ export const megaloEnum = <
     parse: (name) => resolve.get(name),
     has: (name) => resolve.has(name),
     isDeprecated: (name) => deprecatedNames.has(name),
+    supportedMembers: (version) => {
+      let allowed = allowedByVersion.get(version);
+      if (allowed === undefined) {
+        allowed = resolveAllowed(version);
+        allowedByVersion.set(version, allowed);
+      }
+      return allowed;
+    },
   };
 };
 

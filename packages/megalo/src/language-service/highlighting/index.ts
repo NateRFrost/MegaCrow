@@ -4,6 +4,7 @@ import {
   clipTokensToSource,
   mergeTokens,
 } from "src/language-service/highlighting/merge";
+import { runWithHighlightVersion } from "src/language-service/highlighting/session";
 import { highlightSymbol } from "src/language-service/highlighting/symbols";
 import {
   MODIFIER_INDEX,
@@ -26,21 +27,22 @@ export {
  */
 export const getSemanticTokens = (
   snapshot: AnalysisSnapshot
-): SemanticToken[] => {
-  const out: SemanticToken[] = [];
+): SemanticToken[] =>
+  runWithHighlightVersion(snapshot.version, () => {
+    const out: SemanticToken[] = [];
 
-  highlightLexicalTokens(out, snapshot);
+    highlightLexicalTokens(out, snapshot);
 
-  for (const entry of snapshot.ast.symbolTable.toArray()) {
-    highlightSymbol(out, entry);
-  }
+    for (const entry of snapshot.ast.symbolTable.toArray()) {
+      highlightSymbol(out, entry);
+    }
 
-  for (const element of snapshot.ast.elements) {
-    highlightElement(out, element);
-  }
+    for (const element of snapshot.ast.elements) {
+      highlightElement(out, element);
+    }
 
-  return clipTokensToSource(snapshot.source, mergeTokens(out));
-};
+    return clipTokensToSource(snapshot.source, mergeTokens(out));
+  });
 
 /** Encode tokens as an LSP/Monaco semantic-tokens delta stream. */
 export const encodeSemanticTokens = (tokens: SemanticToken[]): number[] => {

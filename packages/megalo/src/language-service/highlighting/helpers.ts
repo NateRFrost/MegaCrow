@@ -7,13 +7,18 @@ import {
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import type { MegaloEnumDef } from "src/frontend/intermediate-representation/megaloEnum";
 import { emitLocation } from "src/language-service/highlighting/emit";
-import type { SemanticToken } from "src/language-service/highlighting/types";
+import { getHighlightVersion } from "src/language-service/highlighting/session";
+import type {
+  SemanticToken,
+  SemanticTokenModifier,
+} from "src/language-service/highlighting/types";
 
 const BOOLEAN_KEYWORDS = ["true", "false"] as const;
 
 export type EnumKeywordAllowed =
   | ReadonlySet<string>
   | readonly string[]
+  | MegaloEnumDef<string>
   | Pick<MegaloEnumDef<string>, "acceptedNames">;
 
 const isKeyword = (
@@ -34,6 +39,18 @@ const asSet = (allowed: EnumKeywordAllowed): ReadonlySet<string> => {
   return new Set(allowed);
 };
 
+const isMegaloEnumDef = (
+  allowed: EnumKeywordAllowed
+): allowed is MegaloEnumDef<string> =>
+  typeof allowed === "object" &&
+  allowed !== null &&
+  !(allowed instanceof Set) &&
+  !Array.isArray(allowed) &&
+  "supportedMembers" in allowed &&
+  "isDeprecated" in allowed &&
+  typeof allowed.supportedMembers === "function" &&
+  typeof allowed.isDeprecated === "function";
+
 /** Closed-vocab keyword → enumMember only when `value` is in `allowed`. */
 export const highlightEnumKeyword = (
   out: SemanticToken[],
@@ -46,7 +63,23 @@ export const highlightEnumKeyword = (
   if (!asSet(allowed).has(node.value)) {
     return;
   }
-  emitLocation(out, node.location, "enumMember");
+  const modifiers: SemanticTokenModifier[] = [];
+  if (isMegaloEnumDef(allowed)) {
+    const version = getHighlightVersion();
+    // Always consult availability for MegaloEnumDefs (full set when ungated).
+    if (version !== undefined) {
+      const canonical = allowed.parse(node.value) ?? node.value;
+      if (
+        !allowed.supportedMembers(version).has(canonical) ||
+        allowed.isDeprecated(node.value)
+      ) {
+        modifiers.push("deprecated");
+      }
+    } else if (allowed.isDeprecated(node.value)) {
+      modifiers.push("deprecated");
+    }
+  }
+  emitLocation(out, node.location, "enumMember", modifiers);
 };
 
 /** Free keyword → parameter. */

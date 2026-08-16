@@ -96,7 +96,7 @@ import {
   recordMotdView,
   shouldShowMotdOnStartup,
 } from "./lib/motd";
-import { isObjectListsPath } from "./lib/objectListsPath";
+import { isObjectListDocument, isObjectListsPath } from "./lib/objectListsPath";
 import { resolveOpenablePathReference } from "./lib/openPathReference";
 import {
   gametypeSaveFileName,
@@ -512,9 +512,18 @@ export function App() {
     [displayDiagnostics]
   );
 
+  const openDocumentPath = includeRoot?.absoluteFilePath ?? fileName;
+
+  /** Any file under `object_lists/` — plaintext editor, not Megalo. */
   const isPlainTextDocument = useMemo(
-    () => isObjectListsPath(includeRoot?.absoluteFilePath ?? fileName),
-    [includeRoot?.absoluteFilePath, fileName]
+    () => isObjectListsPath(openDocumentPath),
+    [openDocumentPath]
+  );
+
+  /** Version-recognized object list only (e.g. `objects.txt`). */
+  const isObjectListDocumentOpen = useMemo(
+    () => isObjectListDocument(openDocumentPath, objectListNames),
+    [openDocumentPath, objectListNames]
   );
 
   const handleRegisterGetValue = useCallback((getValue: () => string) => {
@@ -783,8 +792,11 @@ export function App() {
     (text: string, name: string, includeRootArg?: MegaloIncludeRoot) => {
       const runId = ++loadRunRef.current;
       saveRunRef.current += 1;
-      const plainText = isObjectListsPath(
-        includeRootArg?.absoluteFilePath ?? name
+      const openPath = includeRootArg?.absoluteFilePath ?? name;
+      const underObjectLists = isObjectListsPath(openPath);
+      const objectListDoc = isObjectListDocument(
+        openPath,
+        objectListNamesRef.current
       );
 
       rememberLastOpenFile(includeRootArg?.absoluteFilePath ?? null);
@@ -800,7 +812,7 @@ export function App() {
       setBaseProgram(null);
       setLoadError(null);
 
-      if (plainText) {
+      if (objectListDoc) {
         sourceLoadInProgressRef.current = false;
         skipBaselineCompileRef.current = true;
         setCompileState("parsing");
@@ -818,6 +830,19 @@ export function App() {
           setAnalysis(next);
           setCompileState(next.compileState);
         })();
+        return;
+      }
+
+      if (underObjectLists) {
+        sourceLoadInProgressRef.current = false;
+        skipBaselineCompileRef.current = true;
+        setCompileState("ok");
+        setAnalysis({
+          ...idleAnalysis,
+          compileState: "ok",
+          message: "Text file",
+        });
+        initMegaloWorkerContext(null, null, text);
         return;
       }
 
@@ -1102,8 +1127,17 @@ export function App() {
     (text: string) => {
       sourceRef.current = text;
 
-      if (isObjectListsPath(includeRoot?.absoluteFilePath ?? fileName)) {
+      if (
+        isObjectListDocument(
+          includeRoot?.absoluteFilePath ?? fileName,
+          objectListNames
+        )
+      ) {
         handleObjectListAnalyzeDebounced(text);
+        return;
+      }
+
+      if (isObjectListsPath(includeRoot?.absoluteFilePath ?? fileName)) {
         return;
       }
 
@@ -1194,6 +1228,7 @@ export function App() {
       settings.gamertag,
       settings.compilerStrictness,
       settings,
+      objectListNames,
       handleObjectListAnalyzeDebounced,
     ]
   );
@@ -1754,9 +1789,11 @@ export function App() {
                 editorWordWrap={settings.editorWordWrap}
                 hoverContext={editorHoverContext}
                 onCompileDebounced={
-                  isPlainTextDocument
+                  isObjectListDocumentOpen
                     ? handleObjectListAnalyzeDebounced
-                    : handleCompileDebounced
+                    : isPlainTextDocument
+                      ? undefined
+                      : handleCompileDebounced
                 }
                 onCursorChange={handleCursorChange}
                 onEditorWordWrapChange={(wordWrap) =>

@@ -22,6 +22,7 @@ export const SEMANTIC_TOKEN_MODIFIERS = [
   "readonly",
   "defaultLibrary",
   "declaration",
+  "deprecated",
 ] as const;
 
 export type SemanticTokenModifier = (typeof SEMANTIC_TOKEN_MODIFIERS)[number];
