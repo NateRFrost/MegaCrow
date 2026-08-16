@@ -6,14 +6,9 @@ import {
 } from "src/frontend/abstract-syntax-tree";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 
-interface NamedNode {
-  location: SourceCodeLocation;
-  value: string;
-}
-
-export function assertNotErrorNode(
-  node: NamedNode | ASTErrorNode
-): asserts node is NamedNode {
+export function assertNotErrorNode<T extends { location: SourceCodeLocation }>(
+  node: T
+): asserts node is Exclude<T, ASTErrorNode> {
   if (isAstErrorNode(node)) {
     throw new LowerError(
       diagnosticMessages.expectedOneOf(["identifier"], "invalid"),

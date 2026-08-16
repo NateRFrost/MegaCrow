@@ -16,13 +16,13 @@ export const completeIf = (
   switch (ctx.slotIndex) {
     case 0:
     case 2:
-      return [
-        ...suggestTyped(ctx, ParameterType.Integer),
-        ...suggestTyped(ctx, ParameterType.Player),
-        ...suggestTyped(ctx, ParameterType.Object),
-        ...suggestTyped(ctx, ParameterType.Team),
-        ...suggestTyped(ctx, ParameterType.Timer),
-      ];
+      return suggestTyped(ctx, [
+        ParameterType.Integer,
+        ParameterType.Player,
+        ParameterType.Object,
+        ParameterType.Team,
+        ParameterType.Timer,
+      ]);
     case 1:
       return suggestEnum(ctx, COMPARISON_OPERATOR_NAMES);
     default:

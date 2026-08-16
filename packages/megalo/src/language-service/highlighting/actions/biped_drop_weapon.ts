@@ -2,6 +2,7 @@ import type { ActionStatementNode } from "src/frontend/abstract-syntax-tree/elem
 import { weaponSlot } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import {
   highlightEnumKeyword,
+  highlightOptionalEnum,
   highlightStructural,
 } from "src/language-service/highlighting/helpers";
 import type { SemanticToken } from "src/language-service/highlighting/types";
@@ -13,5 +14,5 @@ export const highlightBipedDropWeapon = (
   const p = statement.parameters;
   highlightStructural(out, p[0]);
   highlightEnumKeyword(out, p[1], weaponSlot);
-  highlightStructural(out, p[2]);
+  highlightOptionalEnum(out, p, 2, "delete_on_drop");
 };

@@ -164,6 +164,30 @@ export const diagnosticMessages = {
     return `Unknown action '${got}'.`;
   },
 
+  actionNotAllowedInPregame(): string {
+    return translate("action_not_allowed_in_pregame");
+  },
+
+  objectReferenceMustBeWritable(): string {
+    return translate("object_reference_must_be_writable");
+  },
+
+  playerReferenceMustBeWriteable(): string {
+    return translate("player_reference_must_be_writeable");
+  },
+
+  teamReferenceMustBeWriteable(): string {
+    return translate("team_reference_must_be_writeable");
+  },
+
+  numericReferenceMustBeWriteable(): string {
+    return translate("numeric_reference_must_be_writeable");
+  },
+
+  unresolvedIdentifier(name: string): string {
+    return translate("unresolved_identifier", { name });
+  },
+
   unknownTriggerStatement(got: string): string {
     return translate("unrecognized_element", { value: got });
   },

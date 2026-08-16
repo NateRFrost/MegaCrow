@@ -14,7 +14,7 @@ export const completePlayerGetVehicle = (
     case 0:
       return suggestTyped(ctx, ParameterType.Player);
     case 1:
-      return suggestTyped(ctx, ParameterType.Object);
+      return suggestTyped(ctx, ParameterType.Object, { writable: true });
     default:
       return [];
   }

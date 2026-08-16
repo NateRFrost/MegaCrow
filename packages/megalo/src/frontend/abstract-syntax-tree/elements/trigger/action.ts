@@ -108,7 +108,7 @@ export const parseAction = (
   }
 
   if (name.value === "for_each") {
-    return parseForEach(ctx, actionToken);
+    return parseForEach(ctx, actionToken, name);
   }
 
   const parser = ctx.actionParserRepository.getParser(name.value);
@@ -1137,12 +1137,26 @@ export class ActionParserRepository {
 
     this.registerParser(
       "set_player_respawn_vehicle",
-      buildParameterParser([ParameterType.Object, ParameterType.Player])
+      buildParameterParser([
+        [
+          ObjectListParameter(ObjectListType.Objects),
+          ParameterType.QuotedString,
+          ParameterType.Keyword,
+        ],
+        ParameterType.Player,
+      ])
     );
 
     this.registerParser(
       "set_team_respawn_vehicle",
-      buildParameterParser([ParameterType.Object, ParameterType.Team])
+      buildParameterParser([
+        [
+          ObjectListParameter(ObjectListType.Objects),
+          ParameterType.QuotedString,
+          ParameterType.Keyword,
+        ],
+        ParameterType.Team,
+      ])
     );
 
     this.registerParser(

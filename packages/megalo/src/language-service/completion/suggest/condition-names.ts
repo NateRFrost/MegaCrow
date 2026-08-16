@@ -1,21 +1,30 @@
 import { conditionType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions";
-import { filterByPrefix } from "src/language-service/completion/helpers";
+import {
+  filterByFuzzy,
+  withContinueCompletion,
+} from "src/language-service/completion/helpers";
 import type {
   CompletionItem,
   ConditionNameCompletionContext,
 } from "src/language-service/completion/types";
+import { hoverDocumentationForId } from "src/language-service/hover";
 
 export const suggestConditionNames = (
   ctx: ConditionNameCompletionContext
 ): CompletionItem[] =>
-  filterByPrefix(
-    conditionType.acceptedNames
+  filterByFuzzy(
+    conditionType.names
       .filter((name) => !conditionType.isDeprecated(name))
-      .map((label) => ({
-        label,
-        kind: "function" as const,
-        sortText: label,
-        detail: "condition",
-      })),
+      .map((label) => {
+        const documentation = hoverDocumentationForId("condition", label);
+        const entry: CompletionItem = {
+          label,
+          kind: "function",
+          sortText: label,
+          detail: "condition",
+          ...(documentation === undefined ? {} : { documentation }),
+        };
+        return withContinueCompletion(entry);
+      }),
     ctx.prefix.text
   );

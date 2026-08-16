@@ -147,7 +147,7 @@ export default defineConfig({
       "@monaco-themes": monacoThemesDir,
       "@tauri-apps/api": tauriApiDir,
     },
-    dedupe: ["@tauri-apps/api"],
+    dedupe: ["@tauri-apps/api", "monaco-editor"],
   },
   server: {
     port: 5173,

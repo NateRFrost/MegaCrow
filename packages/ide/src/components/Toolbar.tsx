@@ -277,30 +277,6 @@ export function Toolbar({
             Docs
           </button>
           <SettingsMenu onChange={onSettingsChange} settings={settings} />
-          <button
-            aria-label="About MegaCrow"
-            className="toolbar-menu"
-            onClick={() => setAboutOpen(true)}
-            title="About MegaCrow"
-            type="button"
-          >
-            <svg aria-hidden="true" viewBox="0 0 16 16">
-              <circle
-                cx="8"
-                cy="8"
-                fill="none"
-                r="6.25"
-                stroke="currentColor"
-                strokeWidth="1.25"
-              />
-              <path
-                d="M8 7.1v4.2M8 5.4h.01"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeWidth="1.4"
-              />
-            </svg>
-          </button>
           <WindowControls />
         </div>
       </header>

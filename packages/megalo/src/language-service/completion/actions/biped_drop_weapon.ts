@@ -20,7 +20,7 @@ export const completeBipedDropWeapon = (
     case 1:
       return suggestEnum(ctx, weaponSlot);
     case 2:
-      return suggestKeywords(ctx, ["delete_on_drop"]);
+      return suggestKeywords(ctx, ["delete_on_drop"], "enumMember");
     default:
       return [];
   }

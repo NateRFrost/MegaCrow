@@ -1,30 +1,38 @@
-export interface SourceFileQuickOpenEntry {
-  /** Secondary text (folder, workspace, etc.). */
-  description?: string;
-  /** Stable id for the pick (path or opfs name). */
+import type { SourceFileQuickOpenEntry } from "./sourceFileQuickOpenEntry";
+
+export type { SourceFileQuickOpenEntry } from "./sourceFileQuickOpenEntry";
+
+export type IdePaletteMode = "files" | "commands";
+
+type IdePaletteOpener = (options: { mode: IdePaletteMode }) => void;
+
+interface MonacoEditorAction {
+  alias?: string;
   id: string;
-  /** Primary label shown in the picker (searchable). */
+  isSupported(): boolean;
   label: string;
-  open: () => void | Promise<void>;
+  run(): void | Promise<void>;
 }
 
-interface QuickPickItem {
+interface MonacoCodeEditor {
+  focus(): void;
+  getSupportedActions(): MonacoEditorAction[];
+}
+
+interface CodeEditorService {
+  getFocusedCodeEditor(): MonacoCodeEditor | null;
+  listCodeEditors(): MonacoCodeEditor[];
+}
+
+export interface IdePaletteCommand {
   description?: string;
-  entry: SourceFileQuickOpenEntry;
+  id: string;
   label: string;
-}
-
-interface QuickInputService {
-  pick(
-    picks: QuickPickItem[],
-    options?: {
-      matchOnDescription?: boolean;
-      placeHolder?: string;
-    }
-  ): Promise<QuickPickItem | undefined>;
+  run: () => void | Promise<void>;
 }
 
 let entries: SourceFileQuickOpenEntry[] = [];
+let paletteOpener: IdePaletteOpener | null = null;
 
 /** Replace the catalog of source files available to Go to File. */
 export function setSourceFileQuickOpenEntries(
@@ -35,62 +43,6 @@ export function setSourceFileQuickOpenEntries(
 
 export function getSourceFileQuickOpenEntries(): readonly SourceFileQuickOpenEntry[] {
   return entries;
-}
-
-/**
- * Open Monaco's quick-pick UI filtered against workspace / OPFS source files.
- * Requires a focused Monaco editor (standalone quick input is editor-scoped).
- */
-export async function showSourceFileQuickOpen(editor?: {
-  focus(): void;
-}): Promise<void> {
-  editor?.focus();
-
-  const { StandaloneServices } = await import(
-    "monaco-editor/esm/vs/editor/standalone/browser/standaloneServices.js"
-  );
-  const { IQuickInputService } = await import(
-    "monaco-editor/esm/vs/platform/quickinput/common/quickInput.js"
-  );
-
-  StandaloneServices.initialize({});
-  const service = StandaloneServices.get(
-    IQuickInputService
-  ) as QuickInputService;
-
-  if (entries.length === 0) {
-    await service.pick(
-      [
-        {
-          label: "No source files in this workspace",
-          description: "Open a workspace folder or create a .txt file",
-          entry: {
-            id: "__empty__",
-            label: "",
-            open: () => undefined,
-          },
-        },
-      ],
-      { placeHolder: "Search source files by name" }
-    );
-    return;
-  }
-
-  const selected = await service.pick(
-    entries.map((entry) => ({
-      label: entry.label,
-      description: entry.description,
-      entry,
-    })),
-    {
-      placeHolder: "Search source files by name",
-      matchOnDescription: true,
-    }
-  );
-
-  if (selected?.entry && selected.entry.id !== "__empty__") {
-    await selected.entry.open();
-  }
 }
 
 /** Flatten a LocalDisk-style tree into file nodes only. */
@@ -110,4 +62,94 @@ export function flattenSourceFileNodes<
   };
   walk(nodes);
   return files;
+}
+
+/** App shell registers the centered palette UI. */
+export function setIdePaletteOpener(opener: IdePaletteOpener | null): void {
+  paletteOpener = opener;
+}
+
+function openPalette(mode: IdePaletteMode): void {
+  if (!paletteOpener) {
+    console.error("[megacrow] Ide palette opener is not registered");
+    return;
+  }
+  paletteOpener({ mode });
+}
+
+/** Open Go to File (works with or without an open editor). */
+export function showSourceFileQuickOpen(_editor?: { focus(): void }): void {
+  openPalette("files");
+}
+
+/** Open command mode (Monaco editor actions when a file editor exists). */
+export function showCommandPalette(_editor?: { focus(): void }): void {
+  openPalette("commands");
+}
+
+async function getCodeEditorService(): Promise<CodeEditorService | null> {
+  try {
+    const [{ StandaloneServices }, { ICodeEditorService }] = await Promise.all([
+      import(
+        "monaco-editor/esm/vs/editor/standalone/browser/standaloneServices.js"
+      ),
+      import(
+        "monaco-editor/esm/vs/editor/browser/services/codeEditorService.js"
+      ),
+    ]);
+    StandaloneServices.initialize({});
+    return StandaloneServices.get(ICodeEditorService) as CodeEditorService;
+  } catch {
+    return null;
+  }
+}
+
+/** Prefer the focused file editor; otherwise any live code editor. */
+export async function getActiveMonacoEditor(): Promise<MonacoCodeEditor | null> {
+  const service = await getCodeEditorService();
+  if (!service) {
+    return null;
+  }
+  return service.getFocusedCodeEditor() ?? service.listCodeEditors()[0] ?? null;
+}
+
+/**
+ * Monaco editor actions for the command palette.
+ * Empty when no file editor is mounted (empty state).
+ */
+export async function getMonacoCommandPaletteEntries(): Promise<
+  IdePaletteCommand[]
+> {
+  const editor = await getActiveMonacoEditor();
+  if (!editor) {
+    return [];
+  }
+
+  const commands: IdePaletteCommand[] = [];
+  for (const action of editor.getSupportedActions()) {
+    if (!action.isSupported()) {
+      continue;
+    }
+    // Avoid nesting our own palette opener inside the list as a no-op loop.
+    if (
+      action.id === "megacrow.commandPalette" ||
+      action.id === "editor.action.quickCommand"
+    ) {
+      continue;
+    }
+    const label = action.label?.trim() || action.id;
+    commands.push({
+      id: action.id,
+      label,
+      description:
+        action.alias && action.alias !== label ? action.alias : undefined,
+      run: () => {
+        editor.focus();
+        return action.run();
+      },
+    });
+  }
+
+  commands.sort((a, b) => a.label.localeCompare(b.label));
+  return commands;
 }

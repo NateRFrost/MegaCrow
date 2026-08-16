@@ -1,5 +1,6 @@
 import type { SourceCodeLocation } from "src/diagnostics";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { assertWritableNumeric } from "src/frontend/intermediate-representation/diagnostics";
 import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import {
   type Action,
@@ -24,6 +25,11 @@ export const lowerObjectGetDistance = (
   requireParamCount(parameters, 3, location);
 
   const paramCtx = asParameterLoweringContext(ctx);
+  const __writableOut = resolveCustomVariableReference(
+    parameters[2]!,
+    paramCtx
+  );
+  assertWritableNumeric(__writableOut, parameters[2]!.location);
 
   return {
     type: ActionType.object_get_distance,
@@ -33,7 +39,7 @@ export const lowerObjectGetDistance = (
 
       to: resolveObjectReference(parameters[1]!, paramCtx),
 
-      distanceOut: resolveCustomVariableReference(parameters[2]!, paramCtx),
+      distanceOut: __writableOut,
     },
   };
 };

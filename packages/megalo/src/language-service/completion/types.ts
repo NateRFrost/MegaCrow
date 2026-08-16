@@ -26,16 +26,30 @@ export interface CompletionRange {
 export interface CompletionItem {
   detail?: string;
   /**
+   * Markdown documentation shown in the suggest details pane / hover on the item.
+   */
+  documentation?: string;
+  /**
    * When set, editors filter/score on this instead of `label`. Use the current
    * prefix for every alternative when replacing a complete keyword so siblings
    * stay visible (e.g. all temporary storage types while on `player`).
    */
   filterText?: string;
+  /**
+   * When true, `insertText` is a snippet (tabstops like `$0`). Wired through
+   * LSP `InsertTextFormat.Snippet` / Monaco `InsertAsSnippet`.
+   */
+  insertAsSnippet?: boolean;
   insertText?: string;
   kind: CompletionKind;
   label: string;
   /** Lower sorts first. */
   sortText?: string;
+  /**
+   * After accepting this item, reopen the suggest widget (next token / body).
+   * Wired as LSP/Monaco `editor.action.triggerSuggest`.
+   */
+  triggerSuggestAfterAccept?: boolean;
 }
 
 export interface CompletionPrefix {

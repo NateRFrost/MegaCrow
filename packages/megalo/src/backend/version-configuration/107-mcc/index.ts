@@ -3,9 +3,16 @@ import {
   type VariableLimits,
   VersionConfiguration,
 } from "src/backend/version-configuration/version_configuration";
+import { ActionType } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import { VariableScope, VariableType } from "src/frontend/symbol-table";
 
 export class VersionConfiguration107MCC extends VersionConfiguration {
+  private static readonly PREGAME_ACTIONS: readonly ActionType[] = [
+    ActionType.set,
+    ActionType.for_each,
+    ActionType.begin,
+  ];
+
   /** Reach MCC object list tables under `object_lists/`. */
   private static readonly OBJECT_LIST_NAMES: readonly string[] = [
     "objects.txt",
@@ -71,5 +78,9 @@ export class VersionConfiguration107MCC extends VersionConfiguration {
 
   public get objectListNames(): readonly string[] {
     return VersionConfiguration107MCC.OBJECT_LIST_NAMES;
+  }
+
+  public get pregameActions(): readonly ActionType[] {
+    return VersionConfiguration107MCC.PREGAME_ACTIONS;
   }
 }

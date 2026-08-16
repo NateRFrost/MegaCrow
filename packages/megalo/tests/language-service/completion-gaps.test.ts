@@ -139,7 +139,11 @@ end
       character: partialChar,
     }).map((item) => item.label);
     expect(labels).toContain("hud_proximity_warning");
-    expect(labels).not.toContain("other_hud_text");
+    // Fuzzy: `hud_` also matches the `hud` segment inside `other_hud_text`.
+    expect(labels).toContain("other_hud_text");
+    expect(labels.indexOf("hud_proximity_warning")).toBeLessThan(
+      labels.indexOf("other_hud_text")
+    );
 
     const emptyPrefixChar = lineText.indexOf("hud_proximity_warning");
     const allLabels = completionsAtPosition(snapshot, {

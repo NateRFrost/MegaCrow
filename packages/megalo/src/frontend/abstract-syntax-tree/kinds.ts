@@ -50,6 +50,7 @@ export type ASTMemberReferenceNode = ASTNode<SyntaxKind.MEMBER_REFERENCE> & {
   member: { value: string; location: SourceCodeLocation };
 };
 
-export const isAstErrorNode = (
-  node: ASTErrorNode | { value: string; location: SourceCodeLocation }
-): node is ASTErrorNode => "kind" in node && node.kind === SyntaxKind.INVALID;
+export const isAstErrorNode = (node: {
+  kind?: SyntaxKind | string | number;
+  location: SourceCodeLocation;
+}): node is ASTErrorNode => node.kind === SyntaxKind.INVALID;

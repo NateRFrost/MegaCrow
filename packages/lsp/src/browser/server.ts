@@ -1,5 +1,5 @@
-import type { ObjectLists } from "@megacrow/megalo";
-import { MEGALO_VERSIONS } from "@megacrow/megalo";
+import type { ObjectLists, SupportedLocale } from "@megacrow/megalo";
+import { MEGALO_VERSIONS, setLocale } from "@megacrow/megalo";
 import {
   BrowserMessageReader,
   BrowserMessageWriter,
@@ -20,6 +20,7 @@ import {
   completionsFromSnapshot,
   definitionFromSnapshot,
   getQuotedPathCompletionQuery,
+  hoverFromSnapshot,
   MEGACROW_ANALYZE_OBJECT_LIST_METHOD,
   MEGACROW_COMPILE_METHOD,
   MEGACROW_LIST_DIRECTORY_METHOD,
@@ -27,6 +28,7 @@ import {
   MEGACROW_RESET_SESSION_METHOD,
   MEGACROW_RESOLVE_BASE_FILE_METHOD,
   MEGACROW_RESOLVE_INCLUDE_METHOD,
+  MEGACROW_SET_LOCALE_METHOD,
   MEGACROW_SET_OBJECT_LISTS_METHOD,
   MEGACROW_SET_RESOLVE_BASE_FILE_METHOD,
   MEGACROW_VERSION_CONFIGURATION_METHOD,
@@ -42,6 +44,7 @@ import {
   type MegacrowResolveBaseFileResult,
   type MegacrowResolveIncludeParams,
   type MegacrowResolveIncludeResult,
+  type MegacrowSetLocaleParams,
   type MegacrowSetObjectListsParams,
   type MegacrowSetResolveBaseFileParams,
   type MegacrowVersionConfigurationResult,
@@ -410,6 +413,7 @@ connection.onInitialize(
   (_params: InitializeParams): InitializeResult => ({
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Full,
+      hoverProvider: true,
       definitionProvider: true,
       completionProvider: {
         triggerCharacters: [" ", ".", "_", '"', "/"],
@@ -479,6 +483,26 @@ connection.onDefinition(async (params) => {
   }
   const entry = await getCachedSnapshot(uri, doc);
   return definitionFromSnapshot(entry.snapshot, uri, params.position);
+});
+
+connection.onHover(async (params) => {
+  const uri = params.textDocument.uri;
+  const doc = documents.get(uri);
+  if (!doc) {
+    return null;
+  }
+  const entry = await getCachedSnapshot(uri, doc);
+  const hover = hoverFromSnapshot(entry.snapshot, params.position);
+  if (!hover) {
+    return null;
+  }
+  return {
+    contents: {
+      kind: "markdown",
+      value: hover.contents.value,
+    },
+    range: hover.range,
+  };
 });
 
 connection.onCompletion(async (params) => {
@@ -607,6 +631,19 @@ connection.onNotification(
       return;
     }
     resolveBaseFileEnabled = next;
+    snapshotCache.clear();
+    snapshotInflight.clear();
+    for (const [uri, doc] of documents) {
+      schedulePublish(uri, doc.getText(), doc.version);
+    }
+  }
+);
+
+connection.onNotification(
+  MEGACROW_SET_LOCALE_METHOD,
+  (params: MegacrowSetLocaleParams) => {
+    const next = (params.locale === "ja" ? "ja" : "en") as SupportedLocale;
+    setLocale(next);
     snapshotCache.clear();
     snapshotInflight.clear();
     for (const [uri, doc] of documents) {

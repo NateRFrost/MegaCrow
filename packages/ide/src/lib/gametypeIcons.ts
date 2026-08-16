@@ -68,3 +68,8 @@ export function getReachGametypeIconUrl(iconIndex: number): string {
   const name = ENGINE_ICON_SUFFIXES[index] ?? String(index).padStart(2, "0");
   return `${FILESHARE_BASE}/gametypes/reach_gametypes_${name}.png`;
 }
+
+/** Fileshare icon used for open object-list documents in the sidebar. */
+export function getObjectListIconUrl(): string {
+  return `${FILESHARE_BASE}/gametypes/reach_gametypes_pre_game_warm_up.png`;
+}

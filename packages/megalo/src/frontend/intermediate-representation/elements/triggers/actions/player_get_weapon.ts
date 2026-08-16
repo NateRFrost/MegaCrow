@@ -1,6 +1,7 @@
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { assertWritableObject } from "src/frontend/intermediate-representation/diagnostics";
 import {
   requireKeyword,
   requireParamCount,
@@ -34,12 +35,14 @@ export const lowerPlayerGetWeapon = (
     );
   }
   const paramCtx = asParameterLoweringContext(ctx);
+  const __writableOut = resolveObjectReference(parameters[2]!, paramCtx);
+  assertWritableObject(__writableOut, parameters[2]!.location);
   return {
     type: ActionType.player_get_weapon,
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),
       primary,
-      weapon: resolveObjectReference(parameters[2]!, paramCtx),
+      weapon: __writableOut,
     },
   };
 };

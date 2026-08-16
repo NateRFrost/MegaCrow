@@ -47,8 +47,11 @@ export const completeCreateObject = (
 
   const prev = previousSignificant(p, ctx.slotIndex);
   if (prev?.kind === SyntaxKind.KEYWORD) {
-    if (prev.value === "at" || prev.value === "set") {
+    if (prev.value === "at") {
       return suggestTyped(ctx, ParameterType.Object);
+    }
+    if (prev.value === "set") {
+      return suggestTyped(ctx, ParameterType.Object, { writable: true });
     }
     if (prev.value === "label") {
       return suggestTyped(ctx, ParameterType.ObjectFilter);

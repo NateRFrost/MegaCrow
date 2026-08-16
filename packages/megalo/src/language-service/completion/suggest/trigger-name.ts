@@ -4,6 +4,7 @@ import {
   filterByPrefix,
   suggestKeywords,
   suggestSymbolKind,
+  withBlockEndSnippet,
 } from "src/language-service/completion/helpers";
 import type {
   CompletionItem,
@@ -12,20 +13,25 @@ import type {
 
 /**
  * Trigger / for_each header: execution kinds + declared map_object filters.
+ * Accepting a name opens the block body and inserts a matching `end`.
  */
 export const suggestTriggerName = (
   ctx: TriggerNameCompletionContext
 ): CompletionItem[] => {
-  const kinds = suggestKeywords(ctx, TRIGGER_EXECUTION_KINDS, "enumMember");
-  const filters = suggestSymbolKind(ctx, SymbolKind.ObjectFilter);
-  const seen = new Set(kinds.map((item) => item.label));
+  const kinds = suggestKeywords(ctx, TRIGGER_EXECUTION_KINDS, "enumMember").map(
+    (entry) => withBlockEndSnippet(entry)
+  );
+  const filters = suggestSymbolKind(ctx, SymbolKind.ObjectFilter).map((entry) =>
+    withBlockEndSnippet(entry)
+  );
+  const seen = new Set(kinds.map((entry) => entry.label));
   const merged = [...kinds];
-  for (const item of filters) {
-    if (seen.has(item.label)) {
+  for (const entry of filters) {
+    if (seen.has(entry.label)) {
       continue;
     }
-    seen.add(item.label);
-    merged.push(item);
+    seen.add(entry.label);
+    merged.push(entry);
   }
   return filterByPrefix(merged, ctx.prefix.text);
 };

@@ -3,6 +3,7 @@ import { normalizeEditorThemeId } from "../monaco/theme";
 import {
   type AppSettings,
   DEFAULT_APP_SETTINGS,
+  normalizeUiLocale,
   readLocalAppSettings,
   writeLocalAppSettings,
 } from "./appSettings";
@@ -71,6 +72,7 @@ export function appSettingsFromMegacrow(
     compilerStrictness: settings.compilerStrictness,
     editorTheme: normalizeEditorThemeId(settings.editorTheme),
     editorWordWrap: settings.editorWordWrap,
+    locale: normalizeUiLocale(settings.locale),
     skippedUpdateVersion: settings.skippedUpdateVersion ?? null,
   };
 }
@@ -94,6 +96,10 @@ export function mergeAppSettings(
       patch.editorWordWrap === undefined
         ? settings.editorWordWrap
         : patch.editorWordWrap,
+    locale:
+      patch.locale === undefined
+        ? settings.locale
+        : normalizeUiLocale(patch.locale),
     skippedUpdateVersion:
       patch.skippedUpdateVersion === undefined
         ? (settings.skippedUpdateVersion ?? null)
@@ -173,6 +179,7 @@ export function normalizeMegacrowSettings(
       typeof raw?.editorWordWrap === "boolean"
         ? raw.editorWordWrap
         : DEFAULT_APP_SETTINGS.editorWordWrap,
+    locale: normalizeUiLocale(raw?.locale),
     skippedUpdateVersion:
       typeof raw?.skippedUpdateVersion === "string"
         ? raw.skippedUpdateVersion

@@ -494,7 +494,10 @@ const parseObjectListParameter = (
   objectType: ObjectListType
 ): ASTParameterNode | undefined => {
   const token = ctx.peekToken();
-  if (token?.kind !== TokenKind.Identifier) {
+  if (
+    token?.kind !== TokenKind.Identifier &&
+    token?.kind !== TokenKind.QuotedString
+  ) {
     return;
   }
 

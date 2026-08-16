@@ -19,7 +19,7 @@ export const completeGetButtonTime = (
     case 1:
       return suggestEnum(ctx, scriptableGameButtons);
     case 2:
-      return suggestTyped(ctx, ParameterType.Integer);
+      return suggestTyped(ctx, ParameterType.Integer, { writable: true });
     default:
       return [];
   }

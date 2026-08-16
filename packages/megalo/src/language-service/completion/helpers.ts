@@ -5,14 +5,29 @@ import {
   ParameterType,
 } from "src/frontend/abstract-syntax-tree/parameters";
 import {
+  isWritableCustomVariable,
+  isWritableExplicitObject,
+  isWritableExplicitPlayer,
+  isWritableExplicitTeam,
+} from "src/frontend/intermediate-representation/diagnostics/isWritable";
+import {
   playerFilterType,
   teamOrPlayerTarget,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
+import type { CustomVariableReference } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_references";
 import type { MegaloEnumDef } from "src/frontend/intermediate-representation/megaloEnum";
+import {
+  tryParseExplicitObject,
+  tryParseExplicitPlayer,
+  tryParseExplicitTeam,
+} from "src/frontend/intermediate-representation/parameters/explicit";
+import { GAME_OPTION_CUSTOM_VARIABLE_TYPE } from "src/frontend/intermediate-representation/parameters/gameOptionTypes";
 import { ObjectListType } from "src/frontend/object-lists";
 import {
+  isBuiltInVariable,
   SymbolKind,
   type SymbolTableEntry,
+  type SymbolTableVariableEntry,
   VariableScope,
   VariableType,
 } from "src/frontend/symbol-table";
@@ -204,15 +219,112 @@ const resolveVisibleRootType = (
   return;
 };
 
+/**
+ * Lower score = better match. `undefined` means no match.
+ * Prefers prefix, then snake_case segment, then substring, then subsequence.
+ */
+export const fuzzyMatchScore = (
+  label: string,
+  query: string
+): number | undefined => {
+  if (query.length === 0) {
+    return 0;
+  }
+  const l = label.toLowerCase();
+  const q = query.toLowerCase();
+
+  if (l === q) {
+    return 0;
+  }
+  if (l.startsWith(q)) {
+    return 1;
+  }
+
+  const segments = l.split("_");
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i]!;
+    if (seg === q) {
+      return 10 + i;
+    }
+    if (seg.startsWith(q)) {
+      return 20 + i;
+    }
+  }
+
+  const substringIndex = l.indexOf(q);
+  if (substringIndex >= 0) {
+    return 100 + substringIndex;
+  }
+
+  // Loose subsequence only for multi-char queries (avoids "s" matching everything).
+  if (q.length < 2) {
+    return;
+  }
+  let qi = 0;
+  let first = -1;
+  let gaps = 0;
+  let prev = -1;
+  for (let i = 0; i < l.length && qi < q.length; i++) {
+    if (l[i] !== q[qi]) {
+      continue;
+    }
+    if (first < 0) {
+      first = i;
+    }
+    if (prev >= 0) {
+      gaps += i - prev - 1;
+    }
+    prev = i;
+    qi += 1;
+  }
+  if (qi === q.length) {
+    return 200 + first + gaps;
+  }
+  return;
+};
+
+/** @deprecated Prefer {@link filterByFuzzy}; kept as an alias. */
 export const filterByPrefix = (
+  items: CompletionItem[],
+  prefix: string
+): CompletionItem[] => filterByFuzzy(items, prefix);
+
+/**
+ * Filter and rank completion items with fuzzy matching.
+ * Non-prefix hits set `filterText` to the query so Monaco keeps them visible.
+ */
+export const filterByFuzzy = (
   items: CompletionItem[],
   prefix: string
 ): CompletionItem[] => {
   if (prefix.length === 0) {
     return items;
   }
-  const lower = prefix.toLowerCase();
-  return items.filter((entry) => entry.label.toLowerCase().startsWith(lower));
+
+  const scored: { item: CompletionItem; score: number }[] = [];
+  for (const entry of items) {
+    const score = fuzzyMatchScore(entry.label, prefix);
+    if (score === undefined) {
+      continue;
+    }
+    const isPrefixMatch = score <= 1;
+    scored.push({
+      score,
+      item: {
+        ...entry,
+        sortText: `${String(score).padStart(4, "0")}_${entry.sortText ?? entry.label}`,
+        // Monaco re-filters by filterText; pin to the query so fuzzy hits aren't dropped.
+        ...(isPrefixMatch || entry.filterText !== undefined
+          ? {}
+          : { filterText: prefix }),
+      },
+    });
+  }
+
+  scored.sort(
+    (a, b) => a.score - b.score || a.item.label.localeCompare(b.item.label)
+  );
+  return scored.map((entry) => entry.item);
 };
 
 /**
@@ -234,9 +346,122 @@ export const forReplacingToken = (
 };
 
 export interface SuggestOptions {
+  /** Include symbols declared later in the file (forward references). */
+  ignoreVisibility?: boolean;
   /** Offer all candidates while the cursor is inside/replacing a value token. */
   replacingToken?: boolean;
+  /**
+   * Only suggest destinations MegaloEdit would accept with `must_be_writeable`
+   * (action out-params / `set` LHS).
+   */
+  writable?: boolean;
 }
+
+/** Built-in `.member` names that are not writable custom-variable destinations. */
+const NON_WRITABLE_BUILTIN_MEMBERS = new Set([
+  "player_rating",
+  "rating",
+  "user_data",
+]);
+
+const isWritableBuiltInNumberName = (name: string): boolean => {
+  // Use the non-pregame mapping so `symmetric_gametype` is not offered as a
+  // general writable destination (Pregame variant is context-specific).
+  const mapped = GAME_OPTION_CUSTOM_VARIABLE_TYPE[name];
+  if (mapped === undefined) {
+    return false;
+  }
+  return isWritableCustomVariable({
+    type: mapped,
+  } as CustomVariableReference);
+};
+
+const isWritableVariableForType = (
+  entry: SymbolTableVariableEntry,
+  type: ParameterType
+): boolean => {
+  switch (type) {
+    case ParameterType.Integer:
+    case ParameterType.Float: {
+      if (entry.type !== VariableType.Number) {
+        return false;
+      }
+      if (!isBuiltInVariable(entry)) {
+        return true;
+      }
+      return isWritableBuiltInNumberName(entry.name);
+    }
+    case ParameterType.Timer:
+      return entry.type === VariableType.Timer;
+    case ParameterType.Player: {
+      if (entry.type !== VariableType.Player) {
+        return false;
+      }
+      if (!isBuiltInVariable(entry)) {
+        return true;
+      }
+      const explicit = tryParseExplicitPlayer(entry.name);
+      return explicit !== undefined && isWritableExplicitPlayer(explicit);
+    }
+    case ParameterType.Object: {
+      // Writable object outs reject player bipeds (`is_player_reference`).
+      if (entry.type === VariableType.Player) {
+        return false;
+      }
+      if (entry.type !== VariableType.Object) {
+        return false;
+      }
+      if (!isBuiltInVariable(entry)) {
+        return true;
+      }
+      const explicit = tryParseExplicitObject(entry.name);
+      return explicit !== undefined && isWritableExplicitObject(explicit);
+    }
+    case ParameterType.Team: {
+      if (entry.type !== VariableType.Team) {
+        return false;
+      }
+      if (!isBuiltInVariable(entry)) {
+        return true;
+      }
+      const explicit = tryParseExplicitTeam(entry.name);
+      return explicit !== undefined && isWritableExplicitTeam(explicit);
+    }
+    default:
+      return false;
+  }
+};
+
+const isWritableSuggestionForType = (
+  entry: SymbolTableEntry,
+  type: ParameterType
+): boolean => {
+  if (
+    entry.kind === SymbolKind.Constant ||
+    entry.kind === SymbolKind.GameOption
+  ) {
+    return false;
+  }
+  if (entry.kind !== SymbolKind.Variable) {
+    return false;
+  }
+  return isWritableVariableForType(entry, type);
+};
+
+const matchesWritableParameterType = (
+  entry: SymbolTableEntry,
+  types: readonly ParameterType[]
+): boolean => {
+  for (const type of types) {
+    if (
+      matchesParameterType(entry, type) &&
+      isWritableSuggestionForType(entry, type)
+    ) {
+      return true;
+    }
+  }
+  return false;
+};
 
 const finalizeSuggestions = (
   ctx: SuggestCtx,
@@ -264,24 +489,71 @@ export const suggestKeywords = (
   ctx: SuggestCtx,
   names: readonly string[],
   kind: CompletionKind = "keyword"
-): CompletionItem[] =>
-  filterByPrefix(
+): CompletionItem[] => {
+  const items = filterByPrefix(
     names.map((name) => item(name, kind)),
     ctx.prefix.text
   );
+  // Property keys almost always take a value on the same line.
+  if (kind === "property") {
+    return items.map((entry) =>
+      entry.label === "end" ? entry : withContinueCompletion(entry)
+    );
+  }
+  return items;
+};
+
+/**
+ * Accepting this item leaves more to type on the statement: append a trailing
+ * space (unless it is already a multi-line snippet) and reopen suggest.
+ */
+export const withContinueCompletion = (
+  entry: CompletionItem
+): CompletionItem => {
+  if (entry.insertAsSnippet === true) {
+    return { ...entry, triggerSuggestAfterAccept: true };
+  }
+  const base = entry.insertText ?? entry.label;
+  return {
+    ...entry,
+    insertText: base.endsWith(" ") ? base : `${base} `,
+    triggerSuggestAfterAccept: true,
+  };
+};
+
+/**
+ * Expand a block opener so accepting it inserts a body line and matching `end`.
+ * Cursor lands on the indented blank line (`$0`).
+ *
+ * @param headerSuffix optional snippet text after the label (e.g. tabstop(1, "general"))
+ */
+export const withBlockEndSnippet = (
+  entry: CompletionItem,
+  headerSuffix = ""
+): CompletionItem => ({
+  ...entry,
+  insertText: `${entry.label}${headerSuffix}\n\t$0\nend`,
+  insertAsSnippet: true,
+  triggerSuggestAfterAccept: true,
+});
+
+/** Build a snippet tabstop like ` ${1:name}` without tripping curly-in-string lint. */
+export const snippetTabstop = (index: number, placeholder: string): string =>
+  ` $${""}{${index}:${placeholder}}`;
 
 export const suggestEnum = (
   ctx: SuggestCtx,
   def:
     | MegaloEnumDef<string>
-    | Pick<MegaloEnumDef<string>, "acceptedNames" | "isDeprecated">
+    | Pick<MegaloEnumDef<string>, "names" | "isDeprecated">
     | readonly string[]
 ): CompletionItem[] => {
   let names: readonly string[];
   if (Array.isArray(def)) {
     names = def;
-  } else if ("acceptedNames" in def) {
-    names = def.acceptedNames.filter(
+  } else if ("names" in def) {
+    // Canonical members only — aliases parse but stay out of autocomplete.
+    names = def.names.filter(
       (name) => !("isDeprecated" in def && def.isDeprecated?.(name))
     );
   } else {
@@ -310,7 +582,8 @@ const pushUnique = (
 const suggestMembers = (
   ctx: SuggestCtx,
   type: ParameterType,
-  rootName: string
+  rootName: string,
+  options?: SuggestOptions
 ): CompletionItem[] => {
   const rootType = resolveVisibleRootType(ctx, rootName);
   if (rootType === undefined) {
@@ -323,8 +596,12 @@ const suggestMembers = (
 
   const items: CompletionItem[] = [];
   const seen = new Set<string>();
+  const requireWritable = options?.writable === true;
 
   for (const name of builtinMembersFor(rootType, type)) {
+    if (requireWritable && NON_WRITABLE_BUILTIN_MEMBERS.has(name)) {
+      continue;
+    }
     pushUnique(items, seen, name, "property", {
       detail: parameterTypeLabel(type),
     });
@@ -340,6 +617,8 @@ const suggestMembers = (
     if (!matchesParameterType(entry, type)) {
       continue;
     }
+    // Scoped members are always writable at the custom-variable type layer
+    // (MegaloEdit does not re-check nested explicits for must_be_writeable).
     pushUnique(items, seen, entry.name, "property", {
       detail: completionDetailForEntry(entry),
     });
@@ -350,11 +629,31 @@ const suggestMembers = (
 
 export const suggestTyped = (
   ctx: SuggestCtx,
-  type: ParameterType,
+  type: ParameterType | readonly ParameterType[],
   options?: SuggestOptions
 ): CompletionItem[] => {
+  const types: readonly ParameterType[] = Array.isArray(type) ? type : [type];
+  const requireWritable = options?.writable === true;
+
   if (ctx.prefix.memberOf !== undefined) {
-    return suggestMembers(ctx, type, ctx.prefix.memberOf);
+    const items: CompletionItem[] = [];
+    const seen = new Set<string>();
+    for (const parameterType of types) {
+      for (const entry of suggestMembers(
+        ctx,
+        parameterType,
+        ctx.prefix.memberOf,
+        options
+      )) {
+        pushUnique(items, seen, entry.label, entry.kind, {
+          detail: entry.detail,
+          insertText: entry.insertText,
+          filterText: entry.filterText,
+          sortText: entry.sortText,
+        });
+      }
+    }
+    return finalizeSuggestions(ctx, items, options);
   }
 
   const items: CompletionItem[] = [];
@@ -363,7 +662,13 @@ export const suggestTyped = (
     if (!isVisibleAt(entry, ctx.offset)) {
       continue;
     }
-    if (!matchesParameterType(entry, type)) {
+    if (requireWritable) {
+      if (!matchesWritableParameterType(entry, types)) {
+        continue;
+      }
+    } else if (
+      !types.some((parameterType) => matchesParameterType(entry, parameterType))
+    ) {
       continue;
     }
     if (
@@ -386,7 +691,8 @@ export const suggestObjectList = (
   objectType: ObjectListType,
   options?: { quoted?: boolean }
 ): CompletionItem[] => {
-  const quoted = options?.quoted === true || ctx.prefix.quoted;
+  // Only wrap when quotes are required and the cursor is not already inside them.
+  const wrapInQuotes = options?.quoted === true && !ctx.prefix.quoted;
   const items: CompletionItem[] = [];
   for (const entry of ctx.snapshot.ast.symbolTable.toArray()) {
     if (entry.kind !== SymbolKind.ObjectListItem) {
@@ -398,7 +704,7 @@ export const suggestObjectList = (
     const label = entry.name;
     items.push(
       item(label, "enumMember", {
-        insertText: quoted ? `"${label}"` : label,
+        insertText: wrapInQuotes ? `"${label}"` : label,
         detail: completionDetailForEntry(entry),
       })
     );
@@ -408,7 +714,8 @@ export const suggestObjectList = (
 
 export const suggestSymbolKind = (
   ctx: SuggestCtx,
-  kind: SymbolKind
+  kind: SymbolKind,
+  options?: SuggestOptions
 ): CompletionItem[] => {
   const items: CompletionItem[] = [];
   const seen = new Set<string>();
@@ -416,7 +723,7 @@ export const suggestSymbolKind = (
     if (entry.kind !== kind) {
       continue;
     }
-    if (!isVisibleAt(entry, ctx.offset)) {
+    if (options?.ignoreVisibility !== true && !isVisibleAt(entry, ctx.offset)) {
       continue;
     }
     if (
@@ -429,7 +736,7 @@ export const suggestSymbolKind = (
       detail: completionDetailForEntry(entry),
     });
   }
-  return filterByPrefix(items, ctx.prefix.text);
+  return finalizeSuggestions(ctx, items, options);
 };
 
 /**

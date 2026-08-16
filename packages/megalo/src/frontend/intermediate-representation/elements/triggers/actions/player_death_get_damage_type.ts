@@ -1,5 +1,6 @@
 import type { SourceCodeLocation } from "src/diagnostics";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { assertWritableNumeric } from "src/frontend/intermediate-representation/diagnostics";
 import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import {
   type Action,
@@ -24,6 +25,11 @@ export const lowerPlayerDeathGetDamageType = (
   requireParamCount(parameters, 2, location);
 
   const paramCtx = asParameterLoweringContext(ctx);
+  const __writableOut = resolveCustomVariableReference(
+    parameters[1]!,
+    paramCtx
+  );
+  assertWritableNumeric(__writableOut, parameters[1]!.location);
 
   return {
     type: ActionType.player_death_get_damage_type,
@@ -31,7 +37,7 @@ export const lowerPlayerDeathGetDamageType = (
     parameters: {
       deadPlayer: resolvePlayerReference(parameters[0]!, paramCtx),
 
-      damageTypeOut: resolveCustomVariableReference(parameters[1]!, paramCtx),
+      damageTypeOut: __writableOut,
     },
   };
 };

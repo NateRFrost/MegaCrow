@@ -3,6 +3,7 @@ import { SymbolKind } from "src/frontend/symbol-table";
 import {
   suggestKeywords,
   suggestSymbolKind,
+  withBlockEndSnippet,
 } from "src/language-service/completion/helpers";
 import type {
   ActionCompletionContext,
@@ -19,5 +20,5 @@ export const completeForEach = (
   return [
     ...suggestKeywords(ctx, TRIGGER_EXECUTION_KINDS, "enumMember"),
     ...suggestSymbolKind(ctx, SymbolKind.ObjectFilter),
-  ];
+  ].map((entry) => withBlockEndSnippet(entry));
 };

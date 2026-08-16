@@ -57,6 +57,7 @@ let worker: Worker | null = null;
 const listeners = new Set<Listener>();
 let currentCompilerSettings: MegaCrowCompilerSettings = {
   creatorGamertag: "",
+  locale: "en",
   strictStringLiterals: false,
 };
 

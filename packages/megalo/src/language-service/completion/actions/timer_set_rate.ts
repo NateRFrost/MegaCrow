@@ -13,7 +13,7 @@ export const completeTimerSetRate = (
 ): CompletionItem[] => {
   switch (ctx.slotIndex) {
     case 0:
-      return suggestTyped(ctx, ParameterType.Timer);
+      return suggestTyped(ctx, ParameterType.Timer, { writable: true });
     case 1:
       return suggestTyped(ctx, ParameterType.Float);
     default:

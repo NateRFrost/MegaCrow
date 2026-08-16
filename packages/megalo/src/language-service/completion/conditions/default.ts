@@ -10,10 +10,11 @@ import type {
 /** Fallback for conditions without a dedicated completer. */
 export const completeConditionDefault = (
   ctx: ConditionCompletionContext
-): CompletionItem[] => [
-  ...suggestTyped(ctx, ParameterType.Integer),
-  ...suggestTyped(ctx, ParameterType.Player),
-  ...suggestTyped(ctx, ParameterType.Object),
-  ...suggestTyped(ctx, ParameterType.Team),
-  ...suggestTyped(ctx, ParameterType.Timer),
-];
+): CompletionItem[] =>
+  suggestTyped(ctx, [
+    ParameterType.Integer,
+    ParameterType.Player,
+    ParameterType.Object,
+    ParameterType.Team,
+    ParameterType.Timer,
+  ]);

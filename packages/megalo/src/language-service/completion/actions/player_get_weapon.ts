@@ -18,7 +18,7 @@ export const completePlayerGetWeapon = (
     case 1:
       return suggestEnum(ctx, weaponSlot);
     case 2:
-      return suggestTyped(ctx, ParameterType.Object);
+      return suggestTyped(ctx, ParameterType.Object, { writable: true });
     default:
       return [];
   }

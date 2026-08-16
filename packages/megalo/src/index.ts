@@ -76,9 +76,16 @@ export {
   encodeSemanticTokens,
   getQuotedPathCompletionQuery,
   getSemanticTokens,
+  type HoverContribution,
+  type HoverContributionKind,
+  type HoverResult,
+  type HoverTarget,
+  hoverAtPosition,
+  hoverDocumentationForId,
   objectListEntryCount,
   type PathDirectoryEntry,
   type QuotedPathCompletionQuery,
+  resolveHoverTarget,
   SEMANTIC_TOKEN_MODIFIERS,
   SEMANTIC_TOKEN_TYPES,
   type SemanticToken,
@@ -87,6 +94,12 @@ export {
   splitPathPrefix,
 } from "src/language-service";
 export { loadObjectListsForVersion } from "src/load-object-lists";
+export {
+  getLocale,
+  SUPPORTED_LOCALES,
+  type SupportedLocale,
+  setLocale,
+} from "src/localization";
 export {
   ALL_MEGACROW_EXTENSIONS,
   DEFAULT_MEGACROW_EXTENSIONS,

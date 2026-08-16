@@ -1,5 +1,6 @@
 import type { SourceCodeLocation } from "src/diagnostics";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { assertWritableNumeric } from "src/frontend/intermediate-representation/diagnostics";
 import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import {
   type Action,
@@ -18,11 +19,13 @@ export const lowerRandom = (
 ): Action => {
   requireParamCount(parameters, 2, location);
   const paramCtx = asParameterLoweringContext(ctx);
+  const valueOut = resolveCustomVariableReference(parameters[1]!, paramCtx);
+  assertWritableNumeric(valueOut, parameters[1]!.location);
   return {
     type: ActionType.random,
     parameters: {
       range: resolveCustomVariableReference(parameters[0]!, paramCtx),
-      valueOut: resolveCustomVariableReference(parameters[1]!, paramCtx),
+      valueOut,
     },
   };
 };

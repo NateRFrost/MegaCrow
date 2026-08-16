@@ -1,0 +1,1500 @@
+{
+  "ui": {
+    "parameters": "パラメータ",
+    "kind": {
+      "action": "アクション",
+      "condition": "条件",
+      "element": "要素",
+      "keyword": "キーワード",
+      "param": "プロパティ"
+    },
+    "symbol": {
+      "built_in": "組み込み",
+      "object_list": "オブジェクトリスト",
+      "constant": "定数",
+      "string": "文字列",
+      "game_option": "ゲームオプション",
+      "hud_widget": "HUD ウィジェット",
+      "loadout": "ロードアウト",
+      "loadout_palette": "ロードアウトパレット",
+      "requisition_palette": "リクイジションパレット",
+      "object_filter": "オブジェクトフィルター",
+      "player_traits": "プレイヤー特性",
+      "game_stat": "ゲーム統計"
+    }
+  },
+  "action": {
+    "adjust_grenades": {
+      "summary": "プレイヤーの手榴弾数を種類ごとに演算で変更します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "grenade_type": "手榴弾の種類: frag、plasma。",
+        "math_operation": "値の適用方法（set_to、add、subtract など）。",
+        "number": "数値または number 変数。"
+      }
+    },
+    "apply_player_traits": {
+      "summary": "名前付きの player_traits ブロックをプレイヤーに適用します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "player_traits_name": "player_traits ブロックの名前。"
+      }
+    },
+    "begin": {
+      "summary": "入れ子のサブトリガーブロックの開始を示します。"
+    },
+    "biped_drop_weapon": {
+      "summary": "バイペッド／プレイヤーから武器を落とします。",
+      "params": {
+        "biped": "武器を受け取る／落とすオブジェクトまたはプレイヤー。",
+        "mode": "装備／スロットモード: primary、secondary。"
+      }
+    },
+    "biped_give_weapon": {
+      "summary": "バイペッド／プレイヤーに武器を付与します。",
+      "params": {
+        "biped": "武器を受け取るオブジェクトまたはプレイヤー。",
+        "weapon": "weapons オブジェクトリストの武器タイプ（通常は引用符付き）。",
+        "mode": "装備モード: primary、secondary、または force。"
+      }
+    },
+    "boundary_set_player_color": {
+      "summary": "境界ボリュームの色をプレイヤー基準で設定します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "player_variable_name": "オブジェクト上のプレイヤーメンバー変数。"
+      }
+    },
+    "boundary_set_visible": {
+      "summary": "境界ボリュームの表示／非表示を切り替えます。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "boolean": "true / false、または真偽値相当。"
+      }
+    },
+    "break_into_debugger": {
+      "summary": "トレーシング有効時にスクリプトデバッガへ割り込みます。"
+    },
+    "create_object": {
+      "summary": "指定タイプのオブジェクトを生成します。",
+      "params": {
+        "object_type": "objects オブジェクトリストの引用符付きタイプ名。",
+        "at": "配置先オブジェクト（任意）。",
+        "set": "生成結果を受け取るオブジェクト変数（任意）。"
+      }
+    },
+    "create_tunnel": {
+      "summary": "2点間にシリンダー形状のオブジェクトを配置します。半径が0の場合はエンジンが5を使います。",
+      "params": {
+        "object_a": "1つ目のオブジェクト参照。",
+        "object_b": "2つ目のオブジェクト参照。",
+        "object_type": "objects オブジェクトリストの引用符付きタイプ名。",
+        "radius": "シリンダー半径（0 の場合エンジン既定値 5）。",
+        "object_reference_out": "生成結果を受け取るオブジェクト変数。"
+      }
+    },
+    "debugging_enable_tracing": {
+      "summary": "スクリプトトレーシングの有効／無効を切り替えます。",
+      "params": {
+        "literal_boolean": "リテラルの true または false。"
+      }
+    },
+    "debug_force_player_view_count": {
+      "summary": "デバッグ用にプレイヤー表示数（分割画面）を強制します。",
+      "params": {
+        "splitscreen_count": "強制する分割画面／ビュー数。"
+      }
+    },
+    "delete_object": {
+      "summary": "マップ上のオブジェクト参照を削除します。",
+      "params": {
+        "object": "オブジェクト参照または変数。"
+      }
+    },
+    "device_animate_position": {
+      "summary": "デバイスを時間をかけて目標位置までアニメーションします。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "animation_target_fraction": "目標アニメーション割合。",
+        "animation_duration_seconds": "アニメーション時間（秒）。",
+        "acceleration_seconds": "加速時間（秒）。",
+        "deceleration_seconds": "減速時間（秒）。"
+      }
+    },
+    "device_get_position": {
+      "summary": "デバイス位置を出力変数へ読み取ります。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "number_out": "パーセント値を受け取る number 変数。"
+      }
+    },
+    "device_get_power": {
+      "summary": "デバイス電源を出力変数へ読み取ります。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "number_out": "パーセント値を受け取る number 変数。"
+      }
+    },
+    "device_set_position": {
+      "summary": "デバイスのアニメーション位置（0–100）を設定します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "number": "パーセント値（0–100）または number 変数。"
+      }
+    },
+    "device_set_position_immediate": {
+      "summary": "アニメーションなしでデバイスを位置にスナップします。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "number": "パーセント値（0–100）または number 変数。"
+      }
+    },
+    "device_set_position_track": {
+      "summary": "デバイスにアニメーショントラック名を割り当てます。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "animation_name": "アニメーショントラック名。",
+        "interpolation_time": "補間時間。"
+      }
+    },
+    "device_set_power": {
+      "summary": "デバイスの電源（パーセント）を設定します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "number": "パーセント値（0–100）または number 変数。"
+      }
+    },
+    "end_round": {
+      "summary": "ラウンドを終了します。"
+    },
+    "for_each": {
+      "summary": "指定トリガータイプの対象ごとに入れ子ブロックを実行します。",
+      "params": {
+        "trigger_type": "入れ子トリガーの種類（player、object など）。"
+      }
+    },
+    "game_grief_record_custom_penalty": {
+      "summary": "プレイヤーにカスタムGriefペナルティを記録します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "penalty_amount": "記録するペナルティ量。"
+      }
+    },
+    "get_button_time": {
+      "summary": "プレイヤーがボタンを押し続けた時間（ミリ秒）を取得します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "scriptable_button": "スクリプト可能ボタンのキーワード。",
+        "milliseconds_out": "長押し時間（ミリ秒）を受け取る number 変数。"
+      }
+    },
+    "get_player_holding_object": {
+      "summary": "オブジェクトを保持しているプレイヤーを取得します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "player_out": "結果を受け取る player 変数。"
+      }
+    },
+    "get_random_object": {
+      "summary": "フィルタに合うオブジェクトをランダムに選びます。",
+      "params": {
+        "filter_name": "オブジェクトフィルタ／ラベル名。",
+        "ignore_object": "ランダム選択から除外するオブジェクト。",
+        "object_out": "結果を受け取る object 変数。"
+      }
+    },
+    "give_weapon": {
+      "summary": "プレイヤーに武器を付与します（レガシー／部分対応。biped_give_weapon 推奨）。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "weapon": "武器タイプ、または武器オブジェクト。",
+        "mode": "装備／スロットモード: primary、secondary、force。"
+      }
+    },
+    "hide_object": {
+      "summary": "オブジェクトの表示／非表示を切り替えます。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "should_hide": "オブジェクトを隠すかどうか。"
+      }
+    },
+    "hs_function_call": {
+      "summary": "HaloScript 関数を名前で呼び出します。",
+      "params": {
+        "function_name": "HaloScript 関数名。"
+      }
+    },
+    "hud_post_message": {
+      "summary": "対象へサウンド付きの HUD メッセージを表示します。",
+      "params": {
+        "team_or_player_target": "everyone、または特定のプレイヤー／チーム。",
+        "sound": "sounds オブジェクトリストのサウンド名。",
+        "dynamic_string": "引用符付き文字列、または動的文字列式。"
+      }
+    },
+    "hud_widget_set_icon": {
+      "summary": "HUD ウィジェットのアイコンを設定します。",
+      "params": {
+        "hud_widget_name": "スクリプトで宣言した hud_widget の名前。",
+        "icon_name": "アイコン名。"
+      }
+    },
+    "hud_widget_set_meter": {
+      "summary": "HUD ウィジェットのメーター表示を設定します。",
+      "params": {
+        "hud_widget_name": "スクリプトで宣言した hud_widget の名前。",
+        "meter": "メーターモード: off、2 つの数値、またはタイマー。"
+      }
+    },
+    "hud_widget_set_text": {
+      "summary": "HUD ウィジェットのテキストを設定します。",
+      "params": {
+        "hud_widget_name": "スクリプトで宣言した hud_widget の名前。",
+        "dynamic_string": "引用符付き文字列、または動的文字列式。"
+      }
+    },
+    "hud_widget_set_value": {
+      "summary": "HUD ウィジェットの値テキストを設定します。",
+      "params": {
+        "hud_widget_name": "スクリプトで宣言した hud_widget の名前。",
+        "dynamic_string": "引用符付き文字列、または動的文字列式。"
+      }
+    },
+    "hud_widget_set_visibility": {
+      "summary": "プレイヤーごとの HUD ウィジェット表示を切り替えます。",
+      "params": {
+        "hud_widget_name": "スクリプトで宣言した hud_widget の名前。",
+        "player": "プレイヤー参照または変数。",
+        "literal_boolean": "リテラルの true または false。"
+      }
+    },
+    "navpoint_set_icon": {
+      "summary": "ナビポイントのアイコンを設定します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "icon": "アイコン名またはキーワード。",
+        "number": "icon が num のときの数値アイコン値。"
+      }
+    },
+    "navpoint_set_priority": {
+      "summary": "ナビポイントの優先度を設定します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "priority": "優先度: low、normal、high、blink。"
+      }
+    },
+    "navpoint_set_text": {
+      "summary": "ナビポイントのテキストを設定します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "dynamic_string": "引用符付き文字列、または動的文字列式。"
+      }
+    },
+    "navpoint_set_timer": {
+      "summary": "ナビポイントにタイマーを関連付けます。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "timer_name": "関連付ける名前付きタイマー。"
+      }
+    },
+    "navpoint_set_visible": {
+      "summary": "ナビポイントの可視対象を設定します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "audience": "影響を受ける対象: no_one、everyone、allies、enemies、player（player 形はプレイヤーと真偽値を取る場合あり）。"
+      }
+    },
+    "navpoint_set_visible_range": {
+      "summary": "ナビポイントが見える距離範囲を設定します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "min": "可視範囲の最小距離（フィート）。",
+        "max": "可視範囲の最大距離（フィート）。"
+      }
+    },
+    "object_adjust_health": {
+      "summary": "オブジェクトの体力を演算で変更します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "math_operation": "値の適用方法（set_to、add、subtract など）。",
+        "number": "数値または number 変数。"
+      }
+    },
+    "object_adjust_maximum_health": {
+      "summary": "オブジェクトの最大体力を演算で変更します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "math_operation": "値の適用方法（set_to、add、subtract など）。",
+        "number": "数値または number 変数。"
+      }
+    },
+    "object_adjust_maximum_shield": {
+      "summary": "オブジェクトの最大シールドを演算で変更します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "math_operation": "値の適用方法（set_to、add、subtract など）。",
+        "number": "数値または number 変数。"
+      }
+    },
+    "object_adjust_shield": {
+      "summary": "オブジェクトのシールドを演算で変更します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "math_operation": "値の適用方法（set_to、add、subtract など）。",
+        "number": "数値または number 変数。"
+      }
+    },
+    "object_attach": {
+      "summary": "子オブジェクトを親オブジェクトにオフセット付きで取り付けます。",
+      "params": {
+        "child_object": "接続／切断するオブジェクト。",
+        "parent_object": "接続先オブジェクト。",
+        "offset_x": "X オフセット（フィート）。",
+        "offset_y": "Y オフセット（フィート）。",
+        "offset_z": "Z オフセット（フィート）。"
+      }
+    },
+    "object_bounce": {
+      "summary": "オブジェクトをバウンスさせます。",
+      "params": {
+        "object": "オブジェクト参照または変数。"
+      }
+    },
+    "object_destroy": {
+      "summary": "オブジェクトを破壊します。",
+      "params": {
+        "object": "オブジェクト参照または変数。"
+      }
+    },
+    "object_detach": {
+      "summary": "取り付けられた子オブジェクトを切り離します。",
+      "params": {
+        "child_object": "接続／切断するオブジェクト。"
+      }
+    },
+    "object_face_object": {
+      "summary": "オブジェクトを別オブジェクトの方向へ向けます。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "target": "向ける先のオブジェクト。",
+        "x": "任意: X 成分（フィート）。",
+        "y": "任意: Y 成分（フィート）。",
+        "z": "任意: Z 成分（フィート）。"
+      }
+    },
+    "object_get_distance": {
+      "summary": "2オブジェクト間の距離（フィート）を取得します。",
+      "params": {
+        "object_a": "1つ目のオブジェクト参照。",
+        "object_b": "2つ目のオブジェクト参照。",
+        "distance_out": "距離（フィート）を受け取る number 変数。"
+      }
+    },
+    "object_get_health": {
+      "summary": "オブジェクトの体力（パーセント）を取得します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "vitality_out": "バイタリティ（％）を受け取る number 変数。"
+      }
+    },
+    "object_get_orientation": {
+      "summary": "オブジェクトの向きを取得します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "orientation_out": "向き（1–6）を受け取る number 変数。"
+      }
+    },
+    "object_get_shield": {
+      "summary": "オブジェクトのシールド（パーセント）を取得します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "vitality_out": "バイタリティ（％）を受け取る number 変数。"
+      }
+    },
+    "object_get_velocity": {
+      "summary": "オブジェクトの速度を取得します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "number_out": "速度を受け取る number 変数。"
+      }
+    },
+    "object_set_invincibility": {
+      "summary": "オブジェクトの無敵状態を設定します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "boolean": "true / false、または真偽値相当。"
+      }
+    },
+    "object_set_minimap_icon": {
+      "summary": "オブジェクトのミニマップアイコンを設定します。Alpha Reach ではコンパイルできますが、動作するミニマップはありません。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "icon": "アイコン名またはキーワード。"
+      }
+    },
+    "object_set_minimap_priority": {
+      "summary": "オブジェクトのミニマップ優先度を設定します。Alpha Reach ではコンパイルできますが、動作するミニマップはありません。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "priority": "優先度: low、normal、high、blink。"
+      }
+    },
+    "object_set_minimap_visibility": {
+      "summary": "オブジェクトのミニマップ表示を切り替えます。Alpha Reach ではコンパイルできますが、動作するミニマップはありません。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "boolean": "true / false、または真偽値相当。"
+      }
+    },
+    "object_set_never_garbage": {
+      "summary": "オブジェクトをガベージ回収対象外にするかを設定します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "boolean": "true / false、または真偽値相当。"
+      }
+    },
+    "object_set_orientation": {
+      "summary": "オブジェクトの向きを別オブジェクトに合わせます。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "source": "向きの参照元オブジェクト。"
+      }
+    },
+    "object_set_scale": {
+      "summary": "オブジェクトのスケール（パーセント）を設定します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "number": "パーセント値（0–100）または number 変数。"
+      }
+    },
+    "player_adjust_money": {
+      "summary": "プレイヤーの所持金を演算で変更します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "math_operation": "値の適用方法（set_to、add、subtract など）。",
+        "number": "数値または number 変数。"
+      }
+    },
+    "player_death_get_damage_type": {
+      "summary": "死亡プレイヤーのダメージ種別を取得します。",
+      "params": {
+        "dead_player": "死亡したプレイヤー。",
+        "number_out": "ダメージタイプを受け取る number 変数。"
+      }
+    },
+    "player_death_get_killing_player": {
+      "summary": "死亡プレイヤーを倒したプレイヤーを取得します。",
+      "params": {
+        "dead_player": "死亡したプレイヤー。",
+        "killing_player": "キルしたプレイヤーを受け取る player 変数。"
+      }
+    },
+    "player_death_get_special_type": {
+      "summary": "死亡の特殊種別を取得します。",
+      "params": {
+        "dead_player": "死亡したプレイヤー。",
+        "number_out": "特殊デス種別を受け取る number 変数。"
+      }
+    },
+    "player_enable_purchases": {
+      "summary": "プレイヤーの購入可否を生死状態ごとに設定します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "when": "購入が適用されるタイミング: alive、dead、both。",
+        "boolean": "true / false、または真偽値相当。"
+      }
+    },
+    "player_get_equipment": {
+      "summary": "プレイヤーの装備オブジェクトを取得します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "equipment_out": "装備を受け取る object 変数。"
+      }
+    },
+    "player_get_fireteam_index": {
+      "summary": "プレイヤーのファイアチーム番号を取得します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "number_out": "結果を受け取る number 変数。"
+      }
+    },
+    "player_get_killing_spree_count": {
+      "summary": "プレイヤーの連続キル数を取得します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "number_out": "結果を受け取る number 変数。"
+      }
+    },
+    "player_get_place": {
+      "summary": "プレイヤーの順位を取得します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "number_out": "順位を受け取る number 変数。"
+      }
+    },
+    "player_get_target_object": {
+      "summary": "プレイヤーが狙っているオブジェクトを取得します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "object_out": "結果を受け取る object 変数。"
+      }
+    },
+    "player_get_vehicle": {
+      "summary": "プレイヤーが乗っている車両を取得します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "vehicle_out": "車両を受け取る object 変数。"
+      }
+    },
+    "player_get_weapon": {
+      "summary": "プレイヤーの主／副武器を取得します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "mode": "装備／スロットモード: primary、secondary。",
+        "weapon_out": "武器を受け取る object 変数。"
+      }
+    },
+    "player_pick_up_weapon": {
+      "summary": "プレイヤーに武器オブジェクトを拾わせます。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "weapon_object": "既存の武器オブジェクト。"
+      }
+    },
+    "player_set_coop_spawning": {
+      "summary": "プレイヤーの協力スポーンを有効／無効にします。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "literal_boolean": "リテラルの true または false。"
+      }
+    },
+    "player_set_fireteam_index": {
+      "summary": "プレイヤーのファイアチーム番号を設定します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "number": "数値または number 変数。"
+      }
+    },
+    "player_set_fireteam_tier": {
+      "summary": "プレイヤーのファイアチームティアを設定します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "tier": "ファイアチームの tier 値。"
+      }
+    },
+    "player_set_objective": {
+      "summary": "プレイヤーの目標テキストを設定します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "dynamic_string": "引用符付き文字列、または動的文字列式。"
+      }
+    },
+    "player_set_objective_allegiance": {
+      "summary": "プレイヤーの目標所属テキストを設定します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "dynamic_string": "引用符付き文字列、または動的文字列式。"
+      }
+    },
+    "player_set_objective_allegiance_icon": {
+      "summary": "プレイヤーの目標所属アイコンを設定します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "constant_integer": "エンジンのアイコン index（整数）。"
+      }
+    },
+    "player_set_primary_respawn_object": {
+      "summary": "プレイヤーの主要リスポーン地点を設定します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "object": "オブジェクト参照または変数。"
+      }
+    },
+    "player_set_requisition_palette": {
+      "summary": "プレイヤーのリクイジションパレットを設定します。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "req_palette_name": "レクイジションパレット名。"
+      }
+    },
+    "player_set_unit": {
+      "summary": "プレイヤーを指定ユニットに割り当てます。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "unit": "ユニットのオブジェクト参照。"
+      }
+    },
+    "player_set_vehicle": {
+      "summary": "プレイヤーを指定車両に乗せます。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "vehicle": "車両のオブジェクト参照。"
+      }
+    },
+    "player_set_vehicle_spawning": {
+      "summary": "プレイヤーの車両スポーンを有効／無効にします。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "literal_boolean": "リテラルの true または false。"
+      }
+    },
+    "play_sound": {
+      "summary": "対象プレイヤー／チームへサウンドを再生します。",
+      "params": {
+        "team_or_player_target": "everyone、または特定のプレイヤー／チーム。",
+        "sound": "sounds オブジェクトリストのサウンド名。"
+      }
+    },
+    "print_variable": {
+      "summary": "動的文字列をデバッグ出力します。",
+      "params": {
+        "dynamic_string": "引用符付き文字列、または動的文字列式。"
+      }
+    },
+    "random": {
+      "summary": "0 から count-1 の乱数を出力変数へ書き込みます。",
+      "params": {
+        "value_count": "上限。結果は 0..(count-1) の範囲。",
+        "number_out": "乱数結果を受け取る number 変数。"
+      }
+    },
+    "respawn_zone_enable": {
+      "summary": "リスポーンゾーンオブジェクトの有効／無効を切り替えます。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "boolean": "true / false、または真偽値相当。"
+      }
+    },
+    "saved_film_insert_marker": {
+      "summary": "保存フィルムにマーカーを挿入します。",
+      "params": {
+        "offset": "時間オフセット（秒）。",
+        "label": "マーカーのラベル文字列。"
+      }
+    },
+    "set": {
+      "summary": "変数に対して数学演算を適用します。",
+      "params": {
+        "var_a": "代入先変数（カスタム、メンバー、または組み込み）。",
+        "math_operation": "値の適用方法（set_to、add、subtract など）。",
+        "var_b": "入力値または変数。"
+      }
+    },
+    "set_boundary": {
+      "summary": "オブジェクトの境界形状と寸法を設定します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "shape": "境界の形状: none、sphere、cylinder、box。"
+      }
+    },
+    "set_fireteam_respawn_filter": {
+      "summary": "オブジェクト上のファイアチームリスポーン権限を制限します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "fireteam_filter": "ファイアチームフィルタ: none、all、0–3。"
+      }
+    },
+    "set_loadout": {
+      "summary": "プレイヤーに名前付きロードアウトを割り当てます。",
+      "params": {
+        "player": "プレイヤー参照または変数。",
+        "loadout_name": "名前付きロードアウト。"
+      }
+    },
+    "set_loadout_palette": {
+      "summary": "プレイヤーまたはチームにロードアウトパレットを割り当てます。",
+      "params": {
+        "team_or_player": "プレイヤーまたはチームの対象。",
+        "loadout": "ロードアウトパレットのティア／名前。"
+      }
+    },
+    "set_pickup_filter": {
+      "summary": "オブジェクトの拾得可能対象を設定します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "audience": "影響を受ける対象: no_one、everyone、allies、enemies、player（player 形はプレイヤーと真偽値を取る場合あり）。"
+      }
+    },
+    "set_player_respawn_vehicle": {
+      "summary": "プレイヤーのリスポーン車両を設定します。",
+      "params": {
+        "vehicle": "車両のオブジェクト参照。",
+        "player": "プレイヤー参照または変数。"
+      }
+    },
+    "set_progress_bar": {
+      "summary": "オブジェクトの進捗バー表示対象とタイマーを設定します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "audience": "影響を受ける対象: no_one、everyone、allies、enemies、player（player 形はプレイヤーと真偽値を取る場合あり）。",
+        "timer_name": "関連付ける名前付きタイマー。"
+      }
+    },
+    "set_respawn_filter": {
+      "summary": "オブジェクトのリスポーン可能対象を設定します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "audience": "影響を受ける対象: no_one、everyone、allies、enemies、player（player 形はプレイヤーと真偽値を取る場合あり）。"
+      }
+    },
+    "set_scenario_interpolator_state": {
+      "summary": "シナリオ補間器の有効状態を設定します。",
+      "params": {
+        "interpolator_index": "シナリオ補間 index。",
+        "boolean_active": "補間が有効かどうか。"
+      }
+    },
+    "set_score": {
+      "summary": "プレイヤー／チーム／全員のスコアを演算で変更します。",
+      "params": {
+        "math_operation": "値の適用方法（set_to、add など）。",
+        "value": "数値または number 変数。",
+        "target": "everyone、または特定のプレイヤー／チーム。"
+      }
+    },
+    "set_team_respawn_vehicle": {
+      "summary": "チームのリスポーン車両を設定します。",
+      "params": {
+        "vehicle": "車両のオブジェクト参照。",
+        "team": "チーム参照または変数。"
+      }
+    },
+    "submit_incident": {
+      "summary": "インシデントを原因／効果の対象とともに送信します。",
+      "params": {
+        "incident_name": "incidents オブジェクトリストのインシデント名。",
+        "cause_team_or_player": "原因側: everyone、または特定のプレイヤー／チーム。",
+        "effect_team_or_player": "効果側: everyone、または特定のプレイヤー／チーム。"
+      }
+    },
+    "submit_incident_with_custom_value": {
+      "summary": "カスタム値付きでインシデントを送信します。",
+      "params": {
+        "incident_name": "incidents オブジェクトリストのインシデント名。",
+        "cause_team_or_player": "原因側: everyone、または特定のプレイヤー／チーム。",
+        "effect_team_or_player": "効果側: everyone、または特定のプレイヤー／チーム。",
+        "custom_value_such_as_territory_index": "カスタム整数ペイロード（例: テリトリー index）。"
+      }
+    },
+    "team_get_place": {
+      "summary": "チームの順位を取得します。",
+      "params": {
+        "team": "チーム参照または変数。",
+        "number_out": "順位を受け取る number 変数。"
+      }
+    },
+    "team_set_coop_spawning": {
+      "summary": "チームの協力スポーンを有効／無効にします。",
+      "params": {
+        "team": "チーム参照または変数。",
+        "literal_boolean": "リテラルの true または false。"
+      }
+    },
+    "team_set_primary_respawn_object": {
+      "summary": "チームの主要リスポーン地点を設定します。",
+      "params": {
+        "team": "チーム参照または変数。",
+        "object": "オブジェクト参照または変数。"
+      }
+    },
+    "team_set_vehicle_spawning": {
+      "summary": "チームの車両スポーンを有効／無効にします。",
+      "params": {
+        "team": "チーム参照または変数。",
+        "literal_boolean": "リテラルの true または false。"
+      }
+    },
+    "timer_reset": {
+      "summary": "タイマーをリセットします。",
+      "params": {
+        "timer": "タイマー変数。"
+      }
+    },
+    "timer_set_rate": {
+      "summary": "タイマーの進行レートを設定します。",
+      "params": {
+        "timer": "タイマー変数。",
+        "rate": "タイマーレートのキーワードまたは値。"
+      }
+    },
+    "weapon_set_pickup_priority": {
+      "summary": "武器オブジェクトの拾得優先度を設定します。",
+      "params": {
+        "object": "オブジェクト参照または変数。",
+        "priority": "優先度: normal、special、auto。"
+      }
+    }
+  },
+  "condition": {
+    "object_is_type": {
+      "summary": "オブジェクトが指定のオブジェクトリスト種別と一致するとき真。",
+      "params": {
+        "object": "判定対象のオブジェクト参照。",
+        "object_type": "objects オブジェクトリストの引用符付き名前。"
+      }
+    },
+    "if": {
+      "summary": "数値比較演算子で 2 つの値を比較します。",
+      "params": {
+        "left": "変数、定数、オプション、またはリテラル。",
+        "operator": "比較演算子（記号または名前）。",
+        "right": "左辺と比較する値。"
+      }
+    },
+    "object_in_area": {
+      "summary": "オブジェクトが別オブジェクトの領域／境界内にあるとき真。"
+    },
+    "player_died": {
+      "summary": "プレイヤーが一致するキラータイプで死亡したとき真。"
+    },
+    "team_disposition": {
+      "summary": "2 つのチーム間の関係（ディスポジション）を判定します。"
+    },
+    "timer_expired": {
+      "summary": "指定タイマーが 0 に達した／期限切れのとき真。"
+    },
+    "team_is_active": {
+      "summary": "チームが試合中にアクティブなとき真。"
+    },
+    "object_out_of_bounds": {
+      "summary": "オブジェクトがプレイ可能マップ境界の外にあるとき真。"
+    },
+    "player_is_fire_team_leader": {
+      "summary": "プレイヤーがファイアチームのリーダーであるとき真。"
+    },
+    "player_assisted_with_kill": {
+      "summary": "プレイヤーが現在のキルイベントをアシストしたとき真。"
+    },
+    "object_matches_filter": {
+      "summary": "オブジェクトが名前付きオブジェクトフィルター／ラベルに一致するとき真。"
+    },
+    "player_is_active": {
+      "summary": "プレイヤーがラウンド中にアクティブなとき真。"
+    },
+    "equipment_is_active": {
+      "summary": "プレイヤーの装備アビリティが有効なとき真。"
+    },
+    "player_is_spartan": {
+      "summary": "プレイヤーがスパルタンモデルを使用しているとき真。"
+    },
+    "player_is_elite": {
+      "summary": "プレイヤーがエリートモデルを使用しているとき真。"
+    },
+    "player_is_editor": {
+      "summary": "プレイヤーが Forge エディタモードのとき真。"
+    },
+    "game_is_forge": {
+      "summary": "現在のセッションが Forge（エディタ）モードのとき真。"
+    }
+  },
+  "element": {
+    "game_options": {
+      "summary": "組み込みおよびユーザー定義のゲームオプション（オーバーライド、オプション、特性）を宣言します。"
+    },
+    "trigger": {
+      "summary": "イベントやフェーズ向けに条件とアクションを実行するトリガーを定義します。"
+    },
+    "variables": {
+      "summary": "スコープ（global、team、player、object）内のカスタム変数を宣言します。"
+    },
+    "base": {
+      "summary": "このスクリプトがベースの Megalo スクリプトファイルから派生することを宣言します。"
+    },
+    "include": {
+      "summary": "別の Megalo スクリプトファイルをこのコンパイル単位に取り込みます。"
+    },
+    "localized_include": {
+      "summary": "ロケール固有のスクリプト断片（文字列／ローカライズ）を取り込みます。"
+    },
+    "string_table": {
+      "summary": "HUD やメッセージで使う名前付き文字列テーブル項目を宣言します。"
+    },
+    "constants": {
+      "summary": "コンパイル時の数値定数を宣言します。",
+      "params": {
+        "number": "数値定数を宣言します: number <name> <value>。"
+      }
+    },
+    "hud_widgets": {
+      "summary": "名前付き HUD ウィジェットとその画面位置を宣言します。"
+    },
+    "loadout": {
+      "summary": "名前付きロードアウト（武器、装備、手榴弾）を定義します。"
+    },
+    "loadout_palette": {
+      "summary": "ロードアウト項目を選択可能なパレットにまとめます。"
+    },
+    "teams": {
+      "summary": "マルチプレイヤーのチームオプション、モデル、デザインネーターを設定します。"
+    },
+    "engine_data": {
+      "summary": "エンジン向けゲームタイプメタデータ（名前、説明、アイコン、カテゴリ）を設定します。"
+    },
+    "player_rating": {
+      "summary": "競技向けプレイヤーレーティング／スキル重みを設定します。"
+    },
+    "map_permissions": {
+      "summary": "このゲームタイプを実行できるマップを制限します。"
+    },
+    "game_stats": {
+      "summary": "スコアボード／ラウンド終了用のカスタムゲーム統計を宣言します。"
+    },
+    "map_object": {
+      "summary": "マップオブジェクトにスクリプトメタデータ（ラベル、種別、チームフィルターなど）を紐付けます。"
+    },
+    "requisition_palette": {
+      "summary": "リクイジション（購入）パレットとその項目を定義します。"
+    }
+  },
+  "keyword": {
+    "action": {
+      "summary": "トリガー内のアクション文を開始します。"
+    },
+    "condition": {
+      "summary": "後続ステートメントを制御する条件を開始します。"
+    },
+    "temporary": {
+      "summary": "現在のトリガーブロック内の一時変数を宣言します。"
+    },
+    "begin": {
+      "summary": "対応する end で閉じる入れ子ブロックを開始します。"
+    },
+    "end": {
+      "summary": "最も近い開いているブロックを閉じます。"
+    },
+    "not": {
+      "summary": "続く条件を否定します。"
+    }
+  },
+  "param": {
+    "variables": {
+      "end": {
+        "summary": "最も近い開いている要素またはブロックを閉じます。"
+      },
+      "global": {
+        "summary": "変数スコープ: スクリプト全体のグローバル。"
+      },
+      "team": {
+        "summary": "スコープ（`variables team`）またはエントリ種別（`… team <name> …`）: チーム単位のコピー／チーム参照。"
+      },
+      "player": {
+        "summary": "スコープ（`variables player`）またはエントリ種別（`… player <name> …`）: プレイヤー単位のコピー／プレイヤー参照。"
+      },
+      "object": {
+        "summary": "スコープ（`variables object`）またはエントリ種別（`… object <name> …`）: オブジェクト単位のコピー／オブジェクト参照。"
+      },
+      "local": {
+        "summary": "ネットワーク状態: 複製されない（ローカルのみ）。"
+      },
+      "networked": {
+        "summary": "ネットワーク状態: クライアントへ複製される。"
+      },
+      "networked_high": {
+        "summary": "ネットワーク状態: 高優先度で複製される。"
+      },
+      "number": {
+        "summary": "変数型: 整数／数値。"
+      },
+      "timer": {
+        "summary": "変数型: カウントダウン／ストップウォッチタイマー。"
+      }
+    },
+    "constants": {
+      "end": {
+        "summary": "最も近い開いている要素またはブロックを閉じます。"
+      },
+      "number": {
+        "summary": "数値定数を宣言します。"
+      }
+    },
+    "game_options": {
+      "end": {
+        "summary": "最も近い開いている要素またはブロックを閉じます。"
+      },
+      "lock": {
+        "summary": "ロビーでプレイヤーが変更できないようゲームオプションをロックします。"
+      },
+      "hide": {
+        "summary": "ロビー UI からゲームオプションを非表示にします。"
+      },
+      "override": {
+        "summary": "組み込みオプションまたは traits ブロックをスクリプト値で上書きします。"
+      },
+      "option": {
+        "summary": "カスタムの真偽／列挙ゲームオプションを宣言します。"
+      },
+      "ranged_option": {
+        "summary": "カスタムの数値レンジゲームオプションを宣言します。"
+      },
+      "player_traits": {
+        "summary": "override や apply_player_traits で使う名前付き player_traits ブロックを宣言します。"
+      },
+      "loadout_palette": {
+        "summary": "組み込みオーバーライド: 有効なロードアウトパレット。"
+      },
+      "damage_resistance": {
+        "summary": "被ダメージの倍率／無敵。"
+      },
+      "body_recharge": {
+        "summary": "体力の回復速度。"
+      },
+      "shield_recharge": {
+        "summary": "シールドの回復速度。"
+      },
+      "vampirism": {
+        "summary": "ダメージを与えたときに奪う体力。"
+      },
+      "headshot_immunity": {
+        "summary": "ヘッドショットを無効にするか。"
+      },
+      "body_multiplier": {
+        "summary": "体力倍率。"
+      },
+      "shield_multiplier": {
+        "summary": "シールド強度倍率。"
+      },
+      "assassination_immunity": {
+        "summary": "暗殺を無効にするか。"
+      },
+      "damage_modifier": {
+        "summary": "与ダメージ倍率（武器）。"
+      },
+      "melee_damage_modifier": {
+        "summary": "近接与ダメージ倍率。"
+      },
+      "initial_primary_weapon": {
+        "summary": "初期メイン武器（none／default／random 可）。"
+      },
+      "initial_secondary_weapon": {
+        "summary": "初期サブ／バックパック武器（none／default／random 可）。"
+      },
+      "initial_equipment": {
+        "summary": "初期装備アイテム（none／default／random 可）。"
+      },
+      "initial_grenades": {
+        "summary": "初期手榴弾構成。"
+      },
+      "recharging_grenades": {
+        "summary": "手榴弾が時間経過で回復するか。"
+      },
+      "infinite_ammo": {
+        "summary": "弾薬無限。"
+      },
+      "bottomless_clip": {
+        "summary": "リロード不要（弾倉無限）。"
+      },
+      "weapon_pickup": {
+        "summary": "武器を拾えるか。"
+      },
+      "drop_equipment": {
+        "summary": "死亡時に装備を落とすか。"
+      },
+      "infinite_equipment": {
+        "summary": "装備使用回数無限。"
+      },
+      "speed": {
+        "summary": "移動速度倍率。"
+      },
+      "gravity": {
+        "summary": "プレイヤーの重力スケール。"
+      },
+      "vehicle_usage": {
+        "summary": "搭乗可能な車両。"
+      },
+      "jump_modifier": {
+        "summary": "ジャンプ高さ／力の倍率。"
+      },
+      "sprinting": {
+        "summary": "スプリントを許可するか。"
+      },
+      "equipment_usage": {
+        "summary": "装備使用を有効にするか。"
+      },
+      "active_camo": {
+        "summary": "アクティブ迷彩の挙動。"
+      },
+      "waypoint": {
+        "summary": "ウェイポイントの表示ルール。"
+      },
+      "gamertag_visibility": {
+        "summary": "他プレイヤーがこのゲーマータグを見る条件。"
+      },
+      "color": {
+        "summary": "強制プレイヤーカラー。"
+      },
+      "tracker_mode": {
+        "summary": "モーショントラッカーのモード。"
+      },
+      "tracker_range": {
+        "summary": "モーショントラッカーの範囲。"
+      },
+      "score_to_win_round": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `score_to_win_round`。"
+      },
+      "fire_teams_enabled": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `fire_teams_enabled`。"
+      },
+      "teams_enabled": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `teams_enabled`。"
+      },
+      "round_time_limit": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `round_time_limit`。"
+      },
+      "round_count": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `round_count`。"
+      },
+      "perfection_enabled": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `perfection_enabled`。"
+      },
+      "early_victory_win_count": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `early_victory_win_count`。"
+      },
+      "sudden_death_time_limit": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `sudden_death_time_limit`。"
+      },
+      "grace_period_time_limit": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `grace_period_time_limit`。"
+      },
+      "lives_per_round": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `lives_per_round`。"
+      },
+      "team_lives_per_round": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `team_lives_per_round`。"
+      },
+      "respawn_time": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `respawn_time`。"
+      },
+      "suicide_respawn_penalty": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `suicide_respawn_penalty`。"
+      },
+      "betrayal_respawn_penalty": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `betrayal_respawn_penalty`。"
+      },
+      "respawn_time_growth": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `respawn_time_growth`。"
+      },
+      "loadout_selection_time": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `loadout_selection_time`。"
+      },
+      "respawn_traits_duration": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `respawn_traits_duration`。"
+      },
+      "friendly_fire_enabled": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `friendly_fire_enabled`。"
+      },
+      "betrayal_booting_enabled": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `betrayal_booting_enabled`。"
+      },
+      "enemy_voice_enabled": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `enemy_voice_enabled`。"
+      },
+      "open_channel_voice_enabled": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `open_channel_voice_enabled`。"
+      },
+      "dead_player_voice_enabled": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `dead_player_voice_enabled`。"
+      },
+      "grenades_on_map": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `grenades_on_map`。"
+      },
+      "shortcuts_on_map": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `shortcuts_on_map`。"
+      },
+      "equipment_on_map": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `equipment_on_map`。"
+      },
+      "powerups_on_map": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `powerups_on_map`。"
+      },
+      "turrets_on_map": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `turrets_on_map`。"
+      },
+      "indestructible_vehicles": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `indestructible_vehicles`。"
+      },
+      "weapon_set": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `weapon_set`。"
+      },
+      "vehicle_set": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `vehicle_set`。"
+      },
+      "red_powerup_duration": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `red_powerup_duration`。"
+      },
+      "blue_powerup_duration": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `blue_powerup_duration`。"
+      },
+      "yellow_powerup_duration": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `yellow_powerup_duration`。"
+      },
+      "team_scoring_mode": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `team_scoring_mode`。"
+      },
+      "tu1_always_spillover_damage": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `tu1_always_spillover_damage`。"
+      },
+      "tu1_armor_lock_stickies_remain": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `tu1_armor_lock_stickies_remain`。"
+      },
+      "tu1_attached_damage_bypass_shields": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `tu1_attached_damage_bypass_shields`。"
+      },
+      "tu1_active_camo_override_energy_curve": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `tu1_active_camo_override_energy_curve`。"
+      },
+      "tu1_sword_gun_clang_kills": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `tu1_sword_gun_clang_kills`。"
+      },
+      "tu1_magnum_is_automatic": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `tu1_magnum_is_automatic`。"
+      },
+      "tu1_headshot_weapon_reticule_bloom_multiplier": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `tu1_headshot_weapon_reticule_bloom_multiplier`。"
+      },
+      "tu1_armor_lock_damage_to_energy_transfer": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `tu1_armor_lock_damage_to_energy_transfer`。"
+      },
+      "tu1_armor_lock_damage_to_energy_cap": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `tu1_armor_lock_damage_to_energy_cap`。"
+      },
+      "tu1_active_camo_override_energy_curve_min": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `tu1_active_camo_override_energy_curve_min`。"
+      },
+      "tu1_active_camo_override_energy_curve_max": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `tu1_active_camo_override_energy_curve_max`。"
+      },
+      "tu1_magnum_damage_multiplier": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `tu1_magnum_damage_multiplier`。"
+      },
+      "tu1_magnum_fire_recovery_time_multiplier": {
+        "summary": "組み込みゲームオプション／オーバーライド対象: `tu1_magnum_fire_recovery_time_multiplier`。"
+      },
+      "base_player_traits": {
+        "summary": "組み込みプレイヤー特性オーバーライド: `base_player_traits`。"
+      },
+      "respawn_traits": {
+        "summary": "組み込みプレイヤー特性オーバーライド: `respawn_traits`。"
+      },
+      "red_powerup_traits": {
+        "summary": "組み込みプレイヤー特性オーバーライド: `red_powerup_traits`。"
+      },
+      "blue_powerup_traits": {
+        "summary": "組み込みプレイヤー特性オーバーライド: `blue_powerup_traits`。"
+      },
+      "yellow_powerup_traits": {
+        "summary": "組み込みプレイヤー特性オーバーライド: `yellow_powerup_traits`。"
+      }
+    },
+    "hud_widgets": {
+      "end": {
+        "summary": "最も近い開いている要素またはブロックを閉じます。"
+      }
+    },
+    "loadout": {
+      "end": {
+        "summary": "最も近い開いている要素またはブロックを閉じます。"
+      },
+      "name": {
+        "summary": "ロードアウト識別子（オブジェクトリストのロードアウト名）。"
+      },
+      "primary_weapon": {
+        "summary": "このロードアウトのメイン武器。"
+      },
+      "backpack_weapon": {
+        "summary": "サブ／バックパック武器。"
+      },
+      "equipment": {
+        "summary": "このロードアウトの装備アイテム。"
+      },
+      "grenades": {
+        "summary": "このロードアウトの手榴弾設定。"
+      }
+    },
+    "loadout_palette": {
+      "end": {
+        "summary": "最も近い開いている要素またはブロックを閉じます。"
+      },
+      "item": {
+        "summary": "このパレットにロードアウト項目を追加します。"
+      }
+    },
+    "teams": {
+      "end": {
+        "summary": "最も近い開いている要素またはブロックを閉じます。"
+      },
+      "model": {
+        "summary": "チームのデフォルト／上書きプレイヤーモデル。"
+      },
+      "designator_switch_type": {
+        "summary": "試合中のチームデザインネーター切替方法。"
+      },
+      "team": {
+        "summary": "チーム単位の設定ブロックを開きます。"
+      },
+      "name": {
+        "summary": "チームの表示名文字列。"
+      },
+      "designator": {
+        "summary": "マルチプレイヤーのチームデザインネーター。"
+      },
+      "color": {
+        "summary": "チームカラーのインデックス。"
+      },
+      "fireteam_count": {
+        "summary": "このチームのファイアチーム数。"
+      }
+    },
+    "engine_data": {
+      "end": {
+        "summary": "最も近い開いている要素またはブロックを閉じます。"
+      },
+      "name": {
+        "summary": "ゲームタイプの表示名文字列。"
+      },
+      "description": {
+        "summary": "ゲームタイプの説明文字列。"
+      },
+      "icon": {
+        "summary": "ゲームタイプのアイコン資産／文字列。"
+      },
+      "category": {
+        "summary": "このゲームタイプのロビーカテゴリ。"
+      }
+    },
+    "player_rating": {
+      "end": {
+        "summary": "最も近い開いている要素またはブロックを閉じます。"
+      },
+      "rating_scale": {
+        "summary": "総合レーティングのスケール係数。"
+      },
+      "kill_weight": {
+        "summary": "キルに適用する重み。"
+      },
+      "assist_weight": {
+        "summary": "アシストに適用する重み。"
+      },
+      "betrayal_weight": {
+        "summary": "裏切りに適用する重み。"
+      },
+      "death_weight": {
+        "summary": "デスに適用する重み。"
+      },
+      "normalize_by_max_kills": {
+        "summary": "最大キル数でレーティングを正規化します。"
+      },
+      "base_value": {
+        "summary": "基本レーティング値。"
+      },
+      "range": {
+        "summary": "レーティング範囲。"
+      },
+      "loss_scalar": {
+        "summary": "レーティング調整の損失スカラー。"
+      },
+      "custom_stat_0": {
+        "summary": "カスタム統計の重み 0。"
+      },
+      "custom_stat_1": {
+        "summary": "カスタム統計の重み 1。"
+      },
+      "custom_stat_2": {
+        "summary": "カスタム統計の重み 2。"
+      },
+      "custom_stat_3": {
+        "summary": "カスタム統計の重み 3。"
+      },
+      "expansion_0": {
+        "summary": "拡張スロット 0。"
+      },
+      "expansion_1": {
+        "summary": "拡張スロット 1。"
+      },
+      "show_in_scoreboard": {
+        "summary": "スコアボードにレーティングを表示するか。"
+      }
+    },
+    "map_permissions": {
+      "end": {
+        "summary": "最も近い開いている要素またはブロックを閉じます。"
+      },
+      "default": {
+        "summary": "マップのデフォルト許可／拒否ポリシー。"
+      },
+      "exception": {
+        "summary": "デフォルトポリシーに対するマップ単位の例外。"
+      }
+    },
+    "game_stats": {
+      "end": {
+        "summary": "最も近い開いている要素またはブロックを閉じます。"
+      },
+      "number": {
+        "summary": "統計形式: 通常の数値。"
+      },
+      "timer": {
+        "summary": "統計形式: タイマー表示。"
+      },
+      "delta": {
+        "summary": "統計形式: 差分。"
+      },
+      "percentage": {
+        "summary": "統計形式: パーセント。"
+      },
+      "none": {
+        "summary": "統計グループ: なし。"
+      },
+      "team": {
+        "summary": "統計グループ: チームごと。"
+      }
+    },
+    "map_object": {
+      "end": {
+        "summary": "最も近い開いている要素またはブロックを閉じます。"
+      },
+      "label": {
+        "summary": "このマップオブジェクトに紐付くフィルター／ラベル文字列。"
+      },
+      "type": {
+        "summary": "objects リストのオブジェクト種別。"
+      },
+      "team": {
+        "summary": "このマップオブジェクトのチームフィルター。"
+      },
+      "user_data": {
+        "summary": "整数のユーザーデータ。"
+      },
+      "min": {
+        "summary": "最小数／しきい値。"
+      }
+    },
+    "requisition_palette": {
+      "end": {
+        "summary": "最も近い開いている要素またはブロックを閉じます。"
+      },
+      "baseline": {
+        "summary": "パレットのベースライン可用性。"
+      },
+      "item": {
+        "summary": "パレットに購入可能アイテムを追加します。"
+      },
+      "enabled": {
+        "summary": "ベースライン状態: パレット有効。"
+      },
+      "disabled": {
+        "summary": "ベースライン／アイテム状態: 無効。"
+      },
+      "available": {
+        "summary": "アイテム状態: 購入可能。"
+      },
+      "unavailable": {
+        "summary": "アイテム状態: 一時的に利用不可。"
+      }
+    },
+    "string_table": {
+      "end": {
+        "summary": "最も近い開いている要素またはブロックを閉じます。"
+      }
+    }
+  }
+}

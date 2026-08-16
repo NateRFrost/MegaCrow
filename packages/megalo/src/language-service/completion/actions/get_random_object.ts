@@ -16,7 +16,7 @@ export const completeGetRandomObject = (
     case 1:
       return suggestTyped(ctx, ParameterType.Object);
     case 2:
-      return suggestTyped(ctx, ParameterType.Object);
+      return suggestTyped(ctx, ParameterType.Object, { writable: true });
     default:
       return [];
   }

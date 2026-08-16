@@ -1,5 +1,6 @@
 import type { SourceCodeLocation } from "src/diagnostics";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { assertWritableVariant } from "src/frontend/intermediate-representation/diagnostics";
 import {
   parseMathOperation,
   requireParamCount,
@@ -37,6 +38,7 @@ export const lowerSet = (
     rightWasNone,
     leftWasNone
   );
+  assertWritableVariant(left, leftNode.location);
 
   return {
     type: ActionType.set,

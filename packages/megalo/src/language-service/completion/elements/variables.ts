@@ -15,6 +15,7 @@ import {
   suggestEnum,
   suggestKeywords,
   suggestTyped,
+  withContinueCompletion,
 } from "src/language-service/completion/helpers";
 import type {
   CompletionItem,
@@ -54,10 +55,14 @@ const completeEntrySlot = (
   entry: VariableEntryNode
 ): CompletionItem[] | undefined => {
   if (containsInclusive(entry.network.location, ctx.offset)) {
-    return suggestEnum(ctx, megaloVariableNetworkState);
+    return suggestEnum(ctx, megaloVariableNetworkState).map(
+      withContinueCompletion
+    );
   }
   if (containsInclusive(entry.type.location, ctx.offset)) {
-    return suggestKeywords(ctx, VARIABLE_TYPE_NAMES, "keyword");
+    return suggestKeywords(ctx, VARIABLE_TYPE_NAMES, "keyword").map(
+      withContinueCompletion
+    );
   }
   if (containsInclusive(entry.name.location, ctx.offset)) {
     return [];
@@ -93,5 +98,8 @@ export const completeVariables = (
     }
   }
 
-  return suggestEnum(ctx, megaloVariableNetworkState);
+  return [
+    ...suggestKeywords(ctx, ["end"], "keyword"),
+    ...suggestEnum(ctx, megaloVariableNetworkState).map(withContinueCompletion),
+  ];
 };

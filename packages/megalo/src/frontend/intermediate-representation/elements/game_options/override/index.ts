@@ -5,6 +5,7 @@ import {
   OverrideValueKind,
 } from "src/frontend/abstract-syntax-tree/elements/game_options";
 import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import { assertNotErrorNode } from "src/frontend/intermediate-representation/diagnostics/assertNotErrorNode";
 import { applyBuiltinLockHide } from "src/frontend/intermediate-representation/elements/game_options/override/helpers";
 import { lowerLoadoutPaletteOverride } from "src/frontend/intermediate-representation/elements/game_options/override/loadoutPalette";
 import { tryLowerMapOverride } from "src/frontend/intermediate-representation/elements/game_options/override/map";
@@ -16,9 +17,6 @@ import { tryLowerTu1Override } from "src/frontend/intermediate-representation/el
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
 
-/**
- * @link https://blam-network.github.io/megalo/language/elements/game-options#override
- */
 export const lowerOverride = (
   entry: OverrideEntryNode,
   ctx: ElementLowerContext
@@ -50,9 +48,7 @@ export const lowerOverride = (
       entry.location
     );
 
-    if (entry.value.kind === SyntaxKind.INVALID) {
-      return;
-    }
+    assertNotErrorNode(entry.value);
 
     if (entry.value.kind !== OverrideValueKind.SIMPLE) {
       throw new LowerError(

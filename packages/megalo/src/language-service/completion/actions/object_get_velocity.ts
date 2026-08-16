@@ -15,7 +15,7 @@ export const completeObjectGetVelocity = (
     case 0:
       return suggestTyped(ctx, ParameterType.Object);
     case 1:
-      return suggestTyped(ctx, ParameterType.Integer);
+      return suggestTyped(ctx, ParameterType.Integer, { writable: true });
     default:
       return [];
   }

@@ -4,6 +4,7 @@ import {
   ParameterType,
   suggestKeywords,
   suggestTyped,
+  withContinueCompletion,
 } from "src/language-service/completion/helpers";
 import type {
   CompletionItem,
@@ -29,7 +30,9 @@ export const completeConstants = (
       continue;
     }
     if (containsInclusive(entry.type.location, ctx.offset)) {
-      return suggestKeywords(ctx, ["number"], "keyword");
+      return suggestKeywords(ctx, ["number"], "keyword").map(
+        withContinueCompletion
+      );
     }
     if (containsInclusive(entry.name.location, ctx.offset)) {
       return [];
@@ -39,5 +42,7 @@ export const completeConstants = (
     }
   }
 
-  return suggestKeywords(ctx, ["number"], "keyword");
+  return suggestKeywords(ctx, ["number", "end"], "keyword").map((entry) =>
+    entry.label === "end" ? entry : withContinueCompletion(entry)
+  );
 };

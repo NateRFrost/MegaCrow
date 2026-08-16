@@ -8,6 +8,7 @@ import {
   MEGALO_VERSIONS,
   type ObjectLists,
   SourceLocationType,
+  setLocale,
   summarizeIncludeDiagnostics,
 } from "@megacrow/megalo";
 import type { SourceAnalysis } from "../lib/analyzeSource";
@@ -32,6 +33,7 @@ let _workspaceContext: WorkspaceContext | null = null;
 let workspaceObjectLists: ObjectLists | undefined;
 let _compilerSettings: MegaCrowCompilerSettings = {
   creatorGamertag: "",
+  locale: "en",
   strictStringLiterals: false,
 };
 
@@ -155,6 +157,7 @@ async function handleMessage(message: MegaloWorkerRequest): Promise<void> {
 
     case "setCompilerSettings":
       _compilerSettings = message.compilerSettings;
+      setLocale(message.compilerSettings.locale === "ja" ? "ja" : "en");
       break;
 
     case "setObjectLists":

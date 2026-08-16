@@ -49,5 +49,5 @@ export const completeGameStats = (
     }
   }
 
-  return [];
+  return suggestKeywords(ctx, ["end"], "keyword");
 };

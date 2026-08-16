@@ -1,5 +1,6 @@
 import type { CompiledMegaloMetadata } from "@megacrow/megalo";
 import {
+  getObjectListIconUrl,
   getReachGametypeIconUrl,
   megaloIconSymbolToIndex,
 } from "./gametypeIcons";
@@ -13,6 +14,10 @@ import {
   tryExpandMegaloIncludes,
   tryParse,
 } from "./megaloShim";
+import {
+  isObjectListsPath,
+  isRecognizedObjectListName,
+} from "./objectListsPath";
 
 export type MegaloVersionProfileId = "107-mcc" | "107";
 
@@ -20,6 +25,8 @@ export interface VariantIdentity {
   description: string | null;
   iconIndex: number;
   iconUrl: string;
+  /** Document kind — object lists always show their sidebar icon. */
+  kind?: "gametype" | "object-list";
   name: string;
 }
 
@@ -302,11 +309,37 @@ export function buildVariantIdentity(options: {
   baseProgram: MegaloProgram | null;
   baselineSource?: string | null;
   fileName: string | null;
+  /** Absolute path when available (preferred for object-list detection). */
+  absoluteFilePath?: string | null;
+  /** Version-recognized object list filenames (e.g. `objects.txt`). */
+  objectListNames?: readonly string[];
   fileBytes: Uint8Array | null;
   includeCache?: MegaloIncludeFileCache;
   /** Prefer compiler-emitted metadata when a compile succeeded. */
   compiledMetadata?: CompiledMegaloMetadata | null;
 }): VariantIdentity | null {
+  const pathForKind = options.absoluteFilePath ?? options.fileName;
+  const basename =
+    (options.fileName ?? pathForKind)?.replace(/\\/g, "/").split("/").pop() ??
+    "";
+  if (
+    isObjectListsPath(pathForKind) &&
+    basename.length > 0 &&
+    isRecognizedObjectListName(basename, options.objectListNames ?? [])
+  ) {
+    const name = displayFileStem(options.fileName ?? pathForKind);
+    if (!name) {
+      return null;
+    }
+    return {
+      kind: "object-list",
+      name,
+      description: "object list",
+      iconIndex: -1,
+      iconUrl: getObjectListIconUrl(),
+    };
+  }
+
   if (options.compiledMetadata) {
     const iconIndex = options.compiledMetadata.engineIcon ?? 0;
     const name =

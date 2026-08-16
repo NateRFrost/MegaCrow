@@ -19,7 +19,7 @@ export const completeBipedGiveWeapon = (
     case 0:
       return suggestTyped(ctx, ParameterType.Object);
     case 1:
-      return suggestObjectList(ctx, ObjectListType.Objects, { quoted: true });
+      return suggestObjectList(ctx, ObjectListType.Weapons, { quoted: true });
     case 2:
       return suggestEnum(ctx, bipedGiveWeaponMode);
     default:

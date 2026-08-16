@@ -8,7 +8,10 @@ import type {
 } from "src/frontend/abstract-syntax-tree/elements/trigger";
 import type { ActionStatementNode } from "src/frontend/abstract-syntax-tree/elements/trigger/action";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
-import { dxAssertionScope } from "src/frontend/intermediate-representation/diagnostics";
+import {
+  assertPreGameActions,
+  dxAssertionScope,
+} from "src/frontend/intermediate-representation/diagnostics";
 import { lowerActionStatement } from "src/frontend/intermediate-representation/elements/triggers/action_registry";
 import { lowerConditionStatement } from "src/frontend/intermediate-representation/elements/triggers/conditions";
 import {
@@ -162,6 +165,12 @@ const lowerPlainAction = (
   ) {
     throw new LowerError("Too many actions!", statement.location);
   }
+
+  assertPreGameActions(
+    statement.name.value,
+    statement.name.location,
+    scopeCtx.ctx
+  );
 
   scopeCtx.appendTarget.appendAction(
     lowerActionStatement(statement, scopeCtx.ctx)

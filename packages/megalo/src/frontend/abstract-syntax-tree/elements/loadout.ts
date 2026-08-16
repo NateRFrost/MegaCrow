@@ -158,12 +158,13 @@ export const loadoutParser = (
     diagnosticMessages.expectedEndBeforeEof(),
     elementToken.location
   );
+  const endLocation = items.at(-1)?.location ?? name.location;
   return {
     kind: SyntaxKind.ELEMENT,
     elementKind: ElementKind.LOADOUT,
     keywordLocation: elementToken.location,
     name,
     items,
-    location: elementToken.location,
+    location: locationSpan(elementToken.location, endLocation),
   };
 };

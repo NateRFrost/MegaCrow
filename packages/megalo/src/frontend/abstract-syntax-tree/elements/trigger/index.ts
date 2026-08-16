@@ -61,6 +61,7 @@ export type BeginStatementNode = ASTNode<SyntaxKind.BEGIN> & {
 };
 
 export type ForEachStatementNode = ASTNode<SyntaxKind.FOR_EACH> & {
+  name: { value: string; location: SourceCodeLocation };
   target: {
     value: string;
     location: SourceCodeLocation;
@@ -284,7 +285,8 @@ const parseForEachTarget = (
 
 export const parseForEach = (
   ctx: ParserContext,
-  actionToken: Token
+  actionToken: Token,
+  name: { value: string; location: SourceCodeLocation }
 ): ForEachStatementNode => {
   const target = parseForEachTarget(ctx, actionToken);
 
@@ -302,6 +304,7 @@ export const parseForEach = (
 
       return {
         kind: SyntaxKind.FOR_EACH,
+        name,
         target: target ?? { value: "", location: actionToken.location },
         statements,
         location,

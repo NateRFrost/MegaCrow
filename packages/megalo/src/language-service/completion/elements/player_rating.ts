@@ -28,6 +28,7 @@ const PLAYER_RATING_KEYS = [
   "expansion_0",
   "expansion_1",
   "show_in_scoreboard",
+  "end",
 ] as const;
 
 interface KeyValueLike {

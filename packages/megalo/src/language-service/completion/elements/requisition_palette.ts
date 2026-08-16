@@ -10,7 +10,7 @@ import type {
   ElementCompletionContext,
 } from "src/language-service/completion/types";
 
-const BODY_KEYS = ["baseline", "item"] as const;
+const BODY_KEYS = ["baseline", "item", "end"] as const;
 const BASELINE_STATES = ["enabled", "disabled"] as const;
 const ITEM_STATES = ["available", "unavailable", "disabled"] as const;
 

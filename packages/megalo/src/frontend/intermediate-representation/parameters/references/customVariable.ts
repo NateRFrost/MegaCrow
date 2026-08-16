@@ -1,3 +1,4 @@
+import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
 import { LowerError } from "src/frontend/intermediate-representation/error";
@@ -532,9 +533,17 @@ const resolveCustomVariableReferenceUnchecked = (
     return option;
   }
 
-  // Fallback: treat identifier as constant numeric (0 if non-numeric)
-  return {
-    type: CustomVariableType.Constant,
-    immediateValue: Number(name) || 0,
-  };
+  // Numeric identifier tokens (rare) → constant. Non-numeric unknowns must error —
+  // previously these silently became Constant 0 (`banshe` → 0).
+  if (/^-?\d+$/.test(name)) {
+    return {
+      type: CustomVariableType.Constant,
+      immediateValue: Number(name),
+    };
+  }
+
+  throw new LowerError(
+    diagnosticMessages.unresolvedIdentifier(name),
+    node.location
+  );
 };

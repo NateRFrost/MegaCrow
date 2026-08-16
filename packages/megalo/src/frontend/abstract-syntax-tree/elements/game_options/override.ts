@@ -1,21 +1,29 @@
+import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
-import { isAstErrorNode, SyntaxKind } from "src/frontend/abstract-syntax-tree";
+import {
+  type ASTErrorNode,
+  isAstErrorNode,
+  SyntaxKind,
+} from "src/frontend/abstract-syntax-tree";
 import type { ParserContext } from "src/frontend/abstract-syntax-tree/context";
 import { parseNumericInitialValue } from "src/frontend/abstract-syntax-tree/elements/constants";
 import { parsePlayerTraitOptions } from "src/frontend/abstract-syntax-tree/elements/game_options/player_traits";
 import {
-  isEndToken,
+  canTakeBoundaryAsIdentifierOperand,
+  isGameOptionsEntryBoundary,
   locationSpan,
-  parseIdentifier,
+  parseGameOptionsIdentifierOperand,
 } from "src/frontend/abstract-syntax-tree/elements/game_options/shared";
 import {
   GameOptionEntryKind,
   type GameOptionModifiers,
   type OverrideEntryNode,
+  type OverrideLoadoutPaletteNode,
   type OverrideNameNode,
   type OverrideSimpleValueNode,
   OverrideValueKind,
 } from "src/frontend/abstract-syntax-tree/elements/game_options/types";
+import { loadoutPaletteType } from "src/frontend/intermediate-representation/game/megalogamengine/loadoutPaletteType";
 import { isPlayerTraitsOverrideOption } from "src/frontend/language-configuration/omni/game_options";
 import { ObjectListType } from "src/frontend/object-lists";
 import { SymbolKind } from "src/frontend/symbol-table";
@@ -96,12 +104,107 @@ const parseOverrideName = (
 };
 
 const isNestedPlayerTraitsOverride = (
+  ctx: ParserContext,
   name: OverrideNameNode,
   peek: Token | undefined
 ): boolean =>
   name.kind === "player_traits_override" &&
-  peek !== undefined &&
-  peek.location.start.line !== name.location.start.line;
+  peek?.kind === TokenKind.Identifier &&
+  ctx.playerTraitParserRepository.getParser(peek.value) !== undefined;
+
+const missingOperandAfter = (
+  ctx: ParserContext,
+  previousLocation: SourceCodeLocation,
+  peek: Token | undefined,
+  expected: string
+): ASTErrorNode => {
+  const end =
+    peek !== undefined &&
+    peek.location.start.localOffset >= previousLocation.end.localOffset
+      ? peek.location.start
+      : previousLocation.end;
+  const location: SourceCodeLocation = {
+    type: previousLocation.type,
+    start: previousLocation.end,
+    end,
+  };
+  ctx.diagnostics.addError(
+    diagnosticMessages.expectedParameterType(expected, peek?.value ?? ""),
+    location
+  );
+  return {
+    kind: SyntaxKind.INVALID,
+    location,
+  };
+};
+
+/** `override loadout_palette <LoadoutPaletteType> <palette>` */
+const parseLoadoutPaletteOverrideValue = (
+  ctx: ParserContext,
+  nameLocation: SourceCodeLocation
+): OverrideLoadoutPaletteNode => {
+  const tierPeek = ctx.peekToken();
+  let tier: OverrideLoadoutPaletteNode["tier"];
+  if (
+    tierPeek?.kind === TokenKind.Identifier &&
+    loadoutPaletteType.has(tierPeek.value)
+  ) {
+    const token = ctx.getToken();
+    tier = { value: token.value, location: token.location };
+  } else if (
+    tierPeek?.kind === TokenKind.Identifier &&
+    !isGameOptionsEntryBoundary(tierPeek)
+  ) {
+    // Attempted tier name outside the enum — consume so recovery stays here.
+    const token = ctx.getToken();
+    ctx.diagnostics.addError(
+      diagnosticMessages.expectedParameterType(
+        "loadout palette type",
+        token.value
+      ),
+      token.location
+    );
+    tier = { kind: SyntaxKind.INVALID, location: token.location };
+  } else {
+    tier = missingOperandAfter(
+      ctx,
+      nameLocation,
+      tierPeek,
+      "loadout palette type"
+    );
+  }
+
+  const afterTier = isAstErrorNode(tier) ? tier.location : tier.location;
+  const palette = parseGameOptionsIdentifierOperand(ctx, afterTier);
+
+  return {
+    kind: OverrideValueKind.LOADOUT_PALETTE,
+    tier,
+    palette,
+  };
+};
+
+const canStartSimpleOverrideValue = (
+  ctx: ParserContext,
+  peek: Token | undefined
+): boolean => {
+  if (!peek) {
+    return false;
+  }
+  if (
+    peek.kind === TokenKind.Integer ||
+    peek.kind === TokenKind.FloatingPoint
+  ) {
+    return true;
+  }
+  if (peek.kind !== TokenKind.Identifier) {
+    return false;
+  }
+  if (!isGameOptionsEntryBoundary(peek)) {
+    return true;
+  }
+  return canTakeBoundaryAsIdentifierOperand(ctx, peek);
+};
 
 const parseOverrideSimpleValue = (
   ctx: ParserContext,
@@ -175,25 +278,14 @@ export const overrideParser = (
   const peek = ctx.peekToken();
 
   if (name.kind === "loadout_palette") {
-    const tier = parseIdentifier(ctx, nameToken);
-    const palette = parseIdentifier(ctx, nameToken);
-    value = {
-      kind: OverrideValueKind.LOADOUT_PALETTE,
-      tier,
-      palette,
-    };
-  } else if (isNestedPlayerTraitsOverride(name, peek)) {
+    value = parseLoadoutPaletteOverrideValue(ctx, name.location);
+  } else if (isNestedPlayerTraitsOverride(ctx, name, peek)) {
     const body = parsePlayerTraitOptions(ctx, nameToken);
     value = {
       kind: OverrideValueKind.NESTED,
       body,
     };
-  } else if (
-    peek &&
-    (peek.kind === TokenKind.Integer ||
-      peek.kind === TokenKind.FloatingPoint ||
-      (peek.kind === TokenKind.Identifier && peek.value !== "end"))
-  ) {
+  } else if (canStartSimpleOverrideValue(ctx, peek)) {
     value = {
       kind: OverrideValueKind.SIMPLE,
       value: parseOverrideSimpleValue(
@@ -201,11 +293,6 @@ export const overrideParser = (
         nameToken,
         objectListTypeForOverride(name)
       ),
-    };
-  } else if (isEndToken(peek)) {
-    value = {
-      kind: SyntaxKind.INVALID,
-      location: nameToken.location,
     };
   } else {
     ctx.diagnostics.addError(

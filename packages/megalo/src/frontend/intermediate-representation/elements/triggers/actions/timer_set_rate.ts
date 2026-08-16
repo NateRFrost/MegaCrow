@@ -1,5 +1,6 @@
 import type { SourceCodeLocation } from "src/diagnostics";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { assertWritableTimer } from "src/frontend/intermediate-representation/diagnostics";
 import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import {
   type Action,
@@ -25,10 +26,12 @@ export const lowerTimerSetRate = (
     "timer rate",
     location
   );
+  const timer = resolveCustomTimerReference(parameters[0]!, paramCtx);
+  assertWritableTimer(timer, parameters[0]!.location);
   const action: Action = {
     type: ActionType.timer_set_rate,
     parameters: {
-      timer: resolveCustomTimerReference(parameters[0]!, paramCtx),
+      timer,
       rate: rate.value,
     },
   };

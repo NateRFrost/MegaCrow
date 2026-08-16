@@ -451,6 +451,90 @@ end
     });
   });
 
+  it("parses loadout_palette override with operands on following lines", () => {
+    const source = `game_options
+\toverride loadout_palette
+\t\tspartan_tier1
+\t\tslayer_loadouts
+end
+`;
+
+    const { ast, diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+
+    const element = ast.elements[0]!;
+    if (element.elementKind !== ElementKind.GAME_OPTIONS) {
+      return;
+    }
+
+    expect(element.entries[0]).toMatchObject({
+      kind: GameOptionEntryKind.OVERRIDE,
+      name: { kind: "loadout_palette" },
+      value: {
+        kind: OverrideValueKind.LOADOUT_PALETTE,
+        tier: { value: "spartan_tier1" },
+        palette: { value: "slayer_loadouts" },
+      },
+    });
+  });
+
+  it("parses nested base_player_traits override on one line", () => {
+    const source = `game_options
+\toverride base_player_traits shield_multiplier 200 weapon_pickup 0 end
+end
+`;
+
+    const { ast, diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+
+    const element = ast.elements[0]!;
+    if (element.elementKind !== ElementKind.GAME_OPTIONS) {
+      return;
+    }
+
+    expect(element.entries[0]).toMatchObject({
+      kind: GameOptionEntryKind.OVERRIDE,
+      name: {
+        kind: "player_traits_override",
+        option: "base_player_traits",
+      },
+      value: {
+        kind: OverrideValueKind.NESTED,
+        body: {
+          options: [
+            { identifier: "shield_multiplier" },
+            { identifier: "weapon_pickup" },
+          ],
+        },
+      },
+    });
+  });
+
+  it("parses loadout_palette override with a palette named end", () => {
+    const source = `game_options
+\toverride loadout_palette spartan_tier1 end
+end
+`;
+
+    const { ast, diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    const element = ast.elements[0]!;
+    if (element.elementKind !== ElementKind.GAME_OPTIONS) {
+      return;
+    }
+    expect(element.entries[0]).toMatchObject({
+      kind: GameOptionEntryKind.OVERRIDE,
+      value: {
+        kind: OverrideValueKind.LOADOUT_PALETTE,
+        tier: { value: "spartan_tier1" },
+        palette: { value: "end" },
+      },
+    });
+  });
+
   it("parses floating-point override values", () => {
     const source = `game_options
 \toverride tu1_magnum_damage_multiplier 1.25
@@ -698,6 +782,33 @@ end
     }
 
     expect(entry.options).toHaveLength(0);
+  });
+
+  it("reports missing override value before end", () => {
+    const source = `game_options
+\toverride round_time_limit
+end
+`;
+
+    const { diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(true);
+    expect(
+      diagnostics
+        .getErrors()
+        .some((error) => error.message.toLowerCase().includes("override value"))
+    ).toBe(true);
+  });
+
+  it("reports missing loadout_palette override operands before end", () => {
+    const source = `game_options
+\toverride loadout_palette
+end
+`;
+
+    const { diagnostics } = parse(source);
+
+    expect(diagnostics.hasErrors()).toBe(true);
   });
 
   it("parses player_traits override shorthand by name and index", () => {

@@ -15,13 +15,14 @@ import {
   suggestEnum,
   suggestKeywords,
   suggestTyped,
+  withBlockEndSnippet,
 } from "src/language-service/completion/helpers";
 import type {
   CompletionItem,
   ElementCompletionContext,
 } from "src/language-service/completion/types";
 
-const BLOCK_KEYS = ["model", "designator_switch_type", "team"] as const;
+const BLOCK_KEYS = ["model", "designator_switch_type", "team", "end"] as const;
 const TEAM_KEYS = [
   "name",
   "designator",
@@ -100,5 +101,7 @@ export const completeTeams = (
   if (focus?.kind === "value") {
     return completeBlockValue(ctx, focus.key);
   }
-  return suggestKeywords(ctx, BLOCK_KEYS, "property");
+  return suggestKeywords(ctx, BLOCK_KEYS, "property").map((entry) =>
+    entry.label === "team" ? withBlockEndSnippet(entry) : entry
+  );
 };

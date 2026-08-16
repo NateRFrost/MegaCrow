@@ -12,7 +12,7 @@ import type {
   ElementCompletionContext,
 } from "src/language-service/completion/types";
 
-const KEYS = ["default", "exception"] as const;
+const KEYS = ["default", "exception", "end"] as const;
 
 interface KeyValueLike {
   key: string;

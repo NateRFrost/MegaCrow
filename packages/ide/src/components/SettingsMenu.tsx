@@ -34,26 +34,12 @@ export function SettingsMenu({ settings, onChange }: Props) {
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-label="Settings"
-        className="toolbar-menu"
+        className="toolbar-menu toolbar-menu--label"
         onClick={() => setOpen(true)}
         title="Settings"
         type="button"
       >
-        <svg aria-hidden="true" viewBox="0 0 16 16">
-          <path
-            d="M8 10.1a2.1 2.1 0 1 0 0-4.2 2.1 2.1 0 0 0 0 4.2Z"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.2"
-          />
-          <path
-            d="M8 1.8v1.5M8 12.7v1.5M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M1.8 8h1.5M12.7 8h1.5M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeWidth="1.2"
-          />
-        </svg>
+        Settings
       </button>
 
       {open ? (
@@ -77,6 +63,27 @@ export function SettingsMenu({ settings, onChange }: Props) {
             </h2>
 
             <div className="settings-modal-body">
+              <label className="settings-field">
+                <span className="settings-toggle-text">
+                  <span className="settings-toggle-label">Language</span>
+                  <span className="settings-toggle-hint">
+                    Language for diagnostics and hover help
+                  </span>
+                </span>
+                <select
+                  className="settings-select"
+                  onChange={(event) =>
+                    onChange({
+                      locale: event.target.value === "ja" ? "ja" : "en",
+                    })
+                  }
+                  value={settings.locale}
+                >
+                  <option value="en">English</option>
+                  <option value="ja">日本語</option>
+                </select>
+              </label>
+
               <label className="settings-field">
                 <span className="settings-toggle-text">
                   <span className="settings-toggle-label">Editor theme</span>

@@ -3,6 +3,7 @@ import {
   ParameterType,
   suggestKeywords,
   suggestTyped,
+  withContinueCompletion,
 } from "src/language-service/completion/helpers";
 import type {
   CompletionItem,
@@ -36,13 +37,15 @@ const completeInitial = (ctx: TemporaryCompletionContext): CompletionItem[] => {
 /** All storage types — do not prefix-filter so replacing `player` still lists siblings. */
 const completeStorage = (ctx: TemporaryCompletionContext): CompletionItem[] => {
   const prefix = ctx.prefix.text;
-  return TEMPORARY_STORAGE_NAMES.map((name) => ({
-    label: name,
-    kind: "keyword" as const,
-    detail: "type",
-    sortText: name,
-    ...(prefix.length > 0 ? { filterText: prefix } : {}),
-  }));
+  return TEMPORARY_STORAGE_NAMES.map((name) =>
+    withContinueCompletion({
+      label: name,
+      kind: "keyword",
+      detail: "type",
+      sortText: name,
+      ...(prefix.length > 0 ? { filterText: prefix } : {}),
+    })
+  );
 };
 
 export const completeTemporary = (

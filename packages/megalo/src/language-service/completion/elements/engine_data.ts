@@ -17,7 +17,7 @@ import type {
   ElementCompletionContext,
 } from "src/language-service/completion/types";
 
-const KEYS = ["name", "description", "icon", "category"] as const;
+const KEYS = ["name", "description", "icon", "category", "end"] as const;
 
 const sameLineAfter = (
   ctx: ElementCompletionContext,

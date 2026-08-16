@@ -1,5 +1,6 @@
 import type { SourceCodeLocation } from "src/diagnostics";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { assertWritableObject } from "src/frontend/intermediate-representation/diagnostics";
 import { requireParamCount } from "src/frontend/intermediate-representation/elements/triggers/helpers";
 import {
   type Action,
@@ -24,6 +25,8 @@ export const lowerPlayerGetTargetObject = (
   requireParamCount(parameters, 2, location);
 
   const paramCtx = asParameterLoweringContext(ctx);
+  const __writableOut = resolveObjectReference(parameters[1]!, paramCtx);
+  assertWritableObject(__writableOut, parameters[1]!.location);
 
   return {
     type: ActionType.player_get_target_object,
@@ -31,7 +34,7 @@ export const lowerPlayerGetTargetObject = (
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),
 
-      objectOut: resolveObjectReference(parameters[1]!, paramCtx),
+      objectOut: __writableOut,
     },
   };
 };

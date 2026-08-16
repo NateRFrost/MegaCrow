@@ -3,6 +3,8 @@ import {
   normalizeEditorThemeId,
 } from "../monaco/theme";
 
+export type UiLocale = "en" | "ja";
+
 export interface AppSettings {
   compilerStrictness: boolean;
   discordRichPresence: boolean;
@@ -10,6 +12,8 @@ export interface AppSettings {
   /** When true, wrap long lines; when false, use horizontal scroll. */
   editorWordWrap: boolean;
   gamertag: string;
+  /** Diagnostics / hover language (`en` or `ja`). */
+  locale: UiLocale;
   mccHotReload: boolean;
   skippedUpdateVersion: string | null;
 }
@@ -23,8 +27,13 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   compilerStrictness: false,
   editorTheme: DEFAULT_EDITOR_THEME_ID,
   editorWordWrap: true,
+  locale: "en",
   skippedUpdateVersion: null,
 };
+
+export function normalizeUiLocale(value: unknown): UiLocale {
+  return value === "ja" ? "ja" : "en";
+}
 
 export function readLocalAppSettings(): AppSettings {
   try {
@@ -48,6 +57,7 @@ export function readLocalAppSettings(): AppSettings {
         typeof parsed.editorWordWrap === "boolean"
           ? parsed.editorWordWrap
           : DEFAULT_APP_SETTINGS.editorWordWrap,
+      locale: normalizeUiLocale(parsed.locale),
       skippedUpdateVersion:
         typeof parsed.skippedUpdateVersion === "string"
           ? parsed.skippedUpdateVersion

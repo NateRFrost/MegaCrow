@@ -14,9 +14,11 @@ import {
   getConfigurationForVersion,
   getQuotedPathCompletionQuery,
   getSemanticTokens,
+  hoverAtPosition,
   type CompletionItem as MegaloCompletionItem,
   type CompletionKind as MegaloCompletionKind,
   type Diagnostic as MegaloDiagnostic,
+  type HoverResult as MegaloHoverResult,
   DiagnosticSeverity as MegaloSeverity,
   type ObjectLists,
   type PathDirectoryEntry,
@@ -32,6 +34,7 @@ import {
   CompletionItemKind,
   type Diagnostic,
   DiagnosticSeverity,
+  InsertTextFormat,
   type LocationLink,
   type SemanticTokensLegend,
 } from "vscode-languageserver/browser";
@@ -47,6 +50,7 @@ export const MEGACROW_ANALYZE_OBJECT_LIST_METHOD = "megacrow/analyzeObjectList";
 export const MEGACROW_SET_OBJECT_LISTS_METHOD = "megacrow/setObjectLists";
 export const MEGACROW_SET_RESOLVE_BASE_FILE_METHOD =
   "megacrow/setResolveBaseFile";
+export const MEGACROW_SET_LOCALE_METHOD = "megacrow/setLocale";
 /** Drop all open documents, caches, and pending analysis (workspace / session switch). */
 export const MEGACROW_RESET_SESSION_METHOD = "megacrow/resetSession";
 
@@ -143,6 +147,11 @@ export interface MegacrowSetObjectListsParams {
 export interface MegacrowSetResolveBaseFileParams {
   /** When false, compile omits `resolveBaseFile` (silent sibling-source JIT). */
   enabled: boolean;
+}
+
+export interface MegacrowSetLocaleParams {
+  /** Diagnostics / hover locale (`en` or `ja`). */
+  locale: "en" | "ja";
 }
 
 /** Params for {@link MEGACROW_RESET_SESSION_METHOD} (currently unused; reserved). */
@@ -479,6 +488,13 @@ const toLspCompletionKind = (
   }
 };
 
+const TRIGGER_SUGGEST_COMMAND = {
+  title: "Suggest",
+  command: "editor.action.triggerSuggest",
+  // Ambient mode so empty results don't show Loading… / "No suggestions".
+  arguments: [{ auto: true }],
+} as const;
+
 const toLspCompletionItems = (
   items: MegaloCompletionItem[]
 ): CompletionItem[] =>
@@ -489,6 +505,20 @@ const toLspCompletionItems = (
     insertText: entry.insertText,
     sortText: entry.sortText,
     filterText: entry.filterText,
+    ...(entry.insertAsSnippet
+      ? { insertTextFormat: InsertTextFormat.Snippet }
+      : {}),
+    ...(entry.triggerSuggestAfterAccept
+      ? { command: TRIGGER_SUGGEST_COMMAND }
+      : {}),
+    ...(entry.documentation === undefined
+      ? {}
+      : {
+          documentation: {
+            kind: "markdown",
+            value: entry.documentation,
+          },
+        }),
   }));
 
 export const completionsFromSnapshot = (
@@ -496,6 +526,11 @@ export const completionsFromSnapshot = (
   position: { line: number; character: number }
 ): CompletionItem[] =>
   toLspCompletionItems(completionsAtPosition(snapshot, position));
+
+export const hoverFromSnapshot = (
+  snapshot: AnalysisSnapshot,
+  position: { line: number; character: number }
+): MegaloHoverResult | null => hoverAtPosition(snapshot, position);
 
 export const pathCompletionsFromEntries = (
   query: QuotedPathCompletionQuery,

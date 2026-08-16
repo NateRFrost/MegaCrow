@@ -5,12 +5,14 @@ import type { MegaloIncludeFileCache } from "../lib/includeDiagnostics";
 import type { MegaloProgram } from "../lib/megaloShim";
 
 interface Props {
+  absoluteFilePath?: string | null;
   baselineSource?: string | null;
   baseProgram: MegaloProgram | null;
   compiledMetadata?: SourceAnalysis["compiledMetadata"];
   fileBytes: Uint8Array | null;
   fileName: string | null;
   includeCache?: MegaloIncludeFileCache;
+  objectListNames?: readonly string[];
   source: string;
 }
 
@@ -19,8 +21,10 @@ export function SidebarVariantHeader({
   baseProgram,
   baselineSource,
   fileName,
+  absoluteFilePath,
   fileBytes,
   includeCache,
+  objectListNames = [],
   compiledMetadata,
 }: Props) {
   const variantIdentity = useMemo(
@@ -30,6 +34,8 @@ export function SidebarVariantHeader({
         baseProgram,
         baselineSource,
         fileName,
+        absoluteFilePath,
+        objectListNames,
         fileBytes,
         includeCache,
         compiledMetadata,
@@ -39,6 +45,8 @@ export function SidebarVariantHeader({
       baseProgram,
       baselineSource,
       fileName,
+      absoluteFilePath,
+      objectListNames,
       fileBytes,
       includeCache,
       compiledMetadata,
@@ -57,15 +65,20 @@ export function SidebarVariantHeader({
     );
   }
 
+  const showIcon =
+    Boolean(compiledMetadata) || variantIdentity.kind === "object-list";
+
   return (
     <div className="sidebar-variant">
-      {compiledMetadata ? (
-        <img
-          alt=""
-          className="sidebar-variant-icon"
-          src={variantIdentity.iconUrl}
-        />
-      ) : null}
+      <div aria-hidden={!showIcon} className="sidebar-variant-icon-slot">
+        {showIcon ? (
+          <img
+            alt=""
+            className="sidebar-variant-icon"
+            src={variantIdentity.iconUrl}
+          />
+        ) : null}
+      </div>
       <div className="sidebar-variant-text">
         <h2 className="sidebar-variant-name">{variantIdentity.name}</h2>
         {variantIdentity.description ? (

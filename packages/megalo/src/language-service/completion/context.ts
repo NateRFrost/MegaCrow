@@ -183,6 +183,58 @@ interface Hit {
   span: number;
 }
 
+/** Top-level / nested blocks that close with an `end` keyword. */
+const ELEMENT_KINDS_WITH_END = new Set<ElementKind>([
+  ElementKind.STRING_TABLE,
+  ElementKind.CONSTANTS,
+  ElementKind.VARIABLES,
+  ElementKind.GAME_OPTIONS,
+  ElementKind.HUD_WIDGETS,
+  ElementKind.LOADOUT,
+  ElementKind.LOADOUT_PALETTE,
+  ElementKind.TEAMS,
+  ElementKind.ENGINE_DATA,
+  ElementKind.PLAYER_RATING,
+  ElementKind.MAP_PERMISSIONS,
+  ElementKind.GAME_STATS,
+  ElementKind.MAP_OBJECT,
+  ElementKind.REQUISITION_PALETTE,
+]);
+
+const isBlockHitKind = (kind: Hit["kind"]): boolean =>
+  kind === "trigger" ||
+  kind === "begin" ||
+  kind === "for_each" ||
+  kind === "element";
+
+const closedWithEndKeyword = (
+  snapshot: AnalysisSnapshot,
+  node: Hit["node"]
+): boolean =>
+  /\bend\s*$/i.test(
+    snapshot.source.slice(
+      node.location.start.localOffset,
+      node.location.end.localOffset
+    )
+  );
+
+const isOnlyWhitespace = (text: string): boolean => /^\s*$/.test(text);
+
+/** Exclusive start of the next root element after `afterOffset`, or EOF. */
+const nextRootElementStart = (
+  snapshot: AnalysisSnapshot,
+  afterOffset: number
+): number => {
+  let next = snapshot.source.length;
+  for (const element of snapshot.ast.elements) {
+    const start = element.location.start.localOffset;
+    if (start > afterOffset && start < next) {
+      next = start;
+    }
+  }
+  return next;
+};
+
 const consider = (
   hits: Hit[],
   kind: Hit["kind"],
@@ -207,7 +259,21 @@ const consider = (
         snapshot.lineStarts[cursorLine + 1] ?? snapshot.source.length;
       if (offset <= lineEnd) {
         hits.push({ kind, node, span: spanLength(start, end) });
+        return;
       }
+    }
+
+    // Unclosed `end` blocks stop at the last statement/header, so trailing blank
+    // lines fall outside the AST span — still treat them as inside the block.
+    if (
+      isBlockHitKind(kind) &&
+      !closedWithEndKeyword(snapshot, node) &&
+      (kind !== "element" ||
+        ELEMENT_KINDS_WITH_END.has((node as ASTElementNode).elementKind)) &&
+      offset < nextRootElementStart(snapshot, start) &&
+      isOnlyWhitespace(snapshot.source.slice(end, offset))
+    ) {
+      hits.push({ kind, node, span: spanLength(start, end) });
     }
   }
 };

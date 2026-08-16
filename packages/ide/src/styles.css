@@ -1136,6 +1136,87 @@ body {
   opacity: 1;
 }
 
+.ide-palette-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 4500;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12vh 16px 16px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.ide-palette-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 560px);
+  max-height: min(60vh, 440px);
+  overflow: hidden;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.ide-palette-input {
+  flex-shrink: 0;
+  width: 100%;
+  padding: 10px 12px;
+  margin: 0;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  background: var(--bg-chrome);
+  border: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.ide-palette-input::placeholder {
+  color: var(--text-muted);
+}
+
+.ide-palette-list {
+  flex: 1;
+  padding: 4px 0;
+  margin: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.ide-palette-item {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.ide-palette-item--active {
+  background: var(--bg-active);
+}
+
+.ide-palette-item-label {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.ide-palette-item-description {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.ide-palette-empty {
+  padding: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
 .motd-stage {
   width: min(100%, 960px);
   transform: perspective(1600px) rotateY(10deg) rotateX(-2deg);
@@ -1622,8 +1703,14 @@ body {
   min-height: calc(14px * 1.25 + 6px + 12px * 1.45 * 2);
 }
 
-.sidebar-variant-icon {
+.sidebar-variant-icon-slot {
   flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+}
+
+.sidebar-variant-icon {
+  display: block;
   width: 48px;
   height: 48px;
   object-fit: contain;
@@ -2325,6 +2412,12 @@ body {
 
 .monaco-editor .suggest-widget {
   z-index: 40;
+}
+
+/* Don't flash Loading… / "No suggestions." — only show when there are items. */
+.monaco-editor .suggest-widget.loading,
+.monaco-editor .suggest-widget:not(:has(.monaco-list-row)) {
+  display: none !important;
 }
 
 .editor-empty {

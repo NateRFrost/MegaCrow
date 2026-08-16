@@ -1,4 +1,4 @@
-import type { AppSettings } from "./appSettings";
+import type { AppSettings, UiLocale } from "./appSettings";
 import {
   type MegaloCompileOptions,
   normalizeCreatorGamertag,
@@ -6,6 +6,7 @@ import {
 
 export interface MegaCrowCompilerSettings {
   creatorGamertag: string;
+  locale: UiLocale;
   megacrowExtensions?: {
     targetTeam?: boolean;
   };
@@ -17,6 +18,7 @@ export function compilerSettingsFromApp(
 ): MegaCrowCompilerSettings {
   return {
     creatorGamertag: normalizeCreatorGamertag(settings.gamertag),
+    locale: settings.locale,
     strictStringLiterals: settings.compilerStrictness,
   };
 }

@@ -15,7 +15,7 @@ export const completeGetPlayerHoldingObject = (
     case 0:
       return suggestTyped(ctx, ParameterType.Object);
     case 1:
-      return suggestTyped(ctx, ParameterType.Player);
+      return suggestTyped(ctx, ParameterType.Player, { writable: true });
     default:
       return [];
   }

@@ -14,7 +14,7 @@ export const completeTeamGetPlace = (
     case 0:
       return suggestTyped(ctx, ParameterType.Team);
     case 1:
-      return suggestTyped(ctx, ParameterType.Integer);
+      return suggestTyped(ctx, ParameterType.Integer, { writable: true });
     default:
       return [];
   }

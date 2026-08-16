@@ -1,6 +1,19 @@
-/** Stop Chromium/WebView print (Ctrl/Cmd+P) so it doesn't steal editor shortcuts. */
+import {
+  showCommandPalette,
+  showSourceFileQuickOpen,
+} from "./sourceFileQuickOpen";
+
+/**
+ * Block browser print and route Ctrl/Cmd+P / Shift+P (and F1) to the IDE palette.
+ */
 export function installPrintShortcutBlocker(): () => void {
   const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "F1") {
+      event.preventDefault();
+      event.stopPropagation();
+      showCommandPalette();
+      return;
+    }
     if (!(event.ctrlKey || event.metaKey)) {
       return;
     }
@@ -8,6 +21,12 @@ export function installPrintShortcutBlocker(): () => void {
       return;
     }
     event.preventDefault();
+    event.stopPropagation();
+    if (event.shiftKey) {
+      showCommandPalette();
+    } else {
+      showSourceFileQuickOpen();
+    }
   };
   window.addEventListener("keydown", onKeyDown, true);
   return () => window.removeEventListener("keydown", onKeyDown, true);

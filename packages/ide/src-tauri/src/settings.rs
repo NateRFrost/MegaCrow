@@ -33,6 +33,8 @@ pub struct MegacrowSettings {
   pub editor_theme: String,
   #[serde(default = "default_editor_word_wrap")]
   pub editor_word_wrap: bool,
+  #[serde(default = "default_locale")]
+  pub locale: String,
   #[serde(default)]
   pub skipped_update_version: Option<String>,
 }
@@ -43,6 +45,10 @@ fn default_editor_theme() -> String {
 
 fn default_editor_word_wrap() -> bool {
   true
+}
+
+fn default_locale() -> String {
+  "en".to_string()
 }
 
 impl Default for MegacrowSettings {
@@ -57,6 +63,7 @@ impl Default for MegacrowSettings {
       compiler_strictness: false,
       editor_theme: default_editor_theme(),
       editor_word_wrap: default_editor_word_wrap(),
+      locale: default_locale(),
       skipped_update_version: None,
     }
   }

@@ -176,9 +176,23 @@ end
 `;
     const labels = await labelsAt(source, 1, afterOnLine(source, 1, "set_"));
     expect(labels.length).toBeGreaterThan(0);
-    expect(labels.every((label) => label.startsWith("set_"))).toBe(true);
     expect(labels).toContain("set_score");
     expect(labels).not.toContain("create_object");
+  });
+
+  it("fuzzy-matches action names (set → hud_widget_set_text)", async () => {
+    const source = `trigger initialization
+\taction set
+end
+`;
+    const labels = await labelsAt(source, 1, afterOnLine(source, 1, "set"));
+    expect(labels).toContain("set_score");
+    expect(labels).toContain("hud_widget_set_text");
+    expect(labels).not.toContain("create_object");
+    // Prefix / segment hits should rank above later substring matches.
+    expect(labels.indexOf("set_score")).toBeLessThan(
+      labels.indexOf("hud_widget_set_text")
+    );
   });
 
   it("only suggests current_player inside the enclosing player trigger", async () => {

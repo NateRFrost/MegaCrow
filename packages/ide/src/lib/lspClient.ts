@@ -26,6 +26,7 @@ export const MEGACROW_ANALYZE_OBJECT_LIST_METHOD = "megacrow/analyzeObjectList";
 export const MEGACROW_SET_OBJECT_LISTS_METHOD = "megacrow/setObjectLists";
 export const MEGACROW_SET_RESOLVE_BASE_FILE_METHOD =
   "megacrow/setResolveBaseFile";
+export const MEGACROW_SET_LOCALE_METHOD = "megacrow/setLocale";
 export const MEGACROW_RESET_SESSION_METHOD = "megacrow/resetSession";
 
 export type MegacrowArtifactKind = "semanticTokens" | "diagnostics" | "mglo";
@@ -611,6 +612,8 @@ export async function lspCompletions(
     documentation?: string | { kind: string; value: string };
     filterText?: string;
     insertText?: string;
+    insertTextFormat?: number;
+    command?: { title: string; command: string; arguments?: unknown[] };
   }>
 > {
   const connection = await getConnection();
@@ -634,6 +637,8 @@ export async function lspCompletions(
           documentation?: string | { kind: string; value: string };
           filterText?: string;
           insertText?: string;
+          insertTextFormat?: number;
+          command?: { title: string; command: string; arguments?: unknown[] };
         }>;
       }
     ).items;
@@ -672,4 +677,10 @@ export async function lspSetObjectLists(
   connection.sendNotification(MEGACROW_SET_OBJECT_LISTS_METHOD, {
     objectLists,
   });
+}
+
+/** Sync diagnostics / hover locale into the LSP worker. */
+export async function lspSetLocale(locale: "en" | "ja"): Promise<void> {
+  const connection = await getConnection();
+  connection.sendNotification(MEGACROW_SET_LOCALE_METHOD, { locale });
 }

@@ -14,7 +14,7 @@ export const completePlayerGetFireteamIndex = (
     case 0:
       return suggestTyped(ctx, ParameterType.Player);
     case 1:
-      return suggestTyped(ctx, ParameterType.Integer);
+      return suggestTyped(ctx, ParameterType.Integer, { writable: true });
     default:
       return [];
   }

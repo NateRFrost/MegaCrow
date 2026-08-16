@@ -2,6 +2,7 @@ import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { assertWritableObject } from "src/frontend/intermediate-representation/diagnostics";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   type Action,
@@ -165,12 +166,13 @@ export const lowerCreateObject = (
         placeAtObject = resolveObjectReference(parameters[++i]!, paramCtx);
         result.parameters.place_at_object = placeAtObject;
         break;
-      case "set":
-        result.parameters.object_reference_out = resolveObjectReference(
-          parameters[++i]!,
-          paramCtx
-        );
+      case "set": {
+        const outNode = parameters[++i]!;
+        const objectOut = resolveObjectReference(outNode, paramCtx);
+        assertWritableObject(objectOut, outNode.location);
+        result.parameters.object_reference_out = objectOut;
         break;
+      }
       case "label":
         result.parameters.labelIndex = resolveObjectFilterIndex(
           parameters[++i]!,

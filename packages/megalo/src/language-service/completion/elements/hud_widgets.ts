@@ -2,7 +2,10 @@ import { isAstErrorNode } from "src/frontend/abstract-syntax-tree";
 import type { HudWidgetsElementNode } from "src/frontend/abstract-syntax-tree/elements/hud_widgets";
 import { hudWidgetPosition } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_hud_widgets";
 import { isSameLineAs } from "src/language-service/completion/elements/property";
-import { suggestEnum } from "src/language-service/completion/helpers";
+import {
+  suggestEnum,
+  suggestKeywords,
+} from "src/language-service/completion/helpers";
 import type {
   CompletionItem,
   ElementCompletionContext,
@@ -38,5 +41,5 @@ export const completeHudWidgets = (
     }
   }
 
-  return [];
+  return suggestKeywords(ctx, ["end"], "keyword");
 };

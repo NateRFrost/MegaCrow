@@ -20,6 +20,7 @@ const LOADOUT_KEYS = [
   "backpack_weapon",
   "equipment",
   "grenades",
+  "end",
 ] as const;
 
 const OBJECT_LIST_SENTINELS = ["none", "default", "random"] as const;

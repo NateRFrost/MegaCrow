@@ -1,6 +1,7 @@
 import type { SourceCodeLocation } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
 import type { ASTParameterNode } from "src/frontend/abstract-syntax-tree/parameters";
+import { assertWritableNumeric } from "src/frontend/intermediate-representation/diagnostics";
 import {
   requireKeyword,
   requireParamCount,
@@ -35,12 +36,17 @@ export const lowerGetButtonTime = (
     );
   }
   const paramCtx = asParameterLoweringContext(ctx);
+  const __writableOut = resolveCustomVariableReference(
+    parameters[2]!,
+    paramCtx
+  );
+  assertWritableNumeric(__writableOut, parameters[2]!.location);
   return {
     type: ActionType.get_button_time,
     parameters: {
       player: resolvePlayerReference(parameters[0]!, paramCtx),
       button,
-      timeOut: resolveCustomVariableReference(parameters[2]!, paramCtx),
+      timeOut: __writableOut,
     },
   };
 };

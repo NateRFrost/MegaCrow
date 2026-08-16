@@ -19,5 +19,5 @@ export const completeStringTable = (
     return suggestKeywords(ctx, STRING_TABLE_LANGUAGES, "enumMember");
   }
 
-  return [];
+  return suggestKeywords(ctx, ["end"], "keyword");
 };

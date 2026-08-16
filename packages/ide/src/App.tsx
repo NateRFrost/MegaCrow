@@ -1,4 +1,5 @@
 import type { ObjectLists } from "@megacrow/megalo";
+import { setLocale } from "@megacrow/megalo";
 import {
   type CSSProperties,
   startTransition,
@@ -13,6 +14,7 @@ import { DiagnosticsTray } from "./components/DiagnosticsTray";
 import { Editor } from "./components/Editor";
 import { EditorEmptyState } from "./components/EditorEmptyState";
 import { FilesPanel } from "./components/FilesPanel";
+import { IdePalette } from "./components/IdePalette";
 import { MotdDialog } from "./components/MotdDialog";
 import { PreReleaseWatermark } from "./components/PreReleaseWatermark";
 import { SidebarVariantHeader } from "./components/SidebarVariantHeader";
@@ -52,6 +54,7 @@ import {
 } from "./lib/includeDiagnostics";
 import {
   lspAnalyzeObjectList,
+  lspConfigureResolveContext,
   lspResetSession,
   lspSetObjectLists,
   lspVersionConfiguration,
@@ -76,13 +79,13 @@ import {
   MEGACROW_BUILD_STRING,
   MEGACROW_SHOW_WATERMARK,
   type MegaloProgram,
+  tryParse,
 } from "./lib/megaloShim";
 import {
   initMegaloWorkerContext,
   postMegaloWorker,
   preloadMegaloWorker,
   requestCompileDownloadInWorker,
-  requestParseInWorker,
   requestSourceOnlyCompileViaLsp,
   setMegaloWorkerObjectLists,
   subscribeMegaloWorker,
@@ -102,6 +105,10 @@ import {
   writeBuildOutputsToWorkspace,
 } from "./lib/saveGametypeFile";
 import { persistOpenSourceFile } from "./lib/saveSourceFile";
+import {
+  type IdePaletteMode,
+  setIdePaletteOpener,
+} from "./lib/sourceFileQuickOpen";
 import { isTauriRuntime } from "./lib/tauriRuntime";
 import { checkForAppUpdate, type GithubReleaseInfo } from "./lib/updateCheck";
 import {
@@ -275,6 +282,8 @@ export function App() {
   const initialMotdOpen = shouldShowMotdOnStartup();
   const motdCountsViewRef = useRef(initialMotdOpen);
   const [motdOpen, setMotdOpen] = useState(initialMotdOpen);
+  const [idePaletteOpen, setIdePaletteOpen] = useState(false);
+  const [idePaletteMode, setIdePaletteMode] = useState<IdePaletteMode>("files");
   const [updateRelease, setUpdateRelease] = useState<GithubReleaseInfo | null>(
     null
   );
@@ -420,7 +429,16 @@ export function App() {
 
   useEffect(() => {
     syncMegaloCompilerSettings(compilerSettingsFromApp(settings));
-  }, [settings.gamertag, settings.compilerStrictness, settings]);
+    setLocale(settings.locale === "ja" ? "ja" : "en");
+    void import("./lib/lspClient").then(({ lspSetLocale }) => {
+      void lspSetLocale(settings.locale === "ja" ? "ja" : "en");
+    });
+  }, [
+    settings.gamertag,
+    settings.compilerStrictness,
+    settings.locale,
+    settings,
+  ]);
 
   useEffect(() => {
     if (!settings.discordRichPresence) {
@@ -805,6 +823,8 @@ export function App() {
       }
 
       sourceLoadInProgressRef.current = true;
+      // Invalidate any in-flight edit compile so it cannot overwrite this load.
+      const compileId = ++compileRunRef.current;
       setCompileState("parsing");
       setAnalysis({
         ...idleAnalysis,
@@ -812,6 +832,10 @@ export function App() {
         message: "Parsing Megalo source…",
       });
       initMegaloWorkerContext(null, null, text);
+      lspConfigureResolveContext({
+        workspace: activeWorkspace,
+        filePath: includeRootArg?.absoluteFilePath ?? null,
+      });
 
       void (async () => {
         const compileContext = await resolveCompileContext(
@@ -834,41 +858,40 @@ export function App() {
           return;
         }
 
-        const { program, analysis } = await requestParseInWorker(text, runId, {
-          includeCache: compileContext.includeCache,
-          resolvedBaseProgram: compileContext.resolvedBaseProgram,
-          resolvedBaseCustomVariant: compileContext.resolvedBaseCustomVariant,
-          resolvedBaseCustomVariantMgloBytes:
-            compileContext.resolvedBaseCustomVariantMgloBytes,
-          baseJitDiagnostics: compileContext.baseJitDiagnostics,
-        });
+        setIncludeFileCache(compileContext.includeCache);
 
-        if (runId !== loadRunRef.current) {
-          return;
-        }
-
-        if (program) {
+        // One LSP compile on open (diagnostics + semantic tokens + mglo).
+        // Do not also run the baseline / settings recompile effects below.
+        const parsed = tryParse(text);
+        const program = parsed.ok ? parsed.program : null;
+        if (program || compileContext.resolvedBaseProgram) {
           setBaseProgram(compileContext.resolvedBaseProgram ?? program);
           setLoadError(null);
         } else {
           setBaseProgram(null);
-          setLoadError(analysis.message);
         }
-        setAnalysis(analysis);
-        setCompileState(analysis.compileState);
 
-        if (analysis.compileState === "error") {
-          sourceLoadInProgressRef.current = false;
+        skipBaselineCompileRef.current = true;
+        sourceLoadInProgressRef.current = false;
+
+        const analysis = await requestSourceOnlyCompileViaLsp(text);
+
+        if (
+          runId !== loadRunRef.current ||
+          compileId !== compileRunRef.current
+        ) {
           return;
         }
 
-        setIncludeFileCache(compileContext.includeCache);
-        // Load already ran a full compile via requestParseInWorker.
-        skipBaselineCompileRef.current = true;
-        sourceLoadInProgressRef.current = false;
+        setAnalysis(analysis);
+        setCompileState(analysis.compileState);
+        if (analysis.compileState === "error") {
+          setLoadError(analysis.message);
+        }
       })();
     },
     [
+      activeWorkspace,
       analyzeObjectListDocument,
       applyDocument,
       rememberLastOpenFile,
@@ -1178,6 +1201,7 @@ export function App() {
 
   useEffect(() => {
     // Recompile when compiler settings or workspace object lists change.
+    // File open compiles once in loadMegaloSource — skip that follow-up here.
     if (isPlainTextDocument) {
       return;
     }
@@ -1185,6 +1209,10 @@ export function App() {
       return;
     }
     if (sourceLoadInProgressRef.current) {
+      return;
+    }
+    if (skipBaselineCompileRef.current) {
+      skipBaselineCompileRef.current = false;
       return;
     }
     handleCompileDebounced(sourceRef.current);
@@ -1223,115 +1251,6 @@ export function App() {
   useEffect(() => {
     initMegaloWorkerContext(originalBytes, baseProgram, baselineSource);
   }, [originalBytes, baseProgram, baselineSource]);
-
-  // Baseline analysis on load (edits use handleCompileDebounced).
-  useEffect(() => {
-    if (isPlainTextDocument) {
-      return;
-    }
-    if (baselineSource === null) {
-      return;
-    }
-    if (sourceLoadInProgressRef.current) {
-      return;
-    }
-    if (skipBaselineCompileRef.current) {
-      skipBaselineCompileRef.current = false;
-      return;
-    }
-    if (originalBytes !== null && !baseProgram) {
-      return;
-    }
-    if (originalBytes === null && baseProgram === null) {
-      return;
-    }
-    const runId = ++compileRunRef.current;
-    const source = sourceRef.current;
-
-    void (async () => {
-      const compileContext = await resolveCompileContext(
-        source,
-        fileName,
-        includeRoot
-      );
-      if (!compileContext.ok) {
-        if (runId === compileRunRef.current) {
-          compileParsingRef.current = false;
-          setIncludeFileCache(undefined);
-          setAnalysis(compileContext.analysis);
-          setCompileState("error");
-        }
-        return;
-      }
-
-      setIncludeFileCache(compileContext.includeCache);
-
-      compileParsingRef.current = true;
-      setCompileState("parsing");
-      setAnalysis((current) => ({
-        ...current,
-        compileState: "parsing",
-        message: "Compiling Megalo source…",
-      }));
-
-      if (originalBytes === null) {
-        const result = await requestSourceOnlyCompileViaLsp(source);
-        if (runId === compileRunRef.current) {
-          compileParsingRef.current = false;
-          setAnalysis(result);
-          setCompileState(result.compileState);
-        }
-        return;
-      }
-
-      const compileOptions = megaloCompileOptionsFromWorkspace(
-        activeWorkspace,
-        compileContext.includeCache,
-        compileContext.resolvedBaseProgram,
-        compileContext.resolvedBaseCustomVariant,
-        compileContext.resolvedBaseCustomVariantMgloBytes
-      );
-
-      const posted = postMegaloWorker({
-        kind: "compile",
-        id: runId,
-        source,
-        includeCache: compileContext.includeCache,
-        resolvedBaseProgram: compileContext.resolvedBaseProgram,
-        resolvedBaseCustomVariant: compileContext.resolvedBaseCustomVariant,
-        resolvedBaseCustomVariantMgloBytes:
-          compileContext.resolvedBaseCustomVariantMgloBytes,
-        baseJitDiagnostics: compileContext.baseJitDiagnostics,
-      });
-      if (!posted) {
-        const result = await analyzeMegaloSource(
-          source,
-          originalBytes,
-          baseProgram,
-          baselineSource,
-          compileOptions,
-          compileContext.includeCache,
-          compilerSettingsFromApp(settings)
-        );
-        if (runId === compileRunRef.current) {
-          compileParsingRef.current = false;
-          setAnalysis(result);
-          setCompileState(result.compileState);
-        }
-        return;
-      }
-    })();
-  }, [
-    baseProgram,
-    baselineSource,
-    fileName,
-    includeRoot,
-    isPlainTextDocument,
-    originalBytes,
-    resolveCompileContext,
-    activeWorkspace,
-    settings,
-  ]);
 
   useEffect(
     () =>
@@ -1715,10 +1634,23 @@ export function App() {
     onResizeStart: onProblemsPaneResizeStart,
   } = useProblemsPaneHeight();
 
+  useEffect(() => {
+    setIdePaletteOpener(({ mode }) => {
+      setIdePaletteMode(mode);
+      setIdePaletteOpen(true);
+    });
+    return () => setIdePaletteOpener(null);
+  }, []);
+
   return (
     <div className="app">
       {MEGACROW_SHOW_WATERMARK ? <PreReleaseWatermark /> : null}
       <MotdDialog onDismiss={handleMotdDismiss} open={motdOpen} />
+      <IdePalette
+        mode={idePaletteMode}
+        onClose={() => setIdePaletteOpen(false)}
+        open={idePaletteOpen}
+      />
       <UpdateAvailableDialog
         currentBuildString={MEGACROW_BUILD_STRING}
         onDismiss={handleUpdateDismiss}
@@ -1775,12 +1707,14 @@ export function App() {
           inert={sidebarOpen ? undefined : true}
         >
           <SidebarVariantHeader
+            absoluteFilePath={includeRoot?.absoluteFilePath ?? null}
             baselineSource={baselineSource}
             baseProgram={baseProgram}
             compiledMetadata={analysis.compiledMetadata}
             fileBytes={originalBytes}
             fileName={fileName}
             includeCache={includeFileCache}
+            objectListNames={objectListNames}
             source={outlineSource}
           />
           <div className="sidebar-body">

@@ -88,5 +88,23 @@ end
       expect(ctx.prefix.quoted).toBe(true);
       expect(ctx.prefix.text).toBe("ban");
     }
+    const items = completionsAtPosition(snapshot, { line: 1, character });
+    const banshee = items.find((item) => item.label === "banshee");
+    expect(banshee?.insertText).toBe("banshee");
+  });
+
+  it("does not re-quote when completing inside empty quotes", async () => {
+    const source = `trigger initialization
+\taction create_object ""
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    // Cursor between the quotes.
+    const character = afterOnLine(source, 1, 'create_object "');
+    const ctx = resolveCompletionContext(snapshot, { line: 1, character });
+    expect(ctx.prefix.quoted).toBe(true);
+    const items = completionsAtPosition(snapshot, { line: 1, character });
+    const warthog = items.find((item) => item.label === "warthog");
+    expect(warthog?.insertText).toBe("warthog");
   });
 });

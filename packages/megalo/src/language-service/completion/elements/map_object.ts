@@ -84,5 +84,8 @@ export const completeMapObject = (
   if (focus?.kind === "value") {
     return completeValue(ctx, focus.key);
   }
-  return suggestKeywords(ctx, MAP_OBJECT_PROPERTY_KEYS, "property");
+  return [
+    ...suggestKeywords(ctx, ["end"], "keyword"),
+    ...suggestKeywords(ctx, MAP_OBJECT_PROPERTY_KEYS, "property"),
+  ];
 };

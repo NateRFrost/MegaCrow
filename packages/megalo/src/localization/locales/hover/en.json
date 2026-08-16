@@ -1,0 +1,1500 @@
+{
+  "ui": {
+    "parameters": "Parameters",
+    "kind": {
+      "action": "action",
+      "condition": "condition",
+      "element": "element",
+      "keyword": "keyword",
+      "param": "property"
+    },
+    "symbol": {
+      "built_in": "built-in",
+      "object_list": "Object list",
+      "constant": "constant",
+      "string": "string",
+      "game_option": "game option",
+      "hud_widget": "hud widget",
+      "loadout": "loadout",
+      "loadout_palette": "loadout palette",
+      "requisition_palette": "requisition palette",
+      "object_filter": "object filter",
+      "player_traits": "player traits",
+      "game_stat": "game stat"
+    }
+  },
+  "action": {
+    "adjust_grenades": {
+      "summary": "Modifies a player's grenade count by type using a math operation.",
+      "params": {
+        "player": "Player reference or variable.",
+        "grenade_type": "Grenade type: frag, plasma.",
+        "math_operation": "How to apply the value (set_to, add, subtract, …).",
+        "number": "Numeric amount or number variable."
+      }
+    },
+    "apply_player_traits": {
+      "summary": "Applies a named `player_traits` block to a player.",
+      "params": {
+        "player": "Player reference or variable.",
+        "player_traits_name": "Name of a player_traits block."
+      }
+    },
+    "begin": {
+      "summary": "Marks the start of a nested sub-trigger block. While `begin` is technically an action, the language treats it more like an element. See the begin element page for more information."
+    },
+    "biped_drop_weapon": {
+      "summary": "Drops a weapon from a biped/player.",
+      "params": {
+        "biped": "Object or player that receives or drops the weapon.",
+        "mode": "Equip / slot mode: primary, secondary."
+      }
+    },
+    "biped_give_weapon": {
+      "summary": "Gives a weapon to a biped/player.",
+      "params": {
+        "biped": "Object or player that receives the weapon.",
+        "weapon": "Weapon type from the weapons object list (usually written in quotes).",
+        "mode": "Equip mode: primary, secondary, or force."
+      }
+    },
+    "boundary_set_player_color": {
+      "summary": "Sets boundary tint color for a player.",
+      "params": {
+        "object": "Object reference or variable.",
+        "player_variable_name": "Player member variable on the object."
+      }
+    },
+    "boundary_set_visible": {
+      "summary": "Shows or hides a boundary volume.",
+      "params": {
+        "object": "Object reference or variable.",
+        "boolean": "true / false, or a boolean-like value."
+      }
+    },
+    "break_into_debugger": {
+      "summary": "Breaks into the script debugger when tracing is enabled."
+    },
+    "create_object": {
+      "summary": "Spawns an object of the given type, optionally placed and labeled.",
+      "params": {
+        "object_type": "Quoted type from the objects object list.",
+        "at": "Optional placement object.",
+        "set": "Optional object variable that receives the created instance."
+      }
+    },
+    "create_tunnel": {
+      "summary": "Places an object between two entities and gives that object a **cylinder** shape. The radius comes from the radius operand; if that value is **0**, the engine uses **5** instead. If both endpoints are the same object, the tunnel is placed **exactly** on that reference—there is no collision check, unlike create_object. The spawned object also faces straight up.",
+      "params": {
+        "object_a": "First object reference.",
+        "object_b": "Second object reference.",
+        "object_type": "Quoted type from the objects object list.",
+        "radius": "Cylinder radius (0 uses engine default 5).",
+        "object_reference_out": "Object variable that receives the created instance."
+      }
+    },
+    "debugging_enable_tracing": {
+      "summary": "Enables or disables script tracing in the debugger.",
+      "params": {
+        "literal_boolean": "Literal true or false."
+      }
+    },
+    "debug_force_player_view_count": {
+      "summary": "Debug action to force player view count.",
+      "params": {
+        "splitscreen_count": "Forced splitscreen / view count."
+      }
+    },
+    "delete_object": {
+      "summary": "Removes an object reference from the map.",
+      "params": {
+        "object": "Object reference or variable."
+      }
+    },
+    "device_animate_position": {
+      "summary": "Animates a device between positions over time.",
+      "params": {
+        "object": "Object reference or variable.",
+        "animation_target_fraction": "Target animation fraction.",
+        "animation_duration_seconds": "Animation duration in seconds.",
+        "acceleration_seconds": "Acceleration time in seconds.",
+        "deceleration_seconds": "Deceleration time in seconds."
+      }
+    },
+    "device_get_position": {
+      "summary": "Reads device position into an out-variable.",
+      "params": {
+        "object": "Object reference or variable.",
+        "number_out": "Number variable that receives a percent value."
+      }
+    },
+    "device_get_power": {
+      "summary": "Reads device power into an out-variable.",
+      "params": {
+        "object": "Object reference or variable.",
+        "number_out": "Number variable that receives a percent value."
+      }
+    },
+    "device_set_position": {
+      "summary": "Sets a device's animation position (0–100).",
+      "params": {
+        "object": "Object reference or variable.",
+        "number": "Percent value (0–100) or number variable."
+      }
+    },
+    "device_set_position_immediate": {
+      "summary": "Snaps a device to a position without animation.",
+      "params": {
+        "object": "Object reference or variable.",
+        "number": "Percent value (0–100) or number variable."
+      }
+    },
+    "device_set_position_track": {
+      "summary": "Assigns an animation track name to a device.",
+      "params": {
+        "object": "Object reference or variable.",
+        "animation_name": "Animation track name.",
+        "interpolation_time": "Interpolation duration."
+      }
+    },
+    "device_set_power": {
+      "summary": "Sets device power state.",
+      "params": {
+        "object": "Object reference or variable.",
+        "number": "Percent value (0–100) or number variable."
+      }
+    },
+    "end_round": {
+      "summary": "Ends the current round immediately."
+    },
+    "for_each": {
+      "summary": "Iterates over players, teams, or objects and runs nested trigger logic.",
+      "params": {
+        "trigger_type": "Nested trigger type (player, object, …)."
+      }
+    },
+    "game_grief_record_custom_penalty": {
+      "summary": "Records a custom grief report penalty value.",
+      "params": {
+        "player": "Player reference or variable.",
+        "penalty_amount": "Penalty amount to record."
+      }
+    },
+    "get_button_time": {
+      "summary": "Reads how long a scriptable button was held into a custom variable, in milliseconds (Reach MCC only).",
+      "params": {
+        "player": "Player reference or variable.",
+        "scriptable_button": "Scriptable button keyword.",
+        "milliseconds_out": "Number variable that receives milliseconds held."
+      }
+    },
+    "get_player_holding_object": {
+      "summary": "Writes the player holding an object into an out-variable.",
+      "params": {
+        "object": "Object reference or variable.",
+        "player_out": "Player variable that receives the result."
+      }
+    },
+    "get_random_object": {
+      "summary": "Selects a random object matching criteria and writes it to an out-variable.",
+      "params": {
+        "filter_name": "Object filter / label name.",
+        "ignore_object": "Object to exclude from the random pick.",
+        "object_out": "Object variable that receives the result."
+      }
+    },
+    "give_weapon": {
+      "summary": "Gives a weapon to a player (legacy / partial availability; prefer biped_give_weapon).",
+      "params": {
+        "player": "Player reference or variable.",
+        "weapon": "Weapon type or weapon object.",
+        "mode": "Equip / slot mode: primary, secondary, force."
+      }
+    },
+    "hide_object": {
+      "summary": "Hides or shows an object for players (Reach MCC only).",
+      "params": {
+        "object": "Object reference or variable.",
+        "should_hide": "Whether the object should be hidden."
+      }
+    },
+    "hs_function_call": {
+      "summary": "Calls a HaloScript function by index (Reach MCC only).",
+      "params": {
+        "function_name": "HaloScript function name."
+      }
+    },
+    "hud_post_message": {
+      "summary": "Posts a HUD message to a team or player target. The sound operand selects an e_megalo_sound token or `none`. The message is a dynamic string.",
+      "params": {
+        "team_or_player_target": "everyone, or a specific player / team.",
+        "sound": "Sound name from the sounds object list.",
+        "dynamic_string": "Quoted string or dynamic string expression."
+      }
+    },
+    "hud_widget_set_icon": {
+      "summary": "Sets the icon on a HUD widget.",
+      "params": {
+        "hud_widget_name": "Name of a hud_widget declared in the script.",
+        "icon_name": "Icon name."
+      }
+    },
+    "hud_widget_set_meter": {
+      "summary": "Configures meter parameters on a HUD widget.",
+      "params": {
+        "hud_widget_name": "Name of a hud_widget declared in the script.",
+        "meter": "Meter mode: off, two numbers, or a timer."
+      }
+    },
+    "hud_widget_set_text": {
+      "summary": "Updates text on a named HUD widget using a dynamic string.",
+      "params": {
+        "hud_widget_name": "Name of a hud_widget declared in the script.",
+        "dynamic_string": "Quoted string or dynamic string expression."
+      }
+    },
+    "hud_widget_set_value": {
+      "summary": "Updates a numeric value displayed on a HUD widget using a dynamic string.",
+      "params": {
+        "hud_widget_name": "Name of a hud_widget declared in the script.",
+        "dynamic_string": "Quoted string or dynamic string expression."
+      }
+    },
+    "hud_widget_set_visibility": {
+      "summary": "Shows or hides a HUD widget for a player reference.",
+      "params": {
+        "hud_widget_name": "Name of a hud_widget declared in the script.",
+        "player": "Player reference or variable.",
+        "literal_boolean": "Literal true or false."
+      }
+    },
+    "navpoint_set_icon": {
+      "summary": "Sets the navpoint icon displayed above an object. The ME name table ends with `coop spawning` (space). MegaloEdit cannot parse it (Megalo Headache #3); enable MegaCrow’s `coopSpawning` extension to accept the two-token form.",
+      "params": {
+        "object": "Object reference or variable.",
+        "icon": "Icon name or keyword.",
+        "number": "Numeric icon value when icon is num."
+      }
+    },
+    "navpoint_set_priority": {
+      "summary": "Sets navpoint draw priority (`high`, `normal`, `low`, `blink`).",
+      "params": {
+        "object": "Object reference or variable.",
+        "priority": "Priority: low, normal, high, blink."
+      }
+    },
+    "navpoint_set_text": {
+      "summary": "Sets navpoint label text from a dynamic string.",
+      "params": {
+        "object": "Object reference or variable.",
+        "dynamic_string": "Quoted string or dynamic string expression."
+      }
+    },
+    "navpoint_set_timer": {
+      "summary": "Links a navpoint to a timer for countdown display.",
+      "params": {
+        "object": "Object reference or variable.",
+        "timer_name": "Named timer to associate."
+      }
+    },
+    "navpoint_set_visible": {
+      "summary": "Controls navpoint visibility for a target audience (everyone, team, player, etc.).",
+      "params": {
+        "object": "Object reference or variable.",
+        "audience": "Who is affected: no_one, everyone, allies, enemies, player (player form may take a player and boolean)."
+      }
+    },
+    "navpoint_set_visible_range": {
+      "summary": "Sets the distance at which a navpoint becomes visible.",
+      "params": {
+        "object": "Object reference or variable.",
+        "min": "Minimum visible range in feet.",
+        "max": "Maximum visible range in feet."
+      }
+    },
+    "object_adjust_health": {
+      "summary": "Modifies an object's current health with a math operation.",
+      "params": {
+        "object": "Object reference or variable.",
+        "math_operation": "How to apply the value (set_to, add, subtract, …).",
+        "number": "Numeric amount or number variable."
+      }
+    },
+    "object_adjust_maximum_health": {
+      "summary": "Modifies an object's maximum health with a math operation.",
+      "params": {
+        "object": "Object reference or variable.",
+        "math_operation": "How to apply the value (set_to, add, subtract, …).",
+        "number": "Numeric amount or number variable."
+      }
+    },
+    "object_adjust_maximum_shield": {
+      "summary": "Modifies an object's maximum shields with a math operation.",
+      "params": {
+        "object": "Object reference or variable.",
+        "math_operation": "How to apply the value (set_to, add, subtract, …).",
+        "number": "Numeric amount or number variable."
+      }
+    },
+    "object_adjust_shield": {
+      "summary": "Modifies an object's current shields with a math operation.",
+      "params": {
+        "object": "Object reference or variable.",
+        "math_operation": "How to apply the value (set_to, add, subtract, …).",
+        "number": "Numeric amount or number variable."
+      }
+    },
+    "object_attach": {
+      "summary": "Attaches one object to another with offset and constraint parameters.",
+      "params": {
+        "child_object": "Object to attach or detach.",
+        "parent_object": "Object to attach to.",
+        "offset_x": "X offset in feet.",
+        "offset_y": "Y offset in feet.",
+        "offset_z": "Z offset in feet."
+      }
+    },
+    "object_bounce": {
+      "summary": "Applies an upward impulse to an object.",
+      "params": {
+        "object": "Object reference or variable."
+      }
+    },
+    "object_destroy": {
+      "summary": "Destroys an object immediately (distinct from `delete_object` in engine handling).",
+      "params": {
+        "object": "Object reference or variable."
+      }
+    },
+    "object_detach": {
+      "summary": "Detaches a child object from its parent.",
+      "params": {
+        "child_object": "Object to attach or detach."
+      }
+    },
+    "object_face_object": {
+      "summary": "Rotates an object to face another object.",
+      "params": {
+        "object": "Object reference or variable.",
+        "target": "Object to face toward.",
+        "x": "Optional: X component in feet.",
+        "y": "Optional: Y component in feet.",
+        "z": "Optional: Z component in feet."
+      }
+    },
+    "object_get_distance": {
+      "summary": "Writes the distance between two objects into an out-variable.",
+      "params": {
+        "object_a": "First object reference.",
+        "object_b": "Second object reference.",
+        "distance_out": "Number variable that receives distance in feet."
+      }
+    },
+    "object_get_health": {
+      "summary": "Reads an object's current health into an out-variable.",
+      "params": {
+        "object": "Object reference or variable.",
+        "vitality_out": "Number variable that receives vitality percent."
+      }
+    },
+    "object_get_orientation": {
+      "summary": "Reads an object's orientation into an out-variable.",
+      "params": {
+        "object": "Object reference or variable.",
+        "orientation_out": "Number variable that receives orientation (1–6)."
+      }
+    },
+    "object_get_shield": {
+      "summary": "Reads an object's current shields into an out-variable.",
+      "params": {
+        "object": "Object reference or variable.",
+        "vitality_out": "Number variable that receives vitality percent."
+      }
+    },
+    "object_get_velocity": {
+      "summary": "Reads an object's velocity into an out-variable.",
+      "params": {
+        "object": "Object reference or variable.",
+        "number_out": "Number variable that receives velocity."
+      }
+    },
+    "object_set_invincibility": {
+      "summary": "Sets whether an object can take damage.",
+      "params": {
+        "object": "Object reference or variable.",
+        "boolean": "true / false, or a boolean-like value."
+      }
+    },
+    "object_set_minimap_icon": {
+      "summary": "Sets an object's minimap icon. Compiles on Alpha Reach builds, but no known Reach build renders a working minimap.",
+      "params": {
+        "object": "Object reference or variable.",
+        "icon": "Icon name or keyword."
+      }
+    },
+    "object_set_minimap_priority": {
+      "summary": "Sets an object's minimap priority. Compiles on Alpha Reach builds, but no known Reach build renders a working minimap.",
+      "params": {
+        "object": "Object reference or variable.",
+        "priority": "Priority: low, normal, high, blink."
+      }
+    },
+    "object_set_minimap_visibility": {
+      "summary": "Shows or hides an object on the minimap. Compiles on Alpha Reach builds, but no known Reach build renders a working minimap.",
+      "params": {
+        "object": "Object reference or variable.",
+        "boolean": "true / false, or a boolean-like value."
+      }
+    },
+    "object_set_never_garbage": {
+      "summary": "Prevents the engine from garbage-collecting an object.",
+      "params": {
+        "object": "Object reference or variable.",
+        "boolean": "true / false, or a boolean-like value."
+      }
+    },
+    "object_set_orientation": {
+      "summary": "Sets an object's facing/orientation explicitly.",
+      "params": {
+        "object": "Object reference or variable.",
+        "source": "Orientation source object."
+      }
+    },
+    "object_set_scale": {
+      "summary": "Scales an object by a multiplier.",
+      "params": {
+        "object": "Object reference or variable.",
+        "number": "Percent value (0–100) or number variable."
+      }
+    },
+    "player_adjust_money": {
+      "summary": "Modifies a player's requisition money with a math operation. `player_adjust_money` is part of the Requisition System that was scrapped before Halo: Reach's release. While much of the requisition functionality remains in the game to this day, the requisition menu is long gone, rendering this action effectively useless outside of early pre-release builds.",
+      "params": {
+        "player": "Player reference or variable.",
+        "math_operation": "How to apply the value (set_to, add, subtract, …).",
+        "number": "Numeric amount or number variable."
+      }
+    },
+    "player_death_get_damage_type": {
+      "summary": "Writes the damage type from a death event into an out-variable.",
+      "params": {
+        "dead_player": "The player who died.",
+        "number_out": "Number variable that receives the damage type."
+      }
+    },
+    "player_death_get_killing_player": {
+      "summary": "Writes the killing player from a death event into an out-variable.",
+      "params": {
+        "dead_player": "The player who died.",
+        "killing_player": "Player variable that receives the killer."
+      }
+    },
+    "player_death_get_special_type": {
+      "summary": "Writes the special death type (melee, headshot, etc.) into an out-variable.",
+      "params": {
+        "dead_player": "The player who died.",
+        "number_out": "Number variable that receives the special death type."
+      }
+    },
+    "player_enable_purchases": {
+      "summary": "Enables or disables requisition purchases by category and alive/dead state. `player_enable_purchases` is part of the Requisition System that was scrapped before Halo: Reach's release. While much of the requisition functionality remains in the game to this day, the requisition menu is long gone, rendering this action effectively useless outside of early pre-release builds.",
+      "params": {
+        "player": "Player reference or variable.",
+        "when": "When purchases apply: alive, dead, both.",
+        "boolean": "true / false, or a boolean-like value."
+      }
+    },
+    "player_get_equipment": {
+      "summary": "Reads a player's equipment into an out-variable.",
+      "params": {
+        "player": "Player reference or variable.",
+        "equipment_out": "Object variable that receives the equipment."
+      }
+    },
+    "player_get_fireteam_index": {
+      "summary": "Reads or writes a player's fireteam index.",
+      "params": {
+        "player": "Player reference or variable.",
+        "number_out": "Number variable that receives the result."
+      }
+    },
+    "player_get_killing_spree_count": {
+      "summary": "Reads a player's killstreak count into an out-variable.",
+      "params": {
+        "player": "Player reference or variable.",
+        "number_out": "Number variable that receives the result."
+      }
+    },
+    "player_get_place": {
+      "summary": "Writes a player's scoreboard rank into an out-variable.",
+      "params": {
+        "player": "Player reference or variable.",
+        "number_out": "Number variable that receives place/rank."
+      }
+    },
+    "player_get_target_object": {
+      "summary": "Reads a player's current target object into an out-variable.",
+      "params": {
+        "player": "Player reference or variable.",
+        "object_out": "Object variable that receives the result."
+      }
+    },
+    "player_get_vehicle": {
+      "summary": "Writes the vehicle a player occupies into an out-variable.",
+      "params": {
+        "player": "Player reference or variable.",
+        "vehicle_out": "Object variable that receives the vehicle."
+      }
+    },
+    "player_get_weapon": {
+      "summary": "Reads a player's current weapon into an out-variable.",
+      "params": {
+        "player": "Player reference or variable.",
+        "mode": "Equip / slot mode: primary, secondary.",
+        "weapon_out": "Object variable that receives the weapon."
+      }
+    },
+    "player_pick_up_weapon": {
+      "summary": "Forces a player to pick up a weapon object.",
+      "params": {
+        "player": "Player reference or variable.",
+        "weapon_object": "Existing weapon object instance."
+      }
+    },
+    "player_set_coop_spawning": {
+      "summary": "Enables or disables cooperative spawning for a player.",
+      "params": {
+        "player": "Player reference or variable.",
+        "literal_boolean": "Literal true or false."
+      }
+    },
+    "player_set_fireteam_index": {
+      "summary": "Assigns a player to a fireteam index.",
+      "params": {
+        "player": "Player reference or variable.",
+        "number": "Numeric amount or number variable."
+      }
+    },
+    "player_set_fireteam_tier": {
+      "summary": "Sets a player's fireteam tier.",
+      "params": {
+        "player": "Player reference or variable.",
+        "tier": "Fireteam tier value."
+      }
+    },
+    "player_set_objective": {
+      "summary": "Sets objective text shown to a player using a dynamic string.",
+      "params": {
+        "player": "Player reference or variable.",
+        "dynamic_string": "Quoted string or dynamic string expression."
+      }
+    },
+    "player_set_objective_allegiance": {
+      "summary": "Sets objective allegiance text (friendly/enemy/neutral styling) using a dynamic string.",
+      "params": {
+        "player": "Player reference or variable.",
+        "dynamic_string": "Quoted string or dynamic string expression."
+      }
+    },
+    "player_set_objective_allegiance_icon": {
+      "summary": "Sets the objective allegiance icon for a player. The icon is a constant integer (literal or number constant such as `k_engine_icon_elite`), in range `0`–`127`, or `-1` for none.",
+      "params": {
+        "player": "Player reference or variable.",
+        "constant_integer": "Engine icon index integer."
+      }
+    },
+    "player_set_primary_respawn_object": {
+      "summary": "Sets a player's primary respawn object.",
+      "params": {
+        "player": "Player reference or variable.",
+        "object": "Object reference or variable."
+      }
+    },
+    "player_set_requisition_palette": {
+      "summary": "Assigns a requisition palette to a player. `player_set_requisition_palette` is part of the Requisition System that was scrapped before Halo: Reach's release. While much of the requisition functionality remains in the game to this day, the requisition menu is long gone, rendering this action effectively useless outside of early pre-release builds.",
+      "params": {
+        "player": "Player reference or variable.",
+        "req_palette_name": "Requisition palette name."
+      }
+    },
+    "player_set_unit": {
+      "summary": "Megalo action `player_set_unit` with operands: player, object.",
+      "params": {
+        "player": "Player reference or variable.",
+        "unit": "Unit object reference."
+      }
+    },
+    "player_set_vehicle": {
+      "summary": "Forces a player into a vehicle reference.",
+      "params": {
+        "player": "Player reference or variable.",
+        "vehicle": "Vehicle object reference."
+      }
+    },
+    "player_set_vehicle_spawning": {
+      "summary": "Enables or disables vehicle spawning for a player (Reach MCC only).",
+      "params": {
+        "player": "Player reference or variable.",
+        "literal_boolean": "Literal true or false."
+      }
+    },
+    "play_sound": {
+      "summary": "Plays a sound for a team or player target. Sound tokens are listed in Sounds.",
+      "params": {
+        "team_or_player_target": "everyone, or a specific player / team.",
+        "sound": "Sound name from the sounds object list."
+      }
+    },
+    "print_variable": {
+      "summary": "Prints a dynamic string to the debug log.",
+      "params": {
+        "dynamic_string": "Quoted string or dynamic string expression."
+      }
+    },
+    "random": {
+      "summary": "Writes a random integer into an out-variable between the configured minimum and maximum. The minimum is **inclusive**; the maximum is **exclusive** (for example, `action random 0 5 x` yields 0–4).",
+      "params": {
+        "value_count": "Upper bound; result is in 0..(count-1).",
+        "number_out": "Number variable that receives the random result."
+      }
+    },
+    "respawn_zone_enable": {
+      "summary": "Enables or disables a respawn zone object.",
+      "params": {
+        "object": "Object reference or variable.",
+        "boolean": "true / false, or a boolean-like value."
+      }
+    },
+    "saved_film_insert_marker": {
+      "summary": "Inserts a marker into a saved film recording. The label operand is a dynamic string.",
+      "params": {
+        "offset": "Time offset in seconds.",
+        "label": "Marker label string."
+      }
+    },
+    "set": {
+      "summary": "Modifies a variable using a math operation (`set_to`, `add`, `subtract`, `multiply`, `divide`, `modulo`, or `=`). The target can be a custom variable, member variable, or built-in global.",
+      "params": {
+        "var_a": "Destination variable (custom, member, or built-in).",
+        "math_operation": "How to apply the value (set_to, add, subtract, …).",
+        "var_b": "Source value or variable."
+      }
+    },
+    "set_boundary": {
+      "summary": "Configures boundary shape parameters on an object.",
+      "params": {
+        "object": "Object reference or variable.",
+        "shape": "Boundary shape: none, sphere, cylinder, box."
+      }
+    },
+    "set_fireteam_respawn_filter": {
+      "summary": "Restricts fireteam respawn permissions on an object.",
+      "params": {
+        "object": "Object reference or variable.",
+        "fireteam_filter": "Fireteam filter: none, all, 0-3."
+      }
+    },
+    "set_loadout": {
+      "summary": "Assigns a named loadout to a player.",
+      "params": {
+        "player": "Player reference or variable.",
+        "loadout_name": "Named loadout."
+      }
+    },
+    "set_loadout_palette": {
+      "summary": "Assigns a loadout palette tier to a player or team. By default, the `loadout_selection_time` game option is set to zero. Using `set_loadout_palette` will set `loadout_selection_time`to 10 if: - You are not using the `base` element - ie. your script doesnt use `base \"../file.mglo\"` - You haven't set `loadout_selection_time` in your `game_options`.",
+      "params": {
+        "team_or_player": "Player or team target.",
+        "loadout": "Loadout palette tier / name."
+      }
+    },
+    "set_pickup_filter": {
+      "summary": "Restricts who can pick up an object (`all`, `allies`, `enemies`, `no_one`).",
+      "params": {
+        "object": "Object reference or variable.",
+        "audience": "Who is affected: no_one, everyone, allies, enemies, player (player form may take a player and boolean)."
+      }
+    },
+    "set_player_respawn_vehicle": {
+      "summary": "Sets the respawn vehicle type for a player (Reach MCC only).",
+      "params": {
+        "vehicle": "Vehicle object reference.",
+        "player": "Player reference or variable."
+      }
+    },
+    "set_progress_bar": {
+      "summary": "Configures an object's progress bar display.",
+      "params": {
+        "object": "Object reference or variable.",
+        "audience": "Who is affected: no_one, everyone, allies, enemies, player (player form may take a player and boolean).",
+        "timer_name": "Named timer to associate."
+      }
+    },
+    "set_respawn_filter": {
+      "summary": "Restricts who can respawn at an object.",
+      "params": {
+        "object": "Object reference or variable.",
+        "audience": "Who is affected: no_one, everyone, allies, enemies, player (player form may take a player and boolean)."
+      }
+    },
+    "set_scenario_interpolator_state": {
+      "summary": "Sets a scenario interpolator state index.",
+      "params": {
+        "interpolator_index": "Scenario interpolator index.",
+        "boolean_active": "Whether the interpolator is active."
+      }
+    },
+    "set_score": {
+      "summary": "Changes score for a player, team, or everyone using a math operation.",
+      "params": {
+        "math_operation": "How to apply the value (set_to, add, …).",
+        "value": "Numeric amount or number variable.",
+        "target": "everyone, or a specific player / team."
+      }
+    },
+    "set_team_respawn_vehicle": {
+      "summary": "Sets the respawn vehicle type for a team (Reach MCC only).",
+      "params": {
+        "vehicle": "Vehicle object reference.",
+        "team": "Team reference or variable."
+      }
+    },
+    "submit_incident": {
+      "summary": "Fires a game incident with team or player target context for cause and effect (from `incidents.txt`).",
+      "params": {
+        "incident_name": "Incident name from the incidents object list.",
+        "cause_team_or_player": "Cause side: everyone, or a specific player / team.",
+        "effect_team_or_player": "Effect side: everyone, or a specific player / team."
+      }
+    },
+    "submit_incident_with_custom_value": {
+      "summary": "Fires a game incident and passes a custom numeric value.",
+      "params": {
+        "incident_name": "Incident name from the incidents object list.",
+        "cause_team_or_player": "Cause side: everyone, or a specific player / team.",
+        "effect_team_or_player": "Effect side: everyone, or a specific player / team.",
+        "custom_value_such_as_territory_index": "Custom integer payload (e.g. territory index)."
+      }
+    },
+    "team_get_place": {
+      "summary": "Writes a team's scoreboard rank into an out-variable.",
+      "params": {
+        "team": "Team reference or variable.",
+        "number_out": "Number variable that receives place/rank."
+      }
+    },
+    "team_set_coop_spawning": {
+      "summary": "Enables or disables cooperative spawning for a team.",
+      "params": {
+        "team": "Team reference or variable.",
+        "literal_boolean": "Literal true or false."
+      }
+    },
+    "team_set_primary_respawn_object": {
+      "summary": "Sets a team's primary respawn object.",
+      "params": {
+        "team": "Team reference or variable.",
+        "object": "Object reference or variable."
+      }
+    },
+    "team_set_vehicle_spawning": {
+      "summary": "Enables or disables vehicle spawning for a team (Reach MCC only).",
+      "params": {
+        "team": "Team reference or variable.",
+        "literal_boolean": "Literal true or false."
+      }
+    },
+    "timer_reset": {
+      "summary": "Resets a timer to its initial value.",
+      "params": {
+        "timer": "Timer variable."
+      }
+    },
+    "timer_set_rate": {
+      "summary": "Sets a timer's tick rate. `0` pauses, `-1` counts down, `1` is normal speed.",
+      "params": {
+        "timer": "Timer variable.",
+        "rate": "Timer rate keyword or value."
+      }
+    },
+    "weapon_set_pickup_priority": {
+      "summary": "Sets weapon pickup priority for an object.",
+      "params": {
+        "object": "Object reference or variable.",
+        "priority": "Priority: normal, special, auto."
+      }
+    }
+  },
+  "condition": {
+    "object_is_type": {
+      "summary": "True when an object matches the given object-list type.",
+      "params": {
+        "object": "Object reference to test.",
+        "object_type": "Quoted name from the objects object list."
+      }
+    },
+    "if": {
+      "summary": "Compares two values with a numeric comparison operator.",
+      "params": {
+        "left": "Variable, constant, option, or literal.",
+        "operator": "Comparison operator (symbolic or named).",
+        "right": "Value compared against left."
+      }
+    },
+    "object_in_area": {
+      "summary": "True when an object is inside another object's area/boundary."
+    },
+    "player_died": {
+      "summary": "True when a player died by a matching killer type."
+    },
+    "team_disposition": {
+      "summary": "Tests the disposition relationship between two teams."
+    },
+    "timer_expired": {
+      "summary": "True when the given timer has reached zero / expired."
+    },
+    "team_is_active": {
+      "summary": "True when the team is currently active in the match."
+    },
+    "object_out_of_bounds": {
+      "summary": "True when an object is outside the playable map bounds."
+    },
+    "player_is_fire_team_leader": {
+      "summary": "True when the player is the leader of their fireteam."
+    },
+    "player_assisted_with_kill": {
+      "summary": "True when the player assisted with the current kill event."
+    },
+    "object_matches_filter": {
+      "summary": "True when an object matches a named object filter / label."
+    },
+    "player_is_active": {
+      "summary": "True when the player is currently active in the round."
+    },
+    "equipment_is_active": {
+      "summary": "True when the player's equipment ability is active."
+    },
+    "player_is_spartan": {
+      "summary": "True when the player is using the Spartan model."
+    },
+    "player_is_elite": {
+      "summary": "True when the player is using the Elite model."
+    },
+    "player_is_editor": {
+      "summary": "True when the player is in Forge editor mode."
+    },
+    "game_is_forge": {
+      "summary": "True when the current session is Forge (editor) mode."
+    }
+  },
+  "element": {
+    "game_options": {
+      "summary": "Declares built-in and user-defined game options (overrides, options, traits)."
+    },
+    "trigger": {
+      "summary": "Defines a trigger that runs conditions and actions for an event or phase."
+    },
+    "variables": {
+      "summary": "Declares custom variables in a scope (global, team, player, or object)."
+    },
+    "base": {
+      "summary": "Declares that this script derives from a base Megalo script file."
+    },
+    "include": {
+      "summary": "Includes another Megalo script file into this compilation unit."
+    },
+    "localized_include": {
+      "summary": "Includes a locale-specific script fragment (strings / localization)."
+    },
+    "string_table": {
+      "summary": "Declares named string table entries used by HUD and messages."
+    },
+    "constants": {
+      "summary": "Declares compile-time numeric constants.",
+      "params": {
+        "number": "Declares a numeric constant: number <name> <value>."
+      }
+    },
+    "hud_widgets": {
+      "summary": "Declares named HUD widgets and their screen positions."
+    },
+    "loadout": {
+      "summary": "Defines a named loadout (weapons, equipment, grenades)."
+    },
+    "loadout_palette": {
+      "summary": "Groups loadout items into a selectable palette."
+    },
+    "teams": {
+      "summary": "Configures multiplayer team options, models, and designators."
+    },
+    "engine_data": {
+      "summary": "Sets engine-facing gametype metadata (name, description, icon, category)."
+    },
+    "player_rating": {
+      "summary": "Configures competitive player-rating / skill weights."
+    },
+    "map_permissions": {
+      "summary": "Restricts which maps this gametype may run on."
+    },
+    "game_stats": {
+      "summary": "Declares custom scoreboard / end-of-round game statistics."
+    },
+    "map_object": {
+      "summary": "Binds script metadata to a map object (label, type, team filter, …)."
+    },
+    "requisition_palette": {
+      "summary": "Defines a requisition (purchase) palette and its items."
+    }
+  },
+  "keyword": {
+    "action": {
+      "summary": "Introduces an action statement inside a trigger or begin block."
+    },
+    "condition": {
+      "summary": "Introduces a condition that gates later statements in the trigger."
+    },
+    "temporary": {
+      "summary": "Declares a temporary variable local to the current trigger block."
+    },
+    "begin": {
+      "summary": "Opens a nested statement block that ends with a matching end."
+    },
+    "end": {
+      "summary": "Closes the nearest open block (trigger, begin, element, …)."
+    },
+    "not": {
+      "summary": "Negates the following condition."
+    }
+  },
+  "param": {
+    "variables": {
+      "end": {
+        "summary": "Closes the nearest open element or block."
+      },
+      "global": {
+        "summary": "Variable scope: script-wide globals."
+      },
+      "team": {
+        "summary": "Scope (`variables team`) or entry type (`… team <name> …`): one team-scoped copy / team reference."
+      },
+      "player": {
+        "summary": "Scope (`variables player`) or entry type (`… player <name> …`): one player-scoped copy / player reference."
+      },
+      "object": {
+        "summary": "Scope (`variables object`) or entry type (`… object <name> …`): one object-scoped copy / object reference."
+      },
+      "local": {
+        "summary": "Network state: not replicated (local-only)."
+      },
+      "networked": {
+        "summary": "Network state: replicated to clients."
+      },
+      "networked_high": {
+        "summary": "Network state: high-priority replication."
+      },
+      "number": {
+        "summary": "Variable type: integer / numeric value."
+      },
+      "timer": {
+        "summary": "Variable type: countdown / stopwatch timer."
+      }
+    },
+    "constants": {
+      "end": {
+        "summary": "Closes the nearest open element or block."
+      },
+      "number": {
+        "summary": "Declares a numeric constant."
+      }
+    },
+    "game_options": {
+      "end": {
+        "summary": "Closes the nearest open element or block."
+      },
+      "lock": {
+        "summary": "Locks a game option so players cannot change it in the lobby."
+      },
+      "hide": {
+        "summary": "Hides a game option from the lobby UI."
+      },
+      "override": {
+        "summary": "Overrides a built-in option or traits block with a scripted value."
+      },
+      "option": {
+        "summary": "Declares a custom boolean/enum game option."
+      },
+      "ranged_option": {
+        "summary": "Declares a custom numeric ranged game option."
+      },
+      "player_traits": {
+        "summary": "Declares a named player_traits block used by overrides / apply_player_traits."
+      },
+      "loadout_palette": {
+        "summary": "Built-in override: which loadout palette is active."
+      },
+      "damage_resistance": {
+        "summary": "Multiplier / invulnerability for damage taken."
+      },
+      "body_recharge": {
+        "summary": "Body health recharge rate."
+      },
+      "shield_recharge": {
+        "summary": "Shield recharge rate."
+      },
+      "vampirism": {
+        "summary": "Health stolen on dealing damage."
+      },
+      "headshot_immunity": {
+        "summary": "Whether headshots are ignored."
+      },
+      "body_multiplier": {
+        "summary": "Body health multiplier."
+      },
+      "shield_multiplier": {
+        "summary": "Shield strength multiplier."
+      },
+      "assassination_immunity": {
+        "summary": "Whether assassinations are blocked."
+      },
+      "damage_modifier": {
+        "summary": "Outgoing damage multiplier (weapons)."
+      },
+      "melee_damage_modifier": {
+        "summary": "Outgoing melee damage multiplier."
+      },
+      "initial_primary_weapon": {
+        "summary": "Starting primary weapon (or none/default/random)."
+      },
+      "initial_secondary_weapon": {
+        "summary": "Starting secondary / backpack weapon (or none/default/random)."
+      },
+      "initial_equipment": {
+        "summary": "Starting equipment item (or none/default/random)."
+      },
+      "initial_grenades": {
+        "summary": "Starting grenade loadout."
+      },
+      "recharging_grenades": {
+        "summary": "Whether grenades recharge over time."
+      },
+      "infinite_ammo": {
+        "summary": "Unlimited ammunition."
+      },
+      "bottomless_clip": {
+        "summary": "Never reload (bottomless magazine)."
+      },
+      "weapon_pickup": {
+        "summary": "Whether the player can pick up weapons."
+      },
+      "drop_equipment": {
+        "summary": "Whether equipment is dropped on death."
+      },
+      "infinite_equipment": {
+        "summary": "Unlimited equipment uses."
+      },
+      "speed": {
+        "summary": "Movement speed multiplier."
+      },
+      "gravity": {
+        "summary": "Gravity scale for the player."
+      },
+      "vehicle_usage": {
+        "summary": "Which vehicles the player may enter."
+      },
+      "jump_modifier": {
+        "summary": "Jump height / strength multiplier."
+      },
+      "sprinting": {
+        "summary": "Whether sprinting is allowed."
+      },
+      "equipment_usage": {
+        "summary": "Whether equipment use is enabled."
+      },
+      "active_camo": {
+        "summary": "Active camouflage behavior."
+      },
+      "waypoint": {
+        "summary": "Waypoint visibility rules."
+      },
+      "gamertag_visibility": {
+        "summary": "When other players see this gamertag."
+      },
+      "color": {
+        "summary": "Forced player color."
+      },
+      "tracker_mode": {
+        "summary": "Motion tracker mode."
+      },
+      "tracker_range": {
+        "summary": "Motion tracker range."
+      },
+      "score_to_win_round": {
+        "summary": "Built-in game option / override target: `score_to_win_round`."
+      },
+      "fire_teams_enabled": {
+        "summary": "Built-in game option / override target: `fire_teams_enabled`."
+      },
+      "teams_enabled": {
+        "summary": "Built-in game option / override target: `teams_enabled`."
+      },
+      "round_time_limit": {
+        "summary": "Built-in game option / override target: `round_time_limit`."
+      },
+      "round_count": {
+        "summary": "Built-in game option / override target: `round_count`."
+      },
+      "perfection_enabled": {
+        "summary": "Built-in game option / override target: `perfection_enabled`."
+      },
+      "early_victory_win_count": {
+        "summary": "Built-in game option / override target: `early_victory_win_count`."
+      },
+      "sudden_death_time_limit": {
+        "summary": "Built-in game option / override target: `sudden_death_time_limit`."
+      },
+      "grace_period_time_limit": {
+        "summary": "Built-in game option / override target: `grace_period_time_limit`."
+      },
+      "lives_per_round": {
+        "summary": "Built-in game option / override target: `lives_per_round`."
+      },
+      "team_lives_per_round": {
+        "summary": "Built-in game option / override target: `team_lives_per_round`."
+      },
+      "respawn_time": {
+        "summary": "Built-in game option / override target: `respawn_time`."
+      },
+      "suicide_respawn_penalty": {
+        "summary": "Built-in game option / override target: `suicide_respawn_penalty`."
+      },
+      "betrayal_respawn_penalty": {
+        "summary": "Built-in game option / override target: `betrayal_respawn_penalty`."
+      },
+      "respawn_time_growth": {
+        "summary": "Built-in game option / override target: `respawn_time_growth`."
+      },
+      "loadout_selection_time": {
+        "summary": "Built-in game option / override target: `loadout_selection_time`."
+      },
+      "respawn_traits_duration": {
+        "summary": "Built-in game option / override target: `respawn_traits_duration`."
+      },
+      "friendly_fire_enabled": {
+        "summary": "Built-in game option / override target: `friendly_fire_enabled`."
+      },
+      "betrayal_booting_enabled": {
+        "summary": "Built-in game option / override target: `betrayal_booting_enabled`."
+      },
+      "enemy_voice_enabled": {
+        "summary": "Built-in game option / override target: `enemy_voice_enabled`."
+      },
+      "open_channel_voice_enabled": {
+        "summary": "Built-in game option / override target: `open_channel_voice_enabled`."
+      },
+      "dead_player_voice_enabled": {
+        "summary": "Built-in game option / override target: `dead_player_voice_enabled`."
+      },
+      "grenades_on_map": {
+        "summary": "Built-in game option / override target: `grenades_on_map`."
+      },
+      "shortcuts_on_map": {
+        "summary": "Built-in game option / override target: `shortcuts_on_map`."
+      },
+      "equipment_on_map": {
+        "summary": "Built-in game option / override target: `equipment_on_map`."
+      },
+      "powerups_on_map": {
+        "summary": "Built-in game option / override target: `powerups_on_map`."
+      },
+      "turrets_on_map": {
+        "summary": "Built-in game option / override target: `turrets_on_map`."
+      },
+      "indestructible_vehicles": {
+        "summary": "Built-in game option / override target: `indestructible_vehicles`."
+      },
+      "weapon_set": {
+        "summary": "Built-in game option / override target: `weapon_set`."
+      },
+      "vehicle_set": {
+        "summary": "Built-in game option / override target: `vehicle_set`."
+      },
+      "red_powerup_duration": {
+        "summary": "Built-in game option / override target: `red_powerup_duration`."
+      },
+      "blue_powerup_duration": {
+        "summary": "Built-in game option / override target: `blue_powerup_duration`."
+      },
+      "yellow_powerup_duration": {
+        "summary": "Built-in game option / override target: `yellow_powerup_duration`."
+      },
+      "team_scoring_mode": {
+        "summary": "Built-in game option / override target: `team_scoring_mode`."
+      },
+      "tu1_always_spillover_damage": {
+        "summary": "Built-in game option / override target: `tu1_always_spillover_damage`."
+      },
+      "tu1_armor_lock_stickies_remain": {
+        "summary": "Built-in game option / override target: `tu1_armor_lock_stickies_remain`."
+      },
+      "tu1_attached_damage_bypass_shields": {
+        "summary": "Built-in game option / override target: `tu1_attached_damage_bypass_shields`."
+      },
+      "tu1_active_camo_override_energy_curve": {
+        "summary": "Built-in game option / override target: `tu1_active_camo_override_energy_curve`."
+      },
+      "tu1_sword_gun_clang_kills": {
+        "summary": "Built-in game option / override target: `tu1_sword_gun_clang_kills`."
+      },
+      "tu1_magnum_is_automatic": {
+        "summary": "Built-in game option / override target: `tu1_magnum_is_automatic`."
+      },
+      "tu1_headshot_weapon_reticule_bloom_multiplier": {
+        "summary": "Built-in game option / override target: `tu1_headshot_weapon_reticule_bloom_multiplier`."
+      },
+      "tu1_armor_lock_damage_to_energy_transfer": {
+        "summary": "Built-in game option / override target: `tu1_armor_lock_damage_to_energy_transfer`."
+      },
+      "tu1_armor_lock_damage_to_energy_cap": {
+        "summary": "Built-in game option / override target: `tu1_armor_lock_damage_to_energy_cap`."
+      },
+      "tu1_active_camo_override_energy_curve_min": {
+        "summary": "Built-in game option / override target: `tu1_active_camo_override_energy_curve_min`."
+      },
+      "tu1_active_camo_override_energy_curve_max": {
+        "summary": "Built-in game option / override target: `tu1_active_camo_override_energy_curve_max`."
+      },
+      "tu1_magnum_damage_multiplier": {
+        "summary": "Built-in game option / override target: `tu1_magnum_damage_multiplier`."
+      },
+      "tu1_magnum_fire_recovery_time_multiplier": {
+        "summary": "Built-in game option / override target: `tu1_magnum_fire_recovery_time_multiplier`."
+      },
+      "base_player_traits": {
+        "summary": "Built-in player-traits override: `base_player_traits`."
+      },
+      "respawn_traits": {
+        "summary": "Built-in player-traits override: `respawn_traits`."
+      },
+      "red_powerup_traits": {
+        "summary": "Built-in player-traits override: `red_powerup_traits`."
+      },
+      "blue_powerup_traits": {
+        "summary": "Built-in player-traits override: `blue_powerup_traits`."
+      },
+      "yellow_powerup_traits": {
+        "summary": "Built-in player-traits override: `yellow_powerup_traits`."
+      }
+    },
+    "hud_widgets": {
+      "end": {
+        "summary": "Closes the nearest open element or block."
+      }
+    },
+    "loadout": {
+      "end": {
+        "summary": "Closes the nearest open element or block."
+      },
+      "name": {
+        "summary": "Loadout identity (object-list loadout name)."
+      },
+      "primary_weapon": {
+        "summary": "Primary weapon for this loadout."
+      },
+      "backpack_weapon": {
+        "summary": "Secondary / backpack weapon."
+      },
+      "equipment": {
+        "summary": "Equipment item for this loadout."
+      },
+      "grenades": {
+        "summary": "Grenade configuration for this loadout."
+      }
+    },
+    "loadout_palette": {
+      "end": {
+        "summary": "Closes the nearest open element or block."
+      },
+      "item": {
+        "summary": "Adds a loadout entry to this palette."
+      }
+    },
+    "teams": {
+      "end": {
+        "summary": "Closes the nearest open element or block."
+      },
+      "model": {
+        "summary": "Default / override player model for teams."
+      },
+      "designator_switch_type": {
+        "summary": "How team designators switch during the match."
+      },
+      "team": {
+        "summary": "Opens a per-team configuration block."
+      },
+      "name": {
+        "summary": "Display name string for a team."
+      },
+      "designator": {
+        "summary": "Multiplayer team designator."
+      },
+      "color": {
+        "summary": "Team color index."
+      },
+      "fireteam_count": {
+        "summary": "Number of fireteams on this team."
+      }
+    },
+    "engine_data": {
+      "end": {
+        "summary": "Closes the nearest open element or block."
+      },
+      "name": {
+        "summary": "Gametype display name string."
+      },
+      "description": {
+        "summary": "Gametype description string."
+      },
+      "icon": {
+        "summary": "Gametype icon asset / string."
+      },
+      "category": {
+        "summary": "Lobby category for this gametype."
+      }
+    },
+    "player_rating": {
+      "end": {
+        "summary": "Closes the nearest open element or block."
+      },
+      "rating_scale": {
+        "summary": "Overall rating scale factor."
+      },
+      "kill_weight": {
+        "summary": "Weight applied to kills."
+      },
+      "assist_weight": {
+        "summary": "Weight applied to assists."
+      },
+      "betrayal_weight": {
+        "summary": "Weight applied to betrayals."
+      },
+      "death_weight": {
+        "summary": "Weight applied to deaths."
+      },
+      "normalize_by_max_kills": {
+        "summary": "Normalize rating by max kills."
+      },
+      "base_value": {
+        "summary": "Base rating value."
+      },
+      "range": {
+        "summary": "Rating range."
+      },
+      "loss_scalar": {
+        "summary": "Loss scalar for rating adjustments."
+      },
+      "custom_stat_0": {
+        "summary": "Custom stat weight 0."
+      },
+      "custom_stat_1": {
+        "summary": "Custom stat weight 1."
+      },
+      "custom_stat_2": {
+        "summary": "Custom stat weight 2."
+      },
+      "custom_stat_3": {
+        "summary": "Custom stat weight 3."
+      },
+      "expansion_0": {
+        "summary": "Expansion slot 0."
+      },
+      "expansion_1": {
+        "summary": "Expansion slot 1."
+      },
+      "show_in_scoreboard": {
+        "summary": "Whether rating is shown on the scoreboard."
+      }
+    },
+    "map_permissions": {
+      "end": {
+        "summary": "Closes the nearest open element or block."
+      },
+      "default": {
+        "summary": "Default allow/deny policy for maps."
+      },
+      "exception": {
+        "summary": "Per-map exception to the default policy."
+      }
+    },
+    "game_stats": {
+      "end": {
+        "summary": "Closes the nearest open element or block."
+      },
+      "number": {
+        "summary": "Stat format: plain number."
+      },
+      "timer": {
+        "summary": "Stat format: timer display."
+      },
+      "delta": {
+        "summary": "Stat format: delta / difference."
+      },
+      "percentage": {
+        "summary": "Stat format: percentage."
+      },
+      "none": {
+        "summary": "Stat grouping: no grouping."
+      },
+      "team": {
+        "summary": "Stat grouping: group by team."
+      }
+    },
+    "map_object": {
+      "end": {
+        "summary": "Closes the nearest open element or block."
+      },
+      "label": {
+        "summary": "Filter / label string bound to this map object."
+      },
+      "type": {
+        "summary": "Object type from the objects list."
+      },
+      "team": {
+        "summary": "Team filter for this map object."
+      },
+      "user_data": {
+        "summary": "Integer user-data payload."
+      },
+      "min": {
+        "summary": "Minimum count / threshold."
+      }
+    },
+    "requisition_palette": {
+      "end": {
+        "summary": "Closes the nearest open element or block."
+      },
+      "baseline": {
+        "summary": "Baseline availability for the palette."
+      },
+      "item": {
+        "summary": "Adds a purchasable item to the palette."
+      },
+      "enabled": {
+        "summary": "Baseline state: palette enabled."
+      },
+      "disabled": {
+        "summary": "Baseline / item state: disabled."
+      },
+      "available": {
+        "summary": "Item state: available for purchase."
+      },
+      "unavailable": {
+        "summary": "Item state: temporarily unavailable."
+      }
+    },
+    "string_table": {
+      "end": {
+        "summary": "Closes the nearest open element or block."
+      }
+    }
+  }
+}

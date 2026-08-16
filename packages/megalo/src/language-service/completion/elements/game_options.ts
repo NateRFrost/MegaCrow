@@ -32,6 +32,8 @@ import {
   suggestObjectList,
   suggestSymbolKind,
   suggestTyped,
+  withBlockEndSnippet,
+  withContinueCompletion,
 } from "src/language-service/completion/helpers";
 import type {
   CompletionItem,
@@ -45,7 +47,15 @@ const BODY_KEYWORDS = [
   "option",
   "ranged_option",
   "player_traits",
+  "end",
 ] as const;
+
+/** Nested `end`-closed entries inside `game_options`. */
+const GAME_OPTIONS_BLOCK_KEYWORDS = new Set([
+  "option",
+  "ranged_option",
+  "player_traits",
+]);
 
 const PLAYER_TRAIT_OPTION_NAMES = [
   "damage_resistance",
@@ -204,11 +214,30 @@ export const completeGameOptions = (
 
       if (entry.value.kind === OverrideValueKind.LOADOUT_PALETTE) {
         const { tier, palette } = entry.value;
-        if (!("kind" in palette) && offsetIn(palette.location, ctx.offset)) {
-          return suggestSymbolKind(ctx, SymbolKind.LoadoutPalette);
-        }
+        const paletteOptions = {
+          // Forward refs are valid for declared loadout_palette names.
+          ignoreVisibility: true,
+          // Keep siblings visible while replacing an existing palette token.
+          replacingToken: true,
+        } as const;
+        // Prefer the tier slot when both missing spans overlap after the name.
         if (!("kind" in tier) && offsetIn(tier.location, ctx.offset)) {
           return suggestEnum(ctx, loadoutPaletteType);
+        }
+        if (
+          "kind" in tier &&
+          tier.kind === SyntaxKind.INVALID &&
+          ctx.offset > entry.name.location.end.localOffset &&
+          isSameLineAs(ctx.snapshot, ctx.offset, entry.name.location)
+        ) {
+          return suggestEnum(ctx, loadoutPaletteType);
+        }
+        if (!("kind" in palette) && offsetIn(palette.location, ctx.offset)) {
+          return suggestSymbolKind(
+            ctx,
+            SymbolKind.LoadoutPalette,
+            paletteOptions
+          );
         }
         if (
           ctx.offset > entry.name.location.end.localOffset &&
@@ -217,10 +246,18 @@ export const completeGameOptions = (
           // After a completed tier (or when the palette token is missing),
           // offer declared loadout palettes — not tier enum names again.
           if (!("kind" in tier) && ctx.offset > tier.location.end.localOffset) {
-            return suggestSymbolKind(ctx, SymbolKind.LoadoutPalette);
+            return suggestSymbolKind(
+              ctx,
+              SymbolKind.LoadoutPalette,
+              paletteOptions
+            );
           }
           if ("kind" in palette && palette.kind === SyntaxKind.INVALID) {
-            return suggestSymbolKind(ctx, SymbolKind.LoadoutPalette);
+            return suggestSymbolKind(
+              ctx,
+              SymbolKind.LoadoutPalette,
+              paletteOptions
+            );
           }
           return suggestEnum(ctx, loadoutPaletteType);
         }
@@ -263,5 +300,14 @@ export const completeGameOptions = (
     }
   }
 
-  return suggestKeywords(ctx, BODY_KEYWORDS, "keyword");
+  return suggestKeywords(ctx, BODY_KEYWORDS, "keyword").map((entry) => {
+    if (GAME_OPTIONS_BLOCK_KEYWORDS.has(entry.label)) {
+      return withBlockEndSnippet(entry);
+    }
+    if (entry.label === "end") {
+      return entry;
+    }
+    // lock / hide / override take a following name (or nested body).
+    return withContinueCompletion(entry);
+  });
 };

@@ -13,7 +13,7 @@ export const completeTimerReset = (
 ): CompletionItem[] => {
   switch (ctx.slotIndex) {
     case 0:
-      return suggestTyped(ctx, ParameterType.Timer);
+      return suggestTyped(ctx, ParameterType.Timer, { writable: true });
     default:
       return [];
   }

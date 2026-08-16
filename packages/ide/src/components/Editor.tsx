@@ -6,7 +6,10 @@ import {
   EDITOR_LINE_HEIGHT,
 } from "../lib/editorFont";
 import { lspSyncDocument, subscribeLspDiagnostics } from "../lib/lspClient";
-import { showSourceFileQuickOpen } from "../lib/sourceFileQuickOpen";
+import {
+  showCommandPalette,
+  showSourceFileQuickOpen,
+} from "../lib/sourceFileQuickOpen";
 import {
   MEGALO_LANGUAGE_ID,
   type MegaloDiagnostic,
@@ -277,21 +280,20 @@ export const MegaloEditor = memo(function MegaloEditor({
       monacoRef.current = monaco;
       applyEditorTheme(monaco, editorThemeRef.current);
 
-      // Ctrl/Cmd+Shift+P → Monaco command palette (print is blocked app-wide).
-      editor.addCommand(
-        monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyP,
-        () => {
-          editor.focus();
-          editor.trigger("keyboard", "editor.action.quickCommand", null);
-        }
-      );
-
+      // Ctrl/Cmd+P, Shift+P, and F1 are handled app-wide (printShortcut → IdePalette).
       editor.addAction({
         id: "megacrow.goToFile",
         label: "Go to File...",
-        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyP],
-        run: (ed: Monaco["editor"]["IStandaloneCodeEditor"]) => {
-          void showSourceFileQuickOpen(ed);
+        run: () => {
+          showSourceFileQuickOpen(editor);
+        },
+      });
+
+      editor.addAction({
+        id: "megacrow.commandPalette",
+        label: "Show All Commands",
+        run: () => {
+          showCommandPalette(editor);
         },
       });
 
@@ -349,7 +351,9 @@ export const MegaloEditor = memo(function MegaloEditor({
         if (!plainTextRef.current) {
           void lspSyncDocument(editor.getModel()?.getValue() ?? "");
           // Space-separated Megalo slots: reopen suggest after space / `.` / `_`,
-          // and after backspace/delete (Monaco only auto-triggers on typed chars).
+          // and after backspace/delete when a non-whitespace prefix remains
+          // (Monaco only auto-triggers on typed chars).
+          let deletionShouldRetrigger = false;
           const shouldRetriggerSuggest = event.changes.some(
             (change: ModelContentChange) => {
               if (
@@ -359,7 +363,11 @@ export const MegaloEditor = memo(function MegaloEditor({
               ) {
                 return true;
               }
-              return change.text === "" && change.rangeLength > 0;
+              if (change.text === "" && change.rangeLength > 0) {
+                deletionShouldRetrigger = true;
+                return true;
+              }
+              return false;
             }
           );
           if (shouldRetriggerSuggest) {
@@ -367,7 +375,25 @@ export const MegaloEditor = memo(function MegaloEditor({
               if (editorRef.current !== editor) {
                 return;
               }
-              editor.trigger("megacrow", "editor.action.triggerSuggest", {});
+              if (deletionShouldRetrigger) {
+                const model = editor.getModel();
+                const position = editor.getPosition();
+                if (model === null || position === null) {
+                  return;
+                }
+                const before = model
+                  .getLineContent(position.lineNumber)
+                  .slice(0, position.column - 1);
+                // Backspace/delete with only whitespace (or nothing) left of the
+                // cursor should not reopen the suggest widget.
+                if (before.length === 0 || /\s$/.test(before)) {
+                  return;
+                }
+              }
+              editor.trigger("megacrow", "editor.action.triggerSuggest", {
+                // Ambient mode: hide when empty / don't flash Loading…
+                auto: true,
+              });
             });
           }
         }

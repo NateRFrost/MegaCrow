@@ -684,6 +684,8 @@ const monacoCompletionKind = (
       return Kind.Folder;
     case 1: // Text
       return Kind.Text;
+    case 15: // Snippet
+      return Kind.Snippet;
     default:
       return Kind.Text;
   }
@@ -858,23 +860,45 @@ export function registerMegaloLanguage(monaco: Monaco): void {
             startColumn: pathSegStart + 2,
             endColumn: position.column,
           };
+          const suggestions = items.map((item) => {
+            const isPath =
+              item.kind === 17 /* File */ || item.kind === 19 /* Folder */;
+            const isSnippet = item.insertTextFormat === 2 /* Snippet */;
+            return {
+              label: item.label,
+              kind: monacoCompletionKind(monaco, item.kind),
+              detail: item.detail,
+              documentation:
+                typeof item.documentation === "string"
+                  ? item.documentation
+                  : item.documentation?.value,
+              insertText: item.insertText ?? item.label,
+              filterText: item.filterText ?? item.label,
+              range: isPath ? pathRange : defaultRange,
+              ...(isSnippet
+                ? {
+                    insertTextRules:
+                      monaco.languages.CompletionItemInsertTextRule
+                        .InsertAsSnippet,
+                  }
+                : {}),
+              ...(item.command
+                ? {
+                    command: {
+                      id: item.command.command,
+                      title: item.command.title,
+                      arguments: item.command.arguments ?? [{ auto: true }],
+                    },
+                  }
+                : {}),
+            };
+          });
+          // Empty results: don't keep the widget open / incomplete-loading.
+          if (suggestions.length === 0) {
+            return { suggestions: [], incomplete: false };
+          }
           return {
-            suggestions: items.map((item) => {
-              const isPath =
-                item.kind === 17 /* File */ || item.kind === 19 /* Folder */;
-              return {
-                label: item.label,
-                kind: monacoCompletionKind(monaco, item.kind),
-                detail: item.detail,
-                documentation:
-                  typeof item.documentation === "string"
-                    ? item.documentation
-                    : item.documentation?.value,
-                insertText: item.insertText ?? item.label,
-                filterText: item.filterText ?? item.label,
-                range: isPath ? pathRange : defaultRange,
-              };
-            }),
+            suggestions,
             // Re-query as the user keeps typing so 1-char prefixes aren't stuck.
             incomplete: true,
           };

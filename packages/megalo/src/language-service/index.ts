@@ -42,6 +42,15 @@ export {
   type SemanticTokenType,
 } from "src/language-service/highlighting";
 export {
+  type HoverContribution,
+  type HoverContributionKind,
+  type HoverResult,
+  type HoverTarget,
+  hoverAtPosition,
+  hoverDocumentationForId,
+  resolveHoverTarget,
+} from "src/language-service/hover";
+export {
   computeLineStarts,
   isRootDocumentLocation,
   locationContainsOffset,

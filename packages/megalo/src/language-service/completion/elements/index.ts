@@ -23,47 +23,83 @@ import type {
   CompletionItem,
   ElementCompletionContext,
 } from "src/language-service/completion/types";
+import { hoverDocumentationForId } from "src/language-service/hover";
+import { elementKeywordId } from "src/language-service/hover/resolve";
+
+const withElementParamDocs = (
+  element: ASTElementNode,
+  items: readonly CompletionItem[]
+): CompletionItem[] => {
+  const elementId = elementKeywordId(element);
+  if (elementId === undefined) {
+    return [...items];
+  }
+  return items.map((item) => {
+    const documentation =
+      hoverDocumentationForId("param", `${elementId}.${item.label}`) ??
+      hoverDocumentationForId("keyword", item.label);
+    return documentation === undefined ? item : { ...item, documentation };
+  });
+};
 
 /** Dispatch element-body completions for a top-level AST element. */
 export const completeElement = (
   ctx: ElementCompletionContext
 ): CompletionItem[] => {
   const element: ASTElementNode = ctx.element;
+  let items: CompletionItem[];
   switch (element.elementKind) {
     case ElementKind.BASE:
-      return completeBase(ctx);
+      items = completeBase(ctx);
+      break;
     case ElementKind.INCLUDE:
-      return completeInclude(ctx);
+      items = completeInclude(ctx);
+      break;
     case ElementKind.LOCALIZED_INCLUDE:
-      return completeLocalizedInclude(ctx);
+      items = completeLocalizedInclude(ctx);
+      break;
     case ElementKind.STRING_TABLE:
-      return completeStringTable(ctx);
+      items = completeStringTable(ctx);
+      break;
     case ElementKind.CONSTANTS:
-      return completeConstants(ctx);
+      items = completeConstants(ctx);
+      break;
     case ElementKind.VARIABLES:
-      return completeVariables(ctx);
+      items = completeVariables(ctx);
+      break;
     case ElementKind.GAME_OPTIONS:
-      return completeGameOptions(ctx);
+      items = completeGameOptions(ctx);
+      break;
     case ElementKind.HUD_WIDGETS:
-      return completeHudWidgets(ctx);
+      items = completeHudWidgets(ctx);
+      break;
     case ElementKind.LOADOUT:
-      return completeLoadout(ctx);
+      items = completeLoadout(ctx);
+      break;
     case ElementKind.LOADOUT_PALETTE:
-      return completeLoadoutPalette(ctx);
+      items = completeLoadoutPalette(ctx);
+      break;
     case ElementKind.TEAMS:
-      return completeTeams(ctx);
+      items = completeTeams(ctx);
+      break;
     case ElementKind.ENGINE_DATA:
-      return completeEngineData(ctx);
+      items = completeEngineData(ctx);
+      break;
     case ElementKind.PLAYER_RATING:
-      return completePlayerRating(ctx);
+      items = completePlayerRating(ctx);
+      break;
     case ElementKind.MAP_PERMISSIONS:
-      return completeMapPermissions(ctx);
+      items = completeMapPermissions(ctx);
+      break;
     case ElementKind.GAME_STATS:
-      return completeGameStats(ctx);
+      items = completeGameStats(ctx);
+      break;
     case ElementKind.MAP_OBJECT:
-      return completeMapObject(ctx);
+      items = completeMapObject(ctx);
+      break;
     case ElementKind.REQUISITION_PALETTE:
-      return completeRequisitionPalette(ctx);
+      items = completeRequisitionPalette(ctx);
+      break;
     case ElementKind.TRIGGER:
       return [];
     default: {
@@ -72,4 +108,5 @@ export const completeElement = (
       return [];
     }
   }
+  return withElementParamDocs(element, items);
 };

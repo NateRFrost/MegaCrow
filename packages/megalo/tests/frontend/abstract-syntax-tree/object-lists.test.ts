@@ -59,6 +59,25 @@ describe("object list parameters", () => {
     expect(entry?.references).toHaveLength(1);
   });
 
+  it("resolves quoted object list entries to REFERENCE symbols", () => {
+    const diagnostics = new Diagnostics();
+    const tokens = new Lexer(frontend).lex('"sniper_rifle"', diagnostics);
+    const binder = new SymbolBinder(frontend, diagnostics);
+    const ctx = new ParserContext(tokens, frontend, diagnostics, binder, {
+      [ObjectListType.Weapons]: ["dmr", "assault_rifle", "sniper_rifle"],
+    });
+
+    const nodes = parameterParserBuilder([
+      ObjectListParameter(ObjectListType.Weapons),
+    ])(ctx, tokens[0]?.location);
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(nodes[0]).toMatchObject({
+      kind: SyntaxKind.REFERENCE,
+      identifier: "sniper_rifle",
+    });
+  });
+
   it("rejects unknown object list entries", () => {
     const diagnostics = new Diagnostics();
     const tokens = new Lexer(frontend).lex("not_a_weapon", diagnostics);
