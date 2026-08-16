@@ -1,5 +1,6 @@
 import { emit, listen } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { getIdeLocale } from "../localization";
 import { isTauriRuntime } from "./tauriRuntime";
 
 const DOCS_LABEL = "docs";
@@ -29,10 +30,33 @@ export function normalizeDocsPath(path?: string | null): string | null {
   return clean.length > 0 ? clean : null;
 }
 
+/**
+ * Prefer Japanese docs when the IDE locale is `ja`.
+ * Paths already under `ja/` are left unchanged.
+ */
+export function localizedDocsPath(path?: string | null): string | null {
+  const clean = normalizeDocsPath(path);
+  if (getIdeLocale() !== "ja") {
+    return clean;
+  }
+  if (!clean || clean === "index") {
+    return "ja/index";
+  }
+  if (clean === "ja" || clean.startsWith("ja/")) {
+    return clean === "ja" ? "ja/index" : clean;
+  }
+  return `ja/${clean}`;
+}
+
 /** Absolute URL to a packaged docs HTML page. */
 export function docsPageUrl(path?: string | null): string {
   const base = `${import.meta.env.BASE_URL}docs/`;
-  const clean = normalizeDocsPath(path);
+  // Prefer an already-localized path (e.g. from the docs shell query) as-is.
+  const clean =
+    normalizeDocsPath(path)?.startsWith("ja/") ||
+    normalizeDocsPath(path) === "ja/index"
+      ? normalizeDocsPath(path)
+      : localizedDocsPath(path);
   if (!clean || clean === "index") {
     return `${base}index.html`;
   }
@@ -42,7 +66,7 @@ export function docsPageUrl(path?: string | null): string {
 }
 
 function docsShellUrl(path?: string | null): string {
-  const clean = normalizeDocsPath(path);
+  const clean = localizedDocsPath(path);
   if (!clean) {
     return DOCS_APP_URL;
   }
@@ -50,11 +74,11 @@ function docsShellUrl(path?: string | null): string {
 }
 
 export async function openDocs(path?: string | null): Promise<void> {
-  const clean = normalizeDocsPath(path);
+  const clean = localizedDocsPath(path);
 
   if (!isTauriRuntime()) {
     // Same window name reuses the tab and navigates when the URL differs.
-    window.open(docsPageUrl(clean), "megacrow-docs");
+    window.open(docsPageUrl(path), "megacrow-docs");
     return;
   }
 
@@ -68,7 +92,7 @@ export async function openDocs(path?: string | null): Promise<void> {
   }
 
   const webview = new WebviewWindow(DOCS_LABEL, {
-    url: docsShellUrl(clean),
+    url: docsShellUrl(path),
     title: "MegaCrow Docs",
     width: 1100,
     height: 800,

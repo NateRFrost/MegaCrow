@@ -1,0 +1,23 @@
+# object_adjust_health
+
+
+<AvailabilityCard reach="yes" />
+
+## 説明
+
+[数学演算](/ja/language/enums/math-operations) を使って、オブジェクトの現在のヘルスを変更します。
+
+<ActionParameters />
+
+## 例
+
+```megalo
+action object_adjust_health …
+```
+
+## 対応バージョン
+
+<ActionSupportedVersions />
+
+
+関連 [アクション構文](/ja/language/elements/trigger/action)。

@@ -28,6 +28,19 @@ function normalizeDocsBase(value: string | undefined): string {
 const docsBase = normalizeDocsBase(process.env.DOCS_BASE);
 const REACH_GAME_ICON = `${docsBase}images/icons/game-reach.png`;
 
+function withLocalePrefix(prefix: string, docPath: string): string {
+  if (!docPath.startsWith("/") || docPath.startsWith("//")) {
+    return docPath;
+  }
+  if (!prefix) {
+    return docPath;
+  }
+  if (docPath === "/") {
+    return `${prefix}/`;
+  }
+  return `${prefix}${docPath}`;
+}
+
 function versionSidebarLabel(label: string) {
   return `<span class="version-sidebar-label"><img class="version-reach-icon" src="${REACH_GAME_ICON}" alt="" aria-hidden="true" /><span>${label}</span></span>`;
 }
@@ -44,163 +57,555 @@ function normalizeFenceLang(lang: string | undefined): string {
   );
 }
 
-function elementsSidebar(): DefaultTheme.SidebarItem[] {
+type DocsLocale = "en" | "ja";
+
+const ui = {
+  en: {
+    nav: {
+      guide: "Guide",
+      megacrow: "MegaCrow",
+      language: "Language",
+      changelog: "Changelog",
+    },
+    sidebar: {
+      introduction: "Introduction",
+      whatIsMegalo: "What is megalo?",
+      installQuickStart: "Install & quick start",
+      megacrow: "MegaCrow",
+      overview: "Overview",
+      workspaces: "Workspaces",
+      export: "Export",
+      settings: "Settings",
+      megaloLanguage: "Megalo language",
+      syntax: "Syntax & file format",
+      baseFiles: "Base files",
+      elements: "Elements",
+      actions: "Actions",
+      optionsEnums: "Options & Enums",
+      variableModel: "Variable model",
+      megaloHeadaches: "Megalo Headaches",
+      references: "References",
+      exampleScripts: "Example scripts",
+      objectLists: "Object lists",
+      compilerSettings: "Compiler settings",
+      versions: "Megalo Versions",
+      usage: "Usage",
+      parsing: "Parsing source",
+      compiling: "Compiling",
+      decompiling: "Decompiling",
+      gametypes: "Gametypes & BLF",
+      megaloVersions: "Megalo versions",
+      contributing: "Contributing",
+      development: "Development",
+      reference: "Reference",
+      changelog: "Changelog",
+      mathOperations: "Math operations",
+      teamOrPlayerTarget: "Team or player target",
+      dynamicStrings: "Dynamic strings",
+      gameOptions: "Game options",
+      teamScoringMethod: "Team Scoring Method",
+      weaponSet: "Weapon Set",
+      vehicleSet: "Vehicle Set",
+      playerTraits: "Player traits",
+      grenadeCount: "Grenade Count",
+      vehicleUsageSetting: "Vehicle Usage Setting",
+      sprinting: "Sprinting",
+      equipmentUsageSetting: "Equipment Usage Setting",
+      activeCamoSetting: "Active Camo Setting",
+      waypointSetting: "Waypoint Setting",
+      forcedChangeColorSetting: "Forced Change Color Setting",
+      motionTrackerSetting: "Motion Tracker Setting",
+      builtInVariables: "Built-in variables",
+      engineCategories: "Engine categories",
+      sounds: "Sounds",
+    },
+  },
+  ja: {
+    nav: {
+      guide: "ガイド",
+      megacrow: "MegaCrow",
+      language: "言語",
+      changelog: "変更履歴",
+    },
+    sidebar: {
+      introduction: "はじめに",
+      whatIsMegalo: "megalo とは？",
+      installQuickStart: "インストールとクイックスタート",
+      megacrow: "MegaCrow",
+      overview: "概要",
+      workspaces: "ワークスペース",
+      export: "エクスポート",
+      settings: "設定",
+      megaloLanguage: "Megalo 言語",
+      syntax: "構文とファイル形式",
+      baseFiles: "ベースファイル",
+      elements: "要素",
+      actions: "アクション",
+      optionsEnums: "オプションと列挙型",
+      variableModel: "変数モデル",
+      megaloHeadaches: "Megalo の注意点",
+      references: "参考文献",
+      exampleScripts: "サンプルスクリプト",
+      objectLists: "オブジェクトリスト",
+      compilerSettings: "コンパイラ設定",
+      versions: "バージョン",
+      usage: "使い方",
+      parsing: "ソースのパース",
+      compiling: "コンパイル",
+      decompiling: "デコンパイル",
+      gametypes: "ゲームタイプと BLF",
+      megaloVersions: "Megalo バージョン",
+      contributing: "コントリビュート",
+      development: "開発",
+      reference: "リファレンス",
+      changelog: "変更履歴",
+      mathOperations: "数学演算",
+      teamOrPlayerTarget: "チームまたはプレイヤー対象",
+      dynamicStrings: "動的文字列",
+      gameOptions: "ゲームオプション",
+      teamScoringMethod: "チームスコア方式",
+      weaponSet: "武器セット",
+      vehicleSet: "車両セット",
+      playerTraits: "プレイヤートレイト",
+      grenadeCount: "グレネード数",
+      vehicleUsageSetting: "車両使用設定",
+      sprinting: "スプリント",
+      equipmentUsageSetting: "装備使用設定",
+      activeCamoSetting: "アクティブカモ設定",
+      waypointSetting: "ウェイポイント設定",
+      forcedChangeColorSetting: "強制カラー変更設定",
+      motionTrackerSetting: "モーションセンサー設定",
+      builtInVariables: "組み込み変数",
+      engineCategories: "エンジンカテゴリ",
+      sounds: "サウンド",
+    },
+  },
+} as const;
+
+function elementsSidebar(prefix: string): DefaultTheme.SidebarItem[] {
   return [
-    { text: "string_table", link: "/language/elements/string-table" },
+    {
+      text: "string_table",
+      link: withLocalePrefix(prefix, "/language/elements/string-table"),
+    },
     {
       text: "game_options",
-      link: "/language/elements/game-options",
+      link: withLocalePrefix(prefix, "/language/elements/game-options"),
       items: [
         {
           text: "player_traits",
-          link: "/language/elements/game-options/player-traits",
+          link: withLocalePrefix(
+            prefix,
+            "/language/elements/game-options/player-traits"
+          ),
         },
       ],
     },
-    { text: "constants", link: "/language/elements/constants" },
-    { text: "loadout", link: "/language/elements/loadout" },
-    { text: "loadout_palette", link: "/language/elements/loadout-palette" },
-    { text: "include", link: "/language/elements/include" },
-    { text: "localized_include", link: "/language/elements/localized-include" },
-    { text: "base", link: "/language/elements/base" },
-    { text: "teams", link: "/language/elements/teams" },
-    { text: "engine_data", link: "/language/elements/engine-data" },
-    { text: "player_rating", link: "/language/elements/player-rating" },
-    { text: "map_permissions", link: "/language/elements/map-permissions" },
-    { text: "variables", link: "/language/elements/variables" },
+    {
+      text: "constants",
+      link: withLocalePrefix(prefix, "/language/elements/constants"),
+    },
+    {
+      text: "loadout",
+      link: withLocalePrefix(prefix, "/language/elements/loadout"),
+    },
+    {
+      text: "loadout_palette",
+      link: withLocalePrefix(prefix, "/language/elements/loadout-palette"),
+    },
+    {
+      text: "include",
+      link: withLocalePrefix(prefix, "/language/elements/include"),
+    },
+    {
+      text: "localized_include",
+      link: withLocalePrefix(prefix, "/language/elements/localized-include"),
+    },
+    {
+      text: "base",
+      link: withLocalePrefix(prefix, "/language/elements/base"),
+    },
+    {
+      text: "teams",
+      link: withLocalePrefix(prefix, "/language/elements/teams"),
+    },
+    {
+      text: "engine_data",
+      link: withLocalePrefix(prefix, "/language/elements/engine-data"),
+    },
+    {
+      text: "player_rating",
+      link: withLocalePrefix(prefix, "/language/elements/player-rating"),
+    },
+    {
+      text: "map_permissions",
+      link: withLocalePrefix(prefix, "/language/elements/map-permissions"),
+    },
+    {
+      text: "variables",
+      link: withLocalePrefix(prefix, "/language/elements/variables"),
+    },
     {
       text: "trigger",
-      link: "/language/elements/trigger",
+      link: withLocalePrefix(prefix, "/language/elements/trigger"),
       items: [
-        { text: "condition", link: "/language/elements/trigger/condition" },
-        { text: "action", link: "/language/elements/trigger/action" },
-        { text: "begin", link: "/language/elements/begin" },
+        {
+          text: "condition",
+          link: withLocalePrefix(prefix, "/language/elements/trigger/condition"),
+        },
+        {
+          text: "action",
+          link: withLocalePrefix(prefix, "/language/elements/trigger/action"),
+        },
+        {
+          text: "begin",
+          link: withLocalePrefix(prefix, "/language/elements/begin"),
+        },
       ],
     },
     {
       text: "requisition_palette",
-      link: "/language/elements/requisition-palette",
+      link: withLocalePrefix(prefix, "/language/elements/requisition-palette"),
     },
-    { text: "hud_widgets", link: "/language/elements/hud-widgets" },
-    { text: "map_object", link: "/language/elements/map-object" },
-    { text: "game_stats", link: "/language/elements/game-stats" },
+    {
+      text: "hud_widgets",
+      link: withLocalePrefix(prefix, "/language/elements/hud-widgets"),
+    },
+    {
+      text: "map_object",
+      link: withLocalePrefix(prefix, "/language/elements/map-object"),
+    },
+    {
+      text: "game_stats",
+      link: withLocalePrefix(prefix, "/language/elements/game-stats"),
+    },
   ];
 }
 
-function actionsSidebar(): DefaultTheme.SidebarItem[] {
+function actionsSidebar(prefix: string): DefaultTheme.SidebarItem[] {
   return languageActions.actions.map((action) => ({
     text: action.name,
-    link: action.docLink,
+    link: withLocalePrefix(prefix, action.docLink),
   }));
 }
 
-function enumsSidebar(): DefaultTheme.SidebarItem[] {
+function enumsSidebar(
+  prefix: string,
+  t: (typeof ui)[DocsLocale]["sidebar"]
+): DefaultTheme.SidebarItem[] {
   return [
-    { text: "Math operations", link: "/language/enums/math-operations" },
     {
-      text: "Team or player target",
-      link: "/language/enums/team-or-player-target",
+      text: t.mathOperations,
+      link: withLocalePrefix(prefix, "/language/enums/math-operations"),
     },
-    { text: "Dynamic strings", link: "/language/enums/dynamic-strings" },
     {
-      text: "Game options",
-      link: "/language/enums/game-options",
+      text: t.teamOrPlayerTarget,
+      link: withLocalePrefix(prefix, "/language/enums/team-or-player-target"),
+    },
+    {
+      text: t.dynamicStrings,
+      link: withLocalePrefix(prefix, "/language/enums/dynamic-strings"),
+    },
+    {
+      text: t.gameOptions,
+      link: withLocalePrefix(prefix, "/language/enums/game-options"),
       items: [
         {
-          text: "Team Scoring Method",
-          link: "/language/enums/game-options/team-scoring-method",
+          text: t.teamScoringMethod,
+          link: withLocalePrefix(
+            prefix,
+            "/language/enums/game-options/team-scoring-method"
+          ),
         },
-        { text: "Weapon Set", link: "/language/enums/game-options/weapon-set" },
         {
-          text: "Vehicle Set",
-          link: "/language/enums/game-options/vehicle-set",
+          text: t.weaponSet,
+          link: withLocalePrefix(prefix, "/language/enums/game-options/weapon-set"),
+        },
+        {
+          text: t.vehicleSet,
+          link: withLocalePrefix(
+            prefix,
+            "/language/enums/game-options/vehicle-set"
+          ),
         },
       ],
     },
     {
-      text: "Player traits",
-      link: "/language/enums/player-traits",
+      text: t.playerTraits,
+      link: withLocalePrefix(prefix, "/language/enums/player-traits"),
       items: [
         {
-          text: "Grenade Count",
-          link: "/language/enums/player-traits/grenade-count",
+          text: t.grenadeCount,
+          link: withLocalePrefix(
+            prefix,
+            "/language/enums/player-traits/grenade-count"
+          ),
         },
         {
-          text: "Vehicle Usage Setting",
-          link: "/language/enums/player-traits/vehicle-usage-setting",
-        },
-        { text: "Sprinting", link: "/language/enums/player-traits/sprinting" },
-        {
-          text: "Equipment Usage Setting",
-          link: "/language/enums/player-traits/equipment-usage-setting",
+          text: t.vehicleUsageSetting,
+          link: withLocalePrefix(
+            prefix,
+            "/language/enums/player-traits/vehicle-usage-setting"
+          ),
         },
         {
-          text: "Active Camo Setting",
-          link: "/language/enums/player-traits/active-camo-setting",
+          text: t.sprinting,
+          link: withLocalePrefix(
+            prefix,
+            "/language/enums/player-traits/sprinting"
+          ),
         },
         {
-          text: "Waypoint Setting",
-          link: "/language/enums/player-traits/waypoint-setting",
+          text: t.equipmentUsageSetting,
+          link: withLocalePrefix(
+            prefix,
+            "/language/enums/player-traits/equipment-usage-setting"
+          ),
         },
         {
-          text: "Forced Change Color Setting",
-          link: "/language/enums/player-traits/forced-change-color-setting",
+          text: t.activeCamoSetting,
+          link: withLocalePrefix(
+            prefix,
+            "/language/enums/player-traits/active-camo-setting"
+          ),
         },
         {
-          text: "Motion Tracker Setting",
-          link: "/language/enums/player-traits/motion-tracker-setting",
+          text: t.waypointSetting,
+          link: withLocalePrefix(
+            prefix,
+            "/language/enums/player-traits/waypoint-setting"
+          ),
+        },
+        {
+          text: t.forcedChangeColorSetting,
+          link: withLocalePrefix(
+            prefix,
+            "/language/enums/player-traits/forced-change-color-setting"
+          ),
+        },
+        {
+          text: t.motionTrackerSetting,
+          link: withLocalePrefix(
+            prefix,
+            "/language/enums/player-traits/motion-tracker-setting"
+          ),
         },
       ],
     },
-    { text: "Built-in variables", link: "/language/enums/built-in-variables" },
-    { text: "Engine categories", link: "/language/enums/engine-categories" },
-    { text: "Sounds", link: "/language/enums/sounds" },
+    {
+      text: t.builtInVariables,
+      link: withLocalePrefix(prefix, "/language/enums/built-in-variables"),
+    },
+    {
+      text: t.engineCategories,
+      link: withLocalePrefix(prefix, "/language/enums/engine-categories"),
+    },
+    {
+      text: t.sounds,
+      link: withLocalePrefix(prefix, "/language/enums/sounds"),
+    },
   ];
 }
 
-function megaloLanguageSidebar(): DefaultTheme.SidebarItem[] {
+function megaloLanguageSidebar(
+  prefix: string,
+  t: (typeof ui)[DocsLocale]["sidebar"]
+): DefaultTheme.SidebarItem[] {
   return [
-    { text: "Introduction", link: "/language/" },
-    { text: "Syntax & file format", link: "/language/syntax" },
-    { text: "Base files", link: "/language/base-files" },
+    { text: t.introduction, link: withLocalePrefix(prefix, "/language/") },
+    { text: t.syntax, link: withLocalePrefix(prefix, "/language/syntax") },
     {
-      text: "Elements",
+      text: t.baseFiles,
+      link: withLocalePrefix(prefix, "/language/base-files"),
+    },
+    {
+      text: t.elements,
       collapsed: false,
-      items: elementsSidebar(),
+      items: elementsSidebar(prefix),
     },
     {
-      text: "Actions",
+      text: t.actions,
       collapsed: true,
-      items: actionsSidebar(),
+      items: actionsSidebar(prefix),
     },
     {
-      text: "Options & Enums",
+      text: t.optionsEnums,
       collapsed: true,
-      items: enumsSidebar(),
+      items: enumsSidebar(prefix, t),
     },
-    { text: "Variable model", link: "/language/variable-model" },
-    { text: "Megalo Headaches", link: "/language/megalo-headaches" },
-    { text: "References", link: "/language/references" },
-    { text: "Example scripts", link: "/language/examples" },
-    { text: "Object lists", link: "/language/object-lists" },
-    { text: "Compiler settings", link: "/language/compiler-settings" },
+    {
+      text: t.variableModel,
+      link: withLocalePrefix(prefix, "/language/variable-model"),
+    },
+    {
+      text: t.megaloHeadaches,
+      link: withLocalePrefix(prefix, "/language/megalo-headaches"),
+    },
+    {
+      text: t.references,
+      link: withLocalePrefix(prefix, "/language/references"),
+    },
+    {
+      text: t.exampleScripts,
+      link: withLocalePrefix(prefix, "/language/examples"),
+    },
+    {
+      text: t.objectLists,
+      link: withLocalePrefix(prefix, "/language/object-lists"),
+    },
+    {
+      text: t.compilerSettings,
+      link: withLocalePrefix(prefix, "/language/compiler-settings"),
+    },
   ];
 }
 
-function supportedVersionsSidebar(): DefaultTheme.SidebarItem[] {
+function supportedVersionsSidebar(
+  prefix: string,
+  t: (typeof ui)[DocsLocale]["sidebar"]
+): DefaultTheme.SidebarItem[] {
   const items: DefaultTheme.SidebarItem[] = [
-    { text: "Overview", link: "/versions/" },
+    { text: t.overview, link: withLocalePrefix(prefix, "/versions/") },
   ];
 
   for (const version of languageVersions.versions) {
     items.push({
       text: versionSidebarLabel(version.label),
-      link: version.docLink,
+      link: withLocalePrefix(prefix, version.docLink),
     });
   }
 
   return items;
 }
+
+function buildNav(
+  prefix: string,
+  locale: DocsLocale
+): DefaultTheme.NavItem[] {
+  const t = ui[locale].nav;
+  return [
+    { text: "Blam Network", link: "https://blam.network" },
+    { text: t.guide, link: withLocalePrefix(prefix, "/guide/quick-start") },
+    {
+      text: t.megacrow,
+      link: withLocalePrefix(prefix, "/megacrow/"),
+      activeMatch: withLocalePrefix(prefix, "/megacrow/"),
+    },
+    {
+      text: t.language,
+      link: withLocalePrefix(prefix, "/language/"),
+      activeMatch: withLocalePrefix(prefix, "/language/"),
+    },
+    { text: t.changelog, link: withLocalePrefix(prefix, "/changelog") },
+    {
+      text: "npm",
+      link: "https://www.npmjs.com/package/@blamnetwork/megalo",
+    },
+    {
+      text: "GitHub",
+      link: "https://github.com/Blam-Network/megalo",
+    },
+  ];
+}
+
+function buildSidebar(
+  prefix: string,
+  locale: DocsLocale
+): DefaultTheme.SidebarItem[] {
+  const t = ui[locale].sidebar;
+  return [
+    {
+      text: t.introduction,
+      items: [
+        { text: t.whatIsMegalo, link: withLocalePrefix(prefix, "/") },
+        {
+          text: t.installQuickStart,
+          link: withLocalePrefix(prefix, "/guide/quick-start"),
+        },
+      ],
+    },
+    {
+      text: t.megacrow,
+      items: [
+        { text: t.overview, link: withLocalePrefix(prefix, "/megacrow/") },
+        {
+          text: t.workspaces,
+          link: withLocalePrefix(prefix, "/megacrow/workspaces"),
+        },
+        { text: t.export, link: withLocalePrefix(prefix, "/megacrow/export") },
+        {
+          text: t.settings,
+          link: withLocalePrefix(prefix, "/megacrow/settings"),
+        },
+      ],
+    },
+    {
+      text: t.megaloLanguage,
+      items: megaloLanguageSidebar(prefix, t),
+    },
+    {
+      text: t.versions,
+      items: supportedVersionsSidebar(prefix, t),
+    },
+    {
+      text: t.usage,
+      items: [
+        {
+          text: t.parsing,
+          link: withLocalePrefix(prefix, "/guide/parsing"),
+        },
+        {
+          text: t.compiling,
+          link: withLocalePrefix(prefix, "/guide/compiling"),
+        },
+        {
+          text: t.decompiling,
+          link: withLocalePrefix(prefix, "/guide/decompiling"),
+        },
+        {
+          text: t.gametypes,
+          link: withLocalePrefix(prefix, "/guide/gametypes"),
+        },
+        {
+          text: t.megaloVersions,
+          link: withLocalePrefix(prefix, "/guide/megalo-versions"),
+        },
+      ],
+    },
+    {
+      text: t.contributing,
+      items: [
+        {
+          text: t.development,
+          link: withLocalePrefix(prefix, "/guide/development"),
+        },
+      ],
+    },
+    {
+      text: t.reference,
+      items: [
+        { text: t.changelog, link: withLocalePrefix(prefix, "/changelog") },
+      ],
+    },
+  ];
+}
+
+const japaneseThemeUi: DefaultTheme.Config = {
+  docFooter: {
+    prev: "前のページ",
+    next: "次のページ",
+  },
+  outline: {
+    label: "このページの内容",
+  },
+  returnToTopLabel: "トップに戻る",
+  darkModeSwitchLabel: "外観",
+  lightModeSwitchTitle: "ライトモードに切り替え",
+  darkModeSwitchTitle: "ダークモードに切り替え",
+  sidebarMenuLabel: "メニュー",
+  lastUpdatedText: "最終更新",
+  langMenuLabel: "言語を切り替える",
+};
 
 export default defineConfig(async () => {
   const { megaloCodeToHtml } = await import(
@@ -250,6 +655,28 @@ export default defineConfig(async () => {
         };
       },
     },
+    locales: {
+      root: {
+        label: "English",
+        lang: "en",
+        themeConfig: {
+          nav: buildNav("", "en"),
+          sidebar: buildSidebar("", "en"),
+        },
+      },
+      ja: {
+        label: "日本語",
+        lang: "ja",
+        link: "/ja/",
+        description:
+          "Megalo 言語と MegaCrow IDE のドキュメントです。",
+        themeConfig: {
+          ...japaneseThemeUi,
+          nav: buildNav("/ja", "ja"),
+          sidebar: buildSidebar("/ja", "ja"),
+        },
+      },
+    },
     themeConfig: {
       search: {
         provider: "local",
@@ -260,69 +687,6 @@ export default defineConfig(async () => {
       },
       siteTitle:
         `<span class="megalo-site-title"><span class="megalo-site-title-row"><span class="megalo-scope">@blamnetwork/</span><span class="megalo-name">megalo</span></span><span class="megalo-site-build">${MEGACROW_BUILD_STRING}</span></span>`,
-      nav: [
-        { text: "Blam Network", link: "https://blam.network" },
-        { text: "Guide", link: "/guide/quick-start" },
-        {
-          text: "MegaCrow",
-          link: "/megacrow/",
-          activeMatch: "/megacrow/",
-        },
-        { text: "Language", link: "/language/", activeMatch: "/language/" },
-        { text: "Changelog", link: "/changelog" },
-        {
-          text: "npm",
-          link: "https://www.npmjs.com/package/@blamnetwork/megalo",
-        },
-        {
-          text: "GitHub",
-          link: "https://github.com/Blam-Network/megalo",
-        },
-      ],
-      sidebar: [
-        {
-          text: "Introduction",
-          items: [
-            { text: "What is megalo?", link: "/" },
-            { text: "Install & quick start", link: "/guide/quick-start" },
-          ],
-        },
-        {
-          text: "MegaCrow",
-          items: [
-            { text: "Overview", link: "/megacrow/" },
-            { text: "Workspaces", link: "/megacrow/workspaces" },
-            { text: "Export", link: "/megacrow/export" },
-            { text: "Settings", link: "/megacrow/settings" },
-          ],
-        },
-        {
-          text: "Megalo language",
-          items: megaloLanguageSidebar(),
-        },
-        {
-          text: "Megalo Versions",
-          items: supportedVersionsSidebar(),
-        },
-        {
-          text: "Usage",
-          items: [
-            { text: "Parsing source", link: "/guide/parsing" },
-            { text: "Compiling", link: "/guide/compiling" },
-            { text: "Decompiling", link: "/guide/decompiling" },
-            { text: "Gametypes & BLF", link: "/guide/gametypes" },
-            { text: "Megalo versions", link: "/guide/megalo-versions" },
-          ],
-        },
-        {
-          text: "Contributing",
-          items: [{ text: "Development", link: "/guide/development" }],
-        },
-        {
-          text: "Reference",
-          items: [{ text: "Changelog", link: "/changelog" }],
-        },
-      ],
       socialLinks: [
         {
           icon: "npm",
