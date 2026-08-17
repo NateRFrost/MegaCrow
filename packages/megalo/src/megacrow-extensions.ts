@@ -14,6 +14,15 @@ export interface MegacrowExtensions {
   // Built-in gametypes are not labelled built-in.
   notBuiltIn: boolean;
   /**
+   * Error when a new declaration reuses an identifier already in scope
+   * (Megalo Headache #1). Left off for now — we may revisit it.
+   */
+  preventShadowing: boolean;
+  /**
+   * Error when a declaration is named after a language keyword (`end`, `action`, …).
+   */
+  reservedKeywords: boolean;
+  /**
    * Accept legacy syntax MegaloEdit rejects (e.g. `text` prefix on hud_widgets)
    * as a warning instead of an error on version 106+.
    */
@@ -28,16 +37,20 @@ export const DEFAULT_MEGACROW_EXTENSIONS: MegacrowExtensions = {
   notBuiltIn: false,
   compileMissingBaseFromSource: false,
   megacrowVersionString: false,
+  preventShadowing: false,
+  reservedKeywords: false,
   supportLegacySyntax: false,
 };
 
-/** IDE / LSP: enable every MegaCrow extension. */
+/** IDE / LSP: enable MegaCrow extensions. `preventShadowing` stays off. */
 export const ALL_MEGACROW_EXTENSIONS: MegacrowExtensions = {
   targetTeam: true,
   coopSpawningWaypointIcon: true,
   notBuiltIn: true,
   compileMissingBaseFromSource: true,
   megacrowVersionString: true,
+  preventShadowing: false,
+  reservedKeywords: true,
   supportLegacySyntax: true,
 };
 

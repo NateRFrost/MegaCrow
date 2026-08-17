@@ -2958,13 +2958,15 @@ body {
   display: grid;
   grid-template-columns: 16px minmax(0, 1fr) auto;
   gap: 8px;
-  align-items: center;
+  align-items: start;
   width: 100%;
   padding: 5px 12px;
   font: inherit;
   font-size: 12px;
+  line-height: 1.4;
   color: inherit;
   text-align: left;
+  white-space: normal;
   cursor: pointer;
   background: transparent;
   border: 0;
@@ -3001,6 +3003,7 @@ body {
   flex-shrink: 0;
   width: 14px;
   height: 14px;
+  margin-top: 1px;
 }
 
 .diagnostics-tray-icon--error {
@@ -3012,12 +3015,14 @@ body {
 }
 
 .diagnostics-tray-message {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 
 .diagnostics-tray-location {
+  margin-top: 1px;
   font-variant-numeric: tabular-nums;
   color: var(--text-muted);
   white-space: nowrap;

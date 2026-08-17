@@ -1,4 +1,4 @@
-import { translate } from "../localization";
+import { failedToCompileStatus, translate } from "../localization";
 import type {
   MegaloWorkerRequest,
   MegaloWorkerResponse,
@@ -62,6 +62,8 @@ let currentCompilerSettings: MegaCrowCompilerSettings = {
     notBuiltIn: true,
     compileMissingBaseFromSource: true,
     megacrowVersionString: true,
+    preventShadowing: false,
+    reservedKeywords: true,
     supportLegacySyntax: true,
   },
   strictStringLiterals: false,
@@ -267,16 +269,14 @@ async function runSourceOnlyCompileOnce(
     return {
       compileState: "error",
       errorCount: Math.max(errorCount, 1),
-      message:
-        result.error ??
-        diagnostics[0]?.message ??
-        translate("status_compilation_failed"),
+      message: failedToCompileStatus(Math.max(errorCount, 1)),
       byteIdentical: null,
       byteDiffCount: null,
       compiledByteLength: null,
       mgloBytes: null,
       compileTiming: timing,
       diagnostics,
+      limitUsage: result.limitUsage ?? null,
     };
   }
   return {
@@ -292,6 +292,7 @@ async function runSourceOnlyCompileOnce(
     compiledMetadata: result.metadata ?? null,
     compileTiming: timing,
     diagnostics,
+    limitUsage: result.limitUsage ?? null,
   };
 }
 
@@ -345,16 +346,12 @@ function parseMegaloSourceFallback(source: string): {
 } {
   const parsed = tryParse(source);
   if (!parsed.ok) {
-    const message = translate("status_parse_error", {
-      line: parsed.line,
-      message: parsed.message,
-    });
     return {
       program: null,
       analysis: {
         compileState: "error",
         errorCount: 1,
-        message,
+        message: failedToCompileStatus(1),
         byteIdentical: null,
         byteDiffCount: null,
         compiledByteLength: null,
@@ -543,18 +540,22 @@ export async function requestCompileDownloadInWorker(
       severity: d.severity === 1 ? ("error" as const) : ("warning" as const),
     }));
     if (!(result.ok && result.bytes)) {
+      const errorCount = diagnostics.filter(
+        (d) => d.severity === "error"
+      ).length;
       return {
         output: null,
         analysis: {
           compileState: "error",
-          errorCount: diagnostics.filter((d) => d.severity === "error").length,
-          message: result.error ?? translate("status_compilation_failed"),
+          errorCount,
+          message: failedToCompileStatus(errorCount),
           byteIdentical: null,
           byteDiffCount: null,
           compiledByteLength: null,
           mgloBytes: null,
           compileTiming: timing,
           diagnostics,
+          limitUsage: result.limitUsage ?? null,
         },
       };
     }
@@ -576,6 +577,7 @@ export async function requestCompileDownloadInWorker(
         compiledMetadata: result.metadata ?? null,
         compileTiming: timing,
         diagnostics,
+        limitUsage: result.limitUsage ?? null,
       },
     };
   } catch {

@@ -1,4 +1,8 @@
-import type { CompiledMegaloMetadata } from "@megacrow/megalo";
+import type {
+  CompiledMegaloMetadata,
+  VariantLimitUsage,
+} from "@megacrow/megalo";
+import { failedToCompileStatus } from "../localization";
 import type { MegaloDiagnostic } from "./diagnostics";
 import type { MegaloIncludeFileCache } from "./includeDiagnostics";
 import {
@@ -47,6 +51,8 @@ export interface SourceAnalysis {
   compileTiming: MegaloCompileTiming | null;
   diagnostics: MegaloDiagnostic[];
   errorCount: number;
+  /** Used/max rows from the compile lower (includes expanded). */
+  limitUsage?: VariantLimitUsage | null;
   message: string;
   /** MCC hot-reload `.mglo` bytes when compile succeeded. */
   mgloBytes: Uint8Array | null;
@@ -277,7 +283,7 @@ async function analyzeSourceOnlyCompile(
     return {
       compileState: "error",
       errorCount: 1,
-      message: `Parse error at line ${parsed.line}: ${parsed.message}`,
+      message: failedToCompileStatus(1),
       byteIdentical: null,
       byteDiffCount: null,
       compiledByteLength: null,
@@ -350,7 +356,7 @@ async function analyzeSourceOnlyCompile(
     return {
       compileState: "error",
       errorCount: 1,
-      message: diagnostic.message,
+      message: failedToCompileStatus(1),
       byteIdentical: null,
       byteDiffCount: null,
       compiledByteLength: null,
@@ -440,7 +446,7 @@ export async function analyzeMegaloSource(
     return {
       compileState: "error",
       errorCount: 1,
-      message: `Parse error at line ${parsed.line}: ${parsed.message}`,
+      message: failedToCompileStatus(1),
       byteIdentical: null,
       byteDiffCount: null,
       compiledByteLength: null,
@@ -555,7 +561,7 @@ export async function analyzeMegaloSource(
     return {
       compileState: "error",
       errorCount: 1,
-      message: diagnostic.message,
+      message: failedToCompileStatus(1),
       byteIdentical: false,
       byteDiffCount: null,
       compiledByteLength: null,

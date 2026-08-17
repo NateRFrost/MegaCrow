@@ -9,7 +9,7 @@ export const highlightLoadoutPalette = (
 ): void => {
   emitLocation(out, element.keywordLocation, "type");
   if (!isAstErrorNode(element.name)) {
-    emitLocation(out, element.name.location, "variable");
+    emitLocation(out, element.name.location, "variable", ["readonly"]);
   }
   for (const item of element.items) {
     emitLocation(out, item.location, "parameter");

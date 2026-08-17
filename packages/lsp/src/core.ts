@@ -34,6 +34,7 @@ import {
   SourceLocationType,
   type SupportedMegaloVersion,
   summarizeIncludeDiagnostics,
+  type VariantLimitUsage,
 } from "@megacrow/megalo";
 import {
   type CompletionItem,
@@ -130,6 +131,8 @@ export interface MegacrowCompileResult {
   dataBase64?: string;
   diagnostics: Diagnostic[];
   error?: string;
+  /** Compile-time resource usage from the same lowered IR. */
+  limitUsage?: VariantLimitUsage;
   metadata?: CompiledMegaloMetadata;
   ok: boolean;
   /** Raw `.mglo` bitstream length (excludes BLF framing). */
@@ -149,6 +152,8 @@ export interface MegacrowRequestArtifactsResult {
   dataBase64?: string;
   diagnostics?: Diagnostic[];
   error?: string;
+  /** Compile-time resource usage from the same lowered IR. */
+  limitUsage?: VariantLimitUsage;
   metadata?: CompiledMegaloMetadata;
   /** Present when a binary artifact was requested. */
   ok?: boolean;
@@ -407,6 +412,7 @@ export const requestArtifactsFromSnapshot = async (
 
     if (wantsDiagnostics || wantsBinary) {
       result.diagnostics = diagnostics;
+      result.limitUsage = compiled.limitUsage;
     }
 
     if (wantsBinary) {
@@ -482,6 +488,7 @@ export const analyzeAndCompile = async (
     dataBase64: artifacts.dataBase64,
     metadata: artifacts.metadata,
     variantByteLength: artifacts.variantByteLength,
+    limitUsage: artifacts.limitUsage,
     error: artifacts.error,
   };
 };

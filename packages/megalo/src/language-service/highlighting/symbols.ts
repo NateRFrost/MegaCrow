@@ -34,14 +34,15 @@ const symbolTokenType = (
       return { type: "variable", modifiers };
     case SymbolKind.String:
       return { type: "variable", modifiers: ["readonly"] };
+    case SymbolKind.GameStat:
+      return { type: "variable", modifiers };
     case SymbolKind.HudWidget:
     case SymbolKind.Loadout:
-    case SymbolKind.LoadoutPalette:
     case SymbolKind.RequisitionPalette:
     case SymbolKind.ObjectFilter:
     case SymbolKind.PlayerTraits:
-    case SymbolKind.GameStat:
-      return { type: "variable", modifiers };
+    case SymbolKind.LoadoutPalette:
+      return { type: "variable", modifiers: ["readonly"] };
     case SymbolKind.ObjectListItem:
       return { type: "enumMember", modifiers: ["defaultLibrary"] };
     default: {

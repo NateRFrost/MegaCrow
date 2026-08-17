@@ -246,6 +246,8 @@
   "status_built_outputs": "Built {{mglo}} and {{gvar}}",
   "status_compiling": "Compiling…",
   "status_compilation_failed": "Compilation failed",
+  "status_failed_to_compile_one": "Failed to compile with {{count}} error",
+  "status_failed_to_compile_other": "Failed to compile with {{count}} errors",
   "status_compiled": "Compiled",
   "status_parse_error": "Parse error at line {{line}}: {{message}}",
   "status_parsed_with_warnings": "Parsed with {{count}} warning(s) — compiling…",

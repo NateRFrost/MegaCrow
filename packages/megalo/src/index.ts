@@ -39,10 +39,6 @@ export {
   DEFAULT_COMPILER_SETTINGS,
   resolveCompilerSettings,
 } from "src/compiler-settings";
-export {
-  type ComputeVariantLimitUsageOptions,
-  computeVariantLimitUsage,
-} from "src/compute-variant-limit-usage";
 export { decodeMglo, readMgloEncodingVersion } from "src/decode-mglo";
 export {
   type Diagnostic,

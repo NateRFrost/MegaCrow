@@ -17,6 +17,7 @@ import type { MegaCrowCompilerSettings } from "../lib/megaloCompilerSettings";
 import type { MegaloProgram } from "../lib/megaloProgram";
 import { tryParse } from "../lib/megaloProgram";
 import type { WorkspaceContext } from "../lib/workspace";
+import { failedToCompileStatus, setIdeLocale } from "../localization";
 import type {
   MegaloWorkerRequest,
   MegaloWorkerResponse,
@@ -49,7 +50,8 @@ function compileResultToAnalysis(
   bytes: Uint8Array | null = null,
   compileTiming: SourceAnalysis["compileTiming"] = null,
   compiledMetadata: SourceAnalysis["compiledMetadata"] = null,
-  variantByteLength: number | null = null
+  variantByteLength: number | null = null,
+  limitUsage: SourceAnalysis["limitUsage"] = null
 ): SourceAnalysis {
   const errorCount = diagnostics.filter((d) => d.severity === "error").length;
   return {
@@ -63,6 +65,7 @@ function compileResultToAnalysis(
     compiledMetadata,
     compileTiming,
     diagnostics,
+    limitUsage,
   };
 }
 
@@ -79,6 +82,7 @@ async function compileToBytes(
   timing: SourceAnalysis["compileTiming"];
   metadata: SourceAnalysis["compiledMetadata"];
   variantByteLength: number | null;
+  limitUsage: SourceAnalysis["limitUsage"];
 }> {
   const includeCache = options?.includeCache;
   const baseBytes = options?.resolvedBaseCustomVariantMgloBytes;
@@ -153,6 +157,7 @@ async function compileToBytes(
     timing,
     metadata: result.metadata ?? null,
     variantByteLength: result.variantByteLength ?? null,
+    limitUsage: result.limitUsage ?? null,
   };
 }
 
@@ -172,10 +177,13 @@ async function handleMessage(message: MegaloWorkerRequest): Promise<void> {
       _workspaceContext = message.workspace;
       break;
 
-    case "setCompilerSettings":
+    case "setCompilerSettings": {
       _compilerSettings = message.compilerSettings;
-      setLocale(message.compilerSettings.locale === "ja" ? "ja" : "en");
+      const locale = message.compilerSettings.locale === "ja" ? "ja" : "en";
+      setLocale(locale);
+      setIdeLocale(locale);
       break;
+    }
 
     case "setObjectLists":
       workspaceObjectLists = message.objectLists ?? undefined;
@@ -184,12 +192,18 @@ async function handleMessage(message: MegaloWorkerRequest): Promise<void> {
     case "compile":
     case "parse": {
       const parsed = tryParse(message.source);
-      const { bytes, diagnostics, timing, metadata, variantByteLength } =
-        await compileToBytes(message.source, {
-          includeCache: message.includeCache,
-          resolvedBaseCustomVariantMgloBytes:
-            message.resolvedBaseCustomVariantMgloBytes,
-        });
+      const {
+        bytes,
+        diagnostics,
+        timing,
+        metadata,
+        variantByteLength,
+        limitUsage,
+      } = await compileToBytes(message.source, {
+        includeCache: message.includeCache,
+        resolvedBaseCustomVariantMgloBytes:
+          message.resolvedBaseCustomVariantMgloBytes,
+      });
       const mergedDiagnostics = [
         ...(message.baseJitDiagnostics ?? []),
         ...diagnostics,
@@ -204,11 +218,14 @@ async function handleMessage(message: MegaloWorkerRequest): Promise<void> {
             bytes,
             timing,
             metadata,
-            variantByteLength
+            variantByteLength,
+            limitUsage
           )
         : compileResultToAnalysis(
             "error",
-            mergedDiagnostics[0]?.message ?? "Compilation failed",
+            failedToCompileStatus(
+              mergedDiagnostics.filter((d) => d.severity === "error").length
+            ),
             mergedDiagnostics.length
               ? mergedDiagnostics
               : [
@@ -220,7 +237,10 @@ async function handleMessage(message: MegaloWorkerRequest): Promise<void> {
                   },
                 ],
             null,
-            timing
+            timing,
+            null,
+            null,
+            limitUsage
           );
       if (message.kind === "compile") {
         self.postMessage({
@@ -254,13 +274,19 @@ async function handleMessage(message: MegaloWorkerRequest): Promise<void> {
         "../lib/gametypeSaveFormat"
       );
       const fileType = compiledFileTypeForSaveFormat(message.format);
-      const { bytes, diagnostics, timing, metadata, variantByteLength } =
-        await compileToBytes(message.source, {
-          fileType,
-          includeCache: message.includeCache,
-          resolvedBaseCustomVariantMgloBytes:
-            message.resolvedBaseCustomVariantMgloBytes,
-        });
+      const {
+        bytes,
+        diagnostics,
+        timing,
+        metadata,
+        variantByteLength,
+        limitUsage,
+      } = await compileToBytes(message.source, {
+        fileType,
+        includeCache: message.includeCache,
+        resolvedBaseCustomVariantMgloBytes:
+          message.resolvedBaseCustomVariantMgloBytes,
+      });
       if (!bytes) {
         self.postMessage({
           kind: "compileDownload",
@@ -268,10 +294,15 @@ async function handleMessage(message: MegaloWorkerRequest): Promise<void> {
           output: null,
           analysis: compileResultToAnalysis(
             "error",
-            diagnostics[0]?.message ?? "Compilation failed",
+            failedToCompileStatus(
+              diagnostics.filter((d) => d.severity === "error").length
+            ),
             diagnostics,
             null,
-            timing
+            timing,
+            null,
+            null,
+            limitUsage
           ),
         } satisfies MegaloWorkerResponse);
         break;
@@ -283,7 +314,8 @@ async function handleMessage(message: MegaloWorkerRequest): Promise<void> {
         fileType === "mglo" ? bytes : null,
         timing,
         metadata,
-        variantByteLength
+        variantByteLength,
+        limitUsage
       );
       self.postMessage({
         kind: "compileDownload",

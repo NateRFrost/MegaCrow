@@ -1,6 +1,5 @@
 import type { ObjectLists } from "@megacrow/megalo";
 import {
-  computeVariantLimitUsage,
   MEGACROW_BUILD_STRING,
   MEGACROW_SHOW_WATERMARK,
   MEGALO_VERSIONS,
@@ -135,7 +134,12 @@ import {
 import { workspaceUnexpectedFailure } from "./lib/workspaceBase";
 import { prepareWorkspaceCompileContext } from "./lib/workspaceCompileContext";
 import { materializeObjectListsOnFirstSave } from "./lib/workspaceObjectLists";
-import { IdeLocaleProvider, setIdeLocale, translate } from "./localization";
+import {
+  failedToCompileStatus,
+  IdeLocaleProvider,
+  setIdeLocale,
+  translate,
+} from "./localization";
 import {
   setMegaloDefinitionOpenHandler,
   setMegaloPathOpenHandler,
@@ -988,9 +992,6 @@ export function App() {
 
         setAnalysis(analysis);
         setCompileState(analysis.compileState);
-        if (analysis.compileState === "error") {
-          setLoadError(analysis.message);
-        }
       })();
     },
     [
@@ -1614,27 +1615,17 @@ export function App() {
     ? VARIANT_STORAGE_CAPACITY
     : VARIANT_CAPACITY_BY_MEGALO_VERSION["107-mcc"];
 
-  const statusMessage = loadError ?? analysis.message;
+  const statusMessage =
+    compileState === "error" && analysis.diagnostics.length > 0
+      ? failedToCompileStatus(analysis.errorCount)
+      : (loadError ?? analysis.message);
 
   const variantBytes =
     analysis.compiledByteLength ??
     compiledSize ??
     (originalBytes === null ? null : originalBytes.length);
 
-  const variantLimitUsage = useMemo(() => {
-    if (!outlineSource.trim()) {
-      return null;
-    }
-    try {
-      return computeVariantLimitUsage(outlineSource, {
-        version: MEGALO_VERSIONS[megaloVersionId],
-        usedBytes: variantBytes,
-      });
-    } catch (error) {
-      console.error("Failed to compute variant limit usage:", error);
-      return null;
-    }
-  }, [outlineSource, variantBytes, megaloVersionId]);
+  const variantLimitUsage = analysis.limitUsage ?? null;
 
   useEffect(() => {
     setMegaloPathOpenHandler(async ({ kind, path }) => {

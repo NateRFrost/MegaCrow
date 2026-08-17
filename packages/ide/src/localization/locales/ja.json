@@ -246,6 +246,8 @@
   "status_built_outputs": "{{mglo}} と {{gvar}} をビルドしました",
   "status_compiling": "コンパイル中…",
   "status_compilation_failed": "コンパイルに失敗しました",
+  "status_failed_to_compile_one": "エラー {{count}} 件でコンパイルに失敗しました",
+  "status_failed_to_compile_other": "エラー {{count}} 件でコンパイルに失敗しました",
   "status_compiled": "コンパイル完了",
   "status_parse_error": "行 {{line}} で解析エラー: {{message}}",
   "status_parsed_with_warnings": "警告 {{count}} 件で解析完了 — コンパイル中…",

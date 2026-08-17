@@ -71,6 +71,52 @@ end
     ).toBe(false);
   });
 
+  it("counts included triggers in limitUsage from the same compile", async () => {
+    const files = new Map<string, string>([
+      [
+        "extra.txt",
+        `trigger general
+\taction set n set_to 1
+end
+`,
+      ],
+    ]);
+
+    const result = await compileSource(
+      `include "extra.txt"
+variables global
+\tlocal number n 0
+end
+trigger general
+\taction set n set_to 2
+end
+`,
+      {
+        version,
+        resolveInclude: (path) => {
+          const text = files.get(path);
+          return text ? { text, uri: path } : null;
+        },
+      }
+    );
+
+    expect(result.limitUsage).toBeDefined();
+    expect(
+      result.limitUsage?.items.find((item) => item.id === "triggers")?.used
+    ).toBe(2);
+    expect(
+      result.limitUsage?.items.find((item) => item.id === "actions")?.used
+    ).toBeGreaterThanOrEqual(2);
+  });
+
+  it("omits limitUsage when includeLimitUsage is false", async () => {
+    const result = await compileSource(minimalScript, {
+      version,
+      includeLimitUsage: false,
+    });
+    expect(result.limitUsage).toBeUndefined();
+  });
+
   it("blames unresolved include DX on the include line", async () => {
     const source = `include "missing.txt"
 `;

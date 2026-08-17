@@ -34,6 +34,16 @@ export const translate = (
   params?: Record<string, string | number>
 ): string => i18n.t(key, params);
 
+export const failedToCompileStatus = (errorCount: number): string => {
+  const count = Math.max(errorCount, 1);
+  return translate(
+    count === 1
+      ? "status_failed_to_compile_one"
+      : "status_failed_to_compile_other",
+    { count }
+  );
+};
+
 interface IdeLocaleContextValue {
   locale: IdeLocale;
   setLocale: (locale: IdeLocale) => void;

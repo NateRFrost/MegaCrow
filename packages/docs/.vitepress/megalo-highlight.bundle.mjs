@@ -923,6 +923,8 @@ var en_default = {
   unsupported_math_operation: "Math operation '{{name}}' is not supported by {{versionLabel}}.",
   only_one_base_directive_allowed: "Only one base directive is allowed",
   duplicate_declaration_name_ignored: "Duplicate {{kind}} name '{{name}}' will be ignored for name lookup (MegaloEdit uses the first declaration)",
+  reserved_keyword_variable_name: "Using language keyword '{{name}}' as a variable name is disabled by the MegaCrow compiler; switch your compiler profile to MegaloEdit if you require this behaviour",
+  variable_shadowing_disabled: "Reusing variable identifier '{{name}}' is disabled by the MegaCrow compiler because variable shadowing is broken in Megalo; switch your compiler profile to MegaloEdit if you require this behaviour",
   legacy_hud_widget_text_keyword: "Legacy 'text' prefix on hud_widgets entries is old syntax and will not compile with MegaloEdit",
   unsupported_dynamic_string_replacement: "'{{got}}' is not a valid dynamic-string replacement. Use a declared reference that matches the placeholder (%n number, %p player, %t team, %o object, %s timer).",
   string_literal_not_allowed_when_strict: "String literals are not allowed when strict compiler is enabled; use a string table identifier",
@@ -1000,6 +1002,8 @@ var ja_default = {
   unsupported_math_operation: "\u7B97\u8853\u6F14\u7B97 '{{name}}' \u306F {{versionLabel}} \u3067\u306F\u30B5\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u307E\u305B\u3093\u3002",
   only_one_base_directive_allowed: "base \u30C7\u30A3\u30EC\u30AF\u30C6\u30A3\u30D6\u306F1\u3064\u3060\u3051\u8A31\u53EF\u3055\u308C\u3066\u3044\u307E\u3059",
   duplicate_declaration_name_ignored: "\u91CD\u8907\u3059\u308B {{kind}} \u540D '{{name}}' \u306F\u540D\u524D\u89E3\u6C7A\u3067\u306F\u7121\u8996\u3055\u308C\u307E\u3059\uFF08MegaloEdit \u306F\u6700\u521D\u306E\u5B9A\u7FA9\u3092\u4F7F\u7528\u3057\u307E\u3059\uFF09",
+  reserved_keyword_variable_name: "\u8A00\u8A9E\u30AD\u30FC\u30EF\u30FC\u30C9 '{{name}}' \u3092\u5909\u6570\u540D\u306B\u4F7F\u3046\u3053\u3068\u306F MegaCrow \u30B3\u30F3\u30D1\u30A4\u30E9\u3067\u306F\u7121\u52B9\u3067\u3059\u3002\u3053\u306E\u52D5\u4F5C\u304C\u5FC5\u8981\u306A\u5834\u5408\u306F\u30B3\u30F3\u30D1\u30A4\u30E9\u30D7\u30ED\u30D5\u30A1\u30A4\u30EB\u3092 MegaloEdit \u306B\u5207\u308A\u66FF\u3048\u3066\u304F\u3060\u3055\u3044",
+  variable_shadowing_disabled: "\u5909\u6570\u8B58\u5225\u5B50 '{{name}}' \u306E\u518D\u5229\u7528\u306F MegaCrow \u30B3\u30F3\u30D1\u30A4\u30E9\u3067\u306F\u7121\u52B9\u3067\u3059\u3002Megalo \u3067\u306F\u5909\u6570\u30B7\u30E3\u30C9\u30FC\u30A4\u30F3\u30B0\u304C\u5927\u304D\u304F\u58CA\u308C\u3066\u3044\u307E\u3059\u3002\u3053\u306E\u52D5\u4F5C\u304C\u5FC5\u8981\u306A\u5834\u5408\u306F\u30B3\u30F3\u30D1\u30A4\u30E9\u30D7\u30ED\u30D5\u30A1\u30A4\u30EB\u3092 MegaloEdit \u306B\u5207\u308A\u66FF\u3048\u3066\u304F\u3060\u3055\u3044",
   legacy_hud_widget_text_keyword: "hud_widgets \u30A8\u30F3\u30C8\u30EA\u306E\u5148\u982D\u306B\u3042\u308B\u53E4\u3044 'text' \u63A5\u982D\u8F9E\u306F\u65E7\u69CB\u6587\u3067\u3059\u3002MegaloEdit \u3067\u306F\u30B3\u30F3\u30D1\u30A4\u30EB\u3067\u304D\u307E\u305B\u3093",
   unsupported_dynamic_string_replacement: "'{{got}}' \u306F dynamic-string \u306E\u7F6E\u63DB\u3068\u3057\u3066\u7121\u52B9\u3067\u3059\u3002\u30D7\u30EC\u30FC\u30B9\u30DB\u30EB\u30C0\u306B\u5408\u3046\u5BA3\u8A00\u6E08\u307F\u53C2\u7167\u3092\u4F7F\u3063\u3066\u304F\u3060\u3055\u3044\uFF08%n \u6570\u5024\u3001%p \u30D7\u30EC\u30A4\u30E4\u30FC\u3001%t \u30C1\u30FC\u30E0\u3001%o \u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3001%s \u30BF\u30A4\u30DE\u30FC\uFF09\u3002",
   string_literal_not_allowed_when_strict: "\u53B3\u683C\u30B3\u30F3\u30D1\u30A4\u30E9\u3067\u306F\u6587\u5B57\u5217\u30EA\u30C6\u30E9\u30EB\u306F\u4F7F\u3048\u307E\u305B\u3093\u3002string table \u306E\u8B58\u5225\u5B50\u3092\u4F7F\u7528\u3057\u3066\u304F\u3060\u3055\u3044",
@@ -1312,6 +1316,12 @@ var diagnosticMessages = {
   },
   duplicateDeclarationNameIgnored(kind, name) {
     return translate("duplicate_declaration_name_ignored", { kind, name });
+  },
+  reservedKeywordVariableName(name) {
+    return translate("reserved_keyword_variable_name", { name });
+  },
+  variableShadowingDisabled(name) {
+    return translate("variable_shadowing_disabled", { name });
   },
   onlyOneBaseDirectiveAllowed() {
     return translate("only_one_base_directive_allowed");
@@ -1955,6 +1965,8 @@ var DEFAULT_MEGACROW_EXTENSIONS = {
   notBuiltIn: false,
   compileMissingBaseFromSource: false,
   megacrowVersionString: false,
+  preventShadowing: false,
+  reservedKeywords: false,
   supportLegacySyntax: false
 };
 var ALL_MEGACROW_EXTENSIONS = {
@@ -1963,6 +1975,8 @@ var ALL_MEGACROW_EXTENSIONS = {
   notBuiltIn: true,
   compileMissingBaseFromSource: true,
   megacrowVersionString: true,
+  preventShadowing: true,
+  reservedKeywords: true,
   supportLegacySyntax: true
 };
 var resolveMegacrowExtensions = (partial) => ({
@@ -7470,6 +7484,54 @@ var engineDataParser = (ctx, elementToken) => {
   };
 };
 
+// ../megalo/src/frontend/language-configuration/omni/keywords.ts
+var TOP_LEVEL_ELEMENT_KEYWORDS = [
+  "base",
+  "include",
+  "localized_include",
+  "string_table",
+  "constants",
+  "variables",
+  "game_options",
+  "hud_widgets",
+  "loadout",
+  "loadout_palette",
+  "teams",
+  "engine_data",
+  "player_rating",
+  "map_permissions",
+  "game_stats",
+  "map_object",
+  "requisition_palette",
+  "trigger"
+];
+var TRIGGER_BODY_KEYWORDS = [
+  "action",
+  "condition",
+  "temporary",
+  "begin",
+  "end",
+  "not"
+];
+var VARIABLE_DECLARATION_KEYWORDS = [
+  "local",
+  "networked",
+  "networked_high",
+  ...VARIABLE_SCOPE_NAMES,
+  ...VARIABLE_TYPE_NAMES
+];
+var BOOLEAN_LITERAL_KEYWORDS = ["true", "false"];
+var RESERVED_VARIABLE_NAME_KEYWORDS = [
+  ...TOP_LEVEL_ELEMENT_KEYWORDS,
+  ...TRIGGER_BODY_KEYWORDS,
+  ...VARIABLE_DECLARATION_KEYWORDS,
+  ...BOOLEAN_LITERAL_KEYWORDS
+];
+var RESERVED_VARIABLE_NAME_KEYWORD_SET = new Set(
+  RESERVED_VARIABLE_NAME_KEYWORDS
+);
+var isReservedVariableName = (name) => RESERVED_VARIABLE_NAME_KEYWORD_SET.has(name);
+
 // ../megalo/src/build-info.ts
 var MEGACROW_BUILD_STRING = "untracked version";
 
@@ -7695,16 +7757,34 @@ var ParserSymbolContext = class {
   }
   addVariableToScope(entry) {
     const id = this.symbolBinder.addVariable(entry);
+    const isBuiltIn = entry.declaration.type === 2 /* BUILT_IN */;
+    if (!isBuiltIn) {
+      const { preventShadowing, reservedKeywords } = this.frontend.megacrowExtensions;
+      if (reservedKeywords && isReservedVariableName(entry.name)) {
+        this.diagnostics.addWarning(
+          diagnosticMessages.reservedKeywordVariableName(entry.name),
+          entry.declaration
+        );
+      }
+      if (preventShadowing && this.findSameScopeVariable(entry, id) !== void 0) {
+        this.diagnostics.addError(
+          diagnosticMessages.variableShadowingDisabled(entry.name),
+          entry.declaration
+        );
+      }
+    }
     if (this.variableNameUsesFindIndex(entry.scope, entry.type)) {
       const existingId = this.findFindIndexNameConflict(entry, id);
       if (existingId !== void 0) {
-        this.diagnostics.addWarning(
-          diagnosticMessages.duplicateDeclarationNameIgnored(
-            VARIABLE_TYPE_NAMES[entry.type],
-            entry.name
-          ),
-          entry.declaration
-        );
+        if (!this.frontend.megacrowExtensions.preventShadowing || isBuiltIn) {
+          this.diagnostics.addWarning(
+            diagnosticMessages.duplicateDeclarationNameIgnored(
+              VARIABLE_TYPE_NAMES[entry.type],
+              entry.name
+            ),
+            entry.declaration
+          );
+        }
         this.scopeSymbolIds.at(-1)?.push(id);
         return id;
       }
@@ -7734,6 +7814,22 @@ var ParserSymbolContext = class {
       return left.type === 0 /* Timer */ && right.type === 0 /* Timer */;
     }
     return left.scope !== 4 /* Temporary */;
+  }
+  /** Same Megalo variable scope + same identifier (any type). */
+  findSameScopeVariable(entry, selfId) {
+    for (const symbol of this.symbolBinder.getSymbolTable().toArray()) {
+      if (symbol.id === selfId) {
+        continue;
+      }
+      if (symbol.kind !== 1 /* Variable */) {
+        continue;
+      }
+      if (symbol.name !== entry.name || symbol.scope !== entry.scope) {
+        continue;
+      }
+      return symbol.id;
+    }
+    return;
   }
   // Returns the symbol id of a variable with the same name if it exists
   findFindIndexNameConflict(entry, selfId) {

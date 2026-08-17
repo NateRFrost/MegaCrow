@@ -326,6 +326,14 @@ export const diagnosticMessages = {
     return translate("duplicate_declaration_name_ignored", { kind, name });
   },
 
+  reservedKeywordVariableName(kind: string, name: string): string {
+    return translate("reserved_keyword_variable_name", { kind, name });
+  },
+
+  variableShadowingDisabled(kind: string, name: string): string {
+    return translate("variable_shadowing_disabled", { kind, name });
+  },
+
   onlyOneBaseDirectiveAllowed(): string {
     return translate("only_one_base_directive_allowed");
   },

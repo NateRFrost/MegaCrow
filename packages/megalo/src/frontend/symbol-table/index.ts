@@ -13,7 +13,9 @@ import {
   type StringTableEntry,
   stringTableEntry,
 } from "src/frontend/intermediate-representation/game/string_table";
+import { isReservedVariableName } from "src/frontend/language-configuration/omni/keywords";
 import type { StringTableLanguage } from "src/frontend/language-configuration/omni/strings";
+import { VARIABLE_TYPE_NAMES } from "src/frontend/language-configuration/omni/variables";
 import type { ObjectListType } from "src/frontend/object-lists";
 
 export enum SymbolKind {
@@ -183,6 +185,50 @@ export type SymbolTableEntry =
   | SymbolTablePlayerTraitsEntry
   | SymbolTableGameStatEntry;
 
+const reservedNameKind = (entry: SymbolTableEntry): string => {
+  switch (entry.kind) {
+    case SymbolKind.Constant:
+      return "constant";
+    case SymbolKind.Variable:
+      return VARIABLE_TYPE_NAMES[entry.type];
+    case SymbolKind.String:
+      return "string";
+    case SymbolKind.GameOption:
+      return "option";
+    case SymbolKind.HudWidget:
+      return "hud_widget";
+    case SymbolKind.Loadout:
+      return "loadout";
+    case SymbolKind.LoadoutPalette:
+      return "loadout_palette";
+    case SymbolKind.RequisitionPalette:
+      return "requisition_palette";
+    case SymbolKind.ObjectListItem:
+      return "object";
+    case SymbolKind.ObjectFilter:
+      return "map_object";
+    case SymbolKind.PlayerTraits:
+      return "player_traits";
+    case SymbolKind.GameStat:
+      return "game_stats";
+    default: {
+      const _exhaustive: never = entry;
+      return _exhaustive;
+    }
+  }
+};
+
+const userDeclaration = (
+  entry: SymbolTableEntry
+): SourceLocation | undefined => {
+  if (entry.kind === SymbolKind.String) {
+    return Object.values(entry.languageDeclarations).find(
+      (declaration) => declaration !== undefined
+    );
+  }
+  return entry.declaration;
+};
+
 export class SymbolTable {
   private readonly table: SymbolTableEntry[] = [];
 
@@ -272,13 +318,44 @@ export class SymbolTable {
 export class SymbolBinder {
   private readonly table: SymbolTableEntry[] = [];
   private readonly diagnostics: Diagnostics;
+  private readonly frontend: MegaloCompilerContext;
 
   public constructor(
     frontend: MegaloCompilerContext,
     diagnostics: Diagnostics
   ) {
-    void frontend;
+    this.frontend = frontend;
     this.diagnostics = diagnostics;
+  }
+
+  private push(entry: SymbolTableEntry): SymbolId {
+    this.errorIfReservedIdentifier(entry);
+    this.table.push(entry);
+    return entry.id;
+  }
+
+  private errorIfReservedIdentifier(entry: SymbolTableEntry): void {
+    if (!this.frontend.megacrowExtensions.reservedKeywords) {
+      return;
+    }
+    const declaration = userDeclaration(entry);
+    if (
+      declaration === undefined ||
+      declaration.type === SourceLocationType.BUILT_IN ||
+      declaration.type === SourceLocationType.OBJECT_LIST
+    ) {
+      return;
+    }
+    if (!isReservedVariableName(entry.name)) {
+      return;
+    }
+    this.diagnostics.addError(
+      diagnosticMessages.reservedKeywordVariableName(
+        reservedNameKind(entry),
+        entry.name
+      ),
+      declaration
+    );
   }
 
   public addString(
@@ -313,7 +390,7 @@ export class SymbolBinder {
 
     // if the string is entirely new, declare it
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -322,7 +399,6 @@ export class SymbolBinder {
       languageDeclarations: { [entry.language]: entry.declaration },
       languageContents: stringTableEntry(entry.language, entry.content),
     });
-    return id;
   }
 
   public addVariable(
@@ -332,7 +408,7 @@ export class SymbolBinder {
     >
   ): SymbolId {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -342,7 +418,6 @@ export class SymbolBinder {
       declaration: entry.declaration,
       scope: entry.scope,
     });
-    return id;
   }
 
   public addGameOption(
@@ -352,7 +427,7 @@ export class SymbolBinder {
     >
   ): SymbolId {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -362,14 +437,13 @@ export class SymbolBinder {
       declaration: entry.declaration,
       index: entry.index,
     });
-    return id;
   }
 
   public addConstant(
     entry: Pick<SymbolTableConstantEntry, "name" | "declaration" | "value">
   ): SymbolId {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -379,14 +453,13 @@ export class SymbolBinder {
       declaration: entry.declaration,
       value: entry.value,
     });
-    return id;
   }
 
   public addHudWidget(
     entry: Pick<SymbolTableHudWidgetEntry, "name" | "declaration">
   ): SymbolId {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -394,14 +467,13 @@ export class SymbolBinder {
       kind: SymbolKind.HudWidget,
       declaration: entry.declaration,
     });
-    return id;
   }
 
   public addLoadout(
     entry: Pick<SymbolTableLoadoutEntry, "name" | "declaration">
   ): SymbolId {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -409,14 +481,13 @@ export class SymbolBinder {
       kind: SymbolKind.Loadout,
       declaration: entry.declaration,
     });
-    return id;
   }
 
   public addLoadoutPalette(
     entry: Pick<SymbolTableLoadoutPaletteEntry, "name" | "declaration">
   ): SymbolId {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -424,14 +495,13 @@ export class SymbolBinder {
       kind: SymbolKind.LoadoutPalette,
       declaration: entry.declaration,
     });
-    return id;
   }
 
   public addRequisitionPalette(
     entry: Pick<SymbolTableRequisitionPaletteEntry, "name" | "declaration">
   ): SymbolId {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -439,7 +509,6 @@ export class SymbolBinder {
       kind: SymbolKind.RequisitionPalette,
       declaration: entry.declaration,
     });
-    return id;
   }
 
   public addObjectListItem(
@@ -449,7 +518,7 @@ export class SymbolBinder {
     >
   ): SymbolId {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -459,14 +528,13 @@ export class SymbolBinder {
       index: entry.index,
       declaration: entry.declaration,
     });
-    return id;
   }
 
   public addObjectFilter(
     entry: Pick<SymbolTableObjectFilterEntry, "name" | "index" | "declaration">
   ): SymbolId {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -475,14 +543,13 @@ export class SymbolBinder {
       index: entry.index,
       declaration: entry.declaration,
     });
-    return id;
   }
 
   public addPlayerTraits(
     entry: Pick<SymbolTablePlayerTraitsEntry, "name" | "index" | "declaration">
   ): SymbolId {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -491,14 +558,13 @@ export class SymbolBinder {
       index: entry.index,
       declaration: entry.declaration,
     });
-    return id;
   }
 
   public addGameStat(
     entry: Pick<SymbolTableGameStatEntry, "name" | "index" | "declaration">
   ): SymbolId {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -507,7 +573,6 @@ export class SymbolBinder {
       index: entry.index,
       declaration: entry.declaration,
     });
-    return id;
   }
 
   public addReference(symbolId: SymbolId, reference: SourceCodeLocation): void {

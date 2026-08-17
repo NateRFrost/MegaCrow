@@ -11,7 +11,7 @@ import { Lexer } from "../../../src/frontend/tokens";
 import type { MegacrowExtensions } from "../../../src/megacrow-extensions";
 import { MEGALO_VERSIONS } from "../../../src/version";
 
-const lowerScript = (
+const parseScript = (
   source: string,
   megacrowExtensions?: Partial<MegacrowExtensions>
 ) => {
@@ -22,6 +22,17 @@ const lowerScript = (
   );
   const tokens = new Lexer(frontend).lex(source, diagnostics);
   const ast = new Parser(frontend).parse(tokens, diagnostics);
+  return { ast, diagnostics, frontend };
+};
+
+const lowerScript = (
+  source: string,
+  megacrowExtensions?: Partial<MegacrowExtensions>
+) => {
+  const { ast, diagnostics, frontend } = parseScript(
+    source,
+    megacrowExtensions
+  );
   const ir = new Lowerer(frontend).lower(ast, diagnostics);
   return { ir, diagnostics };
 };
@@ -109,6 +120,315 @@ describe("megacrowExtensions.megacrowVersionString", () => {
     expect(parser.lookupStringContent("megacrow_version")).toBe(
       MEGACROW_BUILD_STRING
     );
+  });
+});
+
+describe("megacrowExtensions.reservedKeywords", () => {
+  it.each([
+    {
+      kind: "number",
+      source: `variables global
+	local number action 0
+end
+`,
+    },
+    {
+      kind: "constant",
+      source: `constants
+	number action 1
+end
+`,
+    },
+    {
+      kind: "string",
+      source: `string_table english
+	action "hello"
+end
+`,
+    },
+    {
+      kind: "loadout",
+      source: `loadout action
+	name scout_label
+end
+`,
+    },
+    {
+      kind: "loadout_palette",
+      source: `loadout scout
+	name scout_label
+end
+loadout_palette action
+	item scout
+end
+`,
+    },
+    {
+      kind: "hud_widget",
+      source: `hud_widgets
+	action low_left
+end
+`,
+    },
+    {
+      kind: "map_object",
+      source: `map_object action
+	label "slayer"
+end
+`,
+    },
+    {
+      kind: "game_stats",
+      source: `string_table english
+	stat_label "Caps"
+end
+game_stats
+	action number stat_label none 1
+end
+`,
+    },
+    {
+      kind: "requisition_palette",
+      source: `requisition_palette action
+	baseline elite
+end
+`,
+    },
+    {
+      kind: "option",
+      source: `string_table english
+	option_name_kill_points "Kill Points"
+	option_description_kill_points "Kill Points Description"
+	points_0 "0"
+end
+game_options
+	option action
+		option_name_kill_points
+		option_description_kill_points
+		1
+		0 points_0 ""
+	end
+end
+`,
+    },
+    {
+      kind: "player_traits",
+      source: `string_table english
+	traits_name "VIP Traits"
+	traits_description "VIP player traits"
+end
+game_options
+	player_traits action traits_name traits_description
+		weapon_pickup 0
+	end
+end
+`,
+    },
+  ] as const)("errors when a language keyword is used as a $kind name", ({
+    kind,
+    source,
+  }) => {
+    const { diagnostics } = parseScript(source, { reservedKeywords: true });
+    const reserved = diagnostics
+      .getErrors()
+      .filter(
+        (error) =>
+          error.message.includes("action") &&
+          error.message.includes(kind) &&
+          error.message.includes("MegaCrow")
+      );
+    expect(reserved).toHaveLength(1);
+    expect(diagnostics.getWarnings()).toHaveLength(0);
+  });
+
+  it("errors once when a reserved string name is declared in extra languages", () => {
+    const { diagnostics } = parseScript(
+      `string_table english
+	action "hello"
+end
+string_table spanish
+	action "hola"
+end
+`,
+      { reservedKeywords: true }
+    );
+    expect(diagnostics.getErrors()).toHaveLength(1);
+    expect(diagnostics.getErrors()[0]?.message).toContain("string");
+    expect(diagnostics.getWarnings()).toHaveLength(0);
+  });
+
+  it("does not error for ordinary variable names", () => {
+    const { diagnostics } = parseScript(
+      `variables global
+	local number counter 0
+end
+`,
+      { reservedKeywords: true }
+    );
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(diagnostics.getWarnings()).toHaveLength(0);
+  });
+
+  it("does not error when the extension is disabled", () => {
+    const { diagnostics } = parseScript(`variables global
+	local number end 0
+end
+`);
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(diagnostics.getWarnings()).toHaveLength(0);
+  });
+});
+
+describe("megacrowExtensions.preventShadowing", () => {
+  it("errors when a duplicate global timer name is declared", () => {
+    const { diagnostics } = parseScript(
+      `variables global
+	networked timer shared_timer 5
+	networked timer shared_timer 99
+end
+`,
+      { preventShadowing: true }
+    );
+    expect(diagnostics.hasErrors()).toBe(true);
+    expect(diagnostics.getErrors()[0]?.message).toContain("shared_timer");
+    expect(diagnostics.getErrors()[0]?.message).toContain("timer");
+    expect(diagnostics.getErrors()[0]?.message).toContain("already have");
+    expect(diagnostics.getErrors()[0]?.message).toContain("MegaCrow");
+    expect(diagnostics.getWarnings()).toHaveLength(0);
+  });
+
+  it("errors when a duplicate global number would last-wins shadow", () => {
+    const { diagnostics } = parseScript(
+      `variables global
+	local number counter 0
+	local number counter 7
+end
+`,
+      { preventShadowing: true }
+    );
+    expect(diagnostics.hasErrors()).toBe(true);
+    expect(diagnostics.getErrors()[0]?.message).toContain("counter");
+    expect(diagnostics.getErrors()[0]?.message).toContain("number");
+    expect(diagnostics.getErrors()[0]?.message).toContain("already have");
+  });
+
+  it("allows the same identifier in different variable scopes", () => {
+    const { diagnostics } = parseScript(
+      `variables team
+	networked number foo 0
+end
+variables global
+	networked number foo 0
+end
+variables player
+	networked number foo 0
+end
+`,
+      { preventShadowing: true }
+    );
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(diagnostics.getWarnings()).toHaveLength(0);
+  });
+
+  it("errors when a user variable reuses a built-in identifier", () => {
+    const { diagnostics } = parseScript(
+      `variables global
+	local number local_player 0
+end
+`,
+      { preventShadowing: true }
+    );
+    expect(diagnostics.hasErrors()).toBe(true);
+    expect(diagnostics.getErrors()[0]?.message).toContain("local_player");
+  });
+
+  it("does not error on last-wins shadowing when the extension is disabled", () => {
+    const { diagnostics } = parseScript(`variables global
+	local number counter 0
+	local number counter 7
+end
+`);
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(diagnostics.getWarnings()).toHaveLength(0);
+  });
+
+  it("still warns on duplicate FindIndex names when the extension is disabled", () => {
+    const { diagnostics } = parseScript(`variables global
+	networked timer shared_timer 5
+	networked timer shared_timer 99
+end
+`);
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(diagnostics.getWarnings()).toHaveLength(1);
+    expect(diagnostics.getWarnings()[0]?.message).toContain("shared_timer");
+    expect(diagnostics.getWarnings()[0]?.message).toContain("ignored");
+  });
+
+  it("still warns on duplicate loadout_palette names when the extension is disabled", () => {
+    const { diagnostics } = parseScript(`loadout scout
+	name scout_label
+end
+loadout_palette slayer_loadouts
+	item scout
+end
+loadout_palette slayer_loadouts
+	item scout
+end
+`);
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(diagnostics.getWarnings()).toHaveLength(1);
+    expect(diagnostics.getWarnings()[0]?.message).toContain("slayer_loadouts");
+    expect(diagnostics.getWarnings()[0]?.message).toContain("ignored");
+  });
+
+  it("errors when a duplicate temporary name is declared in the same trigger", () => {
+    const { diagnostics } = parseScript(
+      `trigger local
+	temporary number scratch 0
+	temporary number scratch 1
+end
+`,
+      { preventShadowing: true }
+    );
+    expect(diagnostics.hasErrors()).toBe(true);
+    expect(diagnostics.getErrors()[0]?.message).toContain("scratch");
+    expect(diagnostics.getErrors()[0]?.message).toContain("already have");
+  });
+
+  it("allows the same temporary name in different triggers", () => {
+    const { diagnostics } = parseScript(
+      `trigger local
+	temporary number scratch 0
+end
+trigger local
+	temporary number scratch 1
+end
+`,
+      { preventShadowing: true }
+    );
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(diagnostics.getWarnings()).toHaveLength(0);
+  });
+
+  it("errors when a duplicate loadout_palette name is declared", () => {
+    const { diagnostics } = parseScript(
+      `loadout scout
+	name scout_label
+end
+loadout_palette slayer_loadouts
+	item scout
+end
+loadout_palette slayer_loadouts
+	item scout
+end
+`,
+      { preventShadowing: true }
+    );
+    expect(diagnostics.hasErrors()).toBe(true);
+    expect(diagnostics.getErrors()[0]?.message).toContain("slayer_loadouts");
+    expect(diagnostics.getErrors()[0]?.message).toContain("loadout_palette");
+    expect(diagnostics.getErrors()[0]?.message).toContain("already have");
+    expect(diagnostics.getWarnings()).toHaveLength(0);
   });
 });
 

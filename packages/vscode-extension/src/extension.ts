@@ -46,6 +46,8 @@ const ALL_MEGACROW_EXTENSIONS = {
   notBuiltIn: true,
   compileMissingBaseFromSource: true,
   megacrowVersionString: true,
+  preventShadowing: false,
+  reservedKeywords: true,
   supportLegacySyntax: true,
 } as const;
 
@@ -55,6 +57,8 @@ const DEFAULT_MEGACROW_EXTENSIONS = {
   notBuiltIn: false,
   compileMissingBaseFromSource: false,
   megacrowVersionString: false,
+  preventShadowing: false,
+  reservedKeywords: false,
   supportLegacySyntax: false,
 } as const;
 

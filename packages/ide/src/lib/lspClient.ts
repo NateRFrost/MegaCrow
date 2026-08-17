@@ -45,6 +45,7 @@ export interface MegacrowCompileResult {
   dataBase64?: string;
   diagnostics: Diagnostic[];
   error?: string;
+  limitUsage?: import("@megacrow/megalo").VariantLimitUsage;
   metadata?: import("@megacrow/megalo").CompiledMegaloMetadata;
   ok: boolean;
   /** Raw `.mglo` bitstream length (excludes BLF framing). */
@@ -55,6 +56,7 @@ export interface MegacrowRequestArtifactsResult {
   dataBase64?: string;
   diagnostics?: Diagnostic[];
   error?: string;
+  limitUsage?: import("@megacrow/megalo").VariantLimitUsage;
   metadata?: MegacrowCompileResult["metadata"];
   ok?: boolean;
   semanticTokens?: number[];
@@ -457,6 +459,7 @@ export async function lspCompileSource(
   error?: string;
   metadata?: MegacrowCompileResult["metadata"];
   variantByteLength?: number;
+  limitUsage?: MegacrowCompileResult["limitUsage"];
 }> {
   const artifacts = await lspRequestArtifacts(text, ["diagnostics", fileType]);
   if (!(artifacts.ok && artifacts.bytes)) {
@@ -472,6 +475,7 @@ export async function lspCompileSource(
     diagnostics: artifacts.diagnostics ?? [],
     metadata: artifacts.metadata,
     variantByteLength: artifacts.variantByteLength,
+    limitUsage: artifacts.limitUsage,
   };
 }
 
@@ -491,6 +495,7 @@ export async function lspRequestArtifacts(
   semanticTokens?: number[];
   version: number;
   variantByteLength?: number;
+  limitUsage?: MegacrowCompileResult["limitUsage"];
 }> {
   const connection = await getConnection();
   await lspSyncDocument(text);
@@ -512,6 +517,7 @@ export async function lspRequestArtifacts(
     semanticTokens: result.semanticTokens,
     version: result.version,
     variantByteLength: result.variantByteLength,
+    limitUsage: result.limitUsage,
   };
 }
 

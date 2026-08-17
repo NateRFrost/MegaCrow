@@ -167,18 +167,38 @@ export class ParserSymbolContext {
     entry: Parameters<SymbolBinder["addVariable"]>[0]
   ): SymbolId {
     const id = this.symbolBinder.addVariable(entry);
-    // MegaloEdit Headache #1: FindIndex (first wins) for global timers and all
-    // member-scope vars; FindLastIndex (last wins) for other globals / temps.
-    if (this.variableNameUsesFindIndex(entry.scope, entry.type)) {
-      const existingId = this.findFindIndexNameConflict(entry, id);
-      if (existingId !== undefined) {
-        this.diagnostics.addWarning(
-          diagnosticMessages.duplicateDeclarationNameIgnored(
+    const isBuiltIn = entry.declaration.type === SourceLocationType.BUILT_IN;
+    if (!isBuiltIn) {
+      const { preventShadowing } = this.frontend.megacrowExtensions;
+      if (
+        preventShadowing &&
+        this.findVisibleSameScopeVariable(entry, id) !== undefined
+      ) {
+        this.diagnostics.addError(
+          diagnosticMessages.variableShadowingDisabled(
             VARIABLE_TYPE_NAMES[entry.type],
             entry.name
           ),
           entry.declaration
         );
+      }
+    }
+    // MegaloEdit Headache #1: FindIndex (first wins) for global timers and all
+    // member-scope vars; FindLastIndex (last wins) for other globals / temps.
+    if (this.variableNameUsesFindIndex(entry.scope, entry.type)) {
+      const existingId = this.findFindIndexNameConflict(entry, id);
+      if (existingId !== undefined) {
+        // MegaloEdit / preventShadowing off: keep the original first-wins warning.
+        // MegaCrow / preventShadowing on: the error above replaces it (except builtins).
+        if (!this.frontend.megacrowExtensions.preventShadowing || isBuiltIn) {
+          this.diagnostics.addWarning(
+            diagnosticMessages.duplicateDeclarationNameIgnored(
+              VARIABLE_TYPE_NAMES[entry.type],
+              entry.name
+            ),
+            entry.declaration
+          );
+        }
         this.scopeSymbolIds.at(-1)?.push(id);
         return id;
       }
@@ -219,6 +239,31 @@ export class ParserSymbolContext {
       );
     }
     return left.scope !== VariableScope.Temporary;
+  }
+
+  /**
+   * Same Megalo variable scope + same identifier, but only if the previous
+   * declaration is still in a live lexical scope (temps from finished triggers
+   * are out of scope and may be reused).
+   */
+  private findVisibleSameScopeVariable(
+    entry: Parameters<SymbolBinder["addVariable"]>[0],
+    selfId: SymbolId
+  ): SymbolId | undefined {
+    for (let i = this.symbolScopes.length - 1; i >= 0; i--) {
+      const id = this.symbolScopes[i]?.get(entry.name);
+      if (id === undefined || id === selfId) {
+        continue;
+      }
+      const symbol = this.symbolBinder.getSymbolEntry(id);
+      if (
+        symbol?.kind === SymbolKind.Variable &&
+        symbol.scope === entry.scope
+      ) {
+        return id;
+      }
+    }
+    return;
   }
 
   // Returns the symbol id of a variable with the same name if it exists
@@ -271,11 +316,9 @@ export class ParserSymbolContext {
       index: this.declarationCount(this.declaredUserDefinedOptions),
     });
     if (declarations.length > 0) {
-      this.diagnostics.addWarning(
-        diagnosticMessages.duplicateDeclarationNameIgnored(
-          "option",
-          entry.name
-        ),
+      this.reportDuplicateDeclarationName(
+        "option",
+        entry.name,
         entry.declaration
       );
     } else {
@@ -316,10 +359,7 @@ export class ParserSymbolContext {
     const declarations = this.declaredHudWidgets.get(name) ?? [];
     const id = this.symbolBinder.addHudWidget({ name, declaration });
     if (declarations.length > 0) {
-      this.diagnostics.addWarning(
-        diagnosticMessages.duplicateDeclarationNameIgnored("hud_widget", name),
-        declaration
-      );
+      this.reportDuplicateDeclarationName("hud_widget", name, declaration);
     }
     declarations.push(id);
     this.declaredHudWidgets.set(name, declarations);
@@ -342,10 +382,7 @@ export class ParserSymbolContext {
       declaration,
     });
     if (declarations.length > 0) {
-      this.diagnostics.addWarning(
-        diagnosticMessages.duplicateDeclarationNameIgnored("map_object", name),
-        declaration
-      );
+      this.reportDuplicateDeclarationName("map_object", name, declaration);
     }
     declarations.push(id);
     this.declaredObjectFilters.set(name, declarations);
@@ -368,13 +405,7 @@ export class ParserSymbolContext {
       declaration,
     });
     if (declarations.length > 0) {
-      this.diagnostics.addWarning(
-        diagnosticMessages.duplicateDeclarationNameIgnored(
-          "player_traits",
-          name
-        ),
-        declaration
-      );
+      this.reportDuplicateDeclarationName("player_traits", name, declaration);
     }
     declarations.push(id);
     this.declaredPlayerTraits.set(name, declarations);
@@ -397,10 +428,7 @@ export class ParserSymbolContext {
       declaration,
     });
     if (declarations.length > 0) {
-      this.diagnostics.addWarning(
-        diagnosticMessages.duplicateDeclarationNameIgnored("game_stats", name),
-        declaration
-      );
+      this.reportDuplicateDeclarationName("game_stats", name, declaration);
     }
     declarations.push(id);
     this.declaredGameStats.set(name, declarations);
@@ -419,10 +447,7 @@ export class ParserSymbolContext {
     const declarations = this.declaredLoadouts.get(name) ?? [];
     const id = this.symbolBinder.addLoadout({ name, declaration });
     if (declarations.length > 0) {
-      this.diagnostics.addWarning(
-        diagnosticMessages.duplicateDeclarationNameIgnored("loadout", name),
-        declaration
-      );
+      this.reportDuplicateDeclarationName("loadout", name, declaration);
     }
     declarations.push(id);
     this.declaredLoadouts.set(name, declarations);
@@ -441,13 +466,7 @@ export class ParserSymbolContext {
     const declarations = this.declaredLoadoutPalettes.get(name) ?? [];
     const id = this.symbolBinder.addLoadoutPalette({ name, declaration });
     if (declarations.length > 0) {
-      this.diagnostics.addWarning(
-        diagnosticMessages.duplicateDeclarationNameIgnored(
-          "loadout_palette",
-          name
-        ),
-        declaration
-      );
+      this.reportDuplicateDeclarationName("loadout_palette", name, declaration);
     }
     declarations.push(id);
     this.declaredLoadoutPalettes.set(name, declarations);
@@ -466,11 +485,9 @@ export class ParserSymbolContext {
     const declarations = this.declaredRequisitionPalettes.get(name) ?? [];
     const id = this.symbolBinder.addRequisitionPalette({ name, declaration });
     if (declarations.length > 0) {
-      this.diagnostics.addWarning(
-        diagnosticMessages.duplicateDeclarationNameIgnored(
-          "requisition_palette",
-          name
-        ),
+      this.reportDuplicateDeclarationName(
+        "requisition_palette",
+        name,
         declaration
       );
     }
@@ -574,6 +591,28 @@ export class ParserSymbolContext {
   private registerInCurrentScope(name: string, id: SymbolId): void {
     this.symbolScopes.at(-1)?.set(name, id);
     this.scopeSymbolIds.at(-1)?.push(id);
+  }
+
+  /**
+   * FindIndex first-wins duplicates: MegaCrow errors when `preventShadowing` is
+   * on, otherwise emit the original MegaloEdit-parity warning.
+   */
+  private reportDuplicateDeclarationName(
+    kind: string,
+    name: string,
+    declaration: SourceLocation
+  ): void {
+    if (this.frontend.megacrowExtensions.preventShadowing) {
+      this.diagnostics.addError(
+        diagnosticMessages.variableShadowingDisabled(kind, name),
+        declaration
+      );
+      return;
+    }
+    this.diagnostics.addWarning(
+      diagnosticMessages.duplicateDeclarationNameIgnored(kind, name),
+      declaration
+    );
   }
 
   private declarationCount(map: Map<string, SymbolId[]>): number {

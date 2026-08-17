@@ -673,6 +673,13 @@ end
     );
     expect(paletteKeyword).toBeDefined();
     expect(itemKeyword).toBeDefined();
+    const paletteName = tokens.find(
+      (token) =>
+        token.type === "variable" &&
+        token.length === "slayer_loadouts".length &&
+        token.line === 3
+    );
+    expect(paletteName?.modifiers).toContain("readonly");
   });
 
   it("highlights override loadout_palette name as type", async () => {

@@ -28,6 +28,10 @@ import type { AnalysisSnapshot } from "src/language-service/snapshot";
 import { loadObjectListsForVersion } from "src/load-object-lists";
 import type { MegacrowExtensions } from "src/megacrow-extensions";
 import { resolveMegacrowExtensions } from "src/megacrow-extensions";
+import {
+  buildVariantLimitUsage,
+  type VariantLimitUsage,
+} from "src/variant-limit-usage";
 import type { SupportedMegaloVersion } from "src/version";
 
 export type ResolveBaseFileFn = (
@@ -48,6 +52,11 @@ export interface CompileSourceOptions {
   fileType?: CompiledMegaloFileType;
   /** URI of the source document (for relative path resolution). */
   fromUri?: string;
+  /**
+   * When true (default), count compile-time resource usage from the lowered
+   * program (includes already expanded). Set false to skip the extra payload.
+   */
+  includeLimitUsage?: boolean;
   /** MegaCrow-only language extensions (defaults keep MegaloEdit parity). */
   megacrowExtensions?: Partial<MegacrowExtensions>;
   /**
@@ -71,6 +80,11 @@ export interface CompileSourceResult {
   /** Present when compilation succeeded with no errors. */
   bytes?: Uint8Array;
   diagnostics: Diagnostic[];
+  /**
+   * Used/max rows from the same lowered IR as this compile. Present unless
+   * {@link CompileSourceOptions.includeLimitUsage} is false or lowering failed.
+   */
+  limitUsage?: VariantLimitUsage;
   /** Present when compilation succeeded with no errors. */
   metadata?: CompiledMegaloMetadata;
   /**
@@ -239,6 +253,7 @@ export const resolveBaseMgloBytes = async (
     const nested = await compileSource(resolved.text, {
       ...options,
       fromUri: resolved.uri,
+      includeLimitUsage: false,
     });
 
     const nestedErrors = nested.diagnostics.filter(
@@ -361,6 +376,19 @@ export const compileFromAst = async (
   const lowerer = new Lowerer(frontend);
   const compiler = getCompilerForVersion(frontend.megaloVersion);
 
+  const limitUsageFor = (
+    ir: IR,
+    usedBytes?: number
+  ): VariantLimitUsage | undefined => {
+    if (options.includeLimitUsage === false) {
+      return;
+    }
+    return buildVariantLimitUsage(ir, frontend.versionConfiguration.limits, {
+      ast,
+      usedBytes,
+    });
+  };
+
   try {
     const ir = lowerer.lower(ast, diagnostics, {
       objectLists,
@@ -370,6 +398,7 @@ export const compileFromAst = async (
     if (diagnostics.hasErrors()) {
       return {
         diagnostics: [...diagnostics.getErrors(), ...diagnostics.getWarnings()],
+        limitUsage: limitUsageFor(ir),
       };
     }
 
@@ -394,6 +423,7 @@ export const compileFromAst = async (
             ...diagnostics.getErrors(),
             ...diagnostics.getWarnings(),
           ],
+          limitUsage: limitUsageFor(ir),
         };
       }
       throw error;
@@ -409,6 +439,7 @@ export const compileFromAst = async (
       bytes: ok ? data : undefined,
       metadata: ok ? metadata : undefined,
       variantByteLength: ok ? variantByteLength : undefined,
+      limitUsage: limitUsageFor(ir, variantByteLength),
     };
   } catch (error) {
     if (error instanceof CompilerError) {
