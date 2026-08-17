@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { isNewerBuild, parseBuildSeq } from "./buildString";
+import {
+  isNewerBuild,
+  isReleaseBranchBuild,
+  parseBuildBranch,
+  parseBuildSeq,
+} from "./buildString";
 
 describe("parseBuildSeq", () => {
   it("parses zero-padded seq from a build tag", () => {
@@ -8,6 +13,25 @@ describe("parseBuildSeq", () => {
 
   it("returns null for untracked builds", () => {
     expect(parseBuildSeq("untracked version")).toBeNull();
+  });
+});
+
+describe("parseBuildBranch", () => {
+  it("reads the branch suffix", () => {
+    expect(parseBuildBranch("00023.26.08.16.1810.alpha")).toBe("alpha");
+    expect(parseBuildBranch("00024.26.08.17.1810.release")).toBe("release");
+  });
+
+  it("returns null for untracked builds", () => {
+    expect(parseBuildBranch("untracked version")).toBeNull();
+  });
+});
+
+describe("isReleaseBranchBuild", () => {
+  it("is true only for the release branch suffix", () => {
+    expect(isReleaseBranchBuild("00024.26.08.17.1810.release")).toBe(true);
+    expect(isReleaseBranchBuild("00023.26.08.16.1810.alpha")).toBe(false);
+    expect(isReleaseBranchBuild("untracked version")).toBe(false);
   });
 });
 

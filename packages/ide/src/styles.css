@@ -1505,6 +1505,16 @@ body {
   margin-top: 14px;
 }
 
+.motd-link {
+  color: #8ec5ff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.motd-link:hover {
+  color: #c5e1ff;
+}
+
 .motd-footer {
   display: flex;
   align-items: center;

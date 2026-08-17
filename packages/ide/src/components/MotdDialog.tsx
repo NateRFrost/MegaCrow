@@ -1,5 +1,12 @@
-import { useEffect, useRef, useState } from "react";
-import { CURRENT_MOTD, type MotdMessage } from "../lib/motd";
+import { type MouseEvent, useEffect, useRef, useState } from "react";
+import {
+  CURRENT_MOTD,
+  type MotdMessage,
+  parseMotdLinkHref,
+  splitMotdInline,
+} from "../lib/motd";
+import { docsPageUrl, openDocs } from "../lib/openDocs";
+import { openExternalUrl } from "../lib/openExternalUrl";
 
 const MOTD_FADE_MS = 180;
 
@@ -81,7 +88,40 @@ export function MotdDialog({ open, message = CURRENT_MOTD, onDismiss }: Props) {
 
               <div className="motd-body" id="motd-body">
                 {bodyParagraphs.map((paragraph, index) => (
-                  <p key={index}>{paragraph}</p>
+                  <p key={index}>
+                    {splitMotdInline(paragraph).map((part, partIndex) => {
+                      if (part.type !== "link") {
+                        return part.value;
+                      }
+
+                      const target = parseMotdLinkHref(part.href);
+                      const href =
+                        target.kind === "docs"
+                          ? docsPageUrl(target.path)
+                          : target.url;
+
+                      return (
+                        <a
+                          className="motd-link"
+                          href={href}
+                          key={partIndex}
+                          onClick={(event: MouseEvent<HTMLAnchorElement>) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            if (target.kind === "docs") {
+                              void openDocs(target.path);
+                              return;
+                            }
+                            void openExternalUrl(target.url);
+                          }}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        >
+                          {part.label}
+                        </a>
+                      );
+                    })}
+                  </p>
                 ))}
               </div>
 

@@ -29,6 +29,43 @@ export function formatNagMessage(message: string): string {
   return message.replace(/\|n/g, "\n").trim();
 }
 
+const MARKDOWN_LINK_RE = /\[([^\]]+)\]\(([^)\s]+)\)/g;
+
+export type MotdInlinePart =
+  | { type: "text"; value: string }
+  | { type: "link"; href: string; label: string };
+
+/** Split MOTD body text into plain runs and markdown links `[label](url)`. */
+export function splitMotdInline(text: string): MotdInlinePart[] {
+  const parts: MotdInlinePart[] = [];
+  let lastIndex = 0;
+  for (const match of text.matchAll(MARKDOWN_LINK_RE)) {
+    const index = match.index ?? 0;
+    if (index > lastIndex) {
+      parts.push({ type: "text", value: text.slice(lastIndex, index) });
+    }
+    parts.push({ type: "link", label: match[1], href: match[2] });
+    lastIndex = index + match[0].length;
+  }
+  if (lastIndex < text.length) {
+    parts.push({ type: "text", value: text.slice(lastIndex) });
+  }
+  return parts.length > 0 ? parts : [{ type: "text", value: text }];
+}
+
+export type MotdLinkTarget =
+  | { kind: "docs"; path: string | null }
+  | { kind: "external"; url: string };
+
+/** `[label](docs)` / `[label](docs:language/index)` open bundled docs. */
+export function parseMotdLinkHref(href: string): MotdLinkTarget {
+  if (href === "docs" || href.startsWith("docs:")) {
+    const path = href === "docs" || href === "docs:" ? null : href.slice(5);
+    return { kind: "docs", path: path || null };
+  }
+  return { kind: "external", url: href };
+}
+
 /** Strip Reach controller-glyph prefix from button labels. */
 export function formatNagButtonLabel(buttonKey: string): string {
   return buttonKey.replace(/^[\uE000-\uF8FF]+/u, "").trim();
@@ -54,7 +91,7 @@ export function nagToMotdMessage(
 /** Active MOTD — only one message is shown at a time. */
 export const CURRENT_MOTD: MotdMessage = nagToMotdMessage(
   nagEn as ReachNagMessage,
-  "/motd/en.jpg"
+  `${import.meta.env.BASE_URL}motd/en.jpg`
 );
 
 const STORAGE_KEY = "megacrow_motd_views";

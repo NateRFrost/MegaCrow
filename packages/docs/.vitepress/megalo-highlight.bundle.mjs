@@ -162,16 +162,6 @@ var megaloEnum = (members, allowedForVersion) => {
 };
 
 // ../megalo/src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions.ts
-var MCC_ONLY_ACTIONS = [
-  "begin",
-  "hs_function_call",
-  "get_button_time",
-  "team_set_vehicle_spawning",
-  "player_set_vehicle_spawning",
-  "set_player_respawn_vehicle",
-  "set_team_respawn_vehicle",
-  "hide_object"
-];
 var ACTION_TYPE_MEMBERS = [
   "set_score",
   "create_object",
@@ -281,14 +271,117 @@ var ACTION_TYPE_MEMBERS = [
   "hide_object"
 ];
 var actionType = megaloEnum(ACTION_TYPE_MEMBERS, (version2) => {
-  const all = new Set(ACTION_TYPE_MEMBERS);
-  if (version2.flavour === "mcc") {
-    return all;
+  const supported = /* @__PURE__ */ new Set([
+    "set_score",
+    "create_object",
+    "delete_object",
+    "navpoint_set_visible",
+    "navpoint_set_icon",
+    "navpoint_set_priority",
+    "navpoint_set_timer",
+    "navpoint_set_visible_range",
+    "set",
+    "set_boundary",
+    "apply_player_traits",
+    "set_pickup_filter",
+    "set_respawn_filter",
+    "set_fireteam_respawn_filter",
+    "set_progress_bar",
+    "hud_post_message",
+    "timer_set_rate",
+    "print_variable",
+    "get_player_holding_object",
+    "for_each",
+    "end_round",
+    "boundary_set_visible",
+    "object_destroy",
+    "object_set_invincibility",
+    "random",
+    "break_into_debugger",
+    "object_get_orientation",
+    "object_get_velocity",
+    "player_death_get_killing_player",
+    "player_death_get_damage_type",
+    "player_death_get_special_type",
+    "debugging_enable_tracing",
+    "object_attach",
+    "object_detach",
+    "player_get_place",
+    "team_get_place",
+    "player_get_killing_spree_count",
+    "player_adjust_money",
+    "player_enable_purchases",
+    "player_get_vehicle",
+    "player_set_vehicle",
+    "player_set_unit",
+    "timer_reset",
+    "weapon_set_pickup_priority",
+    "object_bounce",
+    "hud_widget_set_text",
+    "hud_widget_set_value",
+    "hud_widget_set_meter",
+    "hud_widget_set_icon",
+    "hud_widget_set_visibility",
+    "play_sound",
+    "object_set_scale",
+    "navpoint_set_text",
+    "object_get_shield",
+    "object_get_health",
+    "player_set_objective",
+    "player_set_objective_allegiance",
+    "player_set_objective_allegiance_icon",
+    "team_set_coop_spawning",
+    "team_set_primary_respawn_object",
+    "player_set_primary_respawn_object",
+    "player_get_fireteam_index",
+    "player_set_fireteam_index",
+    "object_adjust_shield",
+    "object_adjust_health",
+    "object_get_distance",
+    "object_adjust_maximum_shield",
+    "object_adjust_maximum_health",
+    "player_set_requisition_palette",
+    "device_set_power",
+    "device_get_power",
+    "device_set_position",
+    "device_get_position",
+    "adjust_grenades",
+    "submit_incident",
+    "submit_incident_with_custom_value",
+    "set_loadout_palette",
+    "device_set_position_track",
+    "device_animate_position",
+    "device_set_position_immediate",
+    "saved_film_insert_marker",
+    "respawn_zone_enable",
+    "player_get_weapon",
+    "player_get_equipment",
+    "object_set_never_garbage",
+    "player_get_target_object",
+    "create_tunnel",
+    "debug_force_player_view_count",
+    "player_pick_up_weapon",
+    "player_set_coop_spawning",
+    "object_set_orientation",
+    "object_face_object",
+    "biped_give_weapon",
+    "biped_drop_weapon",
+    "set_scenario_interpolator_state",
+    "get_random_object",
+    "game_grief_record_custom_penalty",
+    "boundary_set_player_color"
+  ]);
+  if (version2.version === 107 && version2.flavour === "mcc") {
+    supported.add("begin");
+    supported.add("hs_function_call");
+    supported.add("get_button_time");
+    supported.add("team_set_vehicle_spawning");
+    supported.add("player_set_vehicle_spawning");
+    supported.add("set_player_respawn_vehicle");
+    supported.add("set_team_respawn_vehicle");
+    supported.add("hide_object");
   }
-  for (const name of MCC_ONLY_ACTIONS) {
-    all.delete(name);
-  }
-  return all;
+  return supported;
 });
 var ActionType = actionType.enum;
 var teamOrPlayerTarget = megaloEnum([
@@ -325,9 +418,8 @@ var MATH_OPERATION_MEMBERS = [
   "abs"
   // no alias?
 ];
-var MCC_ONLY_MATH_OPERATIONS = ["lshift", "rshift"];
 var mathOperation = megaloEnum(MATH_OPERATION_MEMBERS, (version2) => {
-  const canonical = [
+  const supported = /* @__PURE__ */ new Set([
     "add",
     "subtract",
     "multiply",
@@ -338,18 +430,13 @@ var mathOperation = megaloEnum(MATH_OPERATION_MEMBERS, (version2) => {
     "or",
     "xor",
     "not",
-    "lshift",
-    "rshift",
     "abs"
-  ];
-  const all = new Set(canonical);
-  if (version2.flavour === "mcc") {
-    return all;
+  ]);
+  if (version2.version === 107 && version2.flavour === "mcc") {
+    supported.add("lshift");
+    supported.add("rshift");
   }
-  for (const name of MCC_ONLY_MATH_OPERATIONS) {
-    all.delete(name);
-  }
-  return all;
+  return supported;
 });
 var MathOperation = mathOperation.enum;
 var navpointPriority = megaloEnum([
@@ -805,6 +892,7 @@ var en_default = {
   expected_parameter_type: "Expected {{expected}} parameter but got '{{got}}'",
   unresolved_identifier: "Unresolved identifier '{{name}}'.",
   unresolved_scoped_identifier: "Unresolved identifier {{base}}.'{{member}}'.",
+  object_type_used_as_object_reference: `'{{name}}' is an object type (use create_object "{{name}}" \u2026), not an object reference.`,
   unknown_player_trait: "Expected player trait modifier, got '{{got}}'",
   unknown_loadout_property: "Expected loadout property, got '{{got}}'",
   unknown_teams_block_property: "Expected teams block property, got '{{got}}'",
@@ -881,6 +969,7 @@ var ja_default = {
   expected_parameter_type: "{{expected}} \u30D1\u30E9\u30E1\u30FC\u30BF\u304C\u5FC5\u8981\u3067\u3059\u304C\u3001'{{got}}' \u304C\u898B\u3064\u304B\u308A\u307E\u3057\u305F",
   unresolved_identifier: "\u672A\u89E3\u6C7A\u306E\u8B58\u5225\u5B50 '{{name}}'\u3002",
   unresolved_scoped_identifier: "\u672A\u89E3\u6C7A\u306E\u8B58\u5225\u5B50 {{base}}.'{{member}}'\u3002",
+  object_type_used_as_object_reference: `'{{name}}' \u306F\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u578B\u3067\u3059\uFF08create_object "{{name}}" \u2026 \u3067\u4F7F\u7528\uFF09\u3002\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u3067\u306F\u3042\u308A\u307E\u305B\u3093\u3002`,
   unknown_player_trait: "player trait modifier \u304C\u5FC5\u8981\u3067\u3059\u304C\u3001'{{got}}' \u304C\u898B\u3064\u304B\u308A\u307E\u3057\u305F",
   unknown_loadout_property: "loadout property \u304C\u5FC5\u8981\u3067\u3059\u304C\u3001'{{got}}' \u304C\u898B\u3064\u304B\u308A\u307E\u3057\u305F",
   unknown_teams_block_property: "teams block property \u304C\u5FC5\u8981\u3067\u3059\u304C\u3001'{{got}}' \u304C\u898B\u3064\u304B\u308A\u307E\u3057\u305F",
@@ -1075,6 +1164,9 @@ var diagnosticMessages = {
   },
   expectedVariableReference(got) {
     return expectedOneOf([translate("variable_reference")], got);
+  },
+  objectTypeUsedAsObjectReference(name) {
+    return translate("object_type_used_as_object_reference", { name });
   },
   expectedParameterType(expected, got) {
     return translate("expected_parameter_type", { expected, got });
@@ -1847,6 +1939,7 @@ var getConfigurationForVersion = ({
 
 // ../megalo/src/compiler-settings.ts
 var DEFAULT_COMPILER_SETTINGS = {
+  creatorGamertag: "MegaCrow",
   strictStringLiterals: false,
   temporaryVariablesCanOverflowIntoUnusedGlobalVariables: true
 };
@@ -3701,7 +3794,7 @@ var parseOverrideName = (ctx, nameToken) => {
     location: nameToken.location
   };
 };
-var isNestedPlayerTraitsOverride = (ctx, name, peek) => name.kind === "player_traits_override" && peek?.kind === 1 /* Identifier */ && ctx.playerTraitParserRepository.getParser(peek.value) !== void 0;
+var isNestedPlayerTraitsOverride = (name) => name.kind === "player_traits_override";
 var missingOperandAfter = (ctx, previousLocation, peek, expected) => {
   const end = peek !== void 0 && peek.location.start.localOffset >= previousLocation.end.localOffset ? peek.location.start : previousLocation.end;
   const location = {
@@ -3819,7 +3912,7 @@ var overrideParser = (ctx, keywordToken, modifiers) => {
   const peek = ctx.peekToken();
   if (name.kind === "loadout_palette") {
     value = parseLoadoutPaletteOverrideValue(ctx, name.location);
-  } else if (isNestedPlayerTraitsOverride(ctx, name, peek)) {
+  } else if (isNestedPlayerTraitsOverride(name)) {
     const body = parsePlayerTraitOptions(ctx, nameToken);
     value = {
       kind: 2 /* NESTED */,
@@ -5231,7 +5324,7 @@ var TeamsParserRepository = class {
     this.registerParser(
       this.teamOptionParsers,
       "name",
-      parameterParserBuilder([0 /* Keyword */])
+      parameterParserBuilder([2 /* String */])
     );
     this.registerParser(
       this.teamOptionParsers,
@@ -6955,11 +7048,7 @@ var parseIdentifierInitialValue = (ctx, anchor) => {
   const valuePeek = ctx.peekToken();
   if (isMissingInitial2(valuePeek)) {
     ctx.diagnostics.addError(
-      diagnosticMessages.expectedTokenKind(
-        1 /* Identifier */,
-        valuePeek?.kind ?? 0 /* None */,
-        valuePeek?.value ?? ""
-      ),
+      diagnosticMessages.expectedVariableReference(valuePeek?.value || "end"),
       anchor.location
     );
     return {
@@ -7047,75 +7136,129 @@ var parseScope = (ctx, elementToken) => {
     location: scopeToken.location
   };
 };
+var missingEntryField = (ctx, expected, anchor) => {
+  const peek = ctx.peekToken();
+  ctx.diagnostics.addError(
+    diagnosticMessages.expectedTokenKind(
+      expected,
+      peek?.kind ?? 0 /* None */,
+      peek?.value ?? ""
+    ),
+    peek && !isMissingInitial2(peek) ? peek.location : anchor.location
+  );
+  return {
+    kind: -1 /* INVALID */,
+    location: anchor.location
+  };
+};
 var parseVariableEntry = (ctx, variableScope) => {
-  const networkToken = ctx.getToken();
+  const first = ctx.peekToken();
+  if (!first) {
+    const empty = {
+      type: 0 /* SOURCE_CODE */,
+      start: { localOffset: 0, absoluteOffset: 0, line: 1, column: 1 },
+      end: { localOffset: 0, absoluteOffset: 0, line: 1, column: 1 }
+    };
+    return {
+      network: { kind: -1 /* INVALID */, location: empty },
+      type: { kind: -1 /* INVALID */, location: empty },
+      name: { kind: -1 /* INVALID */, location: empty },
+      initial: { kind: -1 /* INVALID */, location: empty },
+      location: empty
+    };
+  }
+  const networkOmitted = first.kind === 1 /* Identifier */ && isVariableTypeName(first.value);
+  let networkToken = first;
   let network;
-  if (networkToken.kind === 1 /* Identifier */) {
+  if (networkOmitted) {
     network = {
-      value: networkToken.value,
-      location: networkToken.location
+      value: "local",
+      location: first.location
     };
   } else {
-    ctx.diagnostics.addError(
-      diagnosticMessages.expectedTokenKind(
-        1 /* Identifier */,
-        networkToken.kind,
-        networkToken.value
-      ),
-      networkToken.location
-    );
-    network = {
-      kind: -1 /* INVALID */,
-      location: networkToken.location
-    };
-  }
-  const typeToken = ctx.getToken();
-  let type;
-  if (typeToken.kind === 1 /* Identifier */ && isVariableTypeName(typeToken.value)) {
-    type = {
-      value: typeToken.value,
-      location: typeToken.location
-    };
-  } else {
-    ctx.diagnostics.addError(
-      diagnosticMessages.expectedVariableType(typeToken.value),
-      typeToken.location
-    );
-    type = {
-      kind: -1 /* INVALID */,
-      location: typeToken.location
-    };
-  }
-  const nameToken = ctx.getToken();
-  let name;
-  if (nameToken.kind === 1 /* Identifier */) {
-    name = {
-      value: nameToken.value,
-      location: nameToken.location
-    };
-    if (!isAstErrorNode(type) && variableScope !== void 0) {
-      ctx.symbolParser.addVariableToScope({
-        name: nameToken.value,
-        type: variableTypeFromName(type.value),
-        declaration: nameToken.location,
-        scope: variableScope
-      });
+    networkToken = ctx.getToken();
+    if (networkToken.kind === 1 /* Identifier */) {
+      network = {
+        value: networkToken.value,
+        location: networkToken.location
+      };
+    } else {
+      ctx.diagnostics.addError(
+        diagnosticMessages.expectedTokenKind(
+          1 /* Identifier */,
+          networkToken.kind,
+          networkToken.value
+        ),
+        networkToken.location
+      );
+      network = {
+        kind: -1 /* INVALID */,
+        location: networkToken.location
+      };
     }
-  } else {
-    ctx.diagnostics.addError(
-      diagnosticMessages.expectedTokenKind(
-        1 /* Identifier */,
-        nameToken.kind,
-        nameToken.value
-      ),
-      nameToken.location
-    );
-    name = {
-      kind: -1 /* INVALID */,
-      location: nameToken.location
-    };
   }
-  const initial = !isAstErrorNode(type) && isNumericVariableType(type.value) ? parseIntegerInitialValue(ctx, nameToken) : parseIdentifierInitialValue(ctx, nameToken);
+  const typePeek = ctx.peekToken();
+  let typeToken = networkToken;
+  let type;
+  if (isMissingInitial2(typePeek)) {
+    type = missingEntryField(ctx, 1 /* Identifier */, networkToken);
+  } else {
+    typeToken = ctx.getToken();
+    if (typeToken.kind === 1 /* Identifier */ && isVariableTypeName(typeToken.value)) {
+      type = {
+        value: typeToken.value,
+        location: typeToken.location
+      };
+    } else {
+      ctx.diagnostics.addError(
+        diagnosticMessages.expectedVariableType(typeToken.value),
+        typeToken.location
+      );
+      type = {
+        kind: -1 /* INVALID */,
+        location: typeToken.location
+      };
+    }
+  }
+  const namePeek = ctx.peekToken();
+  let nameToken = typeToken;
+  let name;
+  const afterName = ctx.peekToken(1);
+  const nameLooksLikeVariableNamedEnd = !isAstErrorNode(type) && namePeek?.kind === 1 /* Identifier */ && namePeek.value === "end" && afterName !== void 0 && (isNumericVariableType(type.value) ? afterName.kind === 4 /* Integer */ || afterName.kind === 1 /* Identifier */ : afterName.kind === 1 /* Identifier */ && afterName.value !== "end");
+  if (!namePeek || isMissingInitial2(namePeek) && !nameLooksLikeVariableNamedEnd) {
+    name = missingEntryField(ctx, 1 /* Identifier */, typeToken);
+  } else {
+    nameToken = ctx.getToken();
+    if (nameToken.kind === 1 /* Identifier */) {
+      name = {
+        value: nameToken.value,
+        location: nameToken.location
+      };
+      if (!isAstErrorNode(type) && variableScope !== void 0) {
+        ctx.symbolParser.addVariableToScope({
+          name: nameToken.value,
+          type: variableTypeFromName(type.value),
+          declaration: nameToken.location,
+          scope: variableScope
+        });
+      }
+    } else {
+      ctx.diagnostics.addError(
+        diagnosticMessages.expectedTokenKind(
+          1 /* Identifier */,
+          nameToken.kind,
+          nameToken.value
+        ),
+        nameToken.location
+      );
+      name = {
+        kind: -1 /* INVALID */,
+        location: nameToken.location
+      };
+    }
+  }
+  const initialAnchor = isAstErrorNode(name) ? typeToken : nameToken;
+  const initial = !isAstErrorNode(type) && isNumericVariableType(type.value) ? parseIntegerInitialValue(ctx, initialAnchor) : parseIdentifierInitialValue(ctx, initialAnchor);
   return {
     network,
     type,
@@ -7143,9 +7286,13 @@ var variablesParser = (ctx, elementToken) => {
       endLocation = endToken.location;
       break;
     }
+    const indexBefore = ctx.mark();
     const entry = parseVariableEntry(ctx, variableScope);
     if (hasValidScope) {
       entries.push(entry);
+    }
+    if (ctx.mark() === indexBefore && ctx.hasMore()) {
+      ctx.getToken();
     }
   }
   if (!foundEnd) {
@@ -14131,11 +14278,9 @@ var runWithHighlightContext = (version2, symbolTable, fn) => {
 var getHighlightVersion = () => highlightVersion;
 var BUILTIN_MEMBER_NAMES = /* @__PURE__ */ new Set([
   "score",
+  "money",
   "user_data",
   "team",
-  "player_score",
-  "player_money",
-  "player_rating",
   "rating"
 ]);
 var COMPILED_MEMBER_NAME = /^(?:number|timer|object|player|team|stat)_\d+$/;
