@@ -4,6 +4,8 @@ import type {
   CompiledMegaloMetadata,
 } from "src/backend/compile/compiler";
 import { assertEncodedSize } from "src/backend/compile/diagnostics/assertEncodedSize";
+import { assertScriptStringBytes } from "src/backend/compile/diagnostics/assertScriptStringBytes";
+import type { CompiledEngineStats } from "src/backend/compile/engineStats";
 import type { CompilerSettings } from "src/compiler-settings";
 import { MegaloCompilerContext } from "src/context";
 import {
@@ -29,7 +31,8 @@ import { loadObjectListsForVersion } from "src/load-object-lists";
 import type { MegacrowExtensions } from "src/megacrow-extensions";
 import { resolveMegacrowExtensions } from "src/megacrow-extensions";
 import {
-  buildVariantLimitUsage,
+  formatVariantLimitUsage,
+  scriptStringTableEncodedBytes,
   type VariantLimitUsage,
 } from "src/variant-limit-usage";
 import type { SupportedMegaloVersion } from "src/version";
@@ -53,8 +56,8 @@ export interface CompileSourceOptions {
   /** URI of the source document (for relative path resolution). */
   fromUri?: string;
   /**
-   * When true (default), count compile-time resource usage from the lowered
-   * program (includes already expanded). Set false to skip the extra payload.
+   * When true (default), include used/max rows from compiler engine stats.
+   * Set false to skip the extra payload.
    */
   includeLimitUsage?: boolean;
   /** MegaCrow-only language extensions (defaults keep MegaloEdit parity). */
@@ -81,8 +84,9 @@ export interface CompileSourceResult {
   bytes?: Uint8Array;
   diagnostics: Diagnostic[];
   /**
-   * Used/max rows from the same lowered IR as this compile. Present unless
-   * {@link CompileSourceOptions.includeLimitUsage} is false or lowering failed.
+   * Used/max rows from compiler {@link CompiledEngineStats}. Present unless
+   * {@link CompileSourceOptions.includeLimitUsage} is false or compile stats
+   * were unavailable.
    */
   limitUsage?: VariantLimitUsage;
   /** Present when compilation succeeded with no errors. */
@@ -376,17 +380,32 @@ export const compileFromAst = async (
   const lowerer = new Lowerer(frontend);
   const compiler = getCompilerForVersion(frontend.megaloVersion);
 
-  const limitUsageFor = (
-    ir: IR,
-    usedBytes?: number
+  const limitUsageFrom = (
+    engineStats: CompiledEngineStats
   ): VariantLimitUsage | undefined => {
     if (options.includeLimitUsage === false) {
       return;
     }
-    return buildVariantLimitUsage(ir, frontend.versionConfiguration.limits, {
-      ast,
-      usedBytes,
-    });
+    return formatVariantLimitUsage(
+      engineStats,
+      frontend.versionConfiguration.limits
+    );
+  };
+
+  /** Best-effort stats when write did not run (separate diagnostics so we do not mutate the real bag). */
+  const limitUsageFromDryRun = (ir: IR): VariantLimitUsage | undefined => {
+    if (options.includeLimitUsage === false) {
+      return;
+    }
+    try {
+      const { engineStats } = compiler.dryRun(ir, new Diagnostics());
+      return formatVariantLimitUsage(
+        engineStats,
+        frontend.versionConfiguration.limits
+      );
+    } catch {
+      return;
+    }
   };
 
   try {
@@ -398,24 +417,44 @@ export const compileFromAst = async (
     if (diagnostics.hasErrors()) {
       return {
         diagnostics: [...diagnostics.getErrors(), ...diagnostics.getWarnings()],
-        limitUsage: limitUsageFor(ir),
+        limitUsage: limitUsageFromDryRun(ir),
+      };
+    }
+
+    assertScriptStringBytes(
+      scriptStringTableEncodedBytes(ir),
+      frontend.versionConfiguration.limits.stringBytes,
+      diagnostics
+    );
+    if (diagnostics.hasErrors()) {
+      return {
+        diagnostics: [...diagnostics.getErrors(), ...diagnostics.getWarnings()],
+        limitUsage: limitUsageFromDryRun(ir),
       };
     }
 
     let data: Uint8Array;
     let metadata: CompiledMegaloMetadata;
     let variantByteLength: number;
+    let engineStats: CompiledEngineStats;
     try {
-      ({ data, metadata, variantByteLength } = compiler.writeMegaloFile(
-        ir,
-        diagnostics,
-        { fileType: options.fileType ?? "mglo" }
-      ));
+      ({ data, metadata, variantByteLength, engineStats } =
+        compiler.writeMegaloFile(ir, diagnostics, {
+          fileType: options.fileType ?? "mglo",
+        }));
     } catch (error) {
-      // Encode/write failures (incl. BLF) — size is the usual cause.
+      // Encode/write failures (incl. BLF) — size is a common cause, but not
+      // the only one (e.g. unsupported container type on pre-release builds).
       if (!(error instanceof CompilerError)) {
+        console.error("[megalo] failed to write gametype file:", error);
+        const detail =
+          error instanceof Error
+            ? error.message
+            : typeof error === "string"
+              ? error
+              : String(error);
         diagnostics.addError(
-          diagnosticMessages.failedToWriteGametypeFile(),
+          diagnosticMessages.failedToWriteGametypeFile(detail),
           BUILT_IN_LOCATION
         );
         return {
@@ -423,7 +462,7 @@ export const compileFromAst = async (
             ...diagnostics.getErrors(),
             ...diagnostics.getWarnings(),
           ],
-          limitUsage: limitUsageFor(ir),
+          limitUsage: limitUsageFromDryRun(ir),
         };
       }
       throw error;
@@ -439,7 +478,7 @@ export const compileFromAst = async (
       bytes: ok ? data : undefined,
       metadata: ok ? metadata : undefined,
       variantByteLength: ok ? variantByteLength : undefined,
-      limitUsage: limitUsageFor(ir, variantByteLength),
+      limitUsage: limitUsageFrom(engineStats),
     };
   } catch (error) {
     if (error instanceof CompilerError) {

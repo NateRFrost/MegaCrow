@@ -1,5 +1,6 @@
 import { bitstream } from "@blamnetwork/blf";
 import { c_game_engine_custom_variant as AlphaCustomVariant } from "@blamnetwork/blf/haloreach/v08516_10_02_19_1607_omaha_alpha";
+import { c_game_engine_custom_variant as DeltaCustomVariant } from "@blamnetwork/blf/haloreach/v09730_10_04_09_1309_omaha_delta";
 import { c_game_engine_custom_variant as ReleaseCustomVariant } from "@blamnetwork/blf/haloreach/v11860_10_07_24_0147_omaha_release";
 import { c_game_engine_custom_variant as MccCustomVariant } from "@blamnetwork/blf/haloreach_mcc/v_untracked_25_08_16_1352";
 
@@ -31,6 +32,11 @@ const GAMETYPE_BY_ENCODING: Record<
     id: "49",
     label: "Halo Reach Xbox 360 Alpha",
     Variant: AlphaCustomVariant as unknown as CustomVariantFactory,
+  },
+  73: {
+    id: "73",
+    label: "Halo Reach Xbox 360 Beta",
+    Variant: DeltaCustomVariant as unknown as CustomVariantFactory,
   },
   106: {
     id: "106",

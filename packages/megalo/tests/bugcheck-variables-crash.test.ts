@@ -1,4 +1,4 @@
-import { computeVariantLimitUsage } from "src/compute-variant-limit-usage";
+import { compileSource } from "src/compile-source";
 import { MegaloCompilerContext } from "src/context";
 import { Diagnostics } from "src/diagnostics";
 import { Parser, SyntaxKind } from "src/frontend/abstract-syntax-tree";
@@ -94,13 +94,12 @@ describe("bugcheck variables parse resilience", () => {
     ).not.toThrow();
   });
 
-  it("does not throw when computing variant limit usage", () => {
-    expect(() =>
-      computeVariantLimitUsage(bugcheck, {
-        version: MEGALO_VERSIONS["107-mcc"],
-        usedBytes: null,
-      })
-    ).not.toThrow();
+  it("does not throw when computing variant limit usage", async () => {
+    await expect(
+      compileSource(bugcheck, { version: MEGALO_VERSIONS["107-mcc"] })
+    ).resolves.toMatchObject({
+      limitUsage: expect.objectContaining({ items: expect.any(Array) }),
+    });
   });
 
   it("defaults omitted network to local and keeps end for the block", () => {

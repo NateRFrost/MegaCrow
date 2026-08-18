@@ -60,13 +60,17 @@ export const compileMapObjects = (
       (filter.userData < MIN_USER_DATA || filter.userData > MAX_USER_DATA)
     ) {
       diagnostics.addError(
-        diagnosticMessages.objectFilterUserDataOutOfRange(),
+        diagnosticMessages.outOfRange(
+          "object filter user_data",
+          MIN_USER_DATA,
+          MAX_USER_DATA
+        ),
         BUILT_IN_LOCATION
       );
     }
     if (filter.min !== undefined && (filter.min < 0 || filter.min > MAX_MIN)) {
       diagnostics.addError(
-        diagnosticMessages.objectFilterMinOutOfRange(),
+        diagnosticMessages.outOfRange("object filter min", 0, MAX_MIN),
         BUILT_IN_LOCATION
       );
     }

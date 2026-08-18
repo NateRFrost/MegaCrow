@@ -20,6 +20,7 @@ import {
 } from "src/frontend/abstract-syntax-tree/parameters/types/dynamic-string";
 import type { ASTGrenadeCountNode } from "src/frontend/abstract-syntax-tree/parameters/types/grenade-count";
 import type { MegaloEnumDef } from "src/frontend/intermediate-representation/megaloEnum";
+import { TRIGGER_BODY_KEYWORDS } from "src/frontend/language-configuration/omni/keywords";
 import type { ObjectListType } from "src/frontend/object-lists";
 import {
   type SymbolId,
@@ -299,24 +300,28 @@ const lookupReferenceSymbolId = (
   ctx.symbolParser.lookupObjectFilter(name) ??
   ctx.symbolParser.lookupPlayerTraits(name);
 
+/**
+ * Tokens that start (or end) a trigger body statement — not action/condition
+ * operands. Derived from {@link TRIGGER_BODY_KEYWORDS}; `for_each` is included
+ * because nested for_each headers are statement-shaped even when written without
+ * repeating `action` in recovery paths. `not` is omitted (condition modifier).
+ */
+const TRIGGER_STATEMENT_BOUNDARY = new Set<string>([
+  ...TRIGGER_BODY_KEYWORDS.filter((keyword) => keyword !== "not"),
+  "for_each",
+]);
+
 /** Next-token boundaries that belong to the trigger statement parser, not operands. */
-const isTriggerStatementBoundary = (token: Token | undefined): boolean => {
+export const isTriggerStatementBoundary = (
+  token: Token | undefined
+): boolean => {
   if (token === undefined) {
     return true;
   }
-  if (token.kind !== TokenKind.Identifier) {
-    return false;
-  }
-  switch (token.value) {
-    case "end":
-    case "action":
-    case "condition":
-    case "begin":
-    case "temporary":
-      return true;
-    default:
-      return false;
-  }
+  return (
+    token.kind === TokenKind.Identifier &&
+    TRIGGER_STATEMENT_BOUNDARY.has(token.value)
+  );
 };
 
 const consumeLenientParameter = (

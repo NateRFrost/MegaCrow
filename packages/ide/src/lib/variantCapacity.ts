@@ -1,15 +1,18 @@
-import type { MegaloVersionProfileId } from "./gametypeMetadata";
+import type { MegaloVersionId } from "@megacrow/megalo";
+import { MEGALO_VERSIONS } from "@megacrow/megalo";
 
-/** Reach MCC / TU1 gametype storage slot size (bytes). */
+/** Reach gametype storage slot size (bytes) — matches version config `encodedSize`. */
 export const VARIANT_STORAGE_CAPACITY = 0x5000;
 
 export const VARIANT_CAPACITY_BY_MEGALO_VERSION: Record<
-  MegaloVersionProfileId,
+  MegaloVersionId,
   number
-> = {
-  "107-mcc": VARIANT_STORAGE_CAPACITY,
-  "107": VARIANT_STORAGE_CAPACITY,
-};
+> = Object.fromEntries(
+  (Object.keys(MEGALO_VERSIONS) as MegaloVersionId[]).map((id) => [
+    id,
+    VARIANT_STORAGE_CAPACITY,
+  ])
+) as Record<MegaloVersionId, number>;
 
 export function formatVariantBytes(bytes: number): string {
   if (bytes < 1024) {

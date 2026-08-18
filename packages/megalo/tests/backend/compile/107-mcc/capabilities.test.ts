@@ -13,18 +13,47 @@ import {
 } from "../../../../src/frontend/intermediate-representation";
 import { emptyPlayerTraits } from "../../../../src/frontend/intermediate-representation/elements/game_options/shared";
 import { StringTable } from "../../../../src/frontend/intermediate-representation/game/string_table";
+import { VariableScope } from "../../../../src/frontend/symbol-table";
 import { getLabel, MEGALO_VERSIONS } from "../../../../src/version";
+
+const emptyEngineStats = {
+  actions: 0,
+  conditions: 0,
+  encodedSize: 0,
+  gameStatistics: 0,
+  hudWidgets: 0,
+  loadoutPalettes: 0,
+  loadouts: 0,
+  mapPermissionExceptions: 0,
+  objectFilters: 0,
+  objectsUsed: 0,
+  playerTraitSets: 0,
+  requisitionPalettes: 0,
+  stringBytes: 0,
+  strings: 0,
+  teams: 0,
+  triggers: 0,
+  userDefinedOptions: 0,
+  variables: {
+    [VariableScope.Global]: {},
+    [VariableScope.Player]: {},
+    [VariableScope.Team]: {},
+    [VariableScope.Object]: {},
+    [VariableScope.Temporary]: {},
+  },
+};
 
 /** Minimal compiler stub — avoids pulling @blamnetwork/blf into this test. */
 class TestCompiler extends Compiler {
   dryRun() {
-    return { metadata: {} };
+    return { metadata: {}, engineStats: emptyEngineStats };
   }
   writeMegaloFile() {
     return {
       data: new Uint8Array(),
       metadata: {},
       variantByteLength: 0,
+      engineStats: emptyEngineStats,
     };
   }
   getCapabilities() {
@@ -126,6 +155,9 @@ const buildMinimalIr = (): IR => {
         objectDeathEventTriggerIndex: 0,
         localTriggerIndex: 0,
         pregameTriggerIndex: 0,
+        requisitionPalettes: [],
+        loadouts: [],
+        loadoutPalettes: [],
         objectsUsed: [],
         objectFilters: [],
       },
@@ -187,9 +219,7 @@ describe("107-mcc field capabilities", () => {
     const diagnostics = new Diagnostics();
     assertCompatibleIR(ir, compiler, diagnostics);
 
-    expect(diagnostics.getErrors()[0]?.message).toContain(
-      "gameVariant.baseVariant.mapOverrideOptions.basePlayerTraits.movement.sprinting"
-    );
+    expect(diagnostics.getErrors()[0]?.message).toContain('"sprinting"');
     expect(diagnostics.getErrors()[0]?.location).toEqual(sprintLoc);
   });
 
@@ -208,9 +238,7 @@ describe("107-mcc field capabilities", () => {
     const diagnostics = new Diagnostics();
     assertCompatibleIR(ir, compiler, diagnostics);
 
-    expect(diagnostics.getErrors()[0]?.message).toContain(
-      "gameVariant.playerTraits[0].traits.movement.sprinting"
-    );
+    expect(diagnostics.getErrors()[0]?.message).toContain('"sprinting"');
     expect(diagnostics.getErrors()[0]?.location).toEqual(sprintLoc);
   });
 });

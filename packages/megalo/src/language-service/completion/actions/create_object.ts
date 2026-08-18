@@ -12,15 +12,19 @@ import type {
   CompletionItem,
 } from "src/language-service/completion/types";
 
-const FLAGS = ["never_garbage", "suppress_effect", "absolute_orientation"];
+const OPTIONAL_KEYWORDS_FROM_73 = [
+  "offset",
+  "variant",
+  "suppress_effect",
+  "absolute_orientation",
+] as const;
 
 const OPTIONAL_KEYWORDS = [
   "at",
   "set",
-  "offset",
   "label",
-  "variant",
-  ...FLAGS,
+  "never_garbage",
+  ...OPTIONAL_KEYWORDS_FROM_73,
 ] as const;
 
 /** Skip trailing INVALID placeholders (missing values after `at`/`set`/…). */
@@ -36,7 +40,7 @@ const previousSignificant = (
   }
 };
 
-/** `create_object <type> [at …] [set …] [offset …] [label …] [variant …] [flags…]` */
+/** `create_object <type> [at …] [set …] …` or Alpha `<type> <out> <place_at>`. */
 export const completeCreateObject = (
   ctx: ActionCompletionContext
 ): CompletionItem[] => {
@@ -81,5 +85,37 @@ export const completeCreateObject = (
     }
   }
 
-  return [...suggestKeywords(ctx, OPTIONAL_KEYWORDS)];
+  // Alpha positional operands after the type: <out> then <place_at>.
+  if (
+    ctx.snapshot.version.version < 73 &&
+    prev !== undefined &&
+    prev.kind !== SyntaxKind.KEYWORD
+  ) {
+    if (ctx.slotIndex === 1) {
+      return [
+        ...suggestTyped(ctx, ParameterType.Object, { writable: true }),
+        ...suggestKeywords(
+          ctx,
+          OPTIONAL_KEYWORDS.filter(
+            (keyword) =>
+              !(OPTIONAL_KEYWORDS_FROM_73 as readonly string[]).includes(
+                keyword
+              )
+          )
+        ),
+      ];
+    }
+    if (ctx.slotIndex === 2) {
+      return suggestTyped(ctx, ParameterType.Object);
+    }
+  }
+
+  const keywords =
+    ctx.snapshot.version.version < 73
+      ? OPTIONAL_KEYWORDS.filter(
+          (keyword) =>
+            !(OPTIONAL_KEYWORDS_FROM_73 as readonly string[]).includes(keyword)
+        )
+      : OPTIONAL_KEYWORDS;
+  return [...suggestKeywords(ctx, keywords)];
 };

@@ -143,6 +143,19 @@ async function compileToBytes(
           severity,
         };
       }
+      if (d.location.type === SourceLocationType.OBJECT_LIST) {
+        return {
+          line: 0,
+          column: 0,
+          message: d.message,
+          severity,
+          objectList: {
+            objectType: d.location.objectType,
+            line: d.location.source.line + 1,
+            ...(d.location.file === undefined ? {} : { file: d.location.file }),
+          },
+        };
+      }
       return {
         line: 0,
         column: 0,

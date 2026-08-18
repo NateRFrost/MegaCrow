@@ -43,6 +43,7 @@ import {
 const ALL_MEGACROW_EXTENSIONS = {
   targetTeam: true,
   coopSpawningWaypointIcon: true,
+  doubleJump: true,
   notBuiltIn: true,
   compileMissingBaseFromSource: true,
   megacrowVersionString: true,
@@ -54,6 +55,7 @@ const ALL_MEGACROW_EXTENSIONS = {
 const DEFAULT_MEGACROW_EXTENSIONS = {
   targetTeam: false,
   coopSpawningWaypointIcon: false,
+  doubleJump: false,
   notBuiltIn: false,
   compileMissingBaseFromSource: false,
   megacrowVersionString: false,

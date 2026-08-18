@@ -170,4 +170,44 @@ end
     expect(labels).toContain("elite_tier1");
     expect(labels).toContain("spartan_tier1");
   });
+
+  it("suggests weapon_set values after override weapon_set", async () => {
+    const source = `game_options
+\toverride weapon_set 
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    const line = 1;
+    const lineText = source.split(/\n/)[line]!;
+    const character = lineText.length;
+    const labels = completionsAtPosition(snapshot, { line, character }).map(
+      (item) => item.label
+    );
+    expect(labels).toContain("none");
+    expect(labels).toContain("default");
+    expect(labels).toContain("random");
+    expect(labels).toContain("slayer_pro");
+    expect(labels).toContain("no_weapons");
+    expect(labels).not.toContain("override");
+    expect(labels).not.toContain("round_time_limit");
+    expect(labels).not.toContain("assault_rifle");
+  });
+
+  it("suggests vehicle_set values after override vehicle_set", async () => {
+    const source = `game_options
+\toverride vehicle_set 
+end
+`;
+    const snapshot = await analyzeDocument(source, { version });
+    const line = 1;
+    const lineText = source.split(/\n/)[line]!;
+    const character = lineText.length;
+    const labels = completionsAtPosition(snapshot, { line, character }).map(
+      (item) => item.label
+    );
+    expect(labels).toContain("none");
+    expect(labels).toContain("mongoose_only");
+    expect(labels).not.toContain("override");
+    expect(labels).not.toContain("weapon_set");
+  });
 });

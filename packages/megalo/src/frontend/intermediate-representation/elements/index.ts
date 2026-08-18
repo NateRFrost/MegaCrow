@@ -12,6 +12,7 @@ import { loadoutPaletteLowerer } from "src/frontend/intermediate-representation/
 import { mapObjectLowerer } from "src/frontend/intermediate-representation/elements/map_object";
 import { mapPermissionsLowerer } from "src/frontend/intermediate-representation/elements/map_permissions";
 import { playerRatingLowerer } from "src/frontend/intermediate-representation/elements/player_rating";
+import { requisitionPaletteLowerer } from "src/frontend/intermediate-representation/elements/requisition_palette";
 import { teamsLowerer } from "src/frontend/intermediate-representation/elements/teams";
 import { triggersLowerer } from "src/frontend/intermediate-representation/elements/triggers";
 import { variablesLowerer } from "src/frontend/intermediate-representation/elements/variables";
@@ -55,6 +56,7 @@ registerLowerer(ElementKind.GAME_STATS, gameStatsLowerer);
 registerLowerer(ElementKind.HUD_WIDGETS, hudWidgetsLowerer);
 registerLowerer(ElementKind.LOADOUT, loadoutLowerer);
 registerLowerer(ElementKind.LOADOUT_PALETTE, loadoutPaletteLowerer);
+registerLowerer(ElementKind.REQUISITION_PALETTE, requisitionPaletteLowerer);
 registerLowerer(ElementKind.MAP_OBJECT, mapObjectLowerer);
 registerLowerer(ElementKind.MAP_PERMISSIONS, mapPermissionsLowerer);
 registerLowerer(ElementKind.PLAYER_RATING, playerRatingLowerer);

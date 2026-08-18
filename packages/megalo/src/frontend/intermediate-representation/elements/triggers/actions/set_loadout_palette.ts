@@ -13,31 +13,76 @@ import {
   ActionType,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import type { ElementLowerContext } from "src/frontend/intermediate-representation/parameters/context";
+import { ObjectListType } from "src/frontend/object-lists";
+import { SymbolKind } from "src/frontend/symbol-table";
 
-const resolveLoadoutPaletteType = (
+type ResolvedLoadoutPalette =
+  | { loadoutPaletteType: LoadoutPaletteType }
+  | { loadoutPaletteIndex: number };
+
+const resolveLoadoutPalette = (
   node: ASTParameterNode,
+  ctx: ElementLowerContext,
   location: SourceCodeLocation
-): LoadoutPaletteType => {
+): ResolvedLoadoutPalette => {
+  const usesPaletteType = ctx.frontend.megaloVersion.version >= 106;
+
+  if (node.kind === SyntaxKind.INTEGER) {
+    if (usesPaletteType) {
+      throw new LowerError(
+        diagnosticMessages.expectedParameterType(
+          "loadout palette type",
+          String(node.value)
+        ),
+        node.location ?? location
+      );
+    }
+    return { loadoutPaletteIndex: node.value };
+  }
+
   const name =
     node.kind === SyntaxKind.KEYWORD
       ? node.value
       : node.kind === SyntaxKind.REFERENCE
-        ? node.identifier
+        ? (ctx.symbolTable.getSymbol(node.symbolId)?.name ?? node.identifier)
         : undefined;
   if (name === undefined) {
     throw new LowerError(
-      diagnosticMessages.expectedParameterType("loadout palette type", ""),
+      diagnosticMessages.expectedParameterType(
+        usesPaletteType ? "loadout palette type" : "loadout palette",
+        ""
+      ),
       node.location ?? location
     );
   }
+
+  // <106: object_lists/loadout_palettes.txt (8-bit index).
+  if (!usesPaletteType) {
+    if (node.kind === SyntaxKind.REFERENCE) {
+      const symbol = ctx.symbolTable.getSymbol(node.symbolId);
+      if (
+        symbol?.kind === SymbolKind.ObjectListItem &&
+        symbol.objectType === ObjectListType.LoadoutPalettes &&
+        symbol.index >= 0
+      ) {
+        return { loadoutPaletteIndex: symbol.index };
+      }
+    }
+    throw new LowerError(
+      diagnosticMessages.expectedParameterType("loadout palette", name),
+      node.location ?? location
+    );
+  }
+
+  // >=106: MegaloEdit LoadoutPaletteType — encode at compile.
   const type = loadoutPaletteType.parse(name);
   if (type === undefined) {
     throw new LowerError(
       diagnosticMessages.expectedParameterType("loadout palette type", name),
-      node.location
+      node.location ?? location
     );
   }
-  return type;
+  return { loadoutPaletteType: type };
 };
 
 export const lowerSetLoadoutPalette = (
@@ -69,11 +114,26 @@ export const lowerSetLoadoutPalette = (
     );
   }
 
-  return {
+  const palette = resolveLoadoutPalette(paletteNode, ctx, location);
+  const action: Action = {
     type: ActionType.set_loadout_palette,
     parameters: {
       target,
-      loadoutPaletteIndex: resolveLoadoutPaletteType(paletteNode, location),
+      ...palette,
     },
   };
+  if ("loadoutPaletteType" in palette) {
+    ctx.ir.locations.record(
+      action.parameters,
+      "loadoutPaletteType",
+      paletteNode.location
+    );
+  } else {
+    ctx.ir.locations.record(
+      action.parameters,
+      "loadoutPaletteIndex",
+      paletteNode.location
+    );
+  }
+  return action;
 };

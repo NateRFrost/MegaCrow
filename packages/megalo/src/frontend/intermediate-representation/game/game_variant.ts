@@ -1,11 +1,16 @@
 import type { EngineCategories } from "src/frontend/intermediate-representation/engine-categories";
-import type { GameEngineBaseVariant } from "src/frontend/intermediate-representation/game/game_engine_default";
+import type {
+  GameEngineBaseVariant,
+  LoadoutPaletteTraits,
+  LoadoutTraits,
+} from "src/frontend/intermediate-representation/game/game_engine_default";
 import type { PlayerTraitOption } from "src/frontend/intermediate-representation/game/game_engine_traits";
 import type { Action } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
 import type { Condition } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions";
 import type { HudWidgetPosition } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_hud_widgets";
 import type { ObjectFilter } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_map_objects";
 import type { MegaloGameEngineMapPermissions } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_map_permissions";
+import type { RequisitionPalette } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_requisitions";
 import type { MegaloGameStatistic } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_statistics";
 import type { Trigger } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_trigger";
 import type { UserDefinedOption } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_user_defined_options";
@@ -81,12 +86,15 @@ export interface CustomGameEngineDefinition {
   hostMigrationTriggerIndex: number;
   hudWidgets: HudWidgetPosition[];
   initializationTriggerIndex: number;
+  loadoutPalettes: LoadoutPaletteTraits[];
+  loadouts: LoadoutTraits[];
   localInitializationTriggerIndex: number;
   localTriggerIndex: number;
   objectDeathEventTriggerIndex: number;
   objectFilters: ObjectFilter[];
   objectsUsed: boolean[];
   pregameTriggerIndex: number;
+  requisitionPalettes: RequisitionPalette[];
   statistics: MegaloGameStatistic[];
   triggers: Trigger[];
   // This is a deviation from blam

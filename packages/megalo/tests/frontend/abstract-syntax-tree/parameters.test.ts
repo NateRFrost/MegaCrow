@@ -479,6 +479,47 @@ describe("parameterParserBuilder", () => {
     });
   });
 
+  it("keeps matching later slots when an integer name is unresolved (set_score-style)", () => {
+    const parser = parameterParserBuilder(
+      [
+        ParameterType.MathOperation,
+        ParameterType.Integer,
+        KeywordParameter("everyone"),
+      ],
+      [
+        ParameterType.MathOperation,
+        ParameterType.Integer,
+        KeywordParameter("player"),
+        ParameterType.Player,
+      ],
+      [
+        ParameterType.MathOperation,
+        ParameterType.Integer,
+        KeywordParameter("team"),
+        ParameterType.Team,
+      ]
+    );
+
+    const { parameters, diagnostics } = parseParameters(
+      "add death_points player current_player",
+      parser
+    );
+
+    expect(diagnostics.hasErrors()).toBe(false);
+    expect(parameters).toEqual([
+      expect.objectContaining({ kind: SyntaxKind.KEYWORD, value: "add" }),
+      expect.objectContaining({
+        kind: SyntaxKind.KEYWORD,
+        value: "death_points",
+      }),
+      expect.objectContaining({ kind: SyntaxKind.KEYWORD, value: "player" }),
+      expect.objectContaining({
+        kind: SyntaxKind.REFERENCE,
+        identifier: "current_player",
+      }),
+    ]);
+  });
+
   it("parses dynamic string literals with typed replacements", () => {
     const parser = parameterParserBuilder([ParameterType.DynamicString]);
 

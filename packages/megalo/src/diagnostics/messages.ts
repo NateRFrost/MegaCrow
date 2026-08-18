@@ -132,6 +132,9 @@ export const diagnosticMessages = {
   },
 
   expectedParameterType(expected: string, got: string): string {
+    if (got.length === 0) {
+      return translate("expected_parameter_type_missing", { expected });
+    }
     return translate("expected_parameter_type", { expected, got });
   },
 
@@ -227,8 +230,19 @@ export const diagnosticMessages = {
     });
   },
 
-  failedToWriteGametypeFile(): string {
-    return translate("failed_to_write_gametype_file");
+  scriptStringBytesTooLarge(used: number, max: number): string {
+    return translate("script_string_bytes_too_large", {
+      used: String(used),
+      max: String(max),
+    });
+  },
+
+  failedToWriteGametypeFile(detail?: string): string {
+    const base = translate("failed_to_write_gametype_file");
+    if (detail === undefined || detail.length === 0) {
+      return base;
+    }
+    return `${base} ${detail}`;
   },
 
   tooManyTeamEntries(): string {
@@ -239,8 +253,12 @@ export const diagnosticMessages = {
     return translate("too_many_map_permission_exceptions");
   },
 
-  mapIdOutOfRange(): string {
-    return translate("map_id_out_of_range");
+  outOfRange(name: string, min: string | number, max: string | number): string {
+    return translate("out_of_range", {
+      name,
+      min: String(min),
+      max: String(max),
+    });
   },
 
   tooManyObjectFilters(): string {
@@ -249,18 +267,6 @@ export const diagnosticMessages = {
 
   tooManyGameStatistics(): string {
     return translate("too_many_game_statistics");
-  },
-
-  objectFilterUserDataOutOfRange(): string {
-    return translate("object_filter_user_data_out_of_range");
-  },
-
-  objectFilterMinOutOfRange(): string {
-    return translate("object_filter_min_out_of_range");
-  },
-
-  iconIndexOutOfRange(): string {
-    return translate("icon_index_out_of_range");
   },
 
   objectTypeIndexOutOfRange(index: number, max: number): string {
@@ -358,6 +364,14 @@ export const diagnosticMessages = {
     return translate("megacrow_extension_required", { extension, sourceName });
   },
 
+  doubleJumpUnofficialRequiresTagChanges(): string {
+    return translate("double_jump_unofficial_requires_tag_changes");
+  },
+
+  sprintingDoesNotSeemToFunction(): string {
+    return translate("sprinting_does_not_seem_to_function");
+  },
+
   timerRateSnapped(got: string, used: string): string {
     return translate("timer_rate_snapped", { got, used });
   },
@@ -374,12 +388,34 @@ export const diagnosticMessages = {
     return translate("unsupported_dynamic_string_replacement", { got });
   },
 
+  objectSetScaleFloatNotSupported(versionLabel: string): string {
+    return translate("object_set_scale_float_not_supported", { versionLabel });
+  },
+
+  objectSetScaleVariableNotSupported(versionLabel: string): string {
+    return translate("object_set_scale_variable_not_supported", {
+      versionLabel,
+    });
+  },
+
   unsupportedAction(name: string, versionLabel: string): string {
     return translate("unsupported_action", { name, versionLabel });
   },
 
   unsupportedMathOperation(name: string, versionLabel: string): string {
     return translate("unsupported_math_operation", { name, versionLabel });
+  },
+
+  unsupportedEnumMember(
+    enumName: string,
+    name: string,
+    versionLabel: string
+  ): string {
+    return translate("unsupported_enum_member", {
+      enumName,
+      name,
+      versionLabel,
+    });
   },
 
   stringLiteralNotAllowedWhenStrict(): string {

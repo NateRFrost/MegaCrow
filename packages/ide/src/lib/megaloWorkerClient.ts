@@ -5,7 +5,9 @@ import type {
 } from "../workers/megaloWorkerTypes";
 import type { SourceAnalysis } from "./analyzeSource";
 import { analyzeMegaloSource } from "./analyzeSource";
+import { megaloDiagnosticFromLsp } from "./diagnostics";
 import {
+  autosaveQueueFileSizeForMegaloVersionId,
   compiledFileTypeForSaveFormat,
   finalizeGametypeSaveBytes,
   type GametypeSaveFormat,
@@ -15,6 +17,7 @@ import { megaloCompileOptionsFromCache } from "./includeDiagnostics";
 import {
   compileGametypeForSave,
   formatMegaloCompileTiming,
+  getCompileMegaloVersion,
   setCompileCreatorGamertag,
   setCompileMegacrowExtensions,
   setCompileMegaloVersion,
@@ -49,6 +52,17 @@ function gametypeSaveFormatLabel(format: GametypeSaveFormat): string {
   }
 }
 
+function finalizeForCurrentVersion(
+  bytes: Uint8Array,
+  format: GametypeSaveFormat
+): Uint8Array {
+  return finalizeGametypeSaveBytes(bytes, format, {
+    autosaveSlotSize: autosaveQueueFileSizeForMegaloVersionId(
+      getCompileMegaloVersion()
+    ),
+  });
+}
+
 type Listener = (response: MegaloWorkerResponse) => void;
 
 let worker: Worker | null = null;
@@ -59,6 +73,7 @@ let currentCompilerSettings: MegaCrowCompilerSettings = {
   megacrowExtensions: {
     targetTeam: true,
     coopSpawningWaypointIcon: true,
+    doubleJump: true,
     notBuiltIn: true,
     compileMissingBaseFromSource: true,
     megacrowVersionString: true,
@@ -256,14 +271,7 @@ async function runSourceOnlyCompileOnce(
   }
   const totalMs = performance.now() - started;
   const timing = { parseMs: 0, compileMs: totalMs, totalMs };
-  const diagnostics = result.diagnostics.map((d) => ({
-    line: d.range.start.line + 1,
-    column: d.range.start.character + 1,
-    endLine: d.range.end.line + 1,
-    endColumn: d.range.end.character + 1,
-    message: d.message,
-    severity: d.severity === 1 ? ("error" as const) : ("warning" as const),
-  }));
+  const diagnostics = result.diagnostics.map((d) => megaloDiagnosticFromLsp(d));
   const errorCount = diagnostics.filter((d) => d.severity === "error").length;
   if (!(result.ok && result.bytes) || errorCount > 0) {
     return {
@@ -468,7 +476,7 @@ async function compileDownloadFallback(
         currentCompilerSettings
       )
     );
-    const output = finalizeGametypeSaveBytes(compiled, format);
+    const output = finalizeForCurrentVersion(compiled, format);
     const identical =
       format !== "mglo" &&
       format !== "asq" &&
@@ -531,14 +539,9 @@ export async function requestCompileDownloadInWorker(
     );
     const totalMs = performance.now() - started;
     const timing = { parseMs: 0, compileMs: totalMs, totalMs };
-    const diagnostics = result.diagnostics.map((d) => ({
-      line: d.range.start.line + 1,
-      column: d.range.start.character + 1,
-      endLine: d.range.end.line + 1,
-      endColumn: d.range.end.character + 1,
-      message: d.message,
-      severity: d.severity === 1 ? ("error" as const) : ("warning" as const),
-    }));
+    const diagnostics = result.diagnostics.map((d) =>
+      megaloDiagnosticFromLsp(d)
+    );
     if (!(result.ok && result.bytes)) {
       const errorCount = diagnostics.filter(
         (d) => d.severity === "error"
@@ -559,7 +562,7 @@ export async function requestCompileDownloadInWorker(
         },
       };
     }
-    const output = finalizeGametypeSaveBytes(result.bytes, format);
+    const output = finalizeForCurrentVersion(result.bytes, format);
     return {
       output,
       analysis: {
@@ -615,7 +618,7 @@ export async function requestCompileDownloadInWorker(
   if (!result.output) {
     return result;
   }
-  const output = finalizeGametypeSaveBytes(result.output, format);
+  const output = finalizeForCurrentVersion(result.output, format);
   return {
     output,
     analysis: {

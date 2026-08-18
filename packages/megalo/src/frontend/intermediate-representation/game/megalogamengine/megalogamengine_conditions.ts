@@ -11,42 +11,104 @@ import {
   megaloEnum,
 } from "src/frontend/intermediate-representation/megaloEnum";
 
-export const numericComparison = megaloEnum([
-  "less_than",
-  { name: "<", aliasOf: "less_than" },
-  "greater_than",
-  { name: ">", aliasOf: "greater_than" },
-  "equal_to",
-  { name: "==", aliasOf: "equal_to" },
-  "less_than_or_equal_to",
-  { name: "<=", aliasOf: "less_than_or_equal_to" },
-  "greater_than_or_equal_to",
-  { name: ">=", aliasOf: "greater_than_or_equal_to" },
-  "not_equal_to",
-  { name: "!=", aliasOf: "not_equal_to" },
-] as const);
+export const numericComparison = megaloEnum(
+  [
+    "less_than",
+    { name: "<", aliasOf: "less_than" },
+    "greater_than",
+    { name: ">", aliasOf: "greater_than" },
+    "equal_to",
+    { name: "==", aliasOf: "equal_to" },
+    "less_than_or_equal_to",
+    { name: "<=", aliasOf: "less_than_or_equal_to" },
+    "greater_than_or_equal_to",
+    { name: ">=", aliasOf: "greater_than_or_equal_to" },
+    "not_equal_to",
+    { name: "!=", aliasOf: "not_equal_to" },
+  ] as const,
+  (version) => {
+    const supported = new Set<
+      | "less_than"
+      | "greater_than"
+      | "equal_to"
+      | "less_than_or_equal_to"
+      | "greater_than_or_equal_to"
+      | "not_equal_to"
+    >(["less_than", "greater_than", "equal_to", "not_equal_to"]);
+    if (version.version >= 73) {
+      supported.add("less_than_or_equal_to");
+      supported.add("greater_than_or_equal_to");
+    }
+    return supported;
+  }
+);
 export const NumericComparison = numericComparison.enum;
 export type NumericComparison = MegaloEnumNames<typeof numericComparison>;
 
-export const conditionType = megaloEnum([
-  "if",
-  "object_in_area",
-  "player_died",
-  "team_disposition",
-  "timer_expired",
-  "object_is_type",
-  "team_is_active",
-  "object_out_of_bounds",
-  "player_is_fire_team_leader",
-  "player_assisted_with_kill",
-  "object_matches_filter",
-  "player_is_active",
-  "equipment_is_active",
-  "player_is_spartan",
-  "player_is_elite",
-  "player_is_editor",
-  "game_is_forge",
-] as const);
+export const conditionType = megaloEnum(
+  [
+    "if",
+    "object_in_area",
+    "player_died",
+    "team_disposition",
+    "timer_expired",
+    "object_is_type",
+    "team_is_active",
+    "object_out_of_bounds",
+    "player_is_fire_team_leader",
+    "player_assisted_with_kill",
+    "object_matches_filter",
+    "player_is_active",
+    "equipment_is_active",
+    "player_is_spartan",
+    "player_is_elite",
+    "player_is_editor",
+    "game_is_forge",
+  ] as const,
+  (version) => {
+    const supported = new Set<
+      | "if"
+      | "object_in_area"
+      | "player_died"
+      | "team_disposition"
+      | "timer_expired"
+      | "object_is_type"
+      | "team_is_active"
+      | "object_out_of_bounds"
+      | "player_is_fire_team_leader"
+      | "player_assisted_with_kill"
+      | "object_matches_filter"
+      | "player_is_active"
+      | "equipment_is_active"
+      | "player_is_spartan"
+      | "player_is_elite"
+      | "player_is_editor"
+      | "game_is_forge"
+    >([
+      "if",
+      "object_in_area",
+      "player_died",
+      "team_disposition",
+      "timer_expired",
+      "object_is_type",
+      "team_is_active",
+      "object_out_of_bounds",
+      "player_is_fire_team_leader",
+      "player_assisted_with_kill",
+      "object_matches_filter",
+      "player_is_active",
+      "equipment_is_active",
+    ]);
+    // TU1+ expands the condition opcode to 5 bits.
+    if (version.version >= 107) {
+      supported.add("player_is_spartan");
+      supported.add("player_is_elite");
+      supported.add("player_is_editor");
+      supported.add("game_is_forge");
+    }
+    return supported;
+  }
+);
 export const ConditionType = conditionType.enum;
 export type ConditionType = MegaloEnumNames<typeof conditionType>;
 

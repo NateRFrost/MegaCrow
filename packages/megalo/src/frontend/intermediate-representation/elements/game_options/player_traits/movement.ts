@@ -6,6 +6,7 @@ import {
 } from "src/frontend/intermediate-representation/elements/game_options/player_traits/helpers";
 import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
+  DoubleJump,
   type PlayerTraits,
   VehicleUsage,
 } from "src/frontend/intermediate-representation/game/game_engine_player_traits";
@@ -130,6 +131,42 @@ export const lowerMovementOption = (
         enabled,
         first.location,
         identifier
+      );
+      diagnostics.addWarning(
+        diagnosticMessages.sprintingDoesNotSeemToFunction(),
+        first.location
+      );
+      return true;
+    }
+    case "double_jump": {
+      if (!ctx.frontend.megacrowExtensions.doubleJump) {
+        throw new LowerError(
+          diagnosticMessages.megacrowExtensionRequired(
+            "doubleJump",
+            "double_jump"
+          ),
+          location
+        );
+      }
+      if (first === undefined) {
+        throw new LowerError(
+          diagnosticMessages.expectedParameterType("double_jump", ""),
+          location
+        );
+      }
+      const value = resolveEnumKeyword(first, DoubleJump, "double_jump");
+      setField(
+        ir.locations,
+        diagnostics,
+        traits.movement,
+        "doubleJump",
+        value.value,
+        value.location,
+        identifier
+      );
+      diagnostics.addWarning(
+        diagnosticMessages.doubleJumpUnofficialRequiresTagChanges(),
+        value.location
       );
       return true;
     }

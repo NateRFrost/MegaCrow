@@ -1,10 +1,10 @@
-import { TRIGGER_EXECUTION_KINDS } from "src/frontend/language-configuration/omni/triggers";
 import { SymbolKind } from "src/frontend/symbol-table";
 import {
   suggestKeywords,
   suggestSymbolKind,
   withBlockEndSnippet,
 } from "src/language-service/completion/helpers";
+import { suggestableTriggerExecutionKinds } from "src/language-service/completion/suggest/trigger-kinds";
 import type {
   ActionCompletionContext,
   CompletionItem,
@@ -18,7 +18,11 @@ export const completeForEach = (
     return [];
   }
   return [
-    ...suggestKeywords(ctx, TRIGGER_EXECUTION_KINDS, "enumMember"),
+    ...suggestKeywords(
+      ctx,
+      suggestableTriggerExecutionKinds(ctx.snapshot.version),
+      "enumMember"
+    ),
     ...suggestSymbolKind(ctx, SymbolKind.ObjectFilter),
   ].map((entry) => withBlockEndSnippet(entry));
 };

@@ -20,6 +20,7 @@ import {
 } from "src/frontend/intermediate-representation/parameters/context";
 import { ObjectListType } from "src/frontend/object-lists";
 import { SymbolKind } from "src/frontend/symbol-table";
+import { getLabel } from "src/version";
 
 const resolveObjectFilterIndex = (
   node: ASTParameterNode,
@@ -132,6 +133,34 @@ const CREATE_OBJECT_KEYWORDS = new Set([
   "variant",
 ]);
 
+/** Offset / variant / multi-bit flags land on the wire starting with Delta (73). */
+const CREATE_OBJECT_OPTIONS_FROM_73 = new Set([
+  "suppress_effect",
+  "absolute_orientation",
+  "offset",
+  "variant",
+]);
+
+const assertCreateObjectOptionSupported = (
+  option: string,
+  node: ASTParameterNode,
+  ctx: ElementLowerContext
+): void => {
+  if (
+    CREATE_OBJECT_OPTIONS_FROM_73.has(option) &&
+    ctx.frontend.megaloVersion.version < 73
+  ) {
+    throw new LowerError(
+      diagnosticMessages.unsupportedEnumMember(
+        "create_object option",
+        option,
+        getLabel(ctx.frontend.megaloVersion)
+      ),
+      node.location
+    );
+  }
+};
+
 export const lowerCreateObject = (
   parameters: ASTParameterNode[],
   ctx: ElementLowerContext,
@@ -145,6 +174,96 @@ export const lowerCreateObject = (
   }
 
   const paramCtx = asParameterLoweringContext(ctx);
+
+  // Alpha positional: create_object <type> <object_out> <place_at> [flags…]
+  // (matches wire order m_object_reference_1 / m_object_reference_2).
+  const second = parameters[1];
+  const isKeywordForm =
+    second?.kind === SyntaxKind.KEYWORD &&
+    CREATE_OBJECT_KEYWORDS.has(second.value);
+  if (!isKeywordForm && parameters.length >= 3) {
+    const outNode = parameters[1]!;
+    const placeAtNode = parameters[2]!;
+    const objectOut = resolveObjectReference(outNode, paramCtx);
+    assertWritableObject(objectOut, outNode.location);
+    const placeAtObject = resolveObjectReference(placeAtNode, paramCtx);
+    const result: Action & { type: typeof ActionType.create_object } = {
+      type: ActionType.create_object,
+      parameters: {
+        objectType: resolveObjectTypeReference(parameters[0]!, paramCtx),
+        place_at_object: placeAtObject,
+        object_reference_out: objectOut,
+      },
+    };
+
+    for (let i = 3; i < parameters.length; i++) {
+      const node = parameters[i]!;
+      if (node.kind !== SyntaxKind.KEYWORD) {
+        continue;
+      }
+      switch (node.value) {
+        case "label":
+          result.parameters.labelIndex = resolveObjectFilterIndex(
+            parameters[++i]!,
+            ctx,
+            location
+          );
+          break;
+        case "never_garbage":
+          result.parameters.neverGarbageCollect = true;
+          break;
+        case "suppress_effect":
+          assertCreateObjectOptionSupported(node.value, node, ctx);
+          result.parameters.suppressEffect = true;
+          break;
+        case "absolute_orientation":
+          assertCreateObjectOptionSupported(node.value, node, ctx);
+          result.parameters.absoluteOrientation = true;
+          break;
+        case "offset":
+          assertCreateObjectOptionSupported(node.value, node, ctx);
+          result.parameters.offset = parseOffset(
+            parameters,
+            i + 1,
+            ctx,
+            location
+          );
+          i += 3;
+          break;
+        case "variant":
+          assertCreateObjectOptionSupported(node.value, node, ctx);
+          result.parameters.variantNameIndex = resolveVariantNameIndex(
+            parameters[++i]!,
+            ctx,
+            location
+          );
+          break;
+        case "at":
+        case "set":
+          throw new LowerError(
+            diagnosticMessages.expectedParameterType(
+              "create_object trailing flag",
+              node.value
+            ),
+            node.location
+          );
+        default:
+          if (!CREATE_OBJECT_KEYWORDS.has(node.value)) {
+            throw new LowerError(
+              diagnosticMessages.expectedParameterType(
+                "create_object keyword",
+                node.value
+              ),
+              node.location
+            );
+          }
+          break;
+      }
+    }
+
+    return result;
+  }
+
   let placeAtObject: ReturnType<typeof resolveObjectReference> | undefined;
   const result: Action & { type: typeof ActionType.create_object } = {
     type: ActionType.create_object,
@@ -184,12 +303,15 @@ export const lowerCreateObject = (
         result.parameters.neverGarbageCollect = true;
         break;
       case "suppress_effect":
+        assertCreateObjectOptionSupported(node.value, node, ctx);
         result.parameters.suppressEffect = true;
         break;
       case "absolute_orientation":
+        assertCreateObjectOptionSupported(node.value, node, ctx);
         result.parameters.absoluteOrientation = true;
         break;
       case "offset":
+        assertCreateObjectOptionSupported(node.value, node, ctx);
         result.parameters.offset = parseOffset(
           parameters,
           i + 1,
@@ -199,6 +321,7 @@ export const lowerCreateObject = (
         i += 3;
         break;
       case "variant":
+        assertCreateObjectOptionSupported(node.value, node, ctx);
         result.parameters.variantNameIndex = resolveVariantNameIndex(
           parameters[++i]!,
           ctx,
@@ -221,7 +344,7 @@ export const lowerCreateObject = (
 
   if (placeAtObject === undefined) {
     throw new LowerError(
-      diagnosticMessages.expectedParameterType("at <object>", ""),
+      diagnosticMessages.expectedParameterType("at object", ""),
       location
     );
   }

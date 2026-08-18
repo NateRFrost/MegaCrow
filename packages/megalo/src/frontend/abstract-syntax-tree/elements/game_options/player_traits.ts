@@ -299,6 +299,10 @@ export class PlayerTraitParserRepository {
       buildParameterParser([ParameterType.Keyword])
     );
     this.registerParser(
+      "double_jump",
+      buildParameterParser([ParameterType.Keyword])
+    );
+    this.registerParser(
       "equipment_usage",
       buildParameterParser([ParameterType.Keyword])
     );

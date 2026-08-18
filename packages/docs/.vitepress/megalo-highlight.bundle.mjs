@@ -222,6 +222,9 @@ var ACTION_TYPE_MEMBERS = [
   "player_set_objective_allegiance",
   "player_set_objective_allegiance_icon",
   "team_set_coop_spawning",
+  "object_set_minimap_visibility",
+  "object_set_minimap_priority",
+  "object_set_minimap_icon",
   "team_set_primary_respawn_object",
   "player_set_primary_respawn_object",
   "player_get_fireteam_index",
@@ -232,13 +235,16 @@ var ACTION_TYPE_MEMBERS = [
   "object_adjust_maximum_shield",
   "object_adjust_maximum_health",
   "player_set_requisition_palette",
+  "player_set_fireteam_tier",
   "device_set_power",
   "device_get_power",
   "device_set_position",
   "device_get_position",
+  "give_weapon",
   "adjust_grenades",
   "submit_incident",
   "submit_incident_with_custom_value",
+  "set_loadout",
   "set_loadout_palette",
   "device_set_position_track",
   "device_animate_position",
@@ -313,7 +319,6 @@ var actionType = megaloEnum(ACTION_TYPE_MEMBERS, (version2) => {
     "player_enable_purchases",
     "player_get_vehicle",
     "player_set_vehicle",
-    "player_set_unit",
     "timer_reset",
     "weapon_set_pickup_priority",
     "object_bounce",
@@ -326,10 +331,7 @@ var actionType = megaloEnum(ACTION_TYPE_MEMBERS, (version2) => {
     "object_set_scale",
     "navpoint_set_text",
     "object_get_shield",
-    "object_get_health",
     "player_set_objective",
-    "player_set_objective_allegiance",
-    "player_set_objective_allegiance_icon",
     "team_set_coop_spawning",
     "team_set_primary_respawn_object",
     "player_set_primary_respawn_object",
@@ -353,24 +355,42 @@ var actionType = megaloEnum(ACTION_TYPE_MEMBERS, (version2) => {
     "device_animate_position",
     "device_set_position_immediate",
     "saved_film_insert_marker",
-    "respawn_zone_enable",
-    "player_get_weapon",
-    "player_get_equipment",
-    "object_set_never_garbage",
-    "player_get_target_object",
-    "create_tunnel",
-    "debug_force_player_view_count",
-    "player_pick_up_weapon",
-    "player_set_coop_spawning",
-    "object_set_orientation",
-    "object_face_object",
-    "biped_give_weapon",
-    "biped_drop_weapon",
-    "set_scenario_interpolator_state",
-    "get_random_object",
-    "game_grief_record_custom_penalty",
-    "boundary_set_player_color"
+    "respawn_zone_enable"
   ]);
+  if (version2.version < 73) {
+    supported.add("object_set_minimap_visibility");
+    supported.add("object_set_minimap_priority");
+    supported.add("object_set_minimap_icon");
+  }
+  if (version2.version < 106) {
+    supported.add("player_set_fireteam_tier");
+    supported.add("give_weapon");
+    supported.add("set_loadout");
+  }
+  if (version2.version >= 73) {
+    supported.add("player_set_unit");
+    supported.add("object_get_health");
+    supported.add("player_get_weapon");
+    supported.add("player_get_equipment");
+    supported.add("object_set_never_garbage");
+    supported.add("player_get_target_object");
+    supported.add("create_tunnel");
+    supported.add("debug_force_player_view_count");
+    supported.add("player_pick_up_weapon");
+    supported.add("player_set_coop_spawning");
+    supported.add("object_set_orientation");
+  }
+  if (version2.version >= 106) {
+    supported.add("player_set_objective_allegiance");
+    supported.add("player_set_objective_allegiance_icon");
+    supported.add("object_face_object");
+    supported.add("biped_give_weapon");
+    supported.add("biped_drop_weapon");
+    supported.add("set_scenario_interpolator_state");
+    supported.add("get_random_object");
+    supported.add("game_grief_record_custom_penalty");
+    supported.add("boundary_set_player_color");
+  }
   if (version2.version === 107 && version2.flavour === "mcc") {
     supported.add("begin");
     supported.add("hs_function_call");
@@ -889,7 +909,8 @@ var en_default = {
   invalid_string_identifier: "Invalid string identifier '{{identifier}}'",
   invalid_explicit_team: "Invalid explicit team: {{token}}",
   variable_reference: "variable reference",
-  expected_parameter_type: "Expected {{expected}} parameter but got '{{got}}'",
+  expected_parameter_type: 'Expected "{{expected}}" parameter but got "{{got}}"',
+  expected_parameter_type_missing: 'Expected "{{expected}}" parameter',
   unresolved_identifier: "Unresolved identifier '{{name}}'.",
   unresolved_scoped_identifier: "Unresolved identifier {{base}}.'{{member}}'.",
   object_type_used_as_object_reference: `'{{name}}' is an object type (use create_object "{{name}}" \u2026), not an object reference.`,
@@ -904,27 +925,28 @@ var en_default = {
   too_many_variables: "Too many {{scope}} {{type}} variables (limit {{limit}})",
   too_many_hud_widgets: "Too many hud widgets",
   variant_encoded_too_large: "Variant encoded too large!! encoded {{encoded}} max {{max}}",
+  script_string_bytes_too_large: "Ran out of space in string table! ({{used}} / {{max}} bytes)",
   failed_to_write_gametype_file: "Failed to write gametype file. Your file may be too large.",
   too_many_team_entries: "Too many team entries!",
   too_many_map_permission_exceptions: "Too many map permission exceptions",
-  map_id_out_of_range: "map id out of range (-32k, +32k)",
+  out_of_range: "{{name}} out of range ({{min}} to {{max}})",
   too_many_object_filters: "Too many object filters",
   too_many_game_statistics: "Too many megalo-defined game statistics",
-  object_filter_user_data_out_of_range: "object filter user_data out of range (-0x8000, 0x7fff)",
-  object_filter_min_out_of_range: "object filter min out of range (0, 0x7f)",
-  icon_index_out_of_range: "icon index out of range",
   object_type_index_out_of_range: "Object type index {{index}} is outside the wire bitset range of 0 to {{max}}",
   object_list_exceeds_objects_limit: "Object list has {{count}} entries; maximum is {{max}}",
   object_list_duplicate_entry: "Object list already contains entry for '{{name}}' (previous line: {{previousLine}}, duplicate line: {{duplicateLine}})",
   fireteam_count_out_of_range: "Fireteam count of {{value}} is outside the valid range of 0 to {{max}}",
   value_out_of_range_ignored: "{{name}} {{value}} is out of range {{min}} to {{max}} and will be ignored",
-  unsupported_field: "'{{fieldPath}}' is not supported by {{versionLabel}}.",
+  unsupported_field: '"{{name}}" is not supported by {{versionLabel}}.',
+  object_set_scale_float_not_supported: "object_set_scale float scale is not supported by {{versionLabel}}; use a number variable.",
+  object_set_scale_variable_not_supported: "object_set_scale number variable is not supported by {{versionLabel}}; use a float literal.",
   unsupported_action: "Action '{{name}}' is not supported by {{versionLabel}}.",
   unsupported_math_operation: "Math operation '{{name}}' is not supported by {{versionLabel}}.",
+  unsupported_enum_member: "{{enumName}} '{{name}}' is not supported by {{versionLabel}}.",
   only_one_base_directive_allowed: "Only one base directive is allowed",
   duplicate_declaration_name_ignored: "Duplicate {{kind}} name '{{name}}' will be ignored for name lookup (MegaloEdit uses the first declaration)",
-  reserved_keyword_variable_name: "Using language keyword '{{name}}' as a variable name is disabled by the MegaCrow compiler; switch your compiler profile to MegaloEdit if you require this behaviour",
-  variable_shadowing_disabled: "Reusing variable identifier '{{name}}' is disabled by the MegaCrow compiler because variable shadowing is broken in Megalo; switch your compiler profile to MegaloEdit if you require this behaviour",
+  reserved_keyword_variable_name: "Using language keyword '{{name}}' as a {{kind}} name is disabled by the MegaCrow compiler; switch your compiler profile to MegaloEdit if you require this behaviour",
+  variable_shadowing_disabled: "You already have a {{kind}} called '{{name}}'. MegaCrow prevents reusing names because shadowing is broken in Megalo.",
   legacy_hud_widget_text_keyword: "Legacy 'text' prefix on hud_widgets entries is old syntax and will not compile with MegaloEdit",
   unsupported_dynamic_string_replacement: "'{{got}}' is not a valid dynamic-string replacement. Use a declared reference that matches the placeholder (%n number, %p player, %t team, %o object, %s timer).",
   string_literal_not_allowed_when_strict: "String literals are not allowed when strict compiler is enabled; use a string table identifier",
@@ -941,19 +963,21 @@ var en_default = {
   game_option_override_requires_base: "'{{entry}}' override form requires a base-derived script",
   locking_hiding_player_traits_not_supported: "Locking/hiding of player_traits is not supported",
   megacrow_extension_required: "'{{sourceName}}' requires MegaCrow extension '{{extension}}' (not supported by MegaloEdit)",
+  double_jump_unofficial_requires_tag_changes: "double_jump is not official Megalo syntax and requires tag changes to work",
+  sprinting_does_not_seem_to_function: "sprinting can be set in a game variant, but it does not seem to function",
   timer_rate_snapped: "Timer rate {{got}} is not a supported rate; using {{used}}",
   team_color_overrides_do_not_apply_in_mcc_menus: "team color overrides do not apply in the MCC menus, your chosen color will only be visible in-game",
   version_game_halo_reach: "Halo: Reach",
   version_short_107_mcc: "MCC",
   version_short_107: "TU 1",
   version_short_106: "Release",
-  version_short_73: "Public Beta",
-  version_short_49: "Private Alpha",
+  version_short_73: "Beta",
+  version_short_49: "Alpha",
   version_full_107_mcc: "The Master Chief Collection",
   version_full_107: "Title Update 1",
   version_full_106: "Release",
-  version_full_73: "Public Beta",
-  version_full_49: "Private Alpha"
+  version_full_73: "Beta",
+  version_full_49: "Alpha"
 };
 
 // ../megalo/src/localization/locales/ja.json
@@ -968,7 +992,8 @@ var ja_default = {
   invalid_string_identifier: "\u7121\u52B9\u306A string identifier '{{identifier}}'",
   invalid_explicit_team: "\u7121\u52B9\u306A\u660E\u793A\u30C1\u30FC\u30E0: {{token}}",
   variable_reference: "\u5909\u6570\u53C2\u7167",
-  expected_parameter_type: "{{expected}} \u30D1\u30E9\u30E1\u30FC\u30BF\u304C\u5FC5\u8981\u3067\u3059\u304C\u3001'{{got}}' \u304C\u898B\u3064\u304B\u308A\u307E\u3057\u305F",
+  expected_parameter_type: '"{{expected}}" \u30D1\u30E9\u30E1\u30FC\u30BF\u304C\u5FC5\u8981\u3067\u3059\u304C\u3001"{{got}}" \u304C\u898B\u3064\u304B\u308A\u307E\u3057\u305F',
+  expected_parameter_type_missing: '"{{expected}}" \u30D1\u30E9\u30E1\u30FC\u30BF\u304C\u5FC5\u8981\u3067\u3059',
   unresolved_identifier: "\u672A\u89E3\u6C7A\u306E\u8B58\u5225\u5B50 '{{name}}'\u3002",
   unresolved_scoped_identifier: "\u672A\u89E3\u6C7A\u306E\u8B58\u5225\u5B50 {{base}}.'{{member}}'\u3002",
   object_type_used_as_object_reference: `'{{name}}' \u306F\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u578B\u3067\u3059\uFF08create_object "{{name}}" \u2026 \u3067\u4F7F\u7528\uFF09\u3002\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u53C2\u7167\u3067\u306F\u3042\u308A\u307E\u305B\u3093\u3002`,
@@ -983,27 +1008,28 @@ var ja_default = {
   too_many_variables: "{{scope}} {{type}} \u5909\u6570\u304C\u591A\u3059\u304E\u307E\u3059\uFF08\u4E0A\u9650 {{limit}}\uFF09",
   too_many_hud_widgets: "hud widget \u304C\u591A\u3059\u304E\u307E\u3059",
   variant_encoded_too_large: "\u30D0\u30EA\u30A2\u30F3\u30C8\u306E\u30A8\u30F3\u30B3\u30FC\u30C9\u30B5\u30A4\u30BA\u304C\u5927\u304D\u3059\u304E\u307E\u3059!! encoded {{encoded}} max {{max}}",
+  script_string_bytes_too_large: "string table \u306E\u5BB9\u91CF\u4E0D\u8DB3\u3067\u3059\uFF01\uFF08{{used}} / {{max}} \u30D0\u30A4\u30C8\uFF09",
   failed_to_write_gametype_file: "\u30B2\u30FC\u30E0\u30BF\u30A4\u30D7\u30D5\u30A1\u30A4\u30EB\u306E\u66F8\u304D\u8FBC\u307F\u306B\u5931\u6557\u3057\u307E\u3057\u305F\u3002\u30D5\u30A1\u30A4\u30EB\u304C\u5927\u304D\u3059\u304E\u308B\u53EF\u80FD\u6027\u304C\u3042\u308A\u307E\u3059\u3002",
   too_many_team_entries: "team \u30A8\u30F3\u30C8\u30EA\u304C\u591A\u3059\u304E\u307E\u3059\uFF01",
   too_many_map_permission_exceptions: "map permission \u306E exception \u304C\u591A\u3059\u304E\u307E\u3059",
-  map_id_out_of_range: "map id \u304C\u7BC4\u56F2\u5916\u3067\u3059\uFF08-32k\uFF5E+32k\uFF09",
+  out_of_range: "{{name}} \u304C\u7BC4\u56F2\u5916\u3067\u3059\uFF08{{min}}\uFF5E{{max}}\uFF09",
   too_many_object_filters: "object filter \u304C\u591A\u3059\u304E\u307E\u3059",
   too_many_game_statistics: "megalo \u5B9A\u7FA9\u306E game statistic \u304C\u591A\u3059\u304E\u307E\u3059",
-  object_filter_user_data_out_of_range: "object filter \u306E user_data \u304C\u7BC4\u56F2\u5916\u3067\u3059\uFF08-0x8000\uFF5E0x7fff\uFF09",
-  object_filter_min_out_of_range: "object filter \u306E min \u304C\u7BC4\u56F2\u5916\u3067\u3059\uFF080\uFF5E0x7f\uFF09",
   object_type_index_out_of_range: "object type index {{index}} \u306F\u30EF\u30A4\u30E4 bitset \u306E\u6709\u52B9\u7BC4\u56F2 0\uFF5E{{max}} \u306E\u5916\u3067\u3059",
   object_list_exceeds_objects_limit: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u30EA\u30B9\u30C8\u306E\u30A8\u30F3\u30C8\u30EA\u6570\u306F {{count}} \u3067\u3059\u304C\u3001\u4E0A\u9650\u306F {{max}} \u3067\u3059",
   object_list_duplicate_entry: "\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u30EA\u30B9\u30C8\u306B '{{name}}' \u304C\u65E2\u306B\u3042\u308A\u307E\u3059\uFF08\u5148\u306E\u884C: {{previousLine}}\u3001\u91CD\u8907\u884C: {{duplicateLine}}\uFF09",
-  icon_index_out_of_range: "icon index \u304C\u7BC4\u56F2\u5916\u3067\u3059",
   fireteam_count_out_of_range: "fireteam_count {{value}} \u306F\u6709\u52B9\u7BC4\u56F2 0\uFF5E{{max}} \u306E\u5916\u3067\u3059",
   value_out_of_range_ignored: "{{name}} {{value}} \u306F\u7BC4\u56F2 {{min}}\uFF5E{{max}} \u306E\u5916\u306E\u305F\u3081\u7121\u8996\u3055\u308C\u307E\u3059",
-  unsupported_field: "'{{fieldPath}}' \u306F {{versionLabel}} \u3067\u306F\u30B5\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u307E\u305B\u3093\u3002",
+  unsupported_field: '"{{name}}" \u306F {{versionLabel}} \u3067\u306F\u30B5\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u307E\u305B\u3093\u3002',
+  object_set_scale_float_not_supported: "{{versionLabel}} \u3067\u306F object_set_scale \u306E float \u30B9\u30B1\u30FC\u30EB\u306F\u30B5\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u307E\u305B\u3093\u3002\u6570\u5024\u5909\u6570\u3092\u4F7F\u7528\u3057\u3066\u304F\u3060\u3055\u3044\u3002",
+  object_set_scale_variable_not_supported: "{{versionLabel}} \u3067\u306F object_set_scale \u306E\u6570\u5024\u5909\u6570\u306F\u30B5\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u307E\u305B\u3093\u3002float \u30EA\u30C6\u30E9\u30EB\u3092\u4F7F\u7528\u3057\u3066\u304F\u3060\u3055\u3044\u3002",
   unsupported_action: "\u30A2\u30AF\u30B7\u30E7\u30F3 '{{name}}' \u306F {{versionLabel}} \u3067\u306F\u30B5\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u307E\u305B\u3093\u3002",
   unsupported_math_operation: "\u7B97\u8853\u6F14\u7B97 '{{name}}' \u306F {{versionLabel}} \u3067\u306F\u30B5\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u307E\u305B\u3093\u3002",
+  unsupported_enum_member: "{{enumName}} '{{name}}' \u306F {{versionLabel}} \u3067\u306F\u30B5\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u307E\u305B\u3093\u3002",
   only_one_base_directive_allowed: "base \u30C7\u30A3\u30EC\u30AF\u30C6\u30A3\u30D6\u306F1\u3064\u3060\u3051\u8A31\u53EF\u3055\u308C\u3066\u3044\u307E\u3059",
   duplicate_declaration_name_ignored: "\u91CD\u8907\u3059\u308B {{kind}} \u540D '{{name}}' \u306F\u540D\u524D\u89E3\u6C7A\u3067\u306F\u7121\u8996\u3055\u308C\u307E\u3059\uFF08MegaloEdit \u306F\u6700\u521D\u306E\u5B9A\u7FA9\u3092\u4F7F\u7528\u3057\u307E\u3059\uFF09",
-  reserved_keyword_variable_name: "\u8A00\u8A9E\u30AD\u30FC\u30EF\u30FC\u30C9 '{{name}}' \u3092\u5909\u6570\u540D\u306B\u4F7F\u3046\u3053\u3068\u306F MegaCrow \u30B3\u30F3\u30D1\u30A4\u30E9\u3067\u306F\u7121\u52B9\u3067\u3059\u3002\u3053\u306E\u52D5\u4F5C\u304C\u5FC5\u8981\u306A\u5834\u5408\u306F\u30B3\u30F3\u30D1\u30A4\u30E9\u30D7\u30ED\u30D5\u30A1\u30A4\u30EB\u3092 MegaloEdit \u306B\u5207\u308A\u66FF\u3048\u3066\u304F\u3060\u3055\u3044",
-  variable_shadowing_disabled: "\u5909\u6570\u8B58\u5225\u5B50 '{{name}}' \u306E\u518D\u5229\u7528\u306F MegaCrow \u30B3\u30F3\u30D1\u30A4\u30E9\u3067\u306F\u7121\u52B9\u3067\u3059\u3002Megalo \u3067\u306F\u5909\u6570\u30B7\u30E3\u30C9\u30FC\u30A4\u30F3\u30B0\u304C\u5927\u304D\u304F\u58CA\u308C\u3066\u3044\u307E\u3059\u3002\u3053\u306E\u52D5\u4F5C\u304C\u5FC5\u8981\u306A\u5834\u5408\u306F\u30B3\u30F3\u30D1\u30A4\u30E9\u30D7\u30ED\u30D5\u30A1\u30A4\u30EB\u3092 MegaloEdit \u306B\u5207\u308A\u66FF\u3048\u3066\u304F\u3060\u3055\u3044",
+  reserved_keyword_variable_name: "\u8A00\u8A9E\u30AD\u30FC\u30EF\u30FC\u30C9 '{{name}}' \u3092 {{kind}} \u540D\u306B\u4F7F\u3046\u3053\u3068\u306F MegaCrow \u30B3\u30F3\u30D1\u30A4\u30E9\u3067\u306F\u7121\u52B9\u3067\u3059\u3002\u3053\u306E\u52D5\u4F5C\u304C\u5FC5\u8981\u306A\u5834\u5408\u306F\u30B3\u30F3\u30D1\u30A4\u30E9\u30D7\u30ED\u30D5\u30A1\u30A4\u30EB\u3092 MegaloEdit \u306B\u5207\u308A\u66FF\u3048\u3066\u304F\u3060\u3055\u3044",
+  variable_shadowing_disabled: "\u65E2\u306B {{kind}} '{{name}}' \u304C\u3042\u308A\u307E\u3059\u3002MegaCrow \u306F Megalo \u3067\u30B7\u30E3\u30C9\u30FC\u30A4\u30F3\u30B0\u304C\u58CA\u308C\u3066\u3044\u308B\u305F\u3081\u3001\u540D\u524D\u306E\u518D\u5229\u7528\u3092\u7981\u6B62\u3057\u3066\u3044\u307E\u3059\u3002",
   legacy_hud_widget_text_keyword: "hud_widgets \u30A8\u30F3\u30C8\u30EA\u306E\u5148\u982D\u306B\u3042\u308B\u53E4\u3044 'text' \u63A5\u982D\u8F9E\u306F\u65E7\u69CB\u6587\u3067\u3059\u3002MegaloEdit \u3067\u306F\u30B3\u30F3\u30D1\u30A4\u30EB\u3067\u304D\u307E\u305B\u3093",
   unsupported_dynamic_string_replacement: "'{{got}}' \u306F dynamic-string \u306E\u7F6E\u63DB\u3068\u3057\u3066\u7121\u52B9\u3067\u3059\u3002\u30D7\u30EC\u30FC\u30B9\u30DB\u30EB\u30C0\u306B\u5408\u3046\u5BA3\u8A00\u6E08\u307F\u53C2\u7167\u3092\u4F7F\u3063\u3066\u304F\u3060\u3055\u3044\uFF08%n \u6570\u5024\u3001%p \u30D7\u30EC\u30A4\u30E4\u30FC\u3001%t \u30C1\u30FC\u30E0\u3001%o \u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3001%s \u30BF\u30A4\u30DE\u30FC\uFF09\u3002",
   string_literal_not_allowed_when_strict: "\u53B3\u683C\u30B3\u30F3\u30D1\u30A4\u30E9\u3067\u306F\u6587\u5B57\u5217\u30EA\u30C6\u30E9\u30EB\u306F\u4F7F\u3048\u307E\u305B\u3093\u3002string table \u306E\u8B58\u5225\u5B50\u3092\u4F7F\u7528\u3057\u3066\u304F\u3060\u3055\u3044",
@@ -1020,6 +1046,8 @@ var ja_default = {
   game_option_override_requires_base: "'{{entry}}' \u306E override \u5F62\u5F0F\u306B\u306F base \u6D3E\u751F\u30B9\u30AF\u30EA\u30D7\u30C8\u304C\u5FC5\u8981\u3067\u3059",
   locking_hiding_player_traits_not_supported: "player_traits \u306E lock/hide \u306F\u30B5\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u307E\u305B\u3093",
   megacrow_extension_required: "'{{sourceName}}' \u306B\u306F MegaCrow \u62E1\u5F35 '{{extension}}' \u304C\u5FC5\u8981\u3067\u3059\uFF08MegaloEdit \u3067\u306F\u672A\u5BFE\u5FDC\uFF09",
+  double_jump_unofficial_requires_tag_changes: "double_jump \u306F\u516C\u5F0F Megalo \u69CB\u6587\u3067\u306F\u306A\u304F\u3001\u52D5\u4F5C\u306B\u306F\u30BF\u30B0\u5909\u66F4\u304C\u5FC5\u8981\u3067\u3059",
+  sprinting_does_not_seem_to_function: "sprinting \u306F game variant \u3067\u8A2D\u5B9A\u3067\u304D\u307E\u3059\u304C\u3001\u6A5F\u80FD\u3057\u3066\u3044\u306A\u3044\u3088\u3046\u3067\u3059",
   timer_rate_snapped: "\u30BF\u30A4\u30DE\u30FC\u30EC\u30FC\u30C8 {{got}} \u306F\u30B5\u30DD\u30FC\u30C8\u3055\u308C\u3066\u3044\u307E\u305B\u3093\u3002{{used}} \u3092\u4F7F\u7528\u3057\u307E\u3059",
   team_color_overrides_do_not_apply_in_mcc_menus: "\u30C1\u30FC\u30E0\u30AB\u30E9\u30FC\u306E\u4E0A\u66F8\u304D\u306F MCC \u30E1\u30CB\u30E5\u30FC\u306B\u306F\u53CD\u6620\u3055\u308C\u307E\u305B\u3093\u3002\u9078\u629E\u3057\u305F\u8272\u306F\u30B2\u30FC\u30E0\u5185\u3067\u306E\u307F\u8868\u793A\u3055\u308C\u307E\u3059",
   version_game_halo_reach: "Halo: Reach",
@@ -1173,6 +1201,9 @@ var diagnosticMessages = {
     return translate("object_type_used_as_object_reference", { name });
   },
   expectedParameterType(expected, got) {
+    if (got.length === 0) {
+      return translate("expected_parameter_type_missing", { expected });
+    }
     return translate("expected_parameter_type", { expected, got });
   },
   unknownPlayerTrait(got) {
@@ -1245,8 +1276,18 @@ var diagnosticMessages = {
       max: String(max)
     });
   },
-  failedToWriteGametypeFile() {
-    return translate("failed_to_write_gametype_file");
+  scriptStringBytesTooLarge(used, max) {
+    return translate("script_string_bytes_too_large", {
+      used: String(used),
+      max: String(max)
+    });
+  },
+  failedToWriteGametypeFile(detail) {
+    const base = translate("failed_to_write_gametype_file");
+    if (detail === void 0 || detail.length === 0) {
+      return base;
+    }
+    return `${base} ${detail}`;
   },
   tooManyTeamEntries() {
     return translate("too_many_team_entries");
@@ -1254,23 +1295,18 @@ var diagnosticMessages = {
   tooManyMapPermissionExceptions() {
     return translate("too_many_map_permission_exceptions");
   },
-  mapIdOutOfRange() {
-    return translate("map_id_out_of_range");
+  outOfRange(name, min, max) {
+    return translate("out_of_range", {
+      name,
+      min: String(min),
+      max: String(max)
+    });
   },
   tooManyObjectFilters() {
     return translate("too_many_object_filters");
   },
   tooManyGameStatistics() {
     return translate("too_many_game_statistics");
-  },
-  objectFilterUserDataOutOfRange() {
-    return translate("object_filter_user_data_out_of_range");
-  },
-  objectFilterMinOutOfRange() {
-    return translate("object_filter_min_out_of_range");
-  },
-  iconIndexOutOfRange() {
-    return translate("icon_index_out_of_range");
   },
   objectTypeIndexOutOfRange(index, max) {
     return translate("object_type_index_out_of_range", {
@@ -1317,11 +1353,11 @@ var diagnosticMessages = {
   duplicateDeclarationNameIgnored(kind, name) {
     return translate("duplicate_declaration_name_ignored", { kind, name });
   },
-  reservedKeywordVariableName(name) {
-    return translate("reserved_keyword_variable_name", { name });
+  reservedKeywordVariableName(kind, name) {
+    return translate("reserved_keyword_variable_name", { kind, name });
   },
-  variableShadowingDisabled(name) {
-    return translate("variable_shadowing_disabled", { name });
+  variableShadowingDisabled(kind, name) {
+    return translate("variable_shadowing_disabled", { kind, name });
   },
   onlyOneBaseDirectiveAllowed() {
     return translate("only_one_base_directive_allowed");
@@ -1341,6 +1377,12 @@ var diagnosticMessages = {
   megacrowExtensionRequired(extension, sourceName) {
     return translate("megacrow_extension_required", { extension, sourceName });
   },
+  doubleJumpUnofficialRequiresTagChanges() {
+    return translate("double_jump_unofficial_requires_tag_changes");
+  },
+  sprintingDoesNotSeemToFunction() {
+    return translate("sprinting_does_not_seem_to_function");
+  },
   timerRateSnapped(got, used) {
     return translate("timer_rate_snapped", { got, used });
   },
@@ -1353,11 +1395,26 @@ var diagnosticMessages = {
   unsupportedDynamicStringReplacement(got) {
     return translate("unsupported_dynamic_string_replacement", { got });
   },
+  objectSetScaleFloatNotSupported(versionLabel) {
+    return translate("object_set_scale_float_not_supported", { versionLabel });
+  },
+  objectSetScaleVariableNotSupported(versionLabel) {
+    return translate("object_set_scale_variable_not_supported", {
+      versionLabel
+    });
+  },
   unsupportedAction(name, versionLabel) {
     return translate("unsupported_action", { name, versionLabel });
   },
   unsupportedMathOperation(name, versionLabel) {
     return translate("unsupported_math_operation", { name, versionLabel });
+  },
+  unsupportedEnumMember(enumName, name, versionLabel) {
+    return translate("unsupported_enum_member", {
+      enumName,
+      name,
+      versionLabel
+    });
   },
   stringLiteralNotAllowedWhenStrict() {
     return translate("string_literal_not_allowed_when_strict");
@@ -1375,6 +1432,98 @@ var diagnosticMessages = {
 
 // ../megalo/src/frontend/intermediate-representation/game/string_table.ts
 var stringTableEntry = (language, content) => ({ [language]: content });
+
+// ../megalo/src/frontend/language-configuration/omni/variables.ts
+var VARIABLE_TYPE_NAMES = [
+  "timer",
+  "number",
+  "team",
+  "player",
+  "object"
+];
+var VARIABLE_SCOPE_NAMES = [
+  "global",
+  "team",
+  "player",
+  "object"
+];
+var isVariableTypeName = (value) => VARIABLE_TYPE_NAMES.includes(value);
+var isVariableScopeName = (value) => VARIABLE_SCOPE_NAMES.includes(value);
+var isNumericVariableType = (value) => value === "timer" || value === "number";
+var variableTypeFromName = (name) => {
+  switch (name) {
+    case "timer":
+      return 0 /* Timer */;
+    case "number":
+      return 1 /* Number */;
+    case "team":
+      return 2 /* Team */;
+    case "player":
+      return 3 /* Player */;
+    case "object":
+      return 4 /* Object */;
+  }
+};
+var variableScopeFromName = (name) => {
+  switch (name) {
+    case "global":
+      return 0 /* Global */;
+    case "team":
+      return 1 /* Team */;
+    case "player":
+      return 2 /* Player */;
+    case "object":
+      return 3 /* Object */;
+  }
+};
+
+// ../megalo/src/frontend/language-configuration/omni/keywords.ts
+var TOP_LEVEL_ELEMENT_KEYWORDS = [
+  "base",
+  "include",
+  "localized_include",
+  "string_table",
+  "constants",
+  "variables",
+  "game_options",
+  "hud_widgets",
+  "loadout",
+  "loadout_palette",
+  "teams",
+  "engine_data",
+  "player_rating",
+  "map_permissions",
+  "game_stats",
+  "map_object",
+  "requisition_palette",
+  "trigger"
+];
+var TRIGGER_BODY_KEYWORDS = [
+  "action",
+  "condition",
+  "temporary",
+  "begin",
+  "end",
+  "not"
+];
+var VARIABLE_DECLARATION_KEYWORDS = [
+  "local",
+  "networked",
+  "networked_high",
+  ...VARIABLE_SCOPE_NAMES,
+  ...VARIABLE_TYPE_NAMES
+];
+var BOOLEAN_LITERAL_KEYWORDS = ["true", "false"];
+var RESERVED_VARIABLE_NAME_KEYWORDS = [
+  ...TOP_LEVEL_ELEMENT_KEYWORDS,
+  ...TRIGGER_BODY_KEYWORDS,
+  ...VARIABLE_DECLARATION_KEYWORDS,
+  ...BOOLEAN_LITERAL_KEYWORDS
+];
+var RESERVED_VARIABLE_NAME_KEYWORD_SET = new Set(
+  RESERVED_VARIABLE_NAME_KEYWORDS
+);
+var isReservedVariableName = (name) => RESERVED_VARIABLE_NAME_KEYWORD_SET.has(name);
 
 // ../megalo/src/frontend/symbol-table/index.ts
 var openEndedRange = (start) => ({
@@ -1401,6 +1550,46 @@ var declarationRange = (declaration) => {
   }
 };
 var isBuiltInVariable = (symbol) => symbol.declaration.type === 2 /* BUILT_IN */;
+var reservedNameKind = (entry) => {
+  switch (entry.kind) {
+    case 0 /* Constant */:
+      return "constant";
+    case 1 /* Variable */:
+      return VARIABLE_TYPE_NAMES[entry.type];
+    case 2 /* String */:
+      return "string";
+    case 3 /* GameOption */:
+      return "option";
+    case 4 /* HudWidget */:
+      return "hud_widget";
+    case 5 /* Loadout */:
+      return "loadout";
+    case 6 /* LoadoutPalette */:
+      return "loadout_palette";
+    case 7 /* RequisitionPalette */:
+      return "requisition_palette";
+    case 8 /* ObjectListItem */:
+      return "object";
+    case 9 /* ObjectFilter */:
+      return "map_object";
+    case 10 /* PlayerTraits */:
+      return "player_traits";
+    case 11 /* GameStat */:
+      return "game_stats";
+    default: {
+      const _exhaustive = entry;
+      return _exhaustive;
+    }
+  }
+};
+var userDeclaration = (entry) => {
+  if (entry.kind === 2 /* String */) {
+    return Object.values(entry.languageDeclarations).find(
+      (declaration) => declaration !== void 0
+    );
+  }
+  return entry.declaration;
+};
 var SymbolTable = class {
   table = [];
   constructor(table) {
@@ -1457,9 +1646,34 @@ var SymbolTable = class {
 var SymbolBinder = class {
   table = [];
   diagnostics;
+  frontend;
   constructor(frontend, diagnostics) {
-    void frontend;
+    this.frontend = frontend;
     this.diagnostics = diagnostics;
+  }
+  push(entry) {
+    this.errorIfReservedIdentifier(entry);
+    this.table.push(entry);
+    return entry.id;
+  }
+  errorIfReservedIdentifier(entry) {
+    if (!this.frontend.megacrowExtensions.reservedKeywords) {
+      return;
+    }
+    const declaration = userDeclaration(entry);
+    if (declaration === void 0 || declaration.type === 2 /* BUILT_IN */ || declaration.type === 3 /* OBJECT_LIST */) {
+      return;
+    }
+    if (!isReservedVariableName(entry.name)) {
+      return;
+    }
+    this.diagnostics.addError(
+      diagnosticMessages.reservedKeywordVariableName(
+        reservedNameKind(entry),
+        entry.name
+      ),
+      declaration
+    );
   }
   addString(entry) {
     const existingString = this.table.find(
@@ -1480,7 +1694,7 @@ var SymbolBinder = class {
       return existingString.id;
     }
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -1489,11 +1703,10 @@ var SymbolBinder = class {
       languageDeclarations: { [entry.language]: entry.declaration },
       languageContents: stringTableEntry(entry.language, entry.content)
     });
-    return id;
   }
   addVariable(entry) {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -1503,11 +1716,10 @@ var SymbolBinder = class {
       declaration: entry.declaration,
       scope: entry.scope
     });
-    return id;
   }
   addGameOption(entry) {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -1517,11 +1729,10 @@ var SymbolBinder = class {
       declaration: entry.declaration,
       index: entry.index
     });
-    return id;
   }
   addConstant(entry) {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -1531,11 +1742,10 @@ var SymbolBinder = class {
       declaration: entry.declaration,
       value: entry.value
     });
-    return id;
   }
   addHudWidget(entry) {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -1543,11 +1753,10 @@ var SymbolBinder = class {
       kind: 4 /* HudWidget */,
       declaration: entry.declaration
     });
-    return id;
   }
   addLoadout(entry) {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -1555,11 +1764,10 @@ var SymbolBinder = class {
       kind: 5 /* Loadout */,
       declaration: entry.declaration
     });
-    return id;
   }
   addLoadoutPalette(entry) {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -1567,11 +1775,10 @@ var SymbolBinder = class {
       kind: 6 /* LoadoutPalette */,
       declaration: entry.declaration
     });
-    return id;
   }
   addRequisitionPalette(entry) {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -1579,11 +1786,10 @@ var SymbolBinder = class {
       kind: 7 /* RequisitionPalette */,
       declaration: entry.declaration
     });
-    return id;
   }
   addObjectListItem(entry) {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -1593,11 +1799,10 @@ var SymbolBinder = class {
       index: entry.index,
       declaration: entry.declaration
     });
-    return id;
   }
   addObjectFilter(entry) {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -1606,11 +1811,10 @@ var SymbolBinder = class {
       index: entry.index,
       declaration: entry.declaration
     });
-    return id;
   }
   addPlayerTraits(entry) {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -1619,11 +1823,10 @@ var SymbolBinder = class {
       index: entry.index,
       declaration: entry.declaration
     });
-    return id;
   }
   addGameStat(entry) {
     const id = this.table.length;
-    this.table.push({
+    return this.push({
       id,
       range: declarationRange(entry.declaration),
       references: [],
@@ -1632,7 +1835,6 @@ var SymbolBinder = class {
       index: entry.index,
       declaration: entry.declaration
     });
-    return id;
   }
   addReference(symbolId, reference) {
     this.table[symbolId].references.push(reference);
@@ -1660,6 +1862,180 @@ var SymbolBinder = class {
   }
   getSymbolTable() {
     return new SymbolTable(this.table);
+  }
+};
+
+// ../megalo/src/backend/version-configuration/49/index.ts
+var VersionConfiguration49 = class _VersionConfiguration49 extends VersionConfiguration {
+  static PREGAME_ACTIONS = [
+    ActionType.set,
+    ActionType.for_each
+  ];
+  static OBJECT_LIST_NAMES = [
+    "objects.txt",
+    "weapons.txt",
+    "vehicles.txt",
+    "equipment.txt",
+    "grenades.txt",
+    "incidents.txt",
+    "loadouts.txt",
+    "loadout_palettes.txt",
+    "hud_widget_icons.txt",
+    "weapon_sets.txt",
+    "vehicle_sets.txt",
+    "strings.txt"
+  ];
+  /** Derived from omaha_alpha variable metadata bit-widths. */
+  static VARIABLE_LIMITS = {
+    [0 /* Global */]: {
+      [1 /* Number */]: 12,
+      [0 /* Timer */]: 8,
+      [2 /* Team */]: 8,
+      [3 /* Player */]: 8,
+      [4 /* Object */]: 16
+    },
+    [1 /* Team */]: {
+      [1 /* Number */]: 3,
+      [0 /* Timer */]: 3,
+      [2 /* Team */]: 3,
+      [3 /* Player */]: 3,
+      [4 /* Object */]: 6
+    },
+    [2 /* Player */]: {
+      [1 /* Number */]: 8,
+      [0 /* Timer */]: 4,
+      [2 /* Team */]: 3,
+      [3 /* Player */]: 3,
+      [4 /* Object */]: 6
+    },
+    [3 /* Object */]: {
+      [1 /* Number */]: 8,
+      [0 /* Timer */]: 4,
+      [2 /* Team */]: 3,
+      [3 /* Player */]: 4,
+      [4 /* Object */]: 6
+    },
+    [4 /* Temporary */]: {
+      [1 /* Number */]: 0,
+      [4 /* Object */]: 0,
+      [2 /* Team */]: 0,
+      [3 /* Player */]: 0
+    }
+  };
+  get limits() {
+    return {
+      variables: _VersionConfiguration49.VARIABLE_LIMITS,
+      objectsUsed: 2048,
+      triggers: 320,
+      conditions: 512,
+      actions: 1024,
+      userDefinedOptions: 16,
+      encodedSize: 20480,
+      strings: 112,
+      stringBytes: 19456,
+      hudWidgets: 4,
+      gameStatistics: 4,
+      objectFilters: 16,
+      loadouts: 32,
+      loadoutPalettes: 16,
+      requisitionPalettes: 8,
+      playerTraitSets: 16,
+      teams: 8,
+      mapPermissionExceptions: 0
+    };
+  }
+  get objectListNames() {
+    return _VersionConfiguration49.OBJECT_LIST_NAMES;
+  }
+  get pregameActions() {
+    return _VersionConfiguration49.PREGAME_ACTIONS;
+  }
+};
+
+// ../megalo/src/backend/version-configuration/73/index.ts
+var VersionConfiguration73 = class _VersionConfiguration73 extends VersionConfiguration {
+  static PREGAME_ACTIONS = [
+    ActionType.set,
+    ActionType.for_each
+  ];
+  static OBJECT_LIST_NAMES = [
+    "objects.txt",
+    "weapons.txt",
+    "vehicles.txt",
+    "equipment.txt",
+    "grenades.txt",
+    "incidents.txt",
+    "loadouts.txt",
+    "loadout_palettes.txt",
+    "hud_widget_icons.txt",
+    "weapon_sets.txt",
+    "vehicle_sets.txt",
+    "strings.txt"
+  ];
+  /** Derived from omaha_delta variable metadata bit-widths. */
+  static VARIABLE_LIMITS = {
+    [0 /* Global */]: {
+      [1 /* Number */]: 12,
+      [0 /* Timer */]: 8,
+      [2 /* Team */]: 8,
+      [3 /* Player */]: 8,
+      [4 /* Object */]: 16
+    },
+    [1 /* Team */]: {
+      [1 /* Number */]: 8,
+      [0 /* Timer */]: 4,
+      [2 /* Team */]: 4,
+      [3 /* Player */]: 4,
+      [4 /* Object */]: 6
+    },
+    [2 /* Player */]: {
+      [1 /* Number */]: 8,
+      [0 /* Timer */]: 4,
+      [2 /* Team */]: 4,
+      [3 /* Player */]: 4,
+      [4 /* Object */]: 6
+    },
+    [3 /* Object */]: {
+      [1 /* Number */]: 8,
+      [0 /* Timer */]: 4,
+      [2 /* Team */]: 3,
+      [3 /* Player */]: 4,
+      [4 /* Object */]: 6
+    },
+    [4 /* Temporary */]: {
+      [1 /* Number */]: 0,
+      [4 /* Object */]: 0,
+      [2 /* Team */]: 0,
+      [3 /* Player */]: 0
+    }
+  };
+  get limits() {
+    return {
+      variables: _VersionConfiguration73.VARIABLE_LIMITS,
+      objectsUsed: 2048,
+      triggers: 320,
+      conditions: 512,
+      actions: 1024,
+      userDefinedOptions: 16,
+      encodedSize: 20480,
+      strings: 112,
+      stringBytes: 19456,
+      hudWidgets: 4,
+      gameStatistics: 4,
+      objectFilters: 16,
+      loadouts: 32,
+      loadoutPalettes: 16,
+      requisitionPalettes: 8,
+      playerTraitSets: 16,
+      teams: 8,
+      mapPermissionExceptions: 0
+    };
+  }
+  get objectListNames() {
+    return _VersionConfiguration73.OBJECT_LIST_NAMES;
+  }
+  get pregameActions() {
+    return _VersionConfiguration73.PREGAME_ACTIONS;
   }
 };
 
@@ -1943,6 +2319,10 @@ var getConfigurationForVersion = ({
     }
     case 106:
       return new VersionConfiguration106();
+    case 73:
+      return new VersionConfiguration73();
+    case 49:
+      return new VersionConfiguration49();
   }
   throw new Error(`Unsupported version: ${version2}`);
 };
@@ -1962,6 +2342,7 @@ var resolveCompilerSettings = (partial) => ({
 var DEFAULT_MEGACROW_EXTENSIONS = {
   targetTeam: false,
   coopSpawningWaypointIcon: false,
+  doubleJump: false,
   notBuiltIn: false,
   compileMissingBaseFromSource: false,
   megacrowVersionString: false,
@@ -1972,10 +2353,11 @@ var DEFAULT_MEGACROW_EXTENSIONS = {
 var ALL_MEGACROW_EXTENSIONS = {
   targetTeam: true,
   coopSpawningWaypointIcon: true,
+  doubleJump: true,
   notBuiltIn: true,
   compileMissingBaseFromSource: true,
   megacrowVersionString: true,
-  preventShadowing: true,
+  preventShadowing: false,
   reservedKeywords: true,
   supportLegacySyntax: true
 };
@@ -2590,23 +2972,15 @@ var parseMemberReference = (ctx, rootToken) => {
   };
 };
 var lookupReferenceSymbolId = (ctx, name) => ctx.symbolParser.lookupSymbol(name) ?? ctx.symbolParser.lookupString(name) ?? ctx.symbolParser.lookupHudWidget(name) ?? ctx.symbolParser.lookupLoadout(name) ?? ctx.symbolParser.lookupLoadoutPalette(name) ?? ctx.symbolParser.lookupRequisitionPalette(name) ?? ctx.symbolParser.lookupObjectFilter(name) ?? ctx.symbolParser.lookupPlayerTraits(name);
+var TRIGGER_STATEMENT_BOUNDARY = /* @__PURE__ */ new Set([
+  ...TRIGGER_BODY_KEYWORDS.filter((keyword) => keyword !== "not"),
+  "for_each"
+]);
 var isTriggerStatementBoundary = (token) => {
   if (token === void 0) {
     return true;
   }
-  if (token.kind !== 1 /* Identifier */) {
-    return false;
-  }
-  switch (token.value) {
-    case "end":
-    case "action":
-    case "condition":
-    case "begin":
-    case "temporary":
-      return true;
-    default:
-      return false;
-  }
+  return token.kind === 1 /* Identifier */ && TRIGGER_STATEMENT_BOUNDARY.has(token.value);
 };
 var consumeLenientParameter = (ctx, anchor) => {
   const token = ctx.peekToken();
@@ -3431,6 +3805,7 @@ var objectListSourceFile = (data) => isObjectListFileSource(data) ? data.file : 
 var objectListLocation = (objectType, index, file) => ({
   type: 3 /* OBJECT_LIST */,
   objectType,
+  // `line` is the 0-based entry index (same as file line when blank lines count).
   source: { localOffset: -1, absoluteOffset: -1, line: index, column: 0 },
   ...file === void 0 ? {} : { file }
 });
@@ -3631,6 +4006,10 @@ var PlayerTraitParserRepository = class {
     );
     this.registerParser(
       "sprinting",
+      parameterParserBuilder([0 /* Keyword */])
+    );
+    this.registerParser(
+      "double_jump",
       parameterParserBuilder([0 /* Keyword */])
     );
     this.registerParser(
@@ -3942,17 +4321,7 @@ var overrideParser = (ctx, keywordToken, modifiers) => {
       )
     };
   } else {
-    ctx.diagnostics.addError(
-      diagnosticMessages.expectedParameterType(
-        "override value",
-        peek?.value ?? ""
-      ),
-      peek?.location ?? nameToken.location
-    );
-    value = {
-      kind: -1 /* INVALID */,
-      location: nameToken.location
-    };
+    value = missingOperandAfter(ctx, name.location, peek, "override value");
   }
   const valueLocation = value.kind === -1 /* INVALID */ ? value.location : value.kind === 0 /* SIMPLE */ ? value.value.location : value.kind === 1 /* LOADOUT_PALETTE */ ? isAstErrorNode(value.palette) ? value.palette.location : value.palette.location : value.body.location;
   return {
@@ -5101,21 +5470,31 @@ var parseItemName = (ctx, anchor) => {
   };
 };
 var parseItemState = (ctx, anchor) => {
-  const token = ctx.getToken();
-  if (token.kind === 1 /* Identifier */) {
+  const token = ctx.peekToken();
+  if (token?.kind === 4 /* Integer */) {
+    const integerToken = ctx.getToken();
     return {
-      kind: 5 /* KEYWORD */,
-      value: token.value,
-      location: token.location
+      kind: 3 /* INTEGER */,
+      value: Number(integerToken.value),
+      location: integerToken.location
     };
   }
+  if (token?.kind === 1 /* Identifier */) {
+    const identifierToken = ctx.getToken();
+    return {
+      kind: 5 /* KEYWORD */,
+      value: identifierToken.value,
+      location: identifierToken.location
+    };
+  }
+  const consumed = ctx.getToken();
   ctx.diagnostics.addError(
     diagnosticMessages.expectedTokenKind(
       1 /* Identifier */,
-      token.kind,
-      token.value
+      consumed.kind,
+      consumed.value
     ),
-    token.location
+    consumed.location
   );
   return {
     kind: -1 /* INVALID */,
@@ -5587,13 +5966,7 @@ var CREATE_OBJECT_OPTIONAL_KEYWORDS = /* @__PURE__ */ new Set([
   "offset",
   "variant"
 ]);
-var createObjectLegacy = [
-  0 /* Keyword */,
-  8 /* Object */,
-  8 /* Object */
-];
-var parseCreateObjectV73 = (ctx, anchor) => {
-  const parameters = [];
+var parseCreateObjectType = (ctx, anchor) => {
   const typeToken = ctx.peekToken();
   if (typeToken?.kind === 3 /* QuotedString */) {
     const consumed = ctx.getToken();
@@ -5602,30 +5975,28 @@ var parseCreateObjectV73 = (ctx, anchor) => {
       consumed.value
     );
     if (symbolId === void 0) {
-      parameters.push({
+      return {
         kind: 5 /* KEYWORD */,
         value: consumed.value,
         location: consumed.location
-      });
-    } else {
-      ctx.symbolParser.recordReference(symbolId, consumed.location);
-      parameters.push({
-        kind: 4 /* REFERENCE */,
-        identifier: consumed.value,
-        symbolId,
-        location: consumed.location
-      });
+      };
     }
-  } else {
-    parameters.push(
-      parseParameterValue(
-        ctx,
-        anchor,
-        ObjectListParameter("objects" /* Objects */),
-        0 /* Keyword */
-      )
-    );
+    ctx.symbolParser.recordReference(symbolId, consumed.location);
+    return {
+      kind: 4 /* REFERENCE */,
+      identifier: consumed.value,
+      symbolId,
+      location: consumed.location
+    };
   }
+  return parseParameterValue(
+    ctx,
+    anchor,
+    ObjectListParameter("objects" /* Objects */),
+    0 /* Keyword */
+  );
+};
+var parseCreateObjectKeywordTail = (ctx, parameters) => {
   while (ctx.hasMore()) {
     const token = ctx.peekToken();
     if (token?.kind !== 1 /* Identifier */ || !CREATE_OBJECT_OPTIONAL_KEYWORDS.has(token.value)) {
@@ -5707,6 +6078,21 @@ var parseCreateObjectV73 = (ctx, anchor) => {
         break;
     }
   }
+};
+var parseCreateObject = (ctx, anchor) => {
+  const parameters = [parseCreateObjectType(ctx, anchor)];
+  const next = ctx.peekToken();
+  if (next?.kind === 1 /* Identifier */ && CREATE_OBJECT_OPTIONAL_KEYWORDS.has(next.value)) {
+    parseCreateObjectKeywordTail(ctx, parameters);
+    return parameters;
+  }
+  if (next !== void 0 && !isTriggerStatementBoundary(next)) {
+    parameters.push(
+      parseParameterValue(ctx, anchor, 8 /* Object */),
+      parseParameterValue(ctx, anchor, 8 /* Object */)
+    );
+    parseCreateObjectKeywordTail(ctx, parameters);
+  }
   return parameters;
 };
 var setBoundarySignatures = [
@@ -5778,14 +6164,7 @@ var ActionParserRepository = class {
         ...teamOrPlayerTargetSignatures([MATH_OPERATION, 1 /* Integer */])
       )
     );
-    if (megaloVersion.version >= 73) {
-      this.registerParser("create_object", parseCreateObjectV73);
-    } else {
-      this.registerParser(
-        "create_object",
-        parameterParserBuilder(createObjectLegacy)
-      );
-    }
+    this.registerParser("create_object", parseCreateObject);
     this.registerParser(
       "delete_object",
       parameterParserBuilder([8 /* Object */])
@@ -6048,7 +6427,10 @@ var ActionParserRepository = class {
     );
     this.registerParser(
       "object_set_scale",
-      parameterParserBuilder([8 /* Object */, 1 /* Integer */])
+      parameterParserBuilder([
+        8 /* Object */,
+        [16 /* Float */, 1 /* Integer */]
+      ])
     );
     this.registerParser(
       "navpoint_set_text",
@@ -6183,20 +6565,89 @@ var ActionParserRepository = class {
         )
       )
     );
+    if (megaloVersion.version < 106) {
+      this.registerParser(
+        "set_loadout_palette",
+        parameterParserBuilder(
+          [
+            KeywordParameter(TeamOrPlayerTargetKind.player),
+            7 /* Player */,
+            ObjectListParameter("loadout_palettes" /* LoadoutPalettes */)
+          ],
+          [
+            KeywordParameter(TeamOrPlayerTargetKind.team),
+            6 /* Team */,
+            ObjectListParameter("loadout_palettes" /* LoadoutPalettes */)
+          ]
+        )
+      );
+      this.registerParser(
+        "set_loadout",
+        parameterParserBuilder(
+          [
+            KeywordParameter(TeamOrPlayerTargetKind.player),
+            7 /* Player */,
+            ObjectListParameter("loadouts" /* Loadouts */)
+          ],
+          [
+            KeywordParameter(TeamOrPlayerTargetKind.team),
+            6 /* Team */,
+            ObjectListParameter("loadouts" /* Loadouts */)
+          ]
+        )
+      );
+    } else {
+      this.registerParser(
+        "set_loadout_palette",
+        parameterParserBuilder(
+          [
+            KeywordParameter(TeamOrPlayerTargetKind.player),
+            7 /* Player */,
+            LOADOUT_PALETTE_TYPE_SLOT
+          ],
+          [
+            KeywordParameter(TeamOrPlayerTargetKind.team),
+            6 /* Team */,
+            LOADOUT_PALETTE_TYPE_SLOT
+          ]
+        )
+      );
+    }
     this.registerParser(
-      "set_loadout_palette",
-      parameterParserBuilder(
+      "give_weapon",
+      parameterParserBuilder([
+        7 /* Player */,
         [
-          KeywordParameter(TeamOrPlayerTargetKind.player),
-          7 /* Player */,
-          LOADOUT_PALETTE_TYPE_SLOT
+          ObjectListParameter("objects" /* Objects */),
+          3 /* QuotedString */,
+          0 /* Keyword */
         ],
+        BIPED_WEAPON_SLOT_KEYWORDS
+      ])
+    );
+    this.registerParser(
+      "player_set_fireteam_tier",
+      parameterParserBuilder([7 /* Player */, 1 /* Integer */])
+    );
+    this.registerParser(
+      "object_set_minimap_visibility",
+      parameterParserBuilder([8 /* Object */, BOOLEAN])
+    );
+    this.registerParser(
+      "object_set_minimap_priority",
+      parameterParserBuilder([8 /* Object */, NAVPOINT_PRIORITY_KEYWORDS])
+    );
+    this.registerParser(
+      "object_set_minimap_icon",
+      parameterParserBuilder([
+        8 /* Object */,
         [
-          KeywordParameter(TeamOrPlayerTargetKind.team),
-          6 /* Team */,
-          LOADOUT_PALETTE_TYPE_SLOT
+          ObjectListParameter("hud_widget_icons" /* HudWidgetIcons */),
+          3 /* QuotedString */,
+          0 /* Keyword */,
+          1 /* Integer */
         ]
-      )
+      ])
     );
     this.registerParser(
       "device_set_position_track",
@@ -6611,50 +7062,6 @@ var ConditionParserRepository = class {
   }
 };
 
-// ../megalo/src/frontend/language-configuration/omni/variables.ts
-var VARIABLE_TYPE_NAMES = [
-  "timer",
-  "number",
-  "team",
-  "player",
-  "object"
-];
-var VARIABLE_SCOPE_NAMES = [
-  "global",
-  "team",
-  "player",
-  "object"
-];
-var isVariableTypeName = (value) => VARIABLE_TYPE_NAMES.includes(value);
-var isVariableScopeName = (value) => VARIABLE_SCOPE_NAMES.includes(value);
-var isNumericVariableType = (value) => value === "timer" || value === "number";
-var variableTypeFromName = (name) => {
-  switch (name) {
-    case "timer":
-      return 0 /* Timer */;
-    case "number":
-      return 1 /* Number */;
-    case "team":
-      return 2 /* Team */;
-    case "player":
-      return 3 /* Player */;
-    case "object":
-      return 4 /* Object */;
-  }
-};
-var variableScopeFromName = (name) => {
-  switch (name) {
-    case "global":
-      return 0 /* Global */;
-    case "team":
-      return 1 /* Team */;
-    case "player":
-      return 2 /* Player */;
-    case "object":
-      return 3 /* Object */;
-  }
-};
-
 // ../megalo/src/frontend/abstract-syntax-tree/elements/trigger/temporary.ts
 var TEMPORARY_STORAGE_NAMES = [
   "number",
@@ -6663,7 +7070,6 @@ var TEMPORARY_STORAGE_NAMES = [
   "player"
 ];
 var isTemporaryStorageName = (value) => TEMPORARY_STORAGE_NAMES.includes(value);
-var isTriggerStatementBoundary2 = (token) => !token || token.kind === 1 /* Identifier */ && (token.value === "end" || token.value === "condition" || token.value === "action" || token.value === "begin" || token.value === "temporary");
 var parseTemporaryStorage = (ctx, anchor) => {
   const token = ctx.peekToken();
   if (token?.kind !== 1 /* Identifier */) {
@@ -6731,7 +7137,7 @@ var parseTemporary = (ctx, temporaryToken) => {
       scope: 4 /* Temporary */
     });
   }
-  if (isTriggerStatementBoundary2(ctx.peekToken())) {
+  if (isTriggerStatementBoundary(ctx.peekToken())) {
     ctx.diagnostics.addError(
       diagnosticMessages.expectedTemporaryInitial(),
       name?.location ?? temporaryToken.location
@@ -7484,54 +7890,6 @@ var engineDataParser = (ctx, elementToken) => {
   };
 };
 
-// ../megalo/src/frontend/language-configuration/omni/keywords.ts
-var TOP_LEVEL_ELEMENT_KEYWORDS = [
-  "base",
-  "include",
-  "localized_include",
-  "string_table",
-  "constants",
-  "variables",
-  "game_options",
-  "hud_widgets",
-  "loadout",
-  "loadout_palette",
-  "teams",
-  "engine_data",
-  "player_rating",
-  "map_permissions",
-  "game_stats",
-  "map_object",
-  "requisition_palette",
-  "trigger"
-];
-var TRIGGER_BODY_KEYWORDS = [
-  "action",
-  "condition",
-  "temporary",
-  "begin",
-  "end",
-  "not"
-];
-var VARIABLE_DECLARATION_KEYWORDS = [
-  "local",
-  "networked",
-  "networked_high",
-  ...VARIABLE_SCOPE_NAMES,
-  ...VARIABLE_TYPE_NAMES
-];
-var BOOLEAN_LITERAL_KEYWORDS = ["true", "false"];
-var RESERVED_VARIABLE_NAME_KEYWORDS = [
-  ...TOP_LEVEL_ELEMENT_KEYWORDS,
-  ...TRIGGER_BODY_KEYWORDS,
-  ...VARIABLE_DECLARATION_KEYWORDS,
-  ...BOOLEAN_LITERAL_KEYWORDS
-];
-var RESERVED_VARIABLE_NAME_KEYWORD_SET = new Set(
-  RESERVED_VARIABLE_NAME_KEYWORDS
-);
-var isReservedVariableName = (name) => RESERVED_VARIABLE_NAME_KEYWORD_SET.has(name);
-
 // ../megalo/src/build-info.ts
 var MEGACROW_BUILD_STRING = "untracked version";
 
@@ -7689,19 +8047,19 @@ var ParserSymbolContext = class {
   declaredGameStats = /* @__PURE__ */ new Map();
   declaredObjectListItems = /* @__PURE__ */ new Map();
   symbolBinder;
-  constructor(frontend, diagnostics, symbolTable, objectLists2 = {}) {
+  constructor(frontend, diagnostics, symbolTable, objectLists5 = {}) {
     this.frontend = frontend;
     this.diagnostics = diagnostics;
     this.symbolBinder = symbolTable;
-    this.registerObjectListItems(objectLists2, diagnostics);
+    this.registerObjectListItems(objectLists5, diagnostics);
     addBuiltInConstants(this.frontend.megaloVersion, this);
     addBuiltInVariables(this.frontend, this);
     addBuiltInGameOptions(this.frontend.megaloVersion, this);
     addBuiltInStrings(this.frontend, this);
   }
-  registerObjectListItems(objectLists2, diagnostics) {
+  registerObjectListItems(objectLists5, diagnostics) {
     for (const objectType of OBJECT_LIST_TYPES) {
-      const table = objectLists2[objectType];
+      const table = objectLists5[objectType];
       const entries = objectListEntries(table);
       const file = objectListSourceFile(table);
       const byName = /* @__PURE__ */ new Map();
@@ -7759,16 +8117,13 @@ var ParserSymbolContext = class {
     const id = this.symbolBinder.addVariable(entry);
     const isBuiltIn = entry.declaration.type === 2 /* BUILT_IN */;
     if (!isBuiltIn) {
-      const { preventShadowing, reservedKeywords } = this.frontend.megacrowExtensions;
-      if (reservedKeywords && isReservedVariableName(entry.name)) {
-        this.diagnostics.addWarning(
-          diagnosticMessages.reservedKeywordVariableName(entry.name),
-          entry.declaration
-        );
-      }
-      if (preventShadowing && this.findSameScopeVariable(entry, id) !== void 0) {
+      const { preventShadowing } = this.frontend.megacrowExtensions;
+      if (preventShadowing && this.findVisibleSameScopeVariable(entry, id) !== void 0) {
         this.diagnostics.addError(
-          diagnosticMessages.variableShadowingDisabled(entry.name),
+          diagnosticMessages.variableShadowingDisabled(
+            VARIABLE_TYPE_NAMES[entry.type],
+            entry.name
+          ),
           entry.declaration
         );
       }
@@ -7815,19 +8170,21 @@ var ParserSymbolContext = class {
     }
     return left.scope !== 4 /* Temporary */;
   }
-  /** Same Megalo variable scope + same identifier (any type). */
-  findSameScopeVariable(entry, selfId) {
-    for (const symbol of this.symbolBinder.getSymbolTable().toArray()) {
-      if (symbol.id === selfId) {
+  /**
+   * Same Megalo variable scope + same identifier, but only if the previous
+   * declaration is still in a live lexical scope (temps from finished triggers
+   * are out of scope and may be reused).
+   */
+  findVisibleSameScopeVariable(entry, selfId) {
+    for (let i = this.symbolScopes.length - 1; i >= 0; i--) {
+      const id = this.symbolScopes[i]?.get(entry.name);
+      if (id === void 0 || id === selfId) {
         continue;
       }
-      if (symbol.kind !== 1 /* Variable */) {
-        continue;
+      const symbol = this.symbolBinder.getSymbolEntry(id);
+      if (symbol?.kind === 1 /* Variable */ && symbol.scope === entry.scope) {
+        return id;
       }
-      if (symbol.name !== entry.name || symbol.scope !== entry.scope) {
-        continue;
-      }
-      return symbol.id;
     }
     return;
   }
@@ -7871,11 +8228,9 @@ var ParserSymbolContext = class {
       index: this.declarationCount(this.declaredUserDefinedOptions)
     });
     if (declarations.length > 0) {
-      this.diagnostics.addWarning(
-        diagnosticMessages.duplicateDeclarationNameIgnored(
-          "option",
-          entry.name
-        ),
+      this.reportDuplicateDeclarationName(
+        "option",
+        entry.name,
         entry.declaration
       );
     } else {
@@ -7904,10 +8259,7 @@ var ParserSymbolContext = class {
     const declarations = this.declaredHudWidgets.get(name) ?? [];
     const id = this.symbolBinder.addHudWidget({ name, declaration });
     if (declarations.length > 0) {
-      this.diagnostics.addWarning(
-        diagnosticMessages.duplicateDeclarationNameIgnored("hud_widget", name),
-        declaration
-      );
+      this.reportDuplicateDeclarationName("hud_widget", name, declaration);
     }
     declarations.push(id);
     this.declaredHudWidgets.set(name, declarations);
@@ -7924,10 +8276,7 @@ var ParserSymbolContext = class {
       declaration
     });
     if (declarations.length > 0) {
-      this.diagnostics.addWarning(
-        diagnosticMessages.duplicateDeclarationNameIgnored("map_object", name),
-        declaration
-      );
+      this.reportDuplicateDeclarationName("map_object", name, declaration);
     }
     declarations.push(id);
     this.declaredObjectFilters.set(name, declarations);
@@ -7944,13 +8293,7 @@ var ParserSymbolContext = class {
       declaration
     });
     if (declarations.length > 0) {
-      this.diagnostics.addWarning(
-        diagnosticMessages.duplicateDeclarationNameIgnored(
-          "player_traits",
-          name
-        ),
-        declaration
-      );
+      this.reportDuplicateDeclarationName("player_traits", name, declaration);
     }
     declarations.push(id);
     this.declaredPlayerTraits.set(name, declarations);
@@ -7967,10 +8310,7 @@ var ParserSymbolContext = class {
       declaration
     });
     if (declarations.length > 0) {
-      this.diagnostics.addWarning(
-        diagnosticMessages.duplicateDeclarationNameIgnored("game_stats", name),
-        declaration
-      );
+      this.reportDuplicateDeclarationName("game_stats", name, declaration);
     }
     declarations.push(id);
     this.declaredGameStats.set(name, declarations);
@@ -7983,10 +8323,7 @@ var ParserSymbolContext = class {
     const declarations = this.declaredLoadouts.get(name) ?? [];
     const id = this.symbolBinder.addLoadout({ name, declaration });
     if (declarations.length > 0) {
-      this.diagnostics.addWarning(
-        diagnosticMessages.duplicateDeclarationNameIgnored("loadout", name),
-        declaration
-      );
+      this.reportDuplicateDeclarationName("loadout", name, declaration);
     }
     declarations.push(id);
     this.declaredLoadouts.set(name, declarations);
@@ -7999,13 +8336,7 @@ var ParserSymbolContext = class {
     const declarations = this.declaredLoadoutPalettes.get(name) ?? [];
     const id = this.symbolBinder.addLoadoutPalette({ name, declaration });
     if (declarations.length > 0) {
-      this.diagnostics.addWarning(
-        diagnosticMessages.duplicateDeclarationNameIgnored(
-          "loadout_palette",
-          name
-        ),
-        declaration
-      );
+      this.reportDuplicateDeclarationName("loadout_palette", name, declaration);
     }
     declarations.push(id);
     this.declaredLoadoutPalettes.set(name, declarations);
@@ -8018,11 +8349,9 @@ var ParserSymbolContext = class {
     const declarations = this.declaredRequisitionPalettes.get(name) ?? [];
     const id = this.symbolBinder.addRequisitionPalette({ name, declaration });
     if (declarations.length > 0) {
-      this.diagnostics.addWarning(
-        diagnosticMessages.duplicateDeclarationNameIgnored(
-          "requisition_palette",
-          name
-        ),
+      this.reportDuplicateDeclarationName(
+        "requisition_palette",
+        name,
         declaration
       );
     }
@@ -8108,6 +8437,23 @@ var ParserSymbolContext = class {
     this.symbolScopes.at(-1)?.set(name, id);
     this.scopeSymbolIds.at(-1)?.push(id);
   }
+  /**
+   * FindIndex first-wins duplicates: MegaCrow errors when `preventShadowing` is
+   * on, otherwise emit the original MegaloEdit-parity warning.
+   */
+  reportDuplicateDeclarationName(kind, name, declaration) {
+    if (this.frontend.megacrowExtensions.preventShadowing) {
+      this.diagnostics.addError(
+        diagnosticMessages.variableShadowingDisabled(kind, name),
+        declaration
+      );
+      return;
+    }
+    this.diagnostics.addWarning(
+      diagnosticMessages.duplicateDeclarationNameIgnored(kind, name),
+      declaration
+    );
+  }
   declarationCount(map) {
     let count = 0;
     for (const ids of map.values()) {
@@ -8131,11 +8477,11 @@ var ParserContext = class {
   engineDataParserRepository;
   actionParserRepository;
   conditionParserRepository;
-  constructor(tokens, frontend, diagnostics, symbolTable, objectLists2 = {}, sharedSymbolParser) {
+  constructor(tokens, frontend, diagnostics, symbolTable, objectLists5 = {}, sharedSymbolParser) {
     this.frontend = frontend;
     this.diagnostics = diagnostics;
     this.tokens = tokens;
-    this.symbolParser = sharedSymbolParser ?? new ParserSymbolContext(frontend, diagnostics, symbolTable, objectLists2);
+    this.symbolParser = sharedSymbolParser ?? new ParserSymbolContext(frontend, diagnostics, symbolTable, objectLists5);
     this.playerTraitParserRepository = new PlayerTraitParserRepository(
       frontend
     );
@@ -8213,7 +8559,7 @@ var Parser = class {
     this.elementParserRepository = new ElementParserRepository(frontend);
   }
   /** Sync parse without include expansion (includes remain as AST elements). */
-  parse = (tokens, diagnostics, objectLists2 = {}) => {
+  parse = (tokens, diagnostics, objectLists5 = {}) => {
     const comments = collectComments(tokens);
     const elements = [];
     const tokensWithoutComments = tokens.filter(
@@ -8225,7 +8571,7 @@ var Parser = class {
       this.frontend,
       diagnostics,
       symbolBinder,
-      objectLists2
+      objectLists5
     );
     while (ctx.hasMore()) {
       const token = ctx.getToken();
@@ -8268,7 +8614,7 @@ var Parser = class {
    * symbol table. Diagnostics from included files are remapped to the include line.
    */
   parseAsync = async (tokens, diagnostics, options = {}) => {
-    const objectLists2 = options.objectLists ?? {};
+    const objectLists5 = options.objectLists ?? {};
     const comments = collectComments(tokens);
     const tokensWithoutComments = tokens.filter(
       (token) => token.kind !== 6 /* Comment */
@@ -8283,7 +8629,7 @@ var Parser = class {
       tokensWithoutComments,
       diagnostics,
       symbolBinder,
-      objectLists2,
+      objectLists5,
       {
         ...options,
         includedPaths,
@@ -8298,14 +8644,14 @@ var Parser = class {
       includedPaths
     };
   };
-  async parseElementsAsync(tokens, diagnostics, symbolBinder, objectLists2, options, sharedSymbolParser) {
+  async parseElementsAsync(tokens, diagnostics, symbolBinder, objectLists5, options, sharedSymbolParser) {
     const elements = [];
     const ctx = new ParserContext(
       tokens,
       this.frontend,
       diagnostics,
       symbolBinder,
-      objectLists2,
+      objectLists5,
       sharedSymbolParser
     );
     while (ctx.hasMore()) {
@@ -8327,7 +8673,7 @@ var Parser = class {
               element,
               diagnostics,
               symbolBinder,
-              objectLists2,
+              objectLists5,
               options,
               ctx.symbolParser
             );
@@ -8365,7 +8711,7 @@ var Parser = class {
     }
     diagnostics.addError(resolvedMessage, blameLocation);
   }
-  async expandInclude(element, diagnostics, symbolBinder, objectLists2, options, sharedSymbolParser) {
+  async expandInclude(element, diagnostics, symbolBinder, objectLists5, options, sharedSymbolParser) {
     const blameLocation = element.location;
     if (element.file.kind !== 1 /* QUOTED_STRING */) {
       return [];
@@ -8460,7 +8806,7 @@ var Parser = class {
         nestedWithoutComments,
         included,
         symbolBinder,
-        objectLists2,
+        objectLists5,
         {
           ...options,
           fromUri: resolved.uri,
@@ -8489,7 +8835,7 @@ var computeLineStarts = (source) => {
 var isRootDocumentLocation = (location) => location.type === 0 /* SOURCE_CODE */ && location.include === void 0 && location.start.line > 0 && location.start.absoluteOffset === location.start.localOffset;
 var singleLineSpanLength = (location) => location.start.line === location.end.line ? Math.max(0, location.end.column - location.start.column) : 0;
 
-// ../megalo/src/object-lists/haloreach_mcc/default/equipment.ts
+// ../megalo/src/object-lists/haloreach/alpha/default/equipment.ts
 var equipment_default = [
   "sprint_equipment",
   "jet_pack_equipment",
@@ -8499,11 +8845,10 @@ var equipment_default = [
   "ammo_pack_equipment",
   "sensor_pack_equipment",
   "hologram_equipment",
-  "evade_equipment",
-  "drop_shield_equipment"
+  "evade_equipment"
 ];
 
-// ../megalo/src/object-lists/haloreach_mcc/default/grenades.ts
+// ../megalo/src/object-lists/haloreach/alpha/default/grenades.ts
 var grenades_default = [
   "frag_grenade",
   "plasma_grenade",
@@ -8511,7 +8856,7 @@ var grenades_default = [
   "firebomb_grenade"
 ];
 
-// ../megalo/src/object-lists/haloreach_mcc/default/hud_widget_icons.ts
+// ../megalo/src/object-lists/haloreach/alpha/default/hud_widget_icons.ts
 var hud_widget_icons_default = [
   "ctf",
   "slayer",
@@ -8550,8 +8895,2248 @@ var hud_widget_icons_default = [
   "ammunition"
 ];
 
-// ../megalo/src/object-lists/haloreach_mcc/default/incidents.ts
+// ../megalo/src/object-lists/haloreach/alpha/default/incidents.ts
 var incidents_default = [
+  "kill",
+  "grenade_death",
+  "guardian_kill",
+  "death",
+  "assist",
+  "suicide",
+  "kill_betrayal",
+  "melee_kill",
+  "assassination_kill",
+  "finishing_move_kill",
+  "headshot_kill",
+  "sniper_headshot_kill",
+  "emp_kill",
+  "supercombine_kill",
+  "sniper_kill",
+  "laser_kill",
+  "rocket_kill",
+  "shotgun_kill",
+  "hammer_kill",
+  "sword_kill",
+  "sticky_grenade_kill",
+  "splatter_kill",
+  "zombie_kill_kill",
+  "infection_kill",
+  "kill_from_the_grave",
+  "ordnance_kill",
+  "vehicle_kill",
+  "driver_assist_gunner",
+  "highjack",
+  "skyjack",
+  "shotgun_kill_sword",
+  "killjoy",
+  "flagcarrier_kill",
+  "kill_with_oddball",
+  "bomb_carrier_kill",
+  "juggernaut_kill",
+  "flag_taken",
+  "flag_dropped",
+  "flag_scored",
+  "kill_with_flag",
+  "bomb_planted",
+  "vip_kill",
+  "revenge_kill",
+  "berserker_kill",
+  "opportunist_kill",
+  "opportunist_melee",
+  "opportunist_headshot",
+  "first_blood",
+  "sprinting_kill",
+  "pull_kill",
+  "",
+  "",
+  "",
+  "",
+  "extermination_kill",
+  "multikill_x2",
+  "multikill_x3",
+  "multikill_x4",
+  "multikill_x5",
+  "multikill_x6",
+  "multikill_x7",
+  "multikill_x8",
+  "multikill_x9",
+  "multikill_x10",
+  "5_in_a_row",
+  "10_in_a_row",
+  "15_in_a_row",
+  "20_in_a_row",
+  "25_in_a_row",
+  "30_in_a_row",
+  "shotgun_5x",
+  "shotgun_10x",
+  "sniper_5x",
+  "sniper_10x",
+  "sword_5x",
+  "sword_10x",
+  "sticky_grenade_5x",
+  "sticky_grenade_10x",
+  "gravity_hammer_5x",
+  "gravity_hammer_10x",
+  "splatter_5x",
+  "splatter_10x",
+  "juggernaut_5x",
+  "juggernaut_10x",
+  "infection_5x",
+  "infection_10x",
+  "zombie_kill_5x",
+  "zombie_kill_10x",
+  "infection_survive",
+  "koth_spree",
+  "",
+  "inv_spartan_win",
+  "inv_spartans_win_rd1",
+  "inv_spartans_win_rd2",
+  "",
+  "inv_elite_win",
+  "inv_elites_win_rd1",
+  "invasion_elites_win_rd2",
+  "",
+  "inv_data_taken",
+  "inv_data_stolen",
+  "inv_data_dropped",
+  "inv_power_taken",
+  "inv_power_stolen",
+  "inv_power_dropped",
+  "inv_core_taken",
+  "inv_core_stolen",
+  "inv_core_dropped",
+  "",
+  "",
+  "game_start_slayer",
+  "team_game_start",
+  "victory_game",
+  "victory_team_game",
+  "one_minute_win",
+  "one_minute_team_win",
+  "half_minute_win",
+  "half_minute_team_win",
+  "30_minutes_remaining",
+  "15_minutes_remaining",
+  "5_minutes_remaining",
+  "1_minute_remaining",
+  "30_seconds_remaining",
+  "10_seconds_remaining",
+  "round_over",
+  "sudden_death",
+  "game_over",
+  "gained_lead",
+  "gained_team_lead",
+  "lost_lead",
+  "team_lost_lead",
+  "tied_leader",
+  "tied_team_leader",
+  "player_joined",
+  "player_switched_team",
+  "player_rejoined",
+  "player_quit",
+  "player_booted_player",
+  "multikill_comm",
+  "headshot_comm",
+  "spree_comm",
+  "assist_comm",
+  "technician_comm",
+  "sticky_comm",
+  "vehicle_comm"
+];
+
+// ../megalo/src/object-lists/haloreach/alpha/default/loadout_palettes.ts
+var loadout_palettes_default = [
+  "unsc_bronze",
+  "unsc_silver",
+  "unsc_gold",
+  "covy_bronze",
+  "covy_silver",
+  "covy_gold",
+  "slayer_loadouts",
+  "unsc_firefight",
+  "covy_firefight",
+  "slayer_pro_loadouts",
+  "swat_loadouts",
+  "covy_slayer_loadouts",
+  "objective_loadouts",
+  "objective_pro_loadouts"
+];
+
+// ../megalo/src/object-lists/haloreach/alpha/default/loadouts.ts
+var loadouts_default = [
+  "loadout_name_noble1",
+  "loadout_name_noble2",
+  "loadout_name_noble3",
+  "loadout_name_noble4",
+  "loadout_name_noble5",
+  "loadout_name_noble6",
+  "loadout_name_carter",
+  "loadout_name_kat",
+  "loadout_name_jorge",
+  "loadout_name_emile",
+  "loadout_name_jun",
+  "loadout_name_thom",
+  "loadout_name_rosenda",
+  "loadout_name_danny",
+  "loadout_name_john",
+  "loadout_name_kelly",
+  "loadout_name_linda",
+  "loadout_name_sam",
+  "loadout_name_kurt",
+  "loadout_name_jerry",
+  "loadout_name_jimmy",
+  "loadout_name_bobby",
+  "loadout_name_marlo",
+  "loadout_name_omar",
+  "loadout_name_juggernaut",
+  "loadout_name_berserker",
+  "loadout_name_maverick",
+  "loadout_name_zombie",
+  "loadout_name_demon",
+  "loadout_name_angel",
+  "loadout_name_redshirt",
+  "loadout_name_ling_ling",
+  "loadout_name_pookie",
+  "loadout_name_fng",
+  "loadout_name_noob",
+  "loadout_name_camper",
+  "loadout_name_specter",
+  "loadout_name_bunker",
+  "loadout_name_claymore",
+  "loadout_name_firebase",
+  "loadout_name_intel",
+  "loadout_name_ninja",
+  "loadout_name_power",
+  "loadout_name_cobra",
+  "loadout_name_eagle",
+  "loadout_name_hog",
+  "loadout_name_bear",
+  "loadout_name_warrior",
+  "loadout_name_deceiver",
+  "loadout_name_ranger",
+  "loadout_name_zealot",
+  "loadout_name_royal_zealot",
+  "loadout_name_assassin",
+  "loadout_name_dark_assassin",
+  "loadout_name_champion_assassin",
+  "loadout_name_gladiator",
+  "loadout_name_sentry",
+  "loadout_name_warden",
+  "loadout_name_saboteur",
+  "loadout_name_spec_ops",
+  "loadout_name_scout",
+  "loadout_name_guard",
+  "loadout_name_air_assault",
+  "loadout_name_marksman",
+  "loadout_name_recon_marksman",
+  "loadout_name_expert_marksman",
+  "loadout_name_operator",
+  "loadout_name_grenadier",
+  "loadout_name_medic",
+  "loadout_name_corpsman",
+  "loadout_name_stalker",
+  "loadout_name_demolitions",
+  "loadout_name_infiltrator",
+  "loadout_name_security",
+  "loadout_unchanged_sprint",
+  "loadout_unchanged_evade",
+  "loadout_unchanged_armor_lock",
+  "loadout_unchanged_active_camo",
+  "loadout_unchanged_hologram",
+  "loadout_unchanged_drop_shield",
+  "loadout_unchanged_jet_pack"
+];
+
+// ../megalo/src/object-lists/haloreach/alpha/default/objects.ts
+var objects_default = [
+  "spartan",
+  "elite",
+  "monitor",
+  "flag",
+  "bomb",
+  "ball",
+  "area",
+  "stand",
+  "destination",
+  "frag_grenade",
+  "plasma_grenade",
+  "spike_grenade",
+  "firebomb_grenade",
+  "battle_rifle",
+  "assault_rifle",
+  "plasma_pistol",
+  "spike_rifle",
+  "smg",
+  "needle_rifle",
+  "plasma_repeater",
+  "energy_sword",
+  "magnum",
+  "needler",
+  "plasma_rifle",
+  "rocket_launcher",
+  "shotgun",
+  "sniper_rifle",
+  "brute_shot",
+  "beam_rifle",
+  "spartan_laser",
+  "gravity_hammer",
+  "mauler",
+  "flamethrower",
+  "missile_pod",
+  "warthog",
+  "ghost",
+  "scorpion",
+  "wraith",
+  "banshee",
+  "mongoose",
+  "chopper",
+  "prowler",
+  "hornet",
+  "stingray",
+  "heavy_wraith",
+  "falcon",
+  "sabre",
+  "sprint_equipment",
+  "jet_pack_equipment",
+  "armor_lock_equipment",
+  "power_fist_equipment",
+  "active_camo_equipment",
+  "ammo_pack_equipment",
+  "sensor_pack_equipment",
+  "revenant",
+  "pickup",
+  "prototype_covey_sniper",
+  "territory_static",
+  "ctf_flag_return_area",
+  "ctf_flag_spawn_point",
+  "territories_respawn_zone_bfg",
+  "territories_respawn_zone",
+  "invasion_elite_buy",
+  "invasion_elite_drop",
+  "invasion_slayer",
+  "invasion_spartan_buy",
+  "invasion_spartan_drop",
+  "invasion_spawn_controller",
+  "oddball_ball_spawn_point",
+  "plasma_launcher",
+  "fusion_coil",
+  "unsc_shield_generator",
+  "cov_shield_generator",
+  "initial_spawn_point",
+  "invasion_vehicle_req",
+  "vehicle_req_floor",
+  "wall_switch",
+  "health_station",
+  "req_unsc_laser",
+  "req_unsc_dmr",
+  "req_unsc_rocket",
+  "req_unsc_shotgun",
+  "req_unsc_sniper",
+  "req_covy_launcher",
+  "req_covy_needler",
+  "req_covy_sniper",
+  "req_covy_sword",
+  "shock_loadout",
+  "specialist_loadout",
+  "assassin_loadout",
+  "infiltrator_loadout",
+  "warrior_loadout",
+  "combatant_loadout",
+  "engineer_loadout",
+  "infantry_loadout",
+  "operator_loadout",
+  "recon_loadout",
+  "scout_loadout",
+  "seeker_loadout",
+  "airborne_loadout",
+  "ranger_loadout",
+  "req_buy_banshee",
+  "req_buy_falcon",
+  "req_buy_ghost",
+  "req_buy_mongoose",
+  "req_buy_revenant",
+  "req_buy_scorpion",
+  "req_buy_warthog",
+  "req_buy_wraith",
+  "fireteam_1_respawn_zone",
+  "fireteam_2_respawn_zone",
+  "fireteam_3_respawn_zone",
+  "fireteam_4_respawn_zone",
+  "semi",
+  "soccer_ball",
+  "golf_ball",
+  "golf_ball_blue",
+  "golf_ball_red",
+  "golf_club",
+  "golf_cup",
+  "golf_tee",
+  "dice",
+  "space_crate",
+  "eradicator_loadout",
+  "saboteur_loadout",
+  "grenadier_loadout",
+  "marksman_loadout",
+  "flare",
+  "glow_stick",
+  "elite_shot",
+  "grenade_launcher",
+  "phantom_approach",
+  "hologram_equipment",
+  "evade_equipment",
+  "unsc_data_core",
+  "danger_zone",
+  "teleporter_sender",
+  "teleporter_reciever",
+  "teleporter_2way",
+  "data_core_beam",
+  "phantom_overwatch",
+  "longsword",
+  "invisible_cube_of_derek",
+  "phantom_scenery",
+  "pelican_scenery",
+  "phantom",
+  "pelican",
+  "armory_shelf",
+  "cov_resupply_capsule",
+  "covy_drop_pod",
+  "invisible_marker",
+  "weak_respawn_zone",
+  "weak_anti_respawn_zone",
+  "phantom_device",
+  "resupply_capsule",
+  "resupply_capsule_open",
+  "weapon_box",
+  "tech_console_stationary",
+  "tech_console_wall"
+];
+
+// ../megalo/src/object-lists/haloreach/alpha/default/strings.ts
+var strings_default = [
+  "mp_boneyard_a_idle_start",
+  "mp_boneyard_a_fly_in",
+  "mp_boneyard_a_idle_mid",
+  "mp_boneyard_a_fly_out",
+  "mp_boneyard_b_fly_in",
+  "mp_boneyard_b_idle_mid",
+  "mp_boneyard_b_fly_out",
+  "mp_boneyard_b_idle_start"
+];
+
+// ../megalo/src/object-lists/haloreach/alpha/default/vehicle_sets.ts
+var vehicle_sets_default = [
+  "mongoose_only",
+  "warthog_only",
+  "civilian"
+];
+
+// ../megalo/src/object-lists/haloreach/alpha/default/vehicles.ts
+var vehicles_default = [
+  "warthog",
+  "ghost",
+  "scorpion",
+  "wraith",
+  "banshee",
+  "mongoose",
+  "chopper",
+  "mauler",
+  "hornet",
+  "stingray",
+  "heavy_wraith",
+  "falcon",
+  "sabre",
+  "revenant",
+  "pickup",
+  "semi",
+  "phantom",
+  "pelican"
+];
+
+// ../megalo/src/object-lists/haloreach/alpha/default/weapon_sets.ts
+var weapon_sets_default = [
+  "human",
+  "covenant",
+  "no_snipers",
+  "rockets_only"
+];
+
+// ../megalo/src/object-lists/haloreach/alpha/default/weapons.ts
+var weapons_default = [
+  "battle_rifle",
+  "assault_rifle",
+  "plasma_pistol",
+  "spike_rifle",
+  "smg",
+  "energy_sword",
+  "magnum",
+  "needler",
+  "plasma_rifle",
+  "rocket_launcher",
+  "shotgun",
+  "sniper_rifle",
+  "brute_shot",
+  "beam_rifle",
+  "spartan_laser",
+  "gravity_hammer",
+  "plasma_repeater",
+  "needle_rifle",
+  "prototype_covey_sniper",
+  "plasma_launcher",
+  "elite_shot",
+  "grenade_launcher",
+  "golf_club",
+  "flak_cannon",
+  "machinegun",
+  "plasma_turret_weapon",
+  "target_laser"
+];
+
+// ../megalo/src/object-lists/haloreach/alpha/default/index.ts
+var objectLists = {
+  ["equipment" /* Equipment */]: equipment_default,
+  ["grenades" /* Grenades */]: grenades_default,
+  ["hud_widget_icons" /* HudWidgetIcons */]: hud_widget_icons_default,
+  ["incidents" /* Incidents */]: incidents_default,
+  ["loadouts" /* Loadouts */]: loadouts_default,
+  ["loadout_palettes" /* LoadoutPalettes */]: loadout_palettes_default,
+  ["objects" /* Objects */]: objects_default,
+  ["strings" /* Strings */]: strings_default,
+  ["vehicles" /* Vehicles */]: vehicles_default,
+  ["vehicle_sets" /* VehicleSets */]: vehicle_sets_default,
+  ["weapons" /* Weapons */]: weapons_default,
+  ["weapon_sets" /* WeaponSets */]: weapon_sets_default
+};
+var default_default = objectLists;
+
+// ../megalo/src/object-lists/haloreach/beta/default/equipment.ts
+var equipment_default2 = [
+  "sprint_equipment",
+  "jet_pack_equipment",
+  "armor_lock_equipment",
+  "power_fist_equipment",
+  "active_camo_equipment",
+  "ammo_pack_equipment",
+  "sensor_pack_equipment",
+  "hologram_equipment",
+  "evade_equipment"
+];
+
+// ../megalo/src/object-lists/haloreach/beta/default/grenades.ts
+var grenades_default2 = [
+  "frag_grenade",
+  "plasma_grenade",
+  "spike_grenade",
+  "firebomb_grenade"
+];
+
+// ../megalo/src/object-lists/haloreach/beta/default/hud_widget_icons.ts
+var hud_widget_icons_default2 = [
+  "ctf",
+  "slayer",
+  "oddball",
+  "koth",
+  "juggernaut",
+  "territories",
+  "assault",
+  "infection",
+  "vip",
+  "invasion",
+  "extermination",
+  "stockpile",
+  "action_sack",
+  "race",
+  "rocket_race",
+  "grifball",
+  "soccer",
+  "headhunter",
+  "generic_icon_2",
+  "generic_icon_3",
+  "generic_icon_4",
+  "generic_icon_5",
+  "generic_icon_6",
+  "generic_icon_7",
+  "generic_icon_8",
+  "generic_icon_9",
+  "spartan",
+  "elite",
+  "offense",
+  "defense",
+  "ordnance",
+  "interface",
+  "recon",
+  "retrieve",
+  "ammunition"
+];
+
+// ../megalo/src/object-lists/haloreach/beta/default/incidents.ts
+var incidents_default2 = [
+  "kill",
+  "grenade_kill",
+  "guardian_kill",
+  "death",
+  "assist",
+  "suicide",
+  "kill_betrayal",
+  "melee_kill",
+  "assassination_kill",
+  "finishing_move_kill",
+  "headshot_kill",
+  "sniper_headshot_kill",
+  "emp_kill",
+  "supercombine_kill",
+  "sniper_kill",
+  "laser_kill",
+  "rocket_kill",
+  "shotgun_kill",
+  "hammer_kill",
+  "sword_kill",
+  "sticky_grenade_kill",
+  "splatter_kill",
+  "zombie_kill_kill",
+  "infection_kill",
+  "kill_enemy_leader",
+  "kill_from_the_grave",
+  "ordnance_kill",
+  "vehicle_kill",
+  "driver_assist_gunner",
+  "highjack",
+  "skyjack",
+  "shotgun_kill_sword",
+  "killjoy",
+  "flagcarrier_kill",
+  "kill_with_oddball",
+  "bomb_carrier_kill",
+  "kill_as_juggernaut",
+  "juggernaut_kill",
+  "vip_kill",
+  "koth_game_start",
+  "hill_controlled",
+  "hill_contested",
+  "hill_controlled_team",
+  "hill_contested_team",
+  "hill_moved",
+  "ball_game_start",
+  "ball_taken",
+  "ball_dropped",
+  "ball_taken_team",
+  "ball_dropped_team",
+  "ball_spawned",
+  "ball_reset",
+  "assault_game_start",
+  "bomb_planted",
+  "bomb_taken",
+  "bomb_dropped",
+  "bomb_armed",
+  "bomb_reset_neutral",
+  "bomb_returned",
+  "bomb_disarmed",
+  "bomb_arming",
+  "terr_game_start",
+  "terr_captured",
+  "rally_game_start",
+  "checkpoint_reached",
+  "checkpoint_reached_team",
+  "lap_complete",
+  "final_lap",
+  "final_lap_team",
+  "rocket_race_game_start",
+  "ctf_game_start",
+  "ctf_team",
+  "flag_grabbed",
+  "flag_dropped",
+  "flag_scored",
+  "flag_reset",
+  "flag_recovered",
+  "kill_with_flag",
+  "headhunter_game_start",
+  "skulls_taken",
+  "skulls_scored",
+  "skulls_dropped",
+  "skullamanjaro",
+  "infection_game_start",
+  "inf_new_alpha",
+  "inf_new_infection",
+  "inf_new_zombie",
+  "inf_last_man",
+  "stockpile_game_start",
+  "stock_flags_collected",
+  "swat_game_start",
+  "action_sack_game_start",
+  "bumper_cars_game_start",
+  "custom_game_start",
+  "dogfight_game_start",
+  "fiesta_game_start",
+  "golf_game_start",
+  "grifball_game_start",
+  "hogpile_game_start",
+  "pinata_game_start",
+  "soccer_game_start",
+  "new_juggernaut",
+  "revenge_kill",
+  "berserker_kill",
+  "opportunist_kill",
+  "first_blood",
+  "bro_spawn",
+  "sprinting_kill",
+  "pull_kill",
+  "perfection",
+  "extermination",
+  "multikill_x2",
+  "multikill_x3",
+  "multikill_x4",
+  "multikill_x5",
+  "multikill_x6",
+  "multikill_x7",
+  "multikill_x8",
+  "multikill_x9",
+  "multikill_x10",
+  "5_in_a_row",
+  "10_in_a_row",
+  "15_in_a_row",
+  "20_in_a_row",
+  "25_in_a_row",
+  "30_in_a_row",
+  "shotgun_5x",
+  "shotgun_10x",
+  "sniper_5x",
+  "sniper_10x",
+  "sword_5x",
+  "sword_10x",
+  "sticky_grenade_5x",
+  "sticky_grenade_10x",
+  "gravity_hammer_5x",
+  "gravity_hammer_10x",
+  "splatter_5x",
+  "splatter_10x",
+  "juggernaut_5x",
+  "juggernaut_10x",
+  "infection_5x",
+  "infection_10x",
+  "zombie_kill_5x",
+  "zombie_kill_10x",
+  "infection_survive",
+  "koth_spree",
+  "inv_spartan_win",
+  "inv_spartans_win_rd1",
+  "inv_spartans_win_rd2",
+  "inv_elite_win",
+  "inv_elites_win_rd1",
+  "invasion_elites_win_rd2",
+  "inv_core_grabbed",
+  "inv_core_stolen",
+  "inv_core_dropped",
+  "inv_core_reset",
+  "game_start_slayer",
+  "team_game_start",
+  "victory_game",
+  "victory_team_game",
+  "one_minute_win",
+  "one_minute_team_win",
+  "half_minute_win",
+  "half_minute_team_win",
+  "30_minutes_remaining",
+  "15_minutes_remaining",
+  "5_minutes_remaining",
+  "1_minute_remaining",
+  "30_seconds_remaining",
+  "10_seconds_remaining",
+  "round_over",
+  "sudden_death",
+  "game_over",
+  "gained_lead",
+  "gained_team_lead",
+  "lost_lead",
+  "lost_team_lead",
+  "tied_leader",
+  "tied_team_leader",
+  "player_joined",
+  "player_switched_team",
+  "player_rejoined",
+  "player_quit",
+  "player_booted_player",
+  "respawn_tick",
+  "respawn_final_tick",
+  "multikill_comm",
+  "headshot_comm",
+  "spree_comm",
+  "assist_comm",
+  "technician_comm",
+  "sticky_comm",
+  "vehicle_comm",
+  "triple_double_chall",
+  "tripod_chall",
+  "tripod_2x_chall",
+  "tripod_3x_chall",
+  "three_kind_chall",
+  "three_kind_chall_2x",
+  "mp_spree_chall",
+  "mp_spree_2x_chall",
+  "mp_spree_3x_chall",
+  "mp_spree_4x_chall",
+  "mp_frenzy_chall",
+  "mp_riot_chall",
+  "15k_10a_chall",
+  "20k_10a_chall",
+  "20k_15a_chall",
+  "20k_20a_chall",
+  "30k_chall"
+];
+
+// ../megalo/src/object-lists/haloreach/beta/default/loadout_palettes.ts
+var loadout_palettes_default2 = [
+  "unsc_bronze",
+  "unsc_silver",
+  "unsc_gold",
+  "covy_bronze",
+  "covy_silver",
+  "covy_gold",
+  "slayer_loadouts",
+  "unsc_firefight",
+  "covy_firefight",
+  "slayer_pro_loadouts",
+  "swat_loadouts",
+  "covy_slayer_loadouts",
+  "objective_loadouts",
+  "objective_pro_loadouts"
+];
+
+// ../megalo/src/object-lists/haloreach/beta/default/loadouts.ts
+var loadouts_default2 = [
+  "loadout_name_noble1",
+  "loadout_name_noble2",
+  "loadout_name_noble3",
+  "loadout_name_noble4",
+  "loadout_name_noble5",
+  "loadout_name_noble6",
+  "loadout_name_carter",
+  "loadout_name_kat",
+  "loadout_name_jorge",
+  "loadout_name_emile",
+  "loadout_name_jun",
+  "loadout_name_thom",
+  "loadout_name_rosenda",
+  "loadout_name_danny",
+  "loadout_name_john",
+  "loadout_name_kelly",
+  "loadout_name_linda",
+  "loadout_name_sam",
+  "loadout_name_kurt",
+  "loadout_name_jerry",
+  "loadout_name_jimmy",
+  "loadout_name_bobby",
+  "loadout_name_marlo",
+  "loadout_name_omar",
+  "loadout_name_juggernaut",
+  "loadout_name_berserker",
+  "loadout_name_maverick",
+  "loadout_name_zombie",
+  "loadout_name_demon",
+  "loadout_name_angel",
+  "loadout_name_redshirt",
+  "loadout_name_ling_ling",
+  "loadout_name_pookie",
+  "loadout_name_fng",
+  "loadout_name_noob",
+  "loadout_name_camper",
+  "loadout_name_specter",
+  "loadout_name_bunker",
+  "loadout_name_claymore",
+  "loadout_name_firebase",
+  "loadout_name_intel",
+  "loadout_name_ninja",
+  "loadout_name_power",
+  "loadout_name_cobra",
+  "loadout_name_eagle",
+  "loadout_name_hog",
+  "loadout_name_bear",
+  "loadout_name_warrior",
+  "loadout_name_deceiver",
+  "loadout_name_ranger",
+  "loadout_name_zealot",
+  "loadout_name_royal_zealot",
+  "loadout_name_assassin",
+  "loadout_name_dark_assassin",
+  "loadout_name_champion_assassin",
+  "loadout_name_gladiator",
+  "loadout_name_sentry",
+  "loadout_name_warden",
+  "loadout_name_saboteur",
+  "loadout_name_spec_ops",
+  "loadout_name_scout",
+  "loadout_name_guard",
+  "loadout_name_air_assault",
+  "loadout_name_marksman",
+  "loadout_name_recon_marksman",
+  "loadout_name_expert_marksman",
+  "loadout_name_operator",
+  "loadout_name_grenadier",
+  "loadout_name_medic",
+  "loadout_name_corpsman",
+  "loadout_name_stalker",
+  "loadout_name_demolitions",
+  "loadout_name_infiltrator",
+  "loadout_name_security",
+  "loadout_unchanged_sprint",
+  "loadout_unchanged_evade",
+  "loadout_unchanged_armor_lock",
+  "loadout_unchanged_active_camo",
+  "loadout_unchanged_hologram",
+  "loadout_unchanged_drop_shield",
+  "loadout_unchanged_jet_pack"
+];
+
+// ../megalo/src/object-lists/haloreach/beta/default/objects.ts
+var objects_default2 = [
+  "spartan",
+  "elite",
+  "monitor",
+  "flag",
+  "bomb",
+  "ball",
+  "area",
+  "stand",
+  "destination",
+  "frag_grenade",
+  "plasma_grenade",
+  "spike_grenade",
+  "firebomb_grenade",
+  "battle_rifle",
+  "assault_rifle",
+  "plasma_pistol",
+  "spike_rifle",
+  "smg",
+  "needle_rifle",
+  "plasma_repeater",
+  "energy_sword",
+  "magnum",
+  "needler",
+  "plasma_rifle",
+  "rocket_launcher",
+  "shotgun",
+  "sniper_rifle",
+  "brute_shot",
+  "beam_rifle",
+  "spartan_laser",
+  "gravity_hammer",
+  "mauler",
+  "flamethrower",
+  "missile_pod",
+  "warthog",
+  "ghost",
+  "scorpion",
+  "wraith",
+  "banshee",
+  "mongoose",
+  "chopper",
+  "prowler",
+  "hornet",
+  "stingray",
+  "heavy_wraith",
+  "falcon",
+  "sabre",
+  "sprint_equipment",
+  "jet_pack_equipment",
+  "armor_lock_equipment",
+  "power_fist_equipment",
+  "active_camo_equipment",
+  "ammo_pack_equipment",
+  "sensor_pack_equipment",
+  "revenant",
+  "pickup",
+  "prototype_covey_sniper",
+  "territory_static",
+  "ctf_flag_return_area",
+  "ctf_flag_spawn_point",
+  "territories_respawn_zone_bfg",
+  "territories_respawn_zone",
+  "invasion_elite_buy",
+  "invasion_elite_drop",
+  "invasion_slayer",
+  "invasion_spartan_buy",
+  "invasion_spartan_drop",
+  "invasion_spawn_controller",
+  "oddball_ball_spawn_point",
+  "plasma_launcher",
+  "fusion_coil",
+  "unsc_shield_generator",
+  "cov_shield_generator",
+  "initial_spawn_point",
+  "invasion_vehicle_req",
+  "vehicle_req_floor",
+  "wall_switch",
+  "health_station",
+  "req_unsc_laser",
+  "req_unsc_dmr",
+  "req_unsc_rocket",
+  "req_unsc_shotgun",
+  "req_unsc_sniper",
+  "req_covy_launcher",
+  "req_covy_needler",
+  "req_covy_sniper",
+  "req_covy_sword",
+  "shock_loadout",
+  "specialist_loadout",
+  "assassin_loadout",
+  "infiltrator_loadout",
+  "warrior_loadout",
+  "combatant_loadout",
+  "engineer_loadout",
+  "infantry_loadout",
+  "operator_loadout",
+  "recon_loadout",
+  "scout_loadout",
+  "seeker_loadout",
+  "airborne_loadout",
+  "ranger_loadout",
+  "req_buy_banshee",
+  "req_buy_falcon",
+  "req_buy_ghost",
+  "req_buy_mongoose",
+  "req_buy_revenant",
+  "req_buy_scorpion",
+  "req_buy_warthog",
+  "req_buy_wraith",
+  "fireteam_1_respawn_zone",
+  "fireteam_2_respawn_zone",
+  "fireteam_3_respawn_zone",
+  "fireteam_4_respawn_zone",
+  "semi",
+  "soccer_ball",
+  "golf_ball",
+  "golf_ball_blue",
+  "golf_ball_red",
+  "golf_club",
+  "golf_cup",
+  "golf_tee",
+  "dice",
+  "space_crate",
+  "eradicator_loadout",
+  "saboteur_loadout",
+  "grenadier_loadout",
+  "marksman_loadout",
+  "flare",
+  "glow_stick",
+  "elite_shot",
+  "grenade_launcher",
+  "phantom_approach",
+  "hologram_equipment",
+  "evade_equipment",
+  "unsc_data_core",
+  "danger_zone",
+  "teleporter_sender",
+  "teleporter_reciever",
+  "teleporter_2way",
+  "data_core_beam",
+  "phantom_overwatch",
+  "longsword",
+  "invisible_cube_of_derek",
+  "phantom_scenery",
+  "pelican_scenery",
+  "phantom",
+  "pelican",
+  "armory_shelf",
+  "cov_resupply_capsule",
+  "covy_drop_pod",
+  "invisible_marker",
+  "weak_respawn_zone",
+  "weak_anti_respawn_zone",
+  "phantom_device",
+  "resupply_capsule",
+  "resupply_capsule_open",
+  "weapon_box",
+  "tech_console_stationary",
+  "tech_console_wall",
+  "mp_cinematic_camera",
+  "invis_cov_resupply_capsule"
+];
+
+// ../megalo/src/object-lists/haloreach/beta/default/strings.ts
+var strings_default2 = [
+  "mp_boneyard_a_idle_start",
+  "mp_boneyard_a_fly_in",
+  "mp_boneyard_a_idle_mid",
+  "mp_boneyard_a_fly_out",
+  "mp_boneyard_b_fly_in",
+  "mp_boneyard_b_idle_mid",
+  "mp_boneyard_b_fly_out",
+  "mp_boneyard_b_idle_start"
+];
+
+// ../megalo/src/object-lists/haloreach/beta/default/vehicle_sets.ts
+var vehicle_sets_default2 = [
+  "mongoose_only",
+  "warthog_only",
+  "civilian"
+];
+
+// ../megalo/src/object-lists/haloreach/beta/default/vehicles.ts
+var vehicles_default2 = [
+  "warthog",
+  "ghost",
+  "scorpion",
+  "wraith",
+  "banshee",
+  "mongoose",
+  "chopper",
+  "mauler",
+  "hornet",
+  "stingray",
+  "heavy_wraith",
+  "falcon",
+  "sabre",
+  "revenant",
+  "pickup",
+  "semi",
+  "phantom",
+  "pelican"
+];
+
+// ../megalo/src/object-lists/haloreach/beta/default/weapon_sets.ts
+var weapon_sets_default2 = [
+  "human",
+  "covenant",
+  "no_snipers",
+  "rockets_only"
+];
+
+// ../megalo/src/object-lists/haloreach/beta/default/weapons.ts
+var weapons_default2 = [
+  "battle_rifle",
+  "assault_rifle",
+  "plasma_pistol",
+  "spike_rifle",
+  "smg",
+  "energy_sword",
+  "magnum",
+  "needler",
+  "plasma_rifle",
+  "rocket_launcher",
+  "shotgun",
+  "sniper_rifle",
+  "brute_shot",
+  "beam_rifle",
+  "spartan_laser",
+  "gravity_hammer",
+  "plasma_repeater",
+  "needle_rifle",
+  "prototype_covey_sniper",
+  "plasma_launcher",
+  "elite_shot",
+  "grenade_launcher",
+  "golf_club",
+  "flak_cannon",
+  "machinegun",
+  "plasma_turret_weapon",
+  "target_laser"
+];
+
+// ../megalo/src/object-lists/haloreach/beta/default/index.ts
+var objectLists2 = {
+  ["equipment" /* Equipment */]: equipment_default2,
+  ["grenades" /* Grenades */]: grenades_default2,
+  ["hud_widget_icons" /* HudWidgetIcons */]: hud_widget_icons_default2,
+  ["incidents" /* Incidents */]: incidents_default2,
+  ["loadouts" /* Loadouts */]: loadouts_default2,
+  ["loadout_palettes" /* LoadoutPalettes */]: loadout_palettes_default2,
+  ["objects" /* Objects */]: objects_default2,
+  ["strings" /* Strings */]: strings_default2,
+  ["vehicles" /* Vehicles */]: vehicles_default2,
+  ["vehicle_sets" /* VehicleSets */]: vehicle_sets_default2,
+  ["weapons" /* Weapons */]: weapons_default2,
+  ["weapon_sets" /* WeaponSets */]: weapon_sets_default2
+};
+var default_default2 = objectLists2;
+
+// ../megalo/src/object-lists/haloreach/release/default/equipment.ts
+var equipment_default3 = [
+  "sprint_equipment",
+  "jet_pack_equipment",
+  "armor_lock_equipment",
+  "power_fist_equipment",
+  "active_camo_equipment",
+  "ammo_pack_equipment",
+  "sensor_pack_equipment",
+  "hologram_equipment",
+  "evade_equipment",
+  "drop_shield_equipment"
+];
+
+// ../megalo/src/object-lists/haloreach/release/default/grenades.ts
+var grenades_default3 = [
+  "frag_grenade",
+  "plasma_grenade",
+  "spike_grenade",
+  "firebomb_grenade"
+];
+
+// ../megalo/src/object-lists/haloreach/release/default/hud_widget_icons.ts
+var hud_widget_icons_default3 = [
+  "ctf",
+  "slayer",
+  "oddball",
+  "koth",
+  "juggernaut",
+  "territories",
+  "assault",
+  "infection",
+  "vip",
+  "invasion",
+  "extermination",
+  "stockpile",
+  "action_sack",
+  "race",
+  "rocket_race",
+  "grifball",
+  "soccer",
+  "headhunter",
+  "generic_icon_2",
+  "generic_icon_3",
+  "generic_icon_4",
+  "generic_icon_5",
+  "generic_icon_6",
+  "generic_icon_7",
+  "generic_icon_8",
+  "generic_icon_9",
+  "spartan",
+  "elite",
+  "offense",
+  "defense",
+  "ordnance",
+  "interface",
+  "recon",
+  "retrieve",
+  "ammunition"
+];
+
+// ../megalo/src/object-lists/haloreach/release/default/incidents.ts
+var incidents_default3 = [
+  "kill",
+  "grenade_kill",
+  "guardian_kill",
+  "death",
+  "assist",
+  "suicide",
+  "fell_to_death",
+  "kill_betrayal",
+  "melee_kill",
+  "assassination_kill",
+  "finishing_move_kill",
+  "terminal_velocity_assassination",
+  "recharge_health",
+  "wildlife_kill",
+  "headshot_kill",
+  "sniper_headshot_kill",
+  "emp_assist",
+  "supercombine_kill",
+  "sniper_kill",
+  "laser_kill",
+  "rocket_kill",
+  "shotgun_kill",
+  "hammer_kill",
+  "small_arms_kill",
+  "auto_kill",
+  "precision_kill",
+  "launcher_kill",
+  "pistol_kill",
+  "blamite_kill",
+  "dmr_kill",
+  "enemy_vehicle_kill",
+  "sword_kill",
+  "airstrike_kill",
+  "airstrike_vehicle_kill",
+  "sticky_grenade_kill",
+  "splatter_kill",
+  "zombie_kill_kill",
+  "infection_kill",
+  "kill_elite",
+  "kill_grunt",
+  "kill_elite_bob",
+  "kill_enemy_leader",
+  "kill_enemy_infantry",
+  "kill_enemy_specialist",
+  "kill_from_the_grave",
+  "ordnance_kill",
+  "vehicle_kill",
+  "shade_aa_kill",
+  "driver_assist_gunner",
+  "highjack",
+  "skyjack",
+  "shotgun_kill_sword",
+  "killjoy",
+  "survival_wave_completed_deathless",
+  "survival_wave_completed",
+  "survival_set_completed",
+  "survival_set_completed_deathless",
+  "survival_full_round_completed",
+  "survival_full_round_completed_deathless",
+  "campaign_level_completed",
+  "flagcarrier_kill",
+  "kill_with_oddball",
+  "bomb_carrier_kill",
+  "juggernaut_game_start",
+  "kill_as_juggernaut",
+  "juggernaut_new",
+  "juggernaut_kill",
+  "vip_kill",
+  "koth_game_start",
+  "hill_controlled",
+  "hill_contested",
+  "hill_controlled_team",
+  "hill_contested_team",
+  "hill_moved",
+  "kill_within_hill",
+  "ball_game_start",
+  "ball_taken",
+  "ball_dropped",
+  "ball_taken_team",
+  "ball_dropped_team",
+  "ball_spawned",
+  "ball_reset",
+  "ball_carrier_kill",
+  "assault_game_start",
+  "bomb_planted",
+  "bomb_taken",
+  "bomb_dropped",
+  "bomb_armed",
+  "bomb_reset_neutral",
+  "bomb_returned",
+  "bomb_disarmed",
+  "bomb_arming",
+  "bomb_detonated",
+  "bomb_reset",
+  "",
+  "",
+  "terr_game_start",
+  "terr_captured",
+  "terr_contested",
+  "teleporter_used",
+  "race_game_start",
+  "rally_game_start",
+  "checkpoint_reached",
+  "checkpoint_reached_team",
+  "lap_complete",
+  "final_lap",
+  "final_lap_team",
+  "rocket_race_game_start",
+  "ctf_game_start",
+  "ctf_team",
+  "flag_grabbed",
+  "flag_dropped_neutral",
+  "flag_dropped",
+  "flag_grabbed_neutral",
+  "",
+  "",
+  "flag_scored",
+  "flag_reset_neutral",
+  "flag_reset",
+  "flag_recovered",
+  "kill_with_flag",
+  "team_offense",
+  "team_defense",
+  "headhunter_game_start",
+  "skulls_taken",
+  "skulls_scored",
+  "skulls_dropped",
+  "skullamanjaro",
+  "",
+  "infection_game_start",
+  "inf_new_alpha",
+  "inf_new_infection",
+  "inf_new_zombie",
+  "inf_last_man",
+  "infection_survivor_win",
+  "infection_zombie_win",
+  "stockpile_game_start",
+  "stock_flags_collected",
+  "stock_flag_reset",
+  "swat_game_start",
+  "action_sack_game_start",
+  "bumper_cars_game_start",
+  "custom_game_start",
+  "dogfight_game_start",
+  "fiesta_game_start",
+  "golf_game_start",
+  "grifball_game_start",
+  "hogpile_game_start",
+  "pinata_game_start",
+  "soccer_game_start",
+  "",
+  "new_juggernaut",
+  "",
+  "",
+  "revenge_kill",
+  "close_call",
+  "opportunist_kill",
+  "first_blood",
+  "wingman_spawn",
+  "sprinting_kill",
+  "pull_kill",
+  "perfection",
+  "showstopper",
+  "yoink",
+  "second_wind",
+  "avenged",
+  "avenger",
+  "life_saved",
+  "lifesaver",
+  "firebird",
+  "",
+  "",
+  "",
+  "extermination",
+  "multikill_x2",
+  "multikill_x3",
+  "multikill_x4",
+  "multikill_x5",
+  "multikill_x6",
+  "multikill_x7",
+  "multikill_x8",
+  "multikill_x9",
+  "multikill_x10",
+  "5_in_a_row",
+  "10_in_a_row",
+  "15_in_a_row",
+  "20_in_a_row",
+  "25_in_a_row",
+  "30_in_a_row",
+  "35_in_a_row",
+  "40_in_a_row",
+  "",
+  "assist_5x",
+  "assist_10x",
+  "assist_15x",
+  "wheelman_5x",
+  "wheelman_10x",
+  "wheelman_15x",
+  "shotgun_5x",
+  "shotgun_10x",
+  "shotgun_15x",
+  "sniper_5x",
+  "sniper_10x",
+  "sniper_15x",
+  "sword_5x",
+  "sword_10x",
+  "sword_15x",
+  "sticky_grenade_5x",
+  "sticky_grenade_10x",
+  "sticky_grenade_15x",
+  "laser_5x",
+  "laser_10x",
+  "laser_15x",
+  "gravity_hammer_5x",
+  "gravity_hammer_10x",
+  "gravity_hammer_15x",
+  "splatter_5x",
+  "splatter_10x",
+  "splatter_15x",
+  "juggernaut_5x",
+  "juggernaut_10x",
+  "juggernaut_15x",
+  "infection_5x",
+  "infection_10x",
+  "infection_15x",
+  "zombie_kill_5x",
+  "zombie_kill_10x",
+  "zombie_kill_15x",
+  "infection_survive",
+  "koth_spree",
+  "wingman_5x",
+  "wingman_10x",
+  "wingman_15x",
+  "invasion_game_start",
+  "invasion_game_start_c",
+  "inv_spartan_win",
+  "inv_spartans_win_rd1",
+  "inv_spartans_win_rd2",
+  "inv_elite_win",
+  "inv_elites_win_rd1",
+  "invasion_elites_win_rd2",
+  "inv_core_grabbed",
+  "inv_core_stolen",
+  "inv_core_dropped",
+  "inv_core_captured",
+  "inv_core_reset",
+  "bone_cv_defeat",
+  "bone_cv_ph1_defeat",
+  "bone_cv_ph1_intro",
+  "bone_cv_ph1_victory",
+  "bone_cv_ph2_defeat",
+  "bone_cv_ph2_victory",
+  "bone_cv_ph3_victory",
+  "bone_cv_victory",
+  "bone_sp_defeat",
+  "bone_sp_ph1_intro",
+  "bone_sp_ph1_victory",
+  "bone_sp_ph2_intro",
+  "bone_sp_ph2_victory",
+  "bone_sp_ph3_defeat",
+  "bone_sp_ph3_intro",
+  "bone_sp_ph3_victory",
+  "isle_cv_defeat",
+  "isle_cv_ph1_intro",
+  "isle_cv_ph1_victory",
+  "isle_cv_ph2_intro",
+  "isle_cv_ph2_victory",
+  "isle_cv_ph3_defeat",
+  "isle_cv_ph3_intro",
+  "isle_cv_ph3_victory",
+  "isle_sp_defeat",
+  "isle_sp_ph1_defeat",
+  "isle_sp_ph1_extra",
+  "isle_sp_ph1_intro",
+  "isle_sp_ph1_victory",
+  "isle_sp_ph2_defeat",
+  "isle_sp_ph2_victory",
+  "isle_sp_ph3_victory",
+  "isle_sp_victory",
+  "invasion_slayer_start",
+  "",
+  "game_start_slayer",
+  "team_game_start",
+  "one_minute_win",
+  "one_minute_team_win",
+  "half_minute_win",
+  "half_minute_team_win",
+  "30_minutes_remaining",
+  "15_minutes_remaining",
+  "5_minutes_remaining",
+  "1_minute_remaining",
+  "30_seconds_remaining",
+  "10_seconds_remaining",
+  "round_over",
+  "sudden_death",
+  "game_over",
+  "gained_lead",
+  "gained_team_lead",
+  "lost_lead",
+  "lost_team_lead",
+  "tied_leader",
+  "tied_team_leader",
+  "player_joined",
+  "player_switched_team",
+  "player_rejoined",
+  "player_quit",
+  "player_booted_player",
+  "respawn_tick",
+  "respawn_tick_final",
+  "",
+  "",
+  "multikill_comm",
+  "headshot_comm",
+  "spree_comm",
+  "assist_comm",
+  "technician_comm",
+  "wheelman_comm",
+  "auto_comm",
+  "small_arms_comm",
+  "ordnance_comm",
+  "vehicle_comm",
+  "grenades_comm",
+  "precision_comm",
+  "finishing_move_comm",
+  "cqc_comm",
+  "set_clear_comm",
+  "deathless_round_comm",
+  "kill_leader_comm",
+  "kill_infantry_comm",
+  "kill_specialist_comm",
+  "destroy_vehicle_comm",
+  "clear_a_mission_comm",
+  "campaign_level_completed_deathless",
+  "player_kills_spartan",
+  "player_kill_spartan_achieve",
+  "core_killed_achieve",
+  "m45_elite_pod",
+  "dmr_acheive",
+  "supercombine_achieve",
+  "pistol_achieve",
+  "wingman_achieve",
+  "3kiva_clear",
+  "leg_set_achieve",
+  "2_for_1_achieve",
+  "cruiser_fast_achieve",
+  "firebird_achieve",
+  "tank_survive_achieve",
+  "race_m20",
+  "race_m20_fast",
+  "terminal_vel_achieve",
+  "wildlife_achieve",
+  "skunked_achieve",
+  "m52_aa_kill",
+  "zealot_achieve",
+  "",
+  "",
+  "dlc_achieve_1",
+  "dlc_achieve_2",
+  "dlc_achieve_3",
+  "dlc_achieve_4",
+  "dlc_achieve_5",
+  "dlc_achieve_6",
+  "dlc_achieve_7",
+  "dlc_achieve_8",
+  "dlc_achieve_9",
+  "dlc_achieve_10",
+  "",
+  "survival_welcome",
+  "survival_new_set",
+  "survival_end_set",
+  "survival_new_round",
+  "survival_end_round",
+  "survival_new_wave",
+  "survival_end_wave",
+  "survival_bonus_round",
+  "survival_bonus_lives_awarded",
+  "survival_bonus_round_over",
+  "survival_awarded_lives",
+  "survival_awarded_weapon",
+  "survival_awarded_equipment",
+  "sur_cla_unsc_start",
+  "sur_cla_unsc_fail",
+  "sur_gen_unsc_start",
+  "sur_gen_unsc_fail",
+  "sur_gen_unsc_win",
+  "sur_unsc_timeout",
+  "sur_cla_cov_start",
+  "sur_cla_cov_fail",
+  "sur_gen_cov_start",
+  "sur_gen_cov_fail",
+  "sur_cov_win",
+  "sur_cov_timeout",
+  "gen_alpha_locked",
+  "gen_bravo_locked",
+  "gen_charlie_locked",
+  "survival_generator_destroyed",
+  "survival_round_over",
+  "survival_obj_complete",
+  "survival_obj_failed",
+  "survival_out_of_lives",
+  "survival_generator_lost",
+  "survival_alpha_under_attack",
+  "survival_bravo_under_attack",
+  "survival_charlie_under_attack",
+  "survival_spartans_win",
+  "survival_elites_win",
+  "survival_sudden_death_over",
+  "",
+  "hero",
+  "survival_last_man_standing",
+  "survival_skull_thunderstorm",
+  "survival_skull_famine",
+  "survival_skull_tilt",
+  "survival_skull_mythic",
+  "survival_skull_catch",
+  "survival_skull_black_eye",
+  "survival_skull_tough_luck",
+  "survival_skull_iron",
+  "survival_skull_assassin",
+  "survival_skull_fog",
+  "survival_skull_blind",
+  "survival_skull_superman",
+  "survival_skull_grunt_birthday_party",
+  "survival_skull_iwhbyd",
+  "survival_skull_blue",
+  "survival_skull_yellow",
+  "survival_skull_red",
+  "survival_skulls_multiple",
+  "survival_skull_single",
+  "survival_5_lives_left",
+  "survival_1_life_left",
+  "survival_0_lives_left",
+  "survival_game_over",
+  "survival_5_ai_remaining",
+  "survival_2_ai_remaining",
+  "survival_1_ai_remaining",
+  "survival_reinforcements",
+  "survival_skull_all",
+  "survival_skull_activation_finished",
+  "survival_incredible_round",
+  "survival_superb_set",
+  "survival_bonus_information",
+  "survival_next_round_timer",
+  "survival_next_set_timer",
+  "survival_bonus_skull_all",
+  "survival_10_in_a_row",
+  "survival_20_in_a_row",
+  "survival_30_in_a_row",
+  "survival_40_in_a_row",
+  "survival_50_in_a_row",
+  "survival_100_in_a_row",
+  "survival_500_in_a_row",
+  "survival_1000_in_a_row",
+  "survival_10_aura",
+  "survival_20_aura",
+  "survival_30_aura",
+  "survival_40_aura",
+  "survival_50_aura",
+  "survival_100_aura",
+  "survival_500_aura",
+  "survival_1000_aura",
+  "team_generator_kill",
+  "sur_airstrike_refill",
+  "",
+  "",
+  "survival_mm_game_complete",
+  "score_silver",
+  "score_gold",
+  "score_onyx",
+  "mm_score_achieve"
+];
+
+// ../megalo/src/object-lists/haloreach/release/default/loadouts.ts
+var loadouts_default3 = [
+  "loadout_name_noble1",
+  "loadout_name_noble2",
+  "loadout_name_noble3",
+  "loadout_name_noble4",
+  "loadout_name_noble5",
+  "loadout_name_noble6",
+  "loadout_name_carter",
+  "loadout_name_kat",
+  "loadout_name_jorge",
+  "loadout_name_emile",
+  "loadout_name_jun",
+  "loadout_name_thom",
+  "loadout_name_rosenda",
+  "loadout_name_danny",
+  "loadout_name_john",
+  "loadout_name_kelly",
+  "loadout_name_linda",
+  "loadout_name_sam",
+  "loadout_name_kurt",
+  "loadout_name_jerry",
+  "loadout_name_jimmy",
+  "loadout_name_bobby",
+  "loadout_name_marlo",
+  "loadout_name_omar",
+  "loadout_name_juggernaut",
+  "loadout_name_berserker",
+  "loadout_name_maverick",
+  "loadout_name_zombie",
+  "loadout_name_demon",
+  "loadout_name_angel",
+  "loadout_name_redshirt",
+  "loadout_name_ling_ling",
+  "loadout_name_pookie",
+  "loadout_name_fng",
+  "loadout_name_noob",
+  "loadout_name_camper",
+  "loadout_name_specter",
+  "loadout_name_bunker",
+  "loadout_name_claymore",
+  "loadout_name_firebase",
+  "loadout_name_intel",
+  "loadout_name_ninja",
+  "loadout_name_power",
+  "loadout_name_cobra",
+  "loadout_name_eagle",
+  "loadout_name_hog",
+  "loadout_name_bear",
+  "loadout_name_warrior",
+  "loadout_name_deceiver",
+  "loadout_name_ranger",
+  "loadout_name_zealot",
+  "loadout_name_royal_zealot",
+  "loadout_name_assassin",
+  "loadout_name_dark_assassin",
+  "loadout_name_champion_assassin",
+  "loadout_name_gladiator",
+  "loadout_name_sentry",
+  "loadout_name_warden",
+  "loadout_name_saboteur",
+  "loadout_name_spec_ops",
+  "loadout_name_scout",
+  "loadout_name_guard",
+  "loadout_name_air_assault",
+  "loadout_name_marksman",
+  "loadout_name_recon_marksman",
+  "loadout_name_expert_marksman",
+  "loadout_name_operator",
+  "loadout_name_grenadier",
+  "loadout_name_medic",
+  "loadout_name_corpsman",
+  "loadout_name_stalker",
+  "loadout_name_demolitions",
+  "loadout_name_infiltrator",
+  "loadout_name_security",
+  "loadout_unchanged_sprint",
+  "loadout_unchanged_evade",
+  "loadout_unchanged_armor_lock",
+  "loadout_unchanged_active_camo",
+  "loadout_unchanged_hologram",
+  "loadout_unchanged_drop_shield",
+  "loadout_unchanged_jet_pack"
+];
+
+// ../megalo/src/object-lists/haloreach/release/default/objects.ts
+var objects_default3 = [
+  "spartan",
+  "elite",
+  "monitor",
+  "flag",
+  "bomb",
+  "ball",
+  "area",
+  "stand",
+  "destination",
+  "frag_grenade",
+  "plasma_grenade",
+  "spike_grenade",
+  "firebomb_grenade",
+  "dmr",
+  "assault_rifle",
+  "plasma_pistol",
+  "spike_rifle",
+  "smg",
+  "needle_rifle",
+  "plasma_repeater",
+  "energy_sword",
+  "magnum",
+  "needler",
+  "plasma_rifle",
+  "rocket_launcher",
+  "shotgun",
+  "sniper_rifle",
+  "brute_shot",
+  "beam_rifle",
+  "spartan_laser",
+  "gravity_hammer",
+  "mauler",
+  "flamethrower",
+  "missile_pod",
+  "warthog",
+  "ghost",
+  "scorpion",
+  "wraith",
+  "banshee",
+  "mongoose",
+  "chopper",
+  "prowler",
+  "hornet",
+  "stingray",
+  "heavy_wraith",
+  "falcon",
+  "sabre",
+  "sprint_equipment",
+  "jet_pack_equipment",
+  "armor_lock_equipment",
+  "power_fist_equipment",
+  "active_camo_equipment",
+  "ammo_pack_equipment",
+  "sensor_pack_equipment",
+  "revenant",
+  "pickup",
+  "prototype_covey_sniper",
+  "territory_static",
+  "ctf_flag_return_area",
+  "ctf_flag_spawn_point",
+  "respawn_zone",
+  "invasion_elite_buy",
+  "invasion_elite_drop",
+  "invasion_slayer",
+  "invasion_spartan_buy",
+  "invasion_spartan_drop",
+  "invasion_spawn_controller",
+  "oddball_ball_spawn_point",
+  "plasma_launcher",
+  "fusion_coil",
+  "unsc_shield_generator",
+  "cov_shield_generator",
+  "initial_spawn_point",
+  "invasion_vehicle_req",
+  "vehicle_req_floor",
+  "wall_switch",
+  "health_station",
+  "req_unsc_laser",
+  "req_unsc_dmr",
+  "req_unsc_rocket",
+  "req_unsc_shotgun",
+  "req_unsc_sniper",
+  "req_covy_launcher",
+  "req_covy_needler",
+  "req_covy_sniper",
+  "req_covy_sword",
+  "shock_loadout",
+  "specialist_loadout",
+  "assassin_loadout",
+  "infiltrator_loadout",
+  "warrior_loadout",
+  "combatant_loadout",
+  "engineer_loadout",
+  "infantry_loadout",
+  "operator_loadout",
+  "recon_loadout",
+  "scout_loadout",
+  "seeker_loadout",
+  "airborne_loadout",
+  "ranger_loadout",
+  "req_buy_banshee",
+  "req_buy_falcon",
+  "req_buy_ghost",
+  "req_buy_mongoose",
+  "req_buy_revenant",
+  "req_buy_scorpion",
+  "req_buy_warthog",
+  "req_buy_wraith",
+  "fireteam_1_respawn_zone",
+  "fireteam_2_respawn_zone",
+  "fireteam_3_respawn_zone",
+  "fireteam_4_respawn_zone",
+  "semi",
+  "soccer_ball",
+  "golf_ball",
+  "golf_ball_blue",
+  "golf_ball_red",
+  "golf_club",
+  "golf_cup",
+  "golf_tee",
+  "dice",
+  "space_crate",
+  "eradicator_loadout",
+  "saboteur_loadout",
+  "grenadier_loadout",
+  "marksman_loadout",
+  "flare",
+  "glow_stick",
+  "elite_shot",
+  "grenade_launcher",
+  "phantom_approach",
+  "hologram_equipment",
+  "evade_equipment",
+  "unsc_data_core",
+  "danger_zone",
+  "teleporter_sender",
+  "teleporter_reciever",
+  "teleporter_2way",
+  "data_core_beam",
+  "phantom_overwatch",
+  "longsword",
+  "invisible_cube_of_derek",
+  "phantom_scenery",
+  "pelican_scenery",
+  "phantom",
+  "pelican",
+  "armory_shelf",
+  "cov_resupply_capsule",
+  "covy_drop_pod",
+  "invisible_marker",
+  "weak_respawn_zone",
+  "weak_anti_respawn_zone",
+  "phantom_device",
+  "resupply_capsule",
+  "resupply_capsule_open",
+  "weapon_box",
+  "tech_console_stationary",
+  "tech_console_wall",
+  "mp_cinematic_camera",
+  "invis_cov_resupply_capsule",
+  "cov_power_module",
+  "flak_cannon",
+  "dropzone_boundary",
+  "shield_door_small",
+  "shield_door_medium",
+  "shield_door_large",
+  "drop_shield_equipment",
+  "machinegun",
+  "machinegun_turret",
+  "plasma_turret_weapon",
+  "mounted_plasma_turret",
+  "shade_turret",
+  "cargo_truck",
+  "cart_electric",
+  "forklift",
+  "military_truck",
+  "oni_van",
+  "warthog_gunner",
+  "warthog_gauss_turret",
+  "warthog_rocket_turret",
+  "scorpion_infantry_gunner",
+  "falcon_grenadier_left",
+  "falcon_grenadier_right",
+  "wraith_infantry_turret",
+  "land_mine",
+  "target_laser",
+  "ff_kill_zone",
+  "ff_plat_1x1_flat",
+  "shade_anti_air",
+  "shade_flak",
+  "shade_plasma",
+  "killball",
+  "ff_light_red",
+  "ff_light_blue",
+  "ff_light_green",
+  "ff_light_orange",
+  "ff_light_purple",
+  "ff_light_yellow",
+  "ff_light_white",
+  "ff_light_flash_red",
+  "ff_light_flash_yellow",
+  "fx_colorblind",
+  "fx_gloomy",
+  "fx_juicy",
+  "fx_nova",
+  "fx_olde_timey",
+  "fx_pen_and_ink",
+  "fx_dusk",
+  "fx_golden_hour",
+  "fx_eerie",
+  "ff_grid",
+  "invisible_cube_of_alarming_1",
+  "invisible_cube_of_alarming_2",
+  "spawning_safe",
+  "spawning_safe_soft",
+  "spawning_kill",
+  "spawning_kill_soft",
+  "package_cabinet",
+  "cov_powermodule_stand",
+  "dlc_covenant_bomb",
+  "dlc_invasion_heavy_shield",
+  "dlc_invasion_bomb_door"
+];
+
+// ../megalo/src/object-lists/haloreach/release/default/strings.ts
+var strings_default3 = [
+  "mp_boneyard_a_idle_start",
+  "mp_boneyard_a_fly_in",
+  "mp_boneyard_a_idle_mid",
+  "mp_boneyard_a_fly_out",
+  "mp_boneyard_b_fly_in",
+  "mp_boneyard_b_idle_mid",
+  "mp_boneyard_b_fly_out",
+  "mp_boneyard_b_idle_start",
+  "mp_boneyard_a_leave1",
+  "mp_boneyard_b_leave1",
+  "mp_boneyard_b_pickup",
+  "mp_boneyard_b_idle_pickup",
+  "mp_boneyard_a",
+  "mp_boneyard_b",
+  "default",
+  "carter",
+  "jun",
+  "female",
+  "male",
+  "emile",
+  "player_skull",
+  "kat",
+  "minor",
+  "officer",
+  "ultra",
+  "space",
+  "spec_ops",
+  "general",
+  "zealot",
+  "mp",
+  "jetpack",
+  "gauss",
+  "troop",
+  "rocket",
+  "fr",
+  "pl",
+  "35_spire_fp",
+  "mp_spire_fp",
+  "none",
+  "destroyed",
+  "damaged",
+  "no_sideguns",
+  "grenade",
+  "multiplayer",
+  "no_side_turrets",
+  "no_turrets",
+  "no_chin_gun",
+  "bed_long",
+  "bed_long_container",
+  "bed_long_tanker",
+  "bed_small",
+  "bed_small_container",
+  "bed_small_tanker",
+  "plasma_cannon",
+  "flak_cannon",
+  "auto",
+  "noblade"
+];
+
+// ../megalo/src/object-lists/haloreach/release/default/vehicle_sets.ts
+var vehicle_sets_default3 = [
+  "mongoose_only",
+  "warthog_only",
+  "no_aircraft",
+  "aircraft_only",
+  "no_tanks",
+  "tanks_only",
+  "no_light_ground",
+  "lightground_only",
+  "no_covy_vehicles",
+  "all_covy_vehicles",
+  "no_human_vehicles",
+  "all_human_vehicles",
+  "no_vehicles",
+  "all_vehicles"
+];
+
+// ../megalo/src/object-lists/haloreach/release/default/vehicles.ts
+var vehicles_default3 = [
+  "warthog",
+  "ghost",
+  "scorpion",
+  "wraith",
+  "banshee",
+  "mongoose",
+  "chopper",
+  "mauler",
+  "hornet",
+  "stingray",
+  "heavy_wraith",
+  "falcon",
+  "sabre",
+  "revenant",
+  "pickup",
+  "semi",
+  "phantom",
+  "pelican",
+  "machinegun_turret",
+  "mounted_plasma_turret",
+  "shade_turret",
+  "cargo_truck",
+  "cart_electric",
+  "forklift",
+  "scorpion_infantry_gunner",
+  "warthog_gunner",
+  "warthog_gauss_turret",
+  "warthog_rocket_turret",
+  "falcon_grenadier_left",
+  "falcon_grenadier_right",
+  "wraith_infantry_turret",
+  "military_truck",
+  "shade_plasma",
+  "shade_flak",
+  "shade_anti_air"
+];
+
+// ../megalo/src/object-lists/haloreach/release/default/weapon_sets.ts
+var weapon_sets_default3 = [
+  "human",
+  "covenant",
+  "no_snipers",
+  "rockets_only",
+  "no_power_weapons",
+  "juggernaut",
+  "slayer_pro",
+  "rifles_only",
+  "mid_range_only",
+  "long_range_only",
+  "human_snipers_only",
+  "melee",
+  "swords_only",
+  "hammers_only",
+  "mass_destruction",
+  "no_weapons"
+];
+
+// ../megalo/src/object-lists/haloreach/release/default/weapons.ts
+var weapons_default3 = [
+  "dmr",
+  "assault_rifle",
+  "plasma_pistol",
+  "spike_rifle",
+  "energy_sword",
+  "magnum",
+  "needler",
+  "plasma_rifle",
+  "rocket_launcher",
+  "shotgun",
+  "sniper_rifle",
+  "spartan_laser",
+  "gravity_hammer",
+  "plasma_repeater",
+  "needle_rifle",
+  "prototype_covey_sniper",
+  "plasma_launcher",
+  "elite_shot",
+  "grenade_launcher",
+  "golf_club",
+  "flak_cannon",
+  "machinegun",
+  "plasma_turret_weapon",
+  "target_laser"
+];
+
+// ../megalo/src/object-lists/haloreach/release/default/index.ts
+var objectLists3 = {
+  ["equipment" /* Equipment */]: equipment_default3,
+  ["grenades" /* Grenades */]: grenades_default3,
+  ["hud_widget_icons" /* HudWidgetIcons */]: hud_widget_icons_default3,
+  ["incidents" /* Incidents */]: incidents_default3,
+  ["loadouts" /* Loadouts */]: loadouts_default3,
+  ["objects" /* Objects */]: objects_default3,
+  ["strings" /* Strings */]: strings_default3,
+  ["vehicles" /* Vehicles */]: vehicles_default3,
+  ["vehicle_sets" /* VehicleSets */]: vehicle_sets_default3,
+  ["weapons" /* Weapons */]: weapons_default3,
+  ["weapon_sets" /* WeaponSets */]: weapon_sets_default3
+};
+var default_default3 = objectLists3;
+
+// ../megalo/src/object-lists/haloreach_mcc/default/equipment.ts
+var equipment_default4 = [
+  "sprint_equipment",
+  "jet_pack_equipment",
+  "armor_lock_equipment",
+  "power_fist_equipment",
+  "active_camo_equipment",
+  "ammo_pack_equipment",
+  "sensor_pack_equipment",
+  "hologram_equipment",
+  "evade_equipment",
+  "drop_shield_equipment"
+];
+
+// ../megalo/src/object-lists/haloreach_mcc/default/grenades.ts
+var grenades_default4 = [
+  "frag_grenade",
+  "plasma_grenade",
+  "spike_grenade",
+  "firebomb_grenade"
+];
+
+// ../megalo/src/object-lists/haloreach_mcc/default/hud_widget_icons.ts
+var hud_widget_icons_default4 = [
+  "ctf",
+  "slayer",
+  "oddball",
+  "koth",
+  "juggernaut",
+  "territories",
+  "assault",
+  "infection",
+  "vip",
+  "invasion",
+  "extermination",
+  "stockpile",
+  "action_sack",
+  "race",
+  "rocket_race",
+  "grifball",
+  "soccer",
+  "headhunter",
+  "generic_icon_2",
+  "generic_icon_3",
+  "generic_icon_4",
+  "generic_icon_5",
+  "generic_icon_6",
+  "generic_icon_7",
+  "generic_icon_8",
+  "generic_icon_9",
+  "spartan",
+  "elite",
+  "offense",
+  "defense",
+  "ordnance",
+  "interface",
+  "recon",
+  "retrieve",
+  "ammunition"
+];
+
+// ../megalo/src/object-lists/haloreach_mcc/default/incidents.ts
+var incidents_default4 = [
   "kill",
   "grenade_kill",
   "guardian_kill",
@@ -9025,7 +11610,7 @@ var incidents_default = [
 ];
 
 // ../megalo/src/object-lists/haloreach_mcc/default/loadouts.ts
-var loadouts_default = [
+var loadouts_default4 = [
   "loadout_name_noble1",
   "loadout_name_noble2",
   "loadout_name_noble3",
@@ -9110,7 +11695,7 @@ var loadouts_default = [
 ];
 
 // ../megalo/src/object-lists/haloreach_mcc/default/objects.ts
-var objects_default = [
+var objects_default4 = [
   "spartan",
   "elite",
   "monitor",
@@ -9336,7 +11921,7 @@ var objects_default = [
 ];
 
 // ../megalo/src/object-lists/haloreach_mcc/default/strings.ts
-var strings_default = [
+var strings_default4 = [
   "mp_boneyard_a_idle_start",
   "mp_boneyard_a_fly_in",
   "mp_boneyard_a_idle_mid",
@@ -9397,7 +11982,7 @@ var strings_default = [
 ];
 
 // ../megalo/src/object-lists/haloreach_mcc/default/vehicle_sets.ts
-var vehicle_sets_default = [
+var vehicle_sets_default4 = [
   "mongoose_only",
   "warthog_only",
   "no_aircraft",
@@ -9415,7 +12000,7 @@ var vehicle_sets_default = [
 ];
 
 // ../megalo/src/object-lists/haloreach_mcc/default/vehicles.ts
-var vehicles_default = [
+var vehicles_default4 = [
   "warthog",
   "ghost",
   "scorpion",
@@ -9454,7 +12039,7 @@ var vehicles_default = [
 ];
 
 // ../megalo/src/object-lists/haloreach_mcc/default/weapon_sets.ts
-var weapon_sets_default = [
+var weapon_sets_default4 = [
   "human",
   "covenant",
   "no_snipers",
@@ -9474,7 +12059,7 @@ var weapon_sets_default = [
 ];
 
 // ../megalo/src/object-lists/haloreach_mcc/default/weapons.ts
-var weapons_default = [
+var weapons_default4 = [
   "dmr",
   "assault_rifle",
   "plasma_pistol",
@@ -9502,38 +12087,47 @@ var weapons_default = [
 ];
 
 // ../megalo/src/object-lists/haloreach_mcc/default/index.ts
-var objectLists = {
-  ["equipment" /* Equipment */]: equipment_default,
-  ["grenades" /* Grenades */]: grenades_default,
-  ["hud_widget_icons" /* HudWidgetIcons */]: hud_widget_icons_default,
-  ["incidents" /* Incidents */]: incidents_default,
-  ["loadouts" /* Loadouts */]: loadouts_default,
-  ["objects" /* Objects */]: objects_default,
-  ["strings" /* Strings */]: strings_default,
-  ["vehicles" /* Vehicles */]: vehicles_default,
-  ["vehicle_sets" /* VehicleSets */]: vehicle_sets_default,
-  ["weapons" /* Weapons */]: weapons_default,
-  ["weapon_sets" /* WeaponSets */]: weapon_sets_default
+var objectLists4 = {
+  ["equipment" /* Equipment */]: equipment_default4,
+  ["grenades" /* Grenades */]: grenades_default4,
+  ["hud_widget_icons" /* HudWidgetIcons */]: hud_widget_icons_default4,
+  ["incidents" /* Incidents */]: incidents_default4,
+  ["loadouts" /* Loadouts */]: loadouts_default4,
+  ["objects" /* Objects */]: objects_default4,
+  ["strings" /* Strings */]: strings_default4,
+  ["vehicles" /* Vehicles */]: vehicles_default4,
+  ["vehicle_sets" /* VehicleSets */]: vehicle_sets_default4,
+  ["weapons" /* Weapons */]: weapons_default4,
+  ["weapon_sets" /* WeaponSets */]: weapon_sets_default4
 };
-var default_default = objectLists;
+var default_default4 = objectLists4;
 
 // ../megalo/src/load-object-lists.ts
 var loadObjectListsForVersion = (version2) => {
+  if (version2.version === 107 && version2.flavour === "mcc") {
+    return default_default4;
+  }
   if (version2.version === 107 || version2.version === 106) {
+    return default_default3;
+  }
+  if (version2.version === 73) {
+    return default_default2;
+  }
+  if (version2.version === 49) {
     return default_default;
   }
   return {};
 };
 
 // ../megalo/src/language-service/analyze.ts
-var buildSnapshot = (source, version2, objectLists2, megacrowExtensions, compilerSettings) => {
+var buildSnapshot = (source, version2, objectLists5, megacrowExtensions, compilerSettings) => {
   const frontend = new MegaloCompilerContext(
     version2,
     resolveMegacrowExtensions(megacrowExtensions ?? ALL_MEGACROW_EXTENSIONS),
     compilerSettings
   );
   const diagnostics = new Diagnostics();
-  const lists = objectLists2 ?? loadObjectListsForVersion(version2);
+  const lists = objectLists5 ?? loadObjectListsForVersion(version2);
   const tokens = new Lexer(frontend).lex(source, diagnostics);
   const ast = new Parser(frontend).parse(tokens, diagnostics, lists);
   return {
@@ -9692,14 +12286,18 @@ var GAME_OPTION_CUSTOM_VARIABLE_TYPE = {
 var snippetTabstop = (index, placeholder) => ` $${""}{${index}:${placeholder}}`;
 
 // ../megalo/src/language-service/completion/actions/create_object.ts
-var FLAGS = ["never_garbage", "suppress_effect", "absolute_orientation"];
+var OPTIONAL_KEYWORDS_FROM_73 = [
+  "offset",
+  "variant",
+  "suppress_effect",
+  "absolute_orientation"
+];
 var OPTIONAL_KEYWORDS = [
   "at",
   "set",
-  "offset",
   "label",
-  "variant",
-  ...FLAGS
+  "never_garbage",
+  ...OPTIONAL_KEYWORDS_FROM_73
 ];
 
 // ../megalo/src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_sounds.ts
@@ -9851,6 +12449,12 @@ var vehicleUsage = megaloEnum([
   "full"
 ]);
 var VehicleUsage = vehicleUsage.enum;
+var doubleJump = megaloEnum([
+  "disabled",
+  "enabled",
+  "triple"
+]);
+var DoubleJump = doubleJump.enum;
 var activeCamo = megaloEnum([
   "off",
   "on",
@@ -11060,6 +13664,9 @@ var en_default2 = {
       },
       sprinting: {
         summary: "Whether sprinting is allowed."
+      },
+      double_jump: {
+        summary: "Double-jump trait (MegaCrow extension): disabled, enabled, or triple."
       },
       equipment_usage: {
         summary: "Whether equipment use is enabled."
@@ -12563,6 +15170,9 @@ var ja_default2 = {
       sprinting: {
         summary: "\u30B9\u30D7\u30EA\u30F3\u30C8\u3092\u8A31\u53EF\u3059\u308B\u304B\u3002"
       },
+      double_jump: {
+        summary: "\u4E8C\u6BB5\u30B8\u30E3\u30F3\u30D7\u7279\u6027\uFF08MegaCrow \u62E1\u5F35\uFF09: disabled / enabled / triple\u3002"
+      },
       equipment_usage: {
         summary: "\u88C5\u5099\u4F7F\u7528\u3092\u6709\u52B9\u306B\u3059\u308B\u304B\u3002"
       },
@@ -13430,8 +16040,8 @@ var objectSetOrientationHover = defineActionHover(
 
 // ../megalo/src/language-service/hover/actions/object_set_scale.ts
 var objectSetScaleHover = defineActionHover("object_set_scale", {
-  grammar: "action object_set_scale <object> <number (percent)>",
-  params: ["object", "number"]
+  grammar: "action object_set_scale <object> <float | number (percent / variable)>",
+  params: ["object", "float or number"]
 });
 
 // ../megalo/src/language-service/hover/actions/play_sound.ts
@@ -14112,6 +16722,7 @@ var PLAYER_TRAIT_OPTION_NAMES = [
   "vehicle_usage",
   "jump_modifier",
   "sprinting",
+  "double_jump",
   "equipment_usage",
   "active_camo",
   "waypoint",
@@ -14249,40 +16860,76 @@ registerHovers([
 ]);
 
 // ../megalo/src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions.ts
-var numericComparison = megaloEnum([
-  "less_than",
-  { name: "<", aliasOf: "less_than" },
-  "greater_than",
-  { name: ">", aliasOf: "greater_than" },
-  "equal_to",
-  { name: "==", aliasOf: "equal_to" },
-  "less_than_or_equal_to",
-  { name: "<=", aliasOf: "less_than_or_equal_to" },
-  "greater_than_or_equal_to",
-  { name: ">=", aliasOf: "greater_than_or_equal_to" },
-  "not_equal_to",
-  { name: "!=", aliasOf: "not_equal_to" }
-]);
+var numericComparison = megaloEnum(
+  [
+    "less_than",
+    { name: "<", aliasOf: "less_than" },
+    "greater_than",
+    { name: ">", aliasOf: "greater_than" },
+    "equal_to",
+    { name: "==", aliasOf: "equal_to" },
+    "less_than_or_equal_to",
+    { name: "<=", aliasOf: "less_than_or_equal_to" },
+    "greater_than_or_equal_to",
+    { name: ">=", aliasOf: "greater_than_or_equal_to" },
+    "not_equal_to",
+    { name: "!=", aliasOf: "not_equal_to" }
+  ],
+  (version2) => {
+    const supported = /* @__PURE__ */ new Set(["less_than", "greater_than", "equal_to", "not_equal_to"]);
+    if (version2.version >= 73) {
+      supported.add("less_than_or_equal_to");
+      supported.add("greater_than_or_equal_to");
+    }
+    return supported;
+  }
+);
 var NumericComparison = numericComparison.enum;
-var conditionType = megaloEnum([
-  "if",
-  "object_in_area",
-  "player_died",
-  "team_disposition",
-  "timer_expired",
-  "object_is_type",
-  "team_is_active",
-  "object_out_of_bounds",
-  "player_is_fire_team_leader",
-  "player_assisted_with_kill",
-  "object_matches_filter",
-  "player_is_active",
-  "equipment_is_active",
-  "player_is_spartan",
-  "player_is_elite",
-  "player_is_editor",
-  "game_is_forge"
-]);
+var conditionType = megaloEnum(
+  [
+    "if",
+    "object_in_area",
+    "player_died",
+    "team_disposition",
+    "timer_expired",
+    "object_is_type",
+    "team_is_active",
+    "object_out_of_bounds",
+    "player_is_fire_team_leader",
+    "player_assisted_with_kill",
+    "object_matches_filter",
+    "player_is_active",
+    "equipment_is_active",
+    "player_is_spartan",
+    "player_is_elite",
+    "player_is_editor",
+    "game_is_forge"
+  ],
+  (version2) => {
+    const supported = /* @__PURE__ */ new Set([
+      "if",
+      "object_in_area",
+      "player_died",
+      "team_disposition",
+      "timer_expired",
+      "object_is_type",
+      "team_is_active",
+      "object_out_of_bounds",
+      "player_is_fire_team_leader",
+      "player_assisted_with_kill",
+      "object_matches_filter",
+      "player_is_active",
+      "equipment_is_active"
+    ]);
+    if (version2.version >= 107) {
+      supported.add("player_is_spartan");
+      supported.add("player_is_elite");
+      supported.add("player_is_editor");
+      supported.add("game_is_forge");
+    }
+    return supported;
+  }
+);
 var ConditionType = conditionType.enum;
 var disposition = megaloEnum([
   "neutral",
@@ -14742,7 +17389,7 @@ var highlightLoadout = (out, element) => {
 var highlightLoadoutPalette = (out, element) => {
   emitLocation(out, element.keywordLocation, "type");
   if (!isAstErrorNode(element.name)) {
-    emitLocation(out, element.name.location, "variable");
+    emitLocation(out, element.name.location, "variable", ["readonly"]);
   }
   for (const item of element.items) {
     emitLocation(out, item.location, "parameter");
@@ -16240,14 +18887,15 @@ var symbolTokenType = (entry) => {
       return { type: "variable", modifiers };
     case 2 /* String */:
       return { type: "variable", modifiers: ["readonly"] };
+    case 11 /* GameStat */:
+      return { type: "variable", modifiers };
     case 4 /* HudWidget */:
     case 5 /* Loadout */:
-    case 6 /* LoadoutPalette */:
     case 7 /* RequisitionPalette */:
     case 9 /* ObjectFilter */:
     case 10 /* PlayerTraits */:
-    case 11 /* GameStat */:
-      return { type: "variable", modifiers };
+    case 6 /* LoadoutPalette */:
+      return { type: "variable", modifiers: ["readonly"] };
     case 8 /* ObjectListItem */:
       return { type: "enumMember", modifiers: ["defaultLibrary"] };
     default: {

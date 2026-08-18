@@ -57,6 +57,7 @@ const PLAYER_TRAIT_OPTION_NAMES = [
   "vehicle_usage",
   "jump_modifier",
   "sprinting",
+  "double_jump",
   "equipment_usage",
   "active_camo",
   "waypoint",

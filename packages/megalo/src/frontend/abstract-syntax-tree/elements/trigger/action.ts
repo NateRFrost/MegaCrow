@@ -18,6 +18,7 @@ import {
 import {
   type ASTParameterNode,
   parameterParserBuilder as buildParameterParser,
+  isTriggerStatementBoundary,
   KeywordParameter,
   megaloEnumKeywords,
   ObjectListParameter,
@@ -218,7 +219,10 @@ const pairTeamOrPlayerTargetSignatures = (
   return signatures;
 };
 
-/** MegaloEdit: quoted object type, then `at`/`set`/flags in any order. */
+/**
+ * Keyword form (`at`/`set`/flags/…) shared by all encodings.
+ * Alpha also accepts the older positional form after the type.
+ */
 const CREATE_OBJECT_OPTIONAL_KEYWORDS = new Set([
   "at",
   "set",
@@ -230,15 +234,10 @@ const CREATE_OBJECT_OPTIONAL_KEYWORDS = new Set([
   "variant",
 ]);
 
-const createObjectLegacy: ParameterSignature = [
-  ParameterType.Keyword,
-  ParameterType.Object,
-  ParameterType.Object,
-];
-
-const parseCreateObjectV73: ParameterParser = (ctx, anchor) => {
-  const parameters: ASTParameterNode[] = [];
-
+const parseCreateObjectType = (
+  ctx: ParserContext,
+  anchor: SourceCodeLocation
+): ASTParameterNode => {
   const typeToken = ctx.peekToken();
   if (typeToken?.kind === TokenKind.QuotedString) {
     const consumed = ctx.getToken();
@@ -247,32 +246,34 @@ const parseCreateObjectV73: ParameterParser = (ctx, anchor) => {
       consumed.value
     );
     if (symbolId === undefined) {
-      parameters.push({
+      return {
         kind: SyntaxKind.KEYWORD,
         value: consumed.value,
         location: consumed.location,
-      });
-    } else {
-      ctx.symbolParser.recordReference(symbolId, consumed.location);
-      parameters.push({
-        kind: SyntaxKind.REFERENCE,
-        identifier: consumed.value,
-        symbolId,
-        location: consumed.location,
-      });
+      };
     }
-  } else {
-    // MegaloEdit requires a quoted type; also accept an unquoted name.
-    parameters.push(
-      parseParameterValue(
-        ctx,
-        anchor,
-        ObjectListParameter(ObjectListType.Objects),
-        ParameterType.Keyword
-      )
-    );
+    ctx.symbolParser.recordReference(symbolId, consumed.location);
+    return {
+      kind: SyntaxKind.REFERENCE,
+      identifier: consumed.value,
+      symbolId,
+      location: consumed.location,
+    };
   }
 
+  // MegaloEdit requires a quoted type; also accept an unquoted name.
+  return parseParameterValue(
+    ctx,
+    anchor,
+    ObjectListParameter(ObjectListType.Objects),
+    ParameterType.Keyword
+  );
+};
+
+const parseCreateObjectKeywordTail = (
+  ctx: ParserContext,
+  parameters: ASTParameterNode[]
+): void => {
   while (ctx.hasMore()) {
     const token = ctx.peekToken();
     if (
@@ -358,6 +359,35 @@ const parseCreateObjectV73: ParameterParser = (ctx, anchor) => {
       default:
         break;
     }
+  }
+};
+
+/**
+ * `create_object <type> at … set … …` (all encodings) or Alpha positional
+ * `create_object <type> <object_out> <place_at>`.
+ *
+ * Positional uses the shared trigger-statement boundary so incomplete keyword
+ * forms do not lenient-consume the next `action` / `end` / … as object ops.
+ * Object operands stay lenient (`none`, scoped builtins like `current_object`).
+ */
+const parseCreateObject: ParameterParser = (ctx, anchor) => {
+  const parameters: ASTParameterNode[] = [parseCreateObjectType(ctx, anchor)];
+
+  const next = ctx.peekToken();
+  if (
+    next?.kind === TokenKind.Identifier &&
+    CREATE_OBJECT_OPTIONAL_KEYWORDS.has(next.value)
+  ) {
+    parseCreateObjectKeywordTail(ctx, parameters);
+    return parameters;
+  }
+
+  if (next !== undefined && !isTriggerStatementBoundary(next)) {
+    parameters.push(
+      parseParameterValue(ctx, anchor, ParameterType.Object),
+      parseParameterValue(ctx, anchor, ParameterType.Object)
+    );
+    parseCreateObjectKeywordTail(ctx, parameters);
   }
 
   return parameters;
@@ -453,14 +483,7 @@ export class ActionParserRepository {
       )
     );
 
-    if (megaloVersion.version >= 73) {
-      this.registerParser("create_object", parseCreateObjectV73);
-    } else {
-      this.registerParser(
-        "create_object",
-        buildParameterParser(createObjectLegacy)
-      );
-    }
+    this.registerParser("create_object", parseCreateObject);
 
     this.registerParser(
       "delete_object",
@@ -777,7 +800,10 @@ export class ActionParserRepository {
 
     this.registerParser(
       "object_set_scale",
-      buildParameterParser([ParameterType.Object, ParameterType.Integer])
+      buildParameterParser([
+        ParameterType.Object,
+        [ParameterType.Float, ParameterType.Integer],
+      ])
     );
 
     this.registerParser(
@@ -941,20 +967,95 @@ export class ActionParserRepository {
     );
 
     // MegaloEdit ReadLoadoutPaletteType: none|spartan_tier1|elite_tier1|…
+    // Pre-release (<106): object_lists/loadout_palettes.txt names.
+    if (megaloVersion.version < 106) {
+      this.registerParser(
+        "set_loadout_palette",
+        buildParameterParser(
+          [
+            KeywordParameter(TeamOrPlayerTargetKind.player),
+            ParameterType.Player,
+            ObjectListParameter(ObjectListType.LoadoutPalettes),
+          ],
+          [
+            KeywordParameter(TeamOrPlayerTargetKind.team),
+            ParameterType.Team,
+            ObjectListParameter(ObjectListType.LoadoutPalettes),
+          ]
+        )
+      );
+      this.registerParser(
+        "set_loadout",
+        buildParameterParser(
+          [
+            KeywordParameter(TeamOrPlayerTargetKind.player),
+            ParameterType.Player,
+            ObjectListParameter(ObjectListType.Loadouts),
+          ],
+          [
+            KeywordParameter(TeamOrPlayerTargetKind.team),
+            ParameterType.Team,
+            ObjectListParameter(ObjectListType.Loadouts),
+          ]
+        )
+      );
+    } else {
+      this.registerParser(
+        "set_loadout_palette",
+        buildParameterParser(
+          [
+            KeywordParameter(TeamOrPlayerTargetKind.player),
+            ParameterType.Player,
+            LOADOUT_PALETTE_TYPE_SLOT,
+          ],
+          [
+            KeywordParameter(TeamOrPlayerTargetKind.team),
+            ParameterType.Team,
+            LOADOUT_PALETTE_TYPE_SLOT,
+          ]
+        )
+      );
+    }
+
     this.registerParser(
-      "set_loadout_palette",
-      buildParameterParser(
+      "give_weapon",
+      buildParameterParser([
+        ParameterType.Player,
         [
-          KeywordParameter(TeamOrPlayerTargetKind.player),
-          ParameterType.Player,
-          LOADOUT_PALETTE_TYPE_SLOT,
+          ObjectListParameter(ObjectListType.Objects),
+          ParameterType.QuotedString,
+          ParameterType.Keyword,
         ],
+        BIPED_WEAPON_SLOT_KEYWORDS,
+      ])
+    );
+
+    this.registerParser(
+      "player_set_fireteam_tier",
+      buildParameterParser([ParameterType.Player, ParameterType.Integer])
+    );
+
+    this.registerParser(
+      "object_set_minimap_visibility",
+      buildParameterParser([ParameterType.Object, BOOLEAN])
+    );
+
+    this.registerParser(
+      "object_set_minimap_priority",
+      buildParameterParser([ParameterType.Object, NAVPOINT_PRIORITY_KEYWORDS])
+    );
+
+    this.registerParser(
+      "object_set_minimap_icon",
+      buildParameterParser([
+        ParameterType.Object,
         [
-          KeywordParameter(TeamOrPlayerTargetKind.team),
-          ParameterType.Team,
-          LOADOUT_PALETTE_TYPE_SLOT,
-        ]
-      )
+          ObjectListParameter(ObjectListType.HudWidgetIcons),
+          ParameterType.QuotedString,
+          ParameterType.Keyword,
+          ParameterType.Integer,
+        ],
+      ])
     );
 
     this.registerParser(

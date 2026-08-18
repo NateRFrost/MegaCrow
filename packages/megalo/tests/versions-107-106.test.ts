@@ -134,6 +134,9 @@ const buildMinimalIr = (): IR => {
         objectDeathEventTriggerIndex: 0,
         localTriggerIndex: 0,
         pregameTriggerIndex: 0,
+        requisitionPalettes: [],
+        loadouts: [],
+        loadoutPalettes: [],
         objectsUsed: [],
         objectFilters: [],
       },
@@ -143,15 +146,43 @@ const buildMinimalIr = (): IR => {
   };
 };
 
+const emptyEngineStats = {
+  actions: 0,
+  conditions: 0,
+  encodedSize: 0,
+  gameStatistics: 0,
+  hudWidgets: 0,
+  loadoutPalettes: 0,
+  loadouts: 0,
+  mapPermissionExceptions: 0,
+  objectFilters: 0,
+  objectsUsed: 0,
+  playerTraitSets: 0,
+  requisitionPalettes: 0,
+  stringBytes: 0,
+  strings: 0,
+  teams: 0,
+  triggers: 0,
+  userDefinedOptions: 0,
+  variables: {
+    [VariableScope.Global]: {},
+    [VariableScope.Player]: {},
+    [VariableScope.Team]: {},
+    [VariableScope.Object]: {},
+    [VariableScope.Temporary]: {},
+  },
+};
+
 class TestCompiler106 extends Compiler {
   dryRun() {
-    return { metadata: {} };
+    return { metadata: {}, engineStats: emptyEngineStats };
   }
   writeMegaloFile() {
     return {
       data: new Uint8Array(),
       metadata: {},
       variantByteLength: 0,
+      engineStats: emptyEngineStats,
     };
   }
   getCapabilities() {
@@ -311,7 +342,7 @@ end
 
     const errors = diagnostics.getErrors();
     expect(errors.length).toBeGreaterThanOrEqual(1);
-    expect(errors[0]?.message).toContain("magnumDamage");
+    expect(errors[0]?.message).toContain('"tu1_magnum_damage_multiplier"');
     expect(errors[0]?.message).toContain(getLabel(v106));
   });
 });

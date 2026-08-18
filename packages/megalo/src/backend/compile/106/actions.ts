@@ -129,7 +129,12 @@ import {
   encodeTeamReference,
   encodeVariantVariable,
 } from "src/backend/compile/106/references";
-import { BUILT_IN_LOCATION, type Diagnostics } from "src/diagnostics";
+import {
+  BUILT_IN_LOCATION,
+  type Diagnostics,
+  UNKNOWN_LOCATION,
+} from "src/diagnostics";
+import { CompilerError } from "src/diagnostics/error";
 import type {
   FieldLocations,
   IR,
@@ -631,9 +636,11 @@ const compileAction = (
     case ActionType.object_set_scale: {
       const params = new s_action_object_set_scale_parameters();
       params.m_object = encodeObjectReference(action.parameters.object);
-      params.m_variable = encodeCustomVariableReference(
-        action.parameters.scale
-      );
+      if (action.parameters.scale.kind === "variable") {
+        params.m_variable = encodeCustomVariableReference(
+          action.parameters.scale.value
+        );
+      }
       target.m_object_set_scale_parameters = params;
       break;
     }
@@ -853,8 +860,16 @@ const compileAction = (
     case ActionType.set_loadout_palette: {
       const params = new s_action_set_loadout_palette_parameters();
       params.m_target = encodeTeamOrPlayerTarget(action.parameters.target);
+      // Shipping IR always carries loadoutPaletteType; syntax is a LowerError.
+      if (!("loadoutPaletteType" in action.parameters)) {
+        throw new CompilerError(
+          "set_loadout_palette missing loadoutPaletteType",
+          locations.get(action.parameters, "loadoutPaletteIndex") ??
+            UNKNOWN_LOCATION
+        );
+      }
       params.m_loadout_palette_index = encodeLoadoutPaletteIndex(
-        action.parameters.loadoutPaletteIndex
+        action.parameters.loadoutPaletteType
       );
       target.m_set_loadout_palette_parameters = params;
       break;

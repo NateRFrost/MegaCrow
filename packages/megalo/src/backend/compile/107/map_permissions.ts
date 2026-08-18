@@ -28,7 +28,7 @@ export const compileMapPermissions = (
   for (const mapId of mapPermissions.exceptMapIds) {
     if (mapId < MIN_MAP_ID || mapId > MAX_MAP_ID) {
       diagnostics.addError(
-        diagnosticMessages.mapIdOutOfRange(),
+        diagnosticMessages.outOfRange("map id", MIN_MAP_ID, MAX_MAP_ID),
         BUILT_IN_LOCATION
       );
     }

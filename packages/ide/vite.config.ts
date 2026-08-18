@@ -189,7 +189,9 @@ export default defineConfig({
       "@tauri-apps/plugin-fs",
       "@tauri-apps/plugin-opener",
     ],
-    exclude: ["@megacrow/lsp", "@megacrow/megalo"],
+    // Keep workspace/file: packages out of the dep optimizer so local blf
+    // rebuilds are picked up without a stale .vite/deps snapshot.
+    exclude: ["@megacrow/lsp", "@megacrow/megalo", "@blamnetwork/blf"],
   },
   // Worker bundles do not inherit root `plugins` — register the megalo alias here too.
   worker: {

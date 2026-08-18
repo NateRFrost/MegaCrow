@@ -7,14 +7,18 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { writeClipboardText } from "../lib/clipboard";
-import type { MegaloDiagnostic } from "../lib/diagnostics";
+import {
+  diagnosticCanNavigate,
+  type MegaloDiagnostic,
+  objectListDisplayName,
+} from "../lib/diagnostics";
 import { translate, useT } from "../localization";
 
 interface Props {
   diagnostics: MegaloDiagnostic[];
   height?: number;
   onClose: () => void;
-  onNavigate: (line: number, column: number) => void;
+  onNavigate: (diagnostic: MegaloDiagnostic) => void;
 }
 
 interface ContextMenuState {
@@ -27,11 +31,23 @@ function severityOf(d: MegaloDiagnostic): "error" | "warning" {
   return d.severity === "warning" ? "warning" : "error";
 }
 
+function sortLine(d: MegaloDiagnostic): number {
+  return d.objectList?.line ?? d.line;
+}
+
 function formatDiagnosticCopy(diagnostic: MegaloDiagnostic): string {
   const severity =
     severityOf(diagnostic) === "warning"
       ? translate("diagnostics_severity_warning")
       : translate("diagnostics_severity_error");
+  if (diagnostic.objectList) {
+    return translate("diagnostics_copy_object_list", {
+      severity,
+      file: objectListDisplayName(diagnostic.objectList),
+      line: diagnostic.objectList.line,
+      message: diagnostic.message,
+    });
+  }
   if (diagnostic.trayOnly) {
     return translate("diagnostics_copy_tray_only", {
       severity,
@@ -181,11 +197,15 @@ export function DiagnosticsTray({
     if (aSeverity !== bSeverity) {
       return aSeverity === "error" ? -1 : 1;
     }
-    if (a.trayOnly !== b.trayOnly) {
-      return a.trayOnly ? 1 : -1;
+    const aNav = diagnosticCanNavigate(a);
+    const bNav = diagnosticCanNavigate(b);
+    if (aNav !== bNav) {
+      return aNav ? -1 : 1;
     }
-    if (a.line !== b.line) {
-      return a.line - b.line;
+    const aLine = sortLine(a);
+    const bLine = sortLine(b);
+    if (aLine !== bLine) {
+      return aLine - bLine;
     }
     return a.column - b.column;
   });
@@ -271,17 +291,28 @@ export function DiagnosticsTray({
         ) : (
           sorted.map((diagnostic, index) => {
             const severity = severityOf(diagnostic);
-            const canNavigate = !diagnostic.trayOnly;
+            const canNavigate = diagnosticCanNavigate(diagnostic);
+            const locationLabel = diagnostic.objectList
+              ? t("diagnostics_location_object_list", {
+                  file: objectListDisplayName(diagnostic.objectList),
+                  line: diagnostic.objectList.line,
+                })
+              : canNavigate
+                ? t("diagnostics_location", {
+                    line: diagnostic.line,
+                    column: diagnostic.column,
+                  })
+                : null;
             return (
               <li
-                key={`${diagnostic.trayOnly ? "tray" : `${diagnostic.line}:${diagnostic.column}`}:${index}`}
+                key={`${diagnostic.objectList ? `ol:${diagnostic.objectList.objectType}:${diagnostic.objectList.line}` : diagnostic.trayOnly ? "tray" : `${diagnostic.line}:${diagnostic.column}`}:${index}`}
               >
                 <button
                   aria-disabled={!canNavigate}
                   className={`diagnostics-tray-item diagnostics-tray-item--${severity}${canNavigate ? "" : " diagnostics-tray-item--no-nav"}`}
                   onClick={() => {
                     if (canNavigate) {
-                      onNavigate(diagnostic.line, diagnostic.column);
+                      onNavigate(diagnostic);
                     }
                   }}
                   onContextMenu={(event) =>
@@ -293,12 +324,9 @@ export function DiagnosticsTray({
                   <span className="diagnostics-tray-message">
                     {diagnostic.message}
                   </span>
-                  {canNavigate ? (
+                  {locationLabel ? (
                     <span className="diagnostics-tray-location">
-                      {t("diagnostics_location", {
-                        line: diagnostic.line,
-                        column: diagnostic.column,
-                      })}
+                      {locationLabel}
                     </span>
                   ) : null}
                 </button>

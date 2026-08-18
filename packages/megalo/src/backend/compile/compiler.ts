@@ -1,4 +1,5 @@
 import type { CompilerCapabilities } from "src/backend/compile/diagnostics/assertCompatibleIR";
+import type { CompiledEngineStats } from "src/backend/compile/engineStats";
 import type { Diagnostics } from "src/diagnostics";
 import type { IR } from "src/frontend/intermediate-representation";
 import type { StringTableLanguage } from "src/frontend/language-configuration/omni/strings";
@@ -54,6 +55,7 @@ export interface CompiledMegaloMetadata {
 
 export interface WriteMegaloFileResult {
   data: Uint8Array;
+  engineStats: CompiledEngineStats;
   metadata: CompiledMegaloMetadata;
   variantByteLength: number;
 }
@@ -62,7 +64,7 @@ export abstract class Compiler {
   public abstract dryRun(
     ir: IR,
     diagnostics: Diagnostics
-  ): { metadata: CompiledMegaloMetadata };
+  ): { engineStats: CompiledEngineStats; metadata: CompiledMegaloMetadata };
   public abstract writeMegaloFile(
     ir: IR,
     diagnostics: Diagnostics,

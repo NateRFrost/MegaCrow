@@ -3,7 +3,6 @@ import {
   ActionType,
   type ActionType as ActionTypeName,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_actions";
-import { mapMegaloEnum } from "src/frontend/intermediate-representation/megaloEnum";
 
 const ACTION_TYPE_TO_BLF = {
   [ActionType.set_score]: e_action_type.set_score,
@@ -140,7 +139,19 @@ const ACTION_TYPE_TO_BLF = {
     e_action_type.set_player_respawn_vehicle,
   [ActionType.set_team_respawn_vehicle]: e_action_type.set_team_respawn_vehicle,
   [ActionType.hide_object]: e_action_type.hide_object,
-} as const satisfies Record<ActionTypeName, e_action_type>;
+} as const satisfies Partial<Record<ActionTypeName, e_action_type>>;
 
-export const encodeActionType = (value: ActionTypeName): e_action_type =>
-  mapMegaloEnum(value, ACTION_TYPE_TO_BLF);
+export const encodeActionType = (value: ActionTypeName): e_action_type => {
+  const mapped = (
+    ACTION_TYPE_TO_BLF as Partial<
+      Record<
+        string,
+        (typeof ACTION_TYPE_TO_BLF)[keyof typeof ACTION_TYPE_TO_BLF]
+      >
+    >
+  )[value as string];
+  if (mapped === undefined) {
+    throw new Error(`Action ${value} is not supported on this version`);
+  }
+  return mapped;
+};

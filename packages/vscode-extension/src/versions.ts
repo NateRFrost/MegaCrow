@@ -17,12 +17,12 @@ export const MEGALO_VERSION_OPTIONS = [
   },
   {
     id: "73",
-    label: "Halo: Reach - Public Beta",
+    label: "Halo: Reach - Beta",
     description: "73",
   },
   {
     id: "49",
-    label: "Halo: Reach - Private Alpha",
+    label: "Halo: Reach - Alpha",
     description: "49",
   },
 ] as const;

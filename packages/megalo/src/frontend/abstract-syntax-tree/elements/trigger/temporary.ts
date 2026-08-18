@@ -12,9 +12,10 @@ import {
   type ASTNode,
   SyntaxKind,
 } from "src/frontend/abstract-syntax-tree/kinds";
+import { isTriggerStatementBoundary } from "src/frontend/abstract-syntax-tree/parameters";
 import { variableTypeFromName } from "src/frontend/language-configuration/omni/variables";
 import { VariableScope } from "src/frontend/symbol-table";
-import { type Token, TokenKind } from "src/frontend/tokens";
+import { TokenKind } from "src/frontend/tokens";
 
 export const TEMPORARY_STORAGE_NAMES = [
   "number",
@@ -34,15 +35,6 @@ export type TemporaryStatementNode = ASTNode<SyntaxKind.TEMPORARY> & {
   name: { value: string; location: SourceCodeLocation; symbolId?: number };
   initial: ASTConditionOperandNode;
 };
-
-const isTriggerStatementBoundary = (token: Token | undefined): boolean =>
-  !token ||
-  (token.kind === TokenKind.Identifier &&
-    (token.value === "end" ||
-      token.value === "condition" ||
-      token.value === "action" ||
-      token.value === "begin" ||
-      token.value === "temporary"));
 
 interface ParsedTemporaryStorage {
   accepted: boolean;

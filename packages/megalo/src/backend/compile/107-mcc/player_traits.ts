@@ -5,6 +5,7 @@ import {
   encodeBooleanTrait,
   encodeDamageModifierPercentage,
   encodeDamageResistancePercentage,
+  encodeDoubleJumpSetting,
   encodeEquipmentUsageSetting,
   encodeForcedChangeColorSetting,
   encodeGrenadeCountSetting,
@@ -155,6 +156,11 @@ export const encodePlayerTraits = (
   if (movement.vehicleUsage !== undefined) {
     movementTraits.m_vehicle_usage_setting = encodeVehicleUsageSetting(
       movement.vehicleUsage
+    );
+  }
+  if (movement.doubleJump !== undefined) {
+    movementTraits.m_double_jump_setting = encodeDoubleJumpSetting(
+      movement.doubleJump
     );
   }
   if (movement.jumpModifier !== undefined) {

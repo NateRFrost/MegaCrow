@@ -7,6 +7,7 @@ import type { PlayerTraitOptionNode } from "src/frontend/abstract-syntax-tree/el
 import { SyntaxKind } from "src/frontend/abstract-syntax-tree/kinds";
 import {
   activeCamo,
+  doubleJump,
   forcedChangeColor,
   motionTrackerMode,
   vehicleUsage,
@@ -85,6 +86,7 @@ const PLAYER_TRAIT_OPTION_NAMES = [
   "vehicle_usage",
   "jump_modifier",
   "sprinting",
+  "double_jump",
   "equipment_usage",
   "active_camo",
   "waypoint",
@@ -106,6 +108,7 @@ const PLAYER_TRAIT_VALUE_BY_OPTION: Record<string, readonly string[]> = {
   initial_secondary_weapon: OBJECT_LIST_SENTINELS,
   initial_equipment: OBJECT_LIST_SENTINELS,
   sprinting: ["true", "false"],
+  double_jump: ["disabled", "enabled", "triple"],
   equipment_usage: EQUIPMENT_USAGE_KEYWORDS,
 };
 
@@ -123,6 +126,25 @@ const suggestOverrideNames = (
       ? withBlockEndSnippet(entry)
       : withContinueCompletion(entry)
   );
+
+const completeSimpleOverrideValue = (
+  ctx: ElementCompletionContext,
+  optionName: string | undefined
+): CompletionItem[] => {
+  if (optionName === "weapon_set") {
+    return [
+      ...suggestKeywords(ctx, OBJECT_LIST_SENTINELS, "enumMember"),
+      ...suggestObjectList(ctx, ObjectListType.WeaponSets),
+    ];
+  }
+  if (optionName === "vehicle_set") {
+    return [
+      ...suggestKeywords(ctx, OBJECT_LIST_SENTINELS, "enumMember"),
+      ...suggestObjectList(ctx, ObjectListType.VehicleSets),
+    ];
+  }
+  return [...suggestBoolean(ctx), ...suggestTyped(ctx, ParameterType.Integer)];
+};
 
 const sameLineAfter = (
   ctx: ElementCompletionContext,
@@ -149,6 +171,8 @@ const completeTraitValue = (
       return suggestKeywords(ctx, GRENADE_KEYWORDS, "enumMember");
     case "sprinting":
       return suggestBoolean(ctx);
+    case "double_jump":
+      return suggestEnum(ctx, doubleJump);
     case "vehicle_usage":
       return suggestEnum(ctx, vehicleUsage);
     case "active_camo":
@@ -281,37 +305,43 @@ export const completeGameOptions = (
         }
       }
 
+      const optionName =
+        entry.name.kind === SyntaxKind.REFERENCE
+          ? entry.name.identifier
+          : undefined;
+
       if (
         entry.value.kind === OverrideValueKind.SIMPLE &&
         offsetIn(entry.value.value.location, ctx.offset)
       ) {
-        const optionName =
-          entry.name.kind === SyntaxKind.REFERENCE
-            ? entry.name.identifier
-            : undefined;
-        if (optionName === "weapon_set") {
-          return [
-            ...suggestKeywords(ctx, OBJECT_LIST_SENTINELS, "enumMember"),
-            ...suggestObjectList(ctx, ObjectListType.WeaponSets),
-          ];
+        return completeSimpleOverrideValue(ctx, optionName);
+      }
+
+      // Missing value (`override weapon_set |`) or caret in the gap after the
+      // option name — offer value members, not another override name list.
+      if (
+        entry.name.kind === SyntaxKind.REFERENCE &&
+        ctx.offset > entry.name.location.end.localOffset &&
+        isSameLineAs(ctx.snapshot, ctx.offset, entry.name.location)
+      ) {
+        if (
+          entry.value.kind === OverrideValueKind.SIMPLE &&
+          ctx.offset > entry.value.value.location.end.localOffset
+        ) {
+          return [];
         }
-        if (optionName === "vehicle_set") {
-          return [
-            ...suggestKeywords(ctx, OBJECT_LIST_SENTINELS, "enumMember"),
-            ...suggestObjectList(ctx, ObjectListType.VehicleSets),
-          ];
+        if (
+          entry.value.kind === SyntaxKind.INVALID ||
+          entry.value.kind === OverrideValueKind.SIMPLE
+        ) {
+          return completeSimpleOverrideValue(ctx, optionName);
         }
-        return [
-          ...suggestBoolean(ctx),
-          ...suggestTyped(ctx, ParameterType.Integer),
-        ];
       }
 
       if (
         ctx.offset > entry.keywordLocation.end.localOffset &&
         (entry.name.kind === SyntaxKind.INVALID ||
-          ctx.offset <= entry.name.location.end.localOffset ||
-          isSameLineAs(ctx.snapshot, ctx.offset, entry.keywordLocation))
+          ctx.offset <= entry.name.location.end.localOffset)
       ) {
         return suggestOverrideNames(ctx);
       }

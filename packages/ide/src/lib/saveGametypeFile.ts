@@ -8,9 +8,11 @@ import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
 import {
   autosaveQueueFileName,
+  autosaveQueueFileSizeForMegaloVersionId,
   finalizeGametypeSaveBytes,
   type GametypeSaveFormat,
 } from "./gametypeSaveFormat";
+import { getCompileMegaloVersion } from "./megaloCompile";
 import { isTauriRuntime } from "./tauriRuntime";
 import type { Workspace } from "./workspace";
 
@@ -47,7 +49,11 @@ export async function saveGametypeBytes(
   format: GametypeSaveFormat,
   suggestedName: string
 ): Promise<SaveGametypeResult> {
-  const output = finalizeGametypeSaveBytes(bytes, format);
+  const output = finalizeGametypeSaveBytes(bytes, format, {
+    autosaveSlotSize: autosaveQueueFileSizeForMegaloVersionId(
+      getCompileMegaloVersion()
+    ),
+  });
   if (isTauriRuntime()) {
     const path = await save({
       title: "Save gametype",

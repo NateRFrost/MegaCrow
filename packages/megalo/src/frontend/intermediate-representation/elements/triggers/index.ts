@@ -4,6 +4,7 @@ import type { ElementLowerer } from "src/frontend/intermediate-representation/el
 import {
   applySpecialTriggerIndex,
   makeTrigger,
+  recordTriggerExecutionModeLocation,
   resolveTriggerHeader,
 } from "src/frontend/intermediate-representation/elements/triggers/header";
 import { GameEngineAppendTarget } from "src/frontend/intermediate-representation/elements/triggers/scope";
@@ -28,7 +29,8 @@ export const triggersLowerer: ElementLowerer<TriggerElementNode> = (
       element.name.location,
       ctx.symbolTable,
       element.name.symbolId,
-      false
+      false,
+      ctx.frontend.megaloVersion
     );
 
     // Pre-order: reserve this trigger's slot before lowering nested for_each children.
@@ -41,7 +43,13 @@ export const triggersLowerer: ElementLowerer<TriggerElementNode> = (
         actionCount: 0,
       })
     );
-    applySpecialTriggerIndex(engine, header, triggerIndex);
+    applySpecialTriggerIndex(
+      engine,
+      header,
+      triggerIndex,
+      element.name.location,
+      ctx.ir.locations
+    );
 
     const root = new GameEngineAppendTarget(engine);
     const previousInPregameTrigger = ctx.inPregameTrigger;
@@ -59,6 +67,11 @@ export const triggersLowerer: ElementLowerer<TriggerElementNode> = (
         firstAction: window.firstActionIndex,
         actionCount: window.actionCount,
       });
+      recordTriggerExecutionModeLocation(
+        engine.triggers[triggerIndex]!,
+        element.name.location,
+        ctx.ir.locations
+      );
     } finally {
       ctx.inPregameTrigger = previousInPregameTrigger;
     }

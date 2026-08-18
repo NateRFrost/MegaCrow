@@ -7,9 +7,10 @@ import { LowerError } from "src/frontend/intermediate-representation/error";
 import {
   type Condition,
   ConditionType,
+  conditionType,
   type Disposition,
   disposition,
-  type NumericComparison,
+  NumericComparison,
   numericComparison,
   type PlayerDeathKillerTypeFlags,
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_conditions";
@@ -31,6 +32,7 @@ import {
 } from "src/frontend/intermediate-representation/parameters/references/coerce";
 import type { KillerTypeKeyword } from "src/frontend/language-configuration/omni/conditions";
 import { SymbolKind } from "src/frontend/symbol-table";
+import { getLabel } from "src/version";
 
 const emptyKillerFlags = (): PlayerDeathKillerTypeFlags => ({
   environment: false,
@@ -83,11 +85,25 @@ const parseKillerType = (
 };
 
 const parseComparison = (
-  operand: ASTConditionOperandNode
+  operand: ASTConditionOperandNode,
+  ctx: ElementLowerContext
 ): NumericComparison => {
   if (operand.kind === SyntaxKind.KEYWORD) {
     const comparison = numericComparison.parse(operand.value);
     if (comparison !== undefined) {
+      if (
+        !numericComparison
+          .supportedMembers(ctx.frontend.megaloVersion)
+          .has(comparison)
+      ) {
+        throw new LowerError(
+          diagnosticMessages.unsupportedMathOperation(
+            operand.value,
+            getLabel(ctx.frontend.megaloVersion)
+          ),
+          operand.location
+        );
+      }
       return comparison;
     }
   }
@@ -158,13 +174,24 @@ const lowerIf: ConditionLowerer = (statement, ctx, base) => {
     isBareNoneOperand(rightParam),
     isBareNoneOperand(leftParam)
   );
+  let comparison = parseComparison(comparisonNode, ctx);
+  let negated = base.negated;
+  // Alpha has no `!=` opcode — emit `==` and toggle the condition not-flag.
+  if (
+    comparison === NumericComparison.not_equal_to &&
+    ctx.frontend.megaloVersion.version < 73
+  ) {
+    comparison = NumericComparison.equal_to;
+    negated = !negated;
+  }
   return {
     ...base,
+    negated,
     type: ConditionType.if,
     parameters: {
       left,
       right,
-      comparison: parseComparison(comparisonNode),
+      comparison,
     },
   };
 };
@@ -402,6 +429,19 @@ export const lowerConditionStatement = (
   ctx: ElementLowerContext,
   base: Pick<Condition, "negated" | "unionGroup" | "executeBeforeAction">
 ): Condition => {
+  const canonical = conditionType.parse(statement.name.value);
+  if (
+    canonical !== undefined &&
+    !conditionType.supportedMembers(ctx.frontend.megaloVersion).has(canonical)
+  ) {
+    throw new LowerError(
+      diagnosticMessages.unsupportedAction(
+        statement.name.value,
+        getLabel(ctx.frontend.megaloVersion)
+      ),
+      statement.name.location
+    );
+  }
   const lowerer = CONDITION_LOWERERS[statement.name.value];
   if (lowerer === undefined) {
     throw new LowerError(

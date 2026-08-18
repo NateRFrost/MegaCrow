@@ -289,17 +289,9 @@ export const overrideParser = (
       ),
     };
   } else {
-    ctx.diagnostics.addError(
-      diagnosticMessages.expectedParameterType(
-        "override value",
-        peek?.value ?? ""
-      ),
-      peek?.location ?? nameToken.location
-    );
-    value = {
-      kind: SyntaxKind.INVALID,
-      location: nameToken.location,
-    };
+    // Span the gap after the name so completion at `override weapon_set |`
+    // stays inside this entry (same pattern as loadout_palette missing operands).
+    value = missingOperandAfter(ctx, name.location, peek, "override value");
   }
 
   const valueLocation =

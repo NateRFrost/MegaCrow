@@ -1,5 +1,8 @@
 import {
   type CompiledMegaloMetadata,
+  getLabel,
+  MEGALO_VERSIONS,
+  type MegaloVersionId,
   pickLocalizedStringTableText,
   stringTableLanguageForLocale,
   stringTableLanguageIndex,
@@ -27,7 +30,7 @@ import {
   isRecognizedObjectListName,
 } from "./objectListsPath";
 
-export type MegaloVersionProfileId = "107-mcc" | "107";
+export type MegaloVersionProfileId = MegaloVersionId;
 
 export interface VariantIdentity {
   description: string | null;
@@ -59,10 +62,13 @@ export interface GametypeMetadata {
   variantIdentity: VariantIdentity | null;
 }
 
-export const MEGALO_VERSION_LABELS: Record<MegaloVersionProfileId, string> = {
-  "107-mcc": "Halo: Reach - MCC",
-  "107": "Xbox 360 TU1",
-};
+export const MEGALO_VERSION_LABELS: Record<MegaloVersionProfileId, string> =
+  Object.fromEntries(
+    (Object.keys(MEGALO_VERSIONS) as MegaloVersionId[]).map((id) => [
+      id,
+      getLabel(MEGALO_VERSIONS[id]),
+    ])
+  ) as Record<MegaloVersionProfileId, string>;
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) {

@@ -37,6 +37,7 @@ export const loadoutPaletteLowerer = (
     // Megalo Headache #1
     if (!ctx.loadoutPalettesByName.has(paletteName)) {
       ctx.loadoutPalettesByName.set(paletteName, palette);
+      ctx.ir.gameVariant.gameEngine.loadoutPalettes.push(palette);
     }
   });
 };

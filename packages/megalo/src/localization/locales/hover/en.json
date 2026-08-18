@@ -1107,6 +1107,9 @@
       "sprinting": {
         "summary": "Whether sprinting is allowed."
       },
+      "double_jump": {
+        "summary": "Double-jump trait (MegaCrow extension): disabled, enabled, or triple."
+      },
       "equipment_usage": {
         "summary": "Whether equipment use is enabled."
       },

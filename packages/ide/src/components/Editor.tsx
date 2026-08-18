@@ -1,5 +1,6 @@
 import Editor, { type Monaco } from "@monaco-editor/react";
 import { memo, useCallback, useEffect, useRef } from "react";
+import { megaloDiagnosticFromLsp } from "../lib/diagnostics";
 import {
   EDITOR_FONT_FAMILY,
   EDITOR_FONT_SIZE,
@@ -246,14 +247,9 @@ export const MegaloEditor = memo(function MegaloEditor({
       if (!(monaco && model)) {
         return;
       }
-      const mapped: MegaloDiagnostic[] = lspDiags.map((d) => ({
-        line: d.range.start.line + 1,
-        column: d.range.start.character + 1,
-        endLine: d.range.end.line + 1,
-        endColumn: d.range.end.character + 1,
-        message: d.message,
-        severity: d.severity === 1 ? "error" : "warning",
-      }));
+      const mapped: MegaloDiagnostic[] = lspDiags.map((d) =>
+        megaloDiagnosticFromLsp(d)
+      );
       setMegaloDiagnostics(monaco, model, mapped);
     });
     return unsubscribe;

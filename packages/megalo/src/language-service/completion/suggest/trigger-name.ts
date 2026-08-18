@@ -1,4 +1,3 @@
-import { TRIGGER_EXECUTION_KINDS } from "src/frontend/language-configuration/omni/triggers";
 import { SymbolKind } from "src/frontend/symbol-table";
 import {
   filterByPrefix,
@@ -6,6 +5,7 @@ import {
   suggestSymbolKind,
   withBlockEndSnippet,
 } from "src/language-service/completion/helpers";
+import { suggestableTriggerExecutionKinds } from "src/language-service/completion/suggest/trigger-kinds";
 import type {
   CompletionItem,
   TriggerNameCompletionContext,
@@ -18,9 +18,11 @@ import type {
 export const suggestTriggerName = (
   ctx: TriggerNameCompletionContext
 ): CompletionItem[] => {
-  const kinds = suggestKeywords(ctx, TRIGGER_EXECUTION_KINDS, "enumMember").map(
-    (entry) => withBlockEndSnippet(entry)
-  );
+  const kinds = suggestKeywords(
+    ctx,
+    suggestableTriggerExecutionKinds(ctx.snapshot.version),
+    "enumMember"
+  ).map((entry) => withBlockEndSnippet(entry));
   const filters = suggestSymbolKind(ctx, SymbolKind.ObjectFilter).map((entry) =>
     withBlockEndSnippet(entry)
   );

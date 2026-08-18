@@ -16,12 +16,10 @@ import { useT } from "../localization";
 
 const PANEL_WIDTH = 340;
 
-/** Versions selectable in the browser IDE (expand as support lands). */
-export const BROWSER_MEGALO_VERSIONS: readonly MegaloVersionId[] = [
-  "107-mcc",
-  "107",
-  "106",
-];
+/** All engine profiles from `@megacrow/megalo` (newest first). */
+export const BROWSER_MEGALO_VERSIONS: readonly MegaloVersionId[] = Object.keys(
+  MEGALO_VERSIONS
+) as MegaloVersionId[];
 
 interface Props {
   megaloVersion: MegaloVersionId;

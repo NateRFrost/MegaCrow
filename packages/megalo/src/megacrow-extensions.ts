@@ -8,6 +8,11 @@ export interface MegacrowExtensions {
   // Solve Megalo Headache #3
   coopSpawningWaypointIcon: boolean;
   /**
+   * Expose `double_jump` player-trait option (disabled | enabled | triple).
+   * Present on the Reach wire but not in MegaloEdit.
+   */
+  doubleJump: boolean;
+  /**
    * Seed undocumented builtin string `megacrow_version` with the MegaCrow build string.
    */
   megacrowVersionString: boolean;
@@ -34,6 +39,7 @@ export interface MegacrowExtensions {
 export const DEFAULT_MEGACROW_EXTENSIONS: MegacrowExtensions = {
   targetTeam: false,
   coopSpawningWaypointIcon: false,
+  doubleJump: false,
   notBuiltIn: false,
   compileMissingBaseFromSource: false,
   megacrowVersionString: false,
@@ -46,6 +52,7 @@ export const DEFAULT_MEGACROW_EXTENSIONS: MegacrowExtensions = {
 export const ALL_MEGACROW_EXTENSIONS: MegacrowExtensions = {
   targetTeam: true,
   coopSpawningWaypointIcon: true,
+  doubleJump: true,
   notBuiltIn: true,
   compileMissingBaseFromSource: true,
   megacrowVersionString: true,

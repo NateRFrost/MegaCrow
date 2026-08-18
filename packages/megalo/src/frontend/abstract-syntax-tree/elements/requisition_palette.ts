@@ -2,6 +2,7 @@ import { type SourceCodeLocation, SourceLocationType } from "src/diagnostics";
 import { diagnosticMessages } from "src/diagnostics/messages";
 import {
   type ASTErrorNode,
+  type ASTIntegerNode,
   type ASTNode,
   type ASTReferenceNode,
   SyntaxKind,
@@ -46,6 +47,7 @@ export type RequisitionPaletteBaselineNode =
 
 export type RequisitionPaletteItemStateNode =
   | ASTKeywordParameterNode
+  | ASTIntegerNode
   | ASTErrorNode;
 
 export interface RequisitionPaletteItemNode {
@@ -136,22 +138,32 @@ const parseItemState = (
   ctx: ParserContext,
   anchor: Token
 ): RequisitionPaletteItemStateNode => {
-  const token = ctx.getToken();
-  if (token.kind === TokenKind.Identifier) {
+  const token = ctx.peekToken();
+  if (token?.kind === TokenKind.Integer) {
+    const integerToken = ctx.getToken();
+    return {
+      kind: SyntaxKind.INTEGER,
+      value: Number(integerToken.value),
+      location: integerToken.location,
+    };
+  }
+  if (token?.kind === TokenKind.Identifier) {
+    const identifierToken = ctx.getToken();
     return {
       kind: SyntaxKind.KEYWORD,
-      value: token.value,
-      location: token.location,
+      value: identifierToken.value,
+      location: identifierToken.location,
     };
   }
 
+  const consumed = ctx.getToken();
   ctx.diagnostics.addError(
     diagnosticMessages.expectedTokenKind(
       TokenKind.Identifier,
-      token.kind,
-      token.value
+      consumed.kind,
+      consumed.value
     ),
-    token.location
+    consumed.location
   );
   return {
     kind: SyntaxKind.INVALID,

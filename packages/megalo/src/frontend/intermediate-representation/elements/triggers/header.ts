@@ -9,6 +9,7 @@ import {
 } from "src/frontend/intermediate-representation/game/megalogamengine/megalogamengine_trigger";
 import { TRIGGER_EXECUTION_KINDS } from "src/frontend/language-configuration/omni/triggers";
 import { SymbolKind, type SymbolTable } from "src/frontend/symbol-table";
+import type { SupportedMegaloVersion } from "src/version";
 
 export interface TriggerHeaderInfo {
   executionMode: TriggerExecutionMode;
@@ -79,7 +80,8 @@ export const resolveTriggerHeader = (
   location: SourceCodeLocation,
   symbolTable: SymbolTable,
   objectFilterSymbolId: number | undefined,
-  isInnerLoop: boolean
+  isInnerLoop: boolean,
+  _megaloVersion: SupportedMegaloVersion
 ): TriggerHeaderInfo => {
   const lower = name.toLowerCase();
 
@@ -134,7 +136,7 @@ export const resolveTriggerHeader = (
     };
   }
 
-  // Named object filter → object_with_label
+  // Named object filter → object_with_label (Alpha still encodes as object + filter)
   if (objectFilterSymbolId !== undefined) {
     const symbol = symbolTable.getSymbol(objectFilterSymbolId);
     if (symbol?.kind === SymbolKind.ObjectFilter) {
@@ -158,10 +160,17 @@ export const resolveTriggerHeader = (
 export const applySpecialTriggerIndex = (
   engine: CustomGameEngineDefinition,
   header: TriggerHeaderInfo,
-  triggerIndex: number
+  triggerIndex: number,
+  location?: SourceCodeLocation,
+  locations?: {
+    record: (owner: object, key: string, loc: SourceCodeLocation) => void;
+  }
 ): void => {
   if (header.specialIndexKey !== undefined) {
     engine[header.specialIndexKey] = triggerIndex;
+    if (location !== undefined && locations !== undefined) {
+      locations.record(engine, header.specialIndexKey, location);
+    }
   }
 };
 
@@ -182,3 +191,14 @@ export const makeTrigger = (
   firstAction: window.firstAction,
   actionCount: window.actionCount,
 });
+
+/** Record the trigger header name span for compile-time execution-mode DX. */
+export const recordTriggerExecutionModeLocation = (
+  trigger: Trigger,
+  location: SourceCodeLocation,
+  locations: {
+    record: (owner: object, key: string, loc: SourceCodeLocation) => void;
+  }
+): void => {
+  locations.record(trigger, "executionMode", location);
+};

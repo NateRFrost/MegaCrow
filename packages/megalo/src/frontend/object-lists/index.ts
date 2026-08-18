@@ -87,17 +87,27 @@ export const objectListLocation = (
 ): ObjectListLocation => ({
   type: SourceLocationType.OBJECT_LIST,
   objectType,
+  // `line` is the 0-based entry index (same as file line when blank lines count).
   source: { localOffset: -1, absoluteOffset: -1, line: index, column: 0 },
   ...(file === undefined ? {} : { file }),
 });
 
 export class ObjectListParser {
-  public parse(text: string, diagnostics: Diagnostics): string[] {
-    const lines = text.split("\n");
+  public parse(
+    text: string,
+    diagnostics: Diagnostics,
+    objectType: ObjectListType,
+    file?: string
+  ): string[] {
+    const lines = text.split(/\r?\n/).map((line) => line.replace(/\r$/, ""));
+    if (lines.length > 0 && lines.at(-1) === "") {
+      lines.pop();
+    }
     const objectList: string[] = [];
     const firstLineByName = new Map<string, number>();
     for (let i = 0; i < lines.length; i++) {
-      const line = (lines[i] ?? "").replace(/\r$/, "");
+      const line = lines[i] ?? "";
+      objectList.push(line);
       if (line.trim() === "") {
         continue;
       }
@@ -109,14 +119,13 @@ export class ObjectListParser {
             previousLine0 + 1,
             i + 1
           ),
-          objectListLocation(ObjectListType.Objects, i)
+          objectListLocation(objectType, i, file)
         );
         // When we have a failure we dont compile,
         // so its fine to continue parsing the rest of the file.
         continue;
       }
       firstLineByName.set(line, i);
-      objectList.push(line);
     }
     return objectList;
   }

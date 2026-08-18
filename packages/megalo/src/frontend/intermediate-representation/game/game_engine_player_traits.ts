@@ -72,12 +72,22 @@ export const vehicleUsage = megaloEnum([
 export const VehicleUsage = vehicleUsage.enum;
 export type VehicleUsage = MegaloEnumNames<typeof vehicleUsage>;
 
+/** MegaCrow extension `doubleJump`: Reach wire double-jump trait. */
+export const doubleJump = megaloEnum([
+  "disabled",
+  "enabled",
+  "triple",
+] as const);
+export const DoubleJump = doubleJump.enum;
+export type DoubleJump = MegaloEnumNames<typeof doubleJump>;
+
 export type PlayerTraitMovement = Partial<{
   speedPercentage: number;
   gravityPercentage: number;
   vehicleUsage: VehicleUsage;
   jumpModifier: number; // % expressed as an integer
   sprinting: boolean;
+  doubleJump: DoubleJump;
 }>;
 
 export const activeCamo = megaloEnum([

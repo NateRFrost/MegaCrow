@@ -43,6 +43,9 @@ export { decodeMglo, readMgloEncodingVersion } from "src/decode-mglo";
 export {
   type Diagnostic,
   DiagnosticSeverity,
+  isObjectListDiagnosticData,
+  OBJECT_LIST_DIAGNOSTIC_KIND,
+  type ObjectListDiagnosticData,
   SourceLocationType,
   UNKNOWN_LOCATION,
 } from "src/diagnostics";
@@ -127,7 +130,9 @@ export {
   MegaloCompilerContext,
 } from "src/megalo-compiler";
 export {
-  buildVariantLimitUsage,
+  type CompiledEngineStats,
+  collectCompiledEngineStats,
+  formatVariantLimitUsage,
   type VariantLimitItem,
   type VariantLimitSection,
   type VariantLimitUsage,

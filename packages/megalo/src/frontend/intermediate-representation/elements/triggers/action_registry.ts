@@ -26,6 +26,7 @@ import { lowerGameGriefRecordCustomPenalty } from "src/frontend/intermediate-rep
 import { lowerGetButtonTime } from "src/frontend/intermediate-representation/elements/triggers/actions/get_button_time";
 import { lowerGetPlayerHoldingObject } from "src/frontend/intermediate-representation/elements/triggers/actions/get_player_holding_object";
 import { lowerGetRandomObject } from "src/frontend/intermediate-representation/elements/triggers/actions/get_random_object";
+import { lowerGiveWeapon } from "src/frontend/intermediate-representation/elements/triggers/actions/give_weapon";
 import { lowerHideObject } from "src/frontend/intermediate-representation/elements/triggers/actions/hide_object";
 import { lowerHsFunctionCall } from "src/frontend/intermediate-representation/elements/triggers/actions/hs_function_call";
 import { lowerHudPostMessage } from "src/frontend/intermediate-representation/elements/triggers/actions/hud_post_message";
@@ -55,6 +56,9 @@ import { lowerObjectGetOrientation } from "src/frontend/intermediate-representat
 import { lowerObjectGetShield } from "src/frontend/intermediate-representation/elements/triggers/actions/object_get_shield";
 import { lowerObjectGetVelocity } from "src/frontend/intermediate-representation/elements/triggers/actions/object_get_velocity";
 import { lowerObjectSetInvincibility } from "src/frontend/intermediate-representation/elements/triggers/actions/object_set_invincibility";
+import { lowerObjectSetMinimapIcon } from "src/frontend/intermediate-representation/elements/triggers/actions/object_set_minimap_icon";
+import { lowerObjectSetMinimapPriority } from "src/frontend/intermediate-representation/elements/triggers/actions/object_set_minimap_priority";
+import { lowerObjectSetMinimapVisibility } from "src/frontend/intermediate-representation/elements/triggers/actions/object_set_minimap_visibility";
 import { lowerObjectSetNeverGarbage } from "src/frontend/intermediate-representation/elements/triggers/actions/object_set_never_garbage";
 import { lowerObjectSetOrientation } from "src/frontend/intermediate-representation/elements/triggers/actions/object_set_orientation";
 import { lowerObjectSetScale } from "src/frontend/intermediate-representation/elements/triggers/actions/object_set_scale";
@@ -74,6 +78,7 @@ import { lowerPlayerGetWeapon } from "src/frontend/intermediate-representation/e
 import { lowerPlayerPickUpWeapon } from "src/frontend/intermediate-representation/elements/triggers/actions/player_pick_up_weapon";
 import { lowerPlayerSetCoopSpawning } from "src/frontend/intermediate-representation/elements/triggers/actions/player_set_coop_spawning";
 import { lowerPlayerSetFireteamIndex } from "src/frontend/intermediate-representation/elements/triggers/actions/player_set_fireteam_index";
+import { lowerPlayerSetFireteamTier } from "src/frontend/intermediate-representation/elements/triggers/actions/player_set_fireteam_tier";
 import { lowerPlayerSetObjective } from "src/frontend/intermediate-representation/elements/triggers/actions/player_set_objective";
 import { lowerPlayerSetObjectiveAllegiance } from "src/frontend/intermediate-representation/elements/triggers/actions/player_set_objective_allegiance";
 import { lowerPlayerSetObjectiveAllegianceIcon } from "src/frontend/intermediate-representation/elements/triggers/actions/player_set_objective_allegiance_icon";
@@ -89,6 +94,7 @@ import { lowerSavedFilmInsertMarker } from "src/frontend/intermediate-representa
 import { lowerSet } from "src/frontend/intermediate-representation/elements/triggers/actions/set";
 import { lowerSetBoundary } from "src/frontend/intermediate-representation/elements/triggers/actions/set_boundary";
 import { lowerSetFireteamRespawnFilter } from "src/frontend/intermediate-representation/elements/triggers/actions/set_fireteam_respawn_filter";
+import { lowerSetLoadout } from "src/frontend/intermediate-representation/elements/triggers/actions/set_loadout";
 import { lowerSetLoadoutPalette } from "src/frontend/intermediate-representation/elements/triggers/actions/set_loadout_palette";
 import { lowerSetPickupFilter } from "src/frontend/intermediate-representation/elements/triggers/actions/set_pickup_filter";
 import { lowerSetPlayerRespawnVehicle } from "src/frontend/intermediate-representation/elements/triggers/actions/set_player_respawn_vehicle";
@@ -145,6 +151,7 @@ const ACTION_LOWERERS = new Map<string, ActionLowerer>([
   ["get_button_time", lowerGetButtonTime],
   ["get_player_holding_object", lowerGetPlayerHoldingObject],
   ["get_random_object", lowerGetRandomObject],
+  ["give_weapon", lowerGiveWeapon],
   ["hide_object", lowerHideObject],
   ["hs_function_call", lowerHsFunctionCall],
   ["hud_post_message", lowerHudPostMessage],
@@ -174,6 +181,9 @@ const ACTION_LOWERERS = new Map<string, ActionLowerer>([
   ["object_get_shield", lowerObjectGetShield],
   ["object_get_velocity", lowerObjectGetVelocity],
   ["object_set_invincibility", lowerObjectSetInvincibility],
+  ["object_set_minimap_icon", lowerObjectSetMinimapIcon],
+  ["object_set_minimap_priority", lowerObjectSetMinimapPriority],
+  ["object_set_minimap_visibility", lowerObjectSetMinimapVisibility],
   ["object_set_never_garbage", lowerObjectSetNeverGarbage],
   ["object_set_orientation", lowerObjectSetOrientation],
   ["object_set_scale", lowerObjectSetScale],
@@ -193,6 +203,7 @@ const ACTION_LOWERERS = new Map<string, ActionLowerer>([
   ["player_pick_up_weapon", lowerPlayerPickUpWeapon],
   ["player_set_coop_spawning", lowerPlayerSetCoopSpawning],
   ["player_set_fireteam_index", lowerPlayerSetFireteamIndex],
+  ["player_set_fireteam_tier", lowerPlayerSetFireteamTier],
   ["player_set_objective", lowerPlayerSetObjective],
   ["player_set_objective_allegiance", lowerPlayerSetObjectiveAllegiance],
   [
@@ -211,6 +222,7 @@ const ACTION_LOWERERS = new Map<string, ActionLowerer>([
   ["set", lowerSet],
   ["set_boundary", lowerSetBoundary],
   ["set_fireteam_respawn_filter", lowerSetFireteamRespawnFilter],
+  ["set_loadout", lowerSetLoadout],
   ["set_loadout_palette", lowerSetLoadoutPalette],
   ["set_pickup_filter", lowerSetPickupFilter],
   ["set_player_respawn_vehicle", lowerSetPlayerRespawnVehicle],

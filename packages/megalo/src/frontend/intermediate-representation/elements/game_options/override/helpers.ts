@@ -116,7 +116,12 @@ export const applyBuiltinLockHide = (
   ir: IR,
   diagnostics: Diagnostics,
   optionName: string,
-  modifiers: { lock: boolean; hide: boolean },
+  modifiers: {
+    hide: boolean;
+    hideLocation?: SourceCodeLocation;
+    lock: boolean;
+    lockLocation?: SourceCodeLocation;
+  },
   location: SourceCodeLocation
 ) => {
   if (!isBuiltInGameOptionName(optionName)) {
@@ -133,7 +138,7 @@ export const applyBuiltinLockHide = (
       ir.gameVariant.baseVariantParametersLocked,
       flag,
       true,
-      location,
+      modifiers.lockLocation ?? location,
       optionName
     );
   } else {
@@ -155,7 +160,7 @@ export const applyBuiltinLockHide = (
       ir.gameVariant.baseVariantParametersHidden,
       flag,
       true,
-      location,
+      modifiers.hideLocation ?? location,
       optionName
     );
   }

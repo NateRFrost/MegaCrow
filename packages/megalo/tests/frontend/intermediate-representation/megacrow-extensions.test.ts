@@ -100,6 +100,39 @@ describe("megacrowExtensions.coopSpawning", () => {
   });
 });
 
+const DOUBLE_JUMP_SCRIPT = `string_table english
+	traits_name "DJ Traits"
+	traits_description "Double jump traits"
+end
+game_options
+	player_traits dj_traits traits_name traits_description
+		double_jump enabled
+	end
+end
+`;
+
+describe("megacrowExtensions.doubleJump", () => {
+  it("errors at lower when double_jump is used without the extension", () => {
+    const { diagnostics } = lowerScript(DOUBLE_JUMP_SCRIPT);
+    expect(diagnostics.hasErrors()).toBe(true);
+    const messages = diagnostics.getErrors().map((e) => e.message);
+    expect(messages.some((m) => m.includes("doubleJump"))).toBe(true);
+    expect(messages.some((m) => m.includes("double_jump"))).toBe(true);
+  });
+
+  it("lowers double_jump when the extension is enabled", () => {
+    const { ir, diagnostics } = lowerScript(DOUBLE_JUMP_SCRIPT, {
+      doubleJump: true,
+    });
+    expect(diagnostics.getErrors().map((e) => e.message)).toEqual([]);
+    expect(diagnostics.getWarnings().map((e) => e.message)).toContain(
+      "double_jump is not official Megalo syntax and requires tag changes to work"
+    );
+    const traits = ir.gameVariant.playerTraits[0];
+    expect(traits?.traits.movement.doubleJump).toBe("enabled");
+  });
+});
+
 describe("megacrowExtensions.megacrowVersionString", () => {
   it("does not seed megacrow_version without the extension", () => {
     const diagnostics = new Diagnostics();

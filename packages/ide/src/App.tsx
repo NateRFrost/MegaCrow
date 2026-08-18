@@ -33,7 +33,11 @@ import {
   type SourceAnalysis,
 } from "./lib/analyzeSource";
 import type { AppSettings } from "./lib/appSettings";
-import type { MegaloDiagnostic } from "./lib/diagnostics";
+import {
+  type MegaloDiagnostic,
+  type MegaloObjectListTarget,
+  megaloDiagnosticFromLsp,
+} from "./lib/diagnostics";
 import {
   setDiscordPresenceEnabled,
   updateDiscordPresence,
@@ -52,6 +56,7 @@ import {
 } from "./lib/fileNavigation";
 import { installFileNavShortcuts } from "./lib/fileNavShortcuts";
 import { createPlatformFileProvider } from "./lib/fileProvider";
+import { joinLogicalPaths } from "./lib/fileProvider/paths";
 import type { GametypeSaveFormat } from "./lib/gametypeSaveFormat";
 import {
   includeCompileFailureAnalysis,
@@ -133,7 +138,10 @@ import {
 } from "./lib/workspace";
 import { workspaceUnexpectedFailure } from "./lib/workspaceBase";
 import { prepareWorkspaceCompileContext } from "./lib/workspaceCompileContext";
-import { materializeObjectListsOnFirstSave } from "./lib/workspaceObjectLists";
+import {
+  defaultObjectListText,
+  materializeObjectListsOnFirstSave,
+} from "./lib/workspaceObjectLists";
 import {
   failedToCompileStatus,
   IdeLocaleProvider,
@@ -519,13 +527,6 @@ export function App() {
     setDiagnosticsOpen((open) => !open);
   }, []);
 
-  const handleNavigateToDiagnostic = useCallback(
-    (line: number, column: number) => {
-      editorNavigateRef.current?.(line, column);
-    },
-    []
-  );
-
   const objectListDiagnostics = useMemo((): MegaloDiagnostic[] => {
     if (missingObjectListNames.length === 0) {
       return [];
@@ -845,14 +846,9 @@ export function App() {
 
   const analyzeObjectListDocument = useCallback(async (text: string) => {
     const result = await lspAnalyzeObjectList(text);
-    const diagnostics = result.diagnostics.map((d) => ({
-      line: d.range.start.line + 1,
-      column: d.range.start.character + 1,
-      endLine: d.range.end.line + 1,
-      endColumn: d.range.end.character + 1,
-      message: d.message,
-      severity: d.severity === 1 ? ("error" as const) : ("warning" as const),
-    }));
+    const diagnostics = result.diagnostics.map((d) =>
+      megaloDiagnosticFromLsp(d)
+    );
     const errorCount = diagnostics.filter((d) => d.severity === "error").length;
     return {
       ...idleAnalysis(),
@@ -1002,6 +998,66 @@ export function App() {
       recordFileNavOpen,
       resolveCompileContext,
     ]
+  );
+
+  const openObjectListFromDiagnostic = useCallback(
+    async (target: MegaloObjectListTarget) => {
+      const fileNameForType = `${target.objectType}.txt`;
+      const relativePath = `object_lists/${fileNameForType}`;
+      const absoluteCandidate = target.file
+        ? target.file
+        : activeWorkspace?.inputPath
+          ? joinLogicalPaths(activeWorkspace.inputPath, relativePath)
+          : relativePath;
+
+      const resolved = await resolveOpenablePathReference(
+        "include",
+        target.file ?? relativePath,
+        {
+          workspace: activeWorkspace,
+          currentFilePath: includeRoot?.absoluteFilePath ?? null,
+          includeCache: includeFileCache,
+        }
+      );
+
+      if (resolved) {
+        loadMegaloSource(resolved.text, resolved.displayName, {
+          absoluteFilePath: resolved.absoluteFilePath,
+        });
+      } else {
+        const versionId = activeWorkspace?.megaloVersion ?? "107-mcc";
+        const text = defaultObjectListText(fileNameForType, versionId);
+        loadMegaloSource(text, relativePath, {
+          absoluteFilePath: absoluteCandidate,
+        });
+      }
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          editorNavigateRef.current?.(target.line, 1);
+        });
+      });
+    },
+    [
+      activeWorkspace,
+      includeFileCache,
+      includeRoot?.absoluteFilePath,
+      loadMegaloSource,
+    ]
+  );
+
+  const handleNavigateToDiagnostic = useCallback(
+    (diagnostic: MegaloDiagnostic) => {
+      if (diagnostic.objectList) {
+        void openObjectListFromDiagnostic(diagnostic.objectList);
+        return;
+      }
+      if (diagnostic.trayOnly) {
+        return;
+      }
+      editorNavigateRef.current?.(diagnostic.line, diagnostic.column);
+    },
+    [openObjectListFromDiagnostic]
   );
 
   const restoredForWorkspaceIdRef = useRef<string | null>(null);

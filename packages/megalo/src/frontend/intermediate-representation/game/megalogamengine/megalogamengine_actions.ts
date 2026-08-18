@@ -77,6 +77,9 @@ const ACTION_TYPE_MEMBERS = [
   "player_set_objective_allegiance",
   "player_set_objective_allegiance_icon",
   "team_set_coop_spawning",
+  "object_set_minimap_visibility",
+  "object_set_minimap_priority",
+  "object_set_minimap_icon",
   "team_set_primary_respawn_object",
   "player_set_primary_respawn_object",
   "player_get_fireteam_index",
@@ -87,13 +90,16 @@ const ACTION_TYPE_MEMBERS = [
   "object_adjust_maximum_shield",
   "object_adjust_maximum_health",
   "player_set_requisition_palette",
+  "player_set_fireteam_tier",
   "device_set_power",
   "device_get_power",
   "device_set_position",
   "device_get_position",
+  "give_weapon",
   "adjust_grenades",
   "submit_incident",
   "submit_incident_with_custom_value",
+  "set_loadout",
   "set_loadout_palette",
   "device_set_position_track",
   "device_animate_position",
@@ -169,7 +175,6 @@ export const actionType = megaloEnum(ACTION_TYPE_MEMBERS, (version) => {
     "player_enable_purchases",
     "player_get_vehicle",
     "player_set_vehicle",
-    "player_set_unit",
     "timer_reset",
     "weapon_set_pickup_priority",
     "object_bounce",
@@ -182,10 +187,7 @@ export const actionType = megaloEnum(ACTION_TYPE_MEMBERS, (version) => {
     "object_set_scale",
     "navpoint_set_text",
     "object_get_shield",
-    "object_get_health",
     "player_set_objective",
-    "player_set_objective_allegiance",
-    "player_set_objective_allegiance_icon",
     "team_set_coop_spawning",
     "team_set_primary_respawn_object",
     "player_set_primary_respawn_object",
@@ -210,23 +212,45 @@ export const actionType = megaloEnum(ACTION_TYPE_MEMBERS, (version) => {
     "device_set_position_immediate",
     "saved_film_insert_marker",
     "respawn_zone_enable",
-    "player_get_weapon",
-    "player_get_equipment",
-    "object_set_never_garbage",
-    "player_get_target_object",
-    "create_tunnel",
-    "debug_force_player_view_count",
-    "player_pick_up_weapon",
-    "player_set_coop_spawning",
-    "object_set_orientation",
-    "object_face_object",
-    "biped_give_weapon",
-    "biped_drop_weapon",
-    "set_scenario_interpolator_state",
-    "get_random_object",
-    "game_grief_record_custom_penalty",
-    "boundary_set_player_color",
   ]);
+
+  if (version.version < 73) {
+    supported.add("object_set_minimap_visibility");
+    supported.add("object_set_minimap_priority");
+    supported.add("object_set_minimap_icon");
+  }
+
+  if (version.version < 106) {
+    supported.add("player_set_fireteam_tier");
+    supported.add("give_weapon");
+    supported.add("set_loadout");
+  }
+
+  if (version.version >= 73) {
+    supported.add("player_set_unit");
+    supported.add("object_get_health");
+    supported.add("player_get_weapon");
+    supported.add("player_get_equipment");
+    supported.add("object_set_never_garbage");
+    supported.add("player_get_target_object");
+    supported.add("create_tunnel");
+    supported.add("debug_force_player_view_count");
+    supported.add("player_pick_up_weapon");
+    supported.add("player_set_coop_spawning");
+    supported.add("object_set_orientation");
+  }
+
+  if (version.version >= 106) {
+    supported.add("player_set_objective_allegiance");
+    supported.add("player_set_objective_allegiance_icon");
+    supported.add("object_face_object");
+    supported.add("biped_give_weapon");
+    supported.add("biped_drop_weapon");
+    supported.add("set_scenario_interpolator_state");
+    supported.add("get_random_object");
+    supported.add("game_grief_record_custom_penalty");
+    supported.add("boundary_set_player_color");
+  }
 
   if (version.version === 107 && version.flavour === "mcc") {
     supported.add("begin");
@@ -659,9 +683,50 @@ export interface SubmitIncidentWithCustomValueParameters {
   statIndex: number;
 }
 
-export interface SetLoadoutPaletteParameters {
-  loadoutPaletteIndex: LoadoutPaletteType;
+export type SetLoadoutPaletteParameters = {
   target: TeamOrPlayerTarget;
+} & (
+  | {
+      /** Shipping MegaloEdit LoadoutPaletteType — wire index assigned at compile. */
+      loadoutPaletteType: LoadoutPaletteType;
+    }
+  | {
+      /** Pre-release object_lists/loadout_palettes.txt index (or raw integer). */
+      loadoutPaletteIndex: number;
+    }
+);
+
+export interface SetLoadoutParameters {
+  /** Index into object_lists/loadouts.txt (pre-release) or script loadout table. */
+  loadoutIndex: number;
+  target: TeamOrPlayerTarget;
+}
+
+export interface PlayerSetFireteamTierParameters {
+  player: PlayerReference;
+  tier: CustomVariableReference;
+}
+
+export interface GiveWeaponParameters {
+  /** 1-bit wire flag; `force` encodes as 1, otherwise 0. */
+  force: boolean;
+  player: PlayerReference;
+  weapon: ObjectTypeReference;
+}
+
+export interface ObjectSetMinimapVisibilityParameters {
+  object: ObjectReference;
+  visible: boolean;
+}
+
+export interface ObjectSetMinimapPriorityParameters {
+  object: ObjectReference;
+  priority: NavpointPriority;
+}
+
+export interface ObjectSetMinimapIconParameters {
+  iconIndex: number;
+  object: ObjectReference;
 }
 
 export interface PlayerGetWeaponParameters {
@@ -891,9 +956,14 @@ export interface HUDWidgetSetValueParameters {
   widgetIndex: number;
 }
 
+/** Alpha: immediate float; Beta+: custom number variable (incl. integer constants). */
+export type ObjectSetScaleValue =
+  | { kind: "float"; value: number }
+  | { kind: "variable"; value: CustomVariableReference };
+
 export interface ObjectSetScaleParameters {
   object: ObjectReference;
-  scale: CustomVariableReference;
+  scale: ObjectSetScaleValue;
 }
 
 export interface NavpointSetTextParameters {
@@ -1176,6 +1246,15 @@ export type Action =
     >
   | ActionParameters<"team_set_coop_spawning", TeamSetCoopSpawningParameters>
   | ActionParameters<
+      "object_set_minimap_visibility",
+      ObjectSetMinimapVisibilityParameters
+    >
+  | ActionParameters<
+      "object_set_minimap_priority",
+      ObjectSetMinimapPriorityParameters
+    >
+  | ActionParameters<"object_set_minimap_icon", ObjectSetMinimapIconParameters>
+  | ActionParameters<
       "team_set_primary_respawn_object",
       TeamSetPrimaryRespawnObjectParameters
     >
@@ -1206,16 +1285,22 @@ export type Action =
       "player_set_requisition_palette",
       PlayerSetRequisitionPaletteParameters
     >
+  | ActionParameters<
+      "player_set_fireteam_tier",
+      PlayerSetFireteamTierParameters
+    >
   | ActionParameters<"device_set_power", DeviceSetPowerParameters>
   | ActionParameters<"device_get_power", DeviceGetPowerParameters>
   | ActionParameters<"device_set_position", DeviceSetPositionParameters>
   | ActionParameters<"device_get_position", DeviceGetPositionParameters>
+  | ActionParameters<"give_weapon", GiveWeaponParameters>
   | ActionParameters<"adjust_grenades", AdjustGrenadesParameters>
   | ActionParameters<"submit_incident", SubmitIncidentParameters>
   | ActionParameters<
       "submit_incident_with_custom_value",
       SubmitIncidentWithCustomValueParameters
     >
+  | ActionParameters<"set_loadout", SetLoadoutParameters>
   | ActionParameters<"set_loadout_palette", SetLoadoutPaletteParameters>
   | ActionParameters<
       "device_set_position_track",

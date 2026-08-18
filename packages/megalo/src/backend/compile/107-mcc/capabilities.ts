@@ -37,6 +37,7 @@ const CAPABILITIES_107_MCC_PLAYER_TRAITS = {
     jumpModifier: true,
     // Reach megalo ≤ 73 only; not in the TU1 trait layout
     sprinting: false,
+    doubleJump: true,
   },
   appearance: {
     activeCamo: true,

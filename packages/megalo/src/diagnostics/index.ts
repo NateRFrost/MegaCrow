@@ -110,6 +110,27 @@ export interface ObjectListLocation {
   type: SourceLocationType.OBJECT_LIST;
 }
 
+/** LSP `Diagnostic.data` payload for {@link ObjectListLocation} diagnostics. */
+export const OBJECT_LIST_DIAGNOSTIC_KIND = "megacrow.object_list" as const;
+
+export interface ObjectListDiagnosticData {
+  /** Absolute path when the list came from disk; omit for bundled defaults. */
+  file?: string;
+  kind: typeof OBJECT_LIST_DIAGNOSTIC_KIND;
+  /** 0-based entry / file line index. */
+  line0: number;
+  objectType: ObjectListType | string;
+}
+
+export const isObjectListDiagnosticData = (
+  data: unknown
+): data is ObjectListDiagnosticData =>
+  typeof data === "object" &&
+  data !== null &&
+  (data as ObjectListDiagnosticData).kind === OBJECT_LIST_DIAGNOSTIC_KIND &&
+  typeof (data as ObjectListDiagnosticData).objectType === "string" &&
+  typeof (data as ObjectListDiagnosticData).line0 === "number";
+
 export interface UnknownLocation {
   type: SourceLocationType.UNKNOWN;
 }

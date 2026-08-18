@@ -4,6 +4,10 @@ import {
 } from "@megacrow/megalo";
 import type { Monaco } from "@monaco-editor/react";
 import {
+  diagnosticHasEditorSpan,
+  type MegaloDiagnostic,
+} from "../lib/diagnostics";
+import {
   lspCompletions,
   lspDefinition,
   lspHover,
@@ -176,8 +180,6 @@ function clipSemanticTokenDataToModel(
 }
 
 export type { MegaloDiagnostic } from "../lib/diagnostics";
-
-import type { MegaloDiagnostic } from "../lib/diagnostics";
 
 function diagnosticToMarker(
   monaco: Monaco,
@@ -565,7 +567,7 @@ export function setMegaloDiagnostics(
     model,
     "megalo",
     diagnostics
-      .filter((d) => !d.trayOnly)
+      .filter((d) => diagnosticHasEditorSpan(d))
       .map((d) => diagnosticToMarker(monaco, model, d))
   );
 }

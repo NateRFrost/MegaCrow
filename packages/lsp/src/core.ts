@@ -26,6 +26,8 @@ import {
   type HoverResult as MegaloHoverResult,
   DiagnosticSeverity as MegaloSeverity,
   type MegaloVersionId,
+  OBJECT_LIST_DIAGNOSTIC_KIND,
+  type ObjectListDiagnosticData,
   type ObjectLists,
   type PathDirectoryEntry,
   type QuotedPathCompletionQuery,
@@ -310,8 +312,30 @@ export const toLspDiagnostics = (
         ];
       }
 
-      // UNKNOWN / BUILT_IN / OBJECT_LIST: no document span — still publish so
+      // UNKNOWN / BUILT_IN: no document span — still publish so
       // Problems / compile status aren't empty ("No output produced").
+      if (d.location.type === SourceLocationType.OBJECT_LIST) {
+        const data: ObjectListDiagnosticData = {
+          kind: OBJECT_LIST_DIAGNOSTIC_KIND,
+          objectType: d.location.objectType,
+          line0: Math.max(0, d.location.source.line),
+          ...(d.location.file === undefined ? {} : { file: d.location.file }),
+        };
+        return [
+          {
+            severity,
+            message: d.message,
+            // Placeholder range: hosts must not treat this as a span in the
+            // open document (see `data.kind === megacrow.object_list`).
+            range: {
+              start: { line: 0, character: 0 },
+              end: { line: 0, character: 0 },
+            },
+            data,
+          },
+        ];
+      }
+
       return [
         {
           severity,

@@ -34,9 +34,9 @@ import {
   assertCompatibleIR,
   type CompilerCapabilities,
 } from "src/backend/compile/diagnostics/assertCompatibleIR";
+import { collectCompiledEngineStats } from "src/backend/compile/engineStats";
 import { decodeMglo } from "src/decode-mglo";
 import { type Diagnostics, UNKNOWN_LOCATION } from "src/diagnostics";
-import { CompilerError } from "src/diagnostics/error";
 import type { IR } from "src/frontend/intermediate-representation";
 import type { StringTable } from "src/frontend/intermediate-representation/game/string_table";
 import {
@@ -348,9 +348,12 @@ export class Compiler107 extends Compiler {
   public dryRun(
     ir: IR,
     diagnostics: Diagnostics
-  ): { metadata: CompiledMegaloMetadata } {
+  ): ReturnType<Compiler["dryRun"]> {
     const gametype = this.compile(ir, diagnostics);
-    return { metadata: this.getGametypeMetadata(gametype) };
+    return {
+      metadata: this.getGametypeMetadata(gametype),
+      engineStats: collectCompiledEngineStats(gametype, ir, 0),
+    };
   }
 
   public writeMegaloFile(
@@ -360,16 +363,24 @@ export class Compiler107 extends Compiler {
   ): WriteMegaloFileResult {
     const gametype = this.compile(ir, diagnostics);
     if (diagnostics.hasErrors()) {
-      throw new CompilerError(
-        "Cannot write megalo file while diagnostics have errors",
-        UNKNOWN_LOCATION
-      );
+      // Keep the real compile diagnostics; do not throw a secondary write error.
+      return {
+        data: new Uint8Array(),
+        variantByteLength: 0,
+        metadata: this.getGametypeMetadata(gametype),
+        engineStats: collectCompiledEngineStats(gametype, ir, 0),
+      };
     }
     const packed = packCompiledVariant(gametype, options?.fileType ?? "mglo");
     return {
       data: packed.data,
       variantByteLength: packed.variantByteLength,
       metadata: this.getGametypeMetadata(gametype),
+      engineStats: collectCompiledEngineStats(
+        gametype,
+        ir,
+        packed.variantByteLength
+      ),
     };
   }
 

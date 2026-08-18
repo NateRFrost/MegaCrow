@@ -160,6 +160,7 @@ export const loadoutLowerer = (
     // Megalo Headache #1
     if (!ctx.loadoutsByName.has(name.value)) {
       ctx.loadoutsByName.set(name.value, traits);
+      ctx.ir.gameVariant.gameEngine.loadouts.push(traits);
     }
   });
 };

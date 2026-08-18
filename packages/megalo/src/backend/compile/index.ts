@@ -1,3 +1,7 @@
+import { Compiler49 } from "src/backend/compile/49";
+import { packMgloBytes as packMgloBytes49 } from "src/backend/compile/49/pack";
+import { Compiler73 } from "src/backend/compile/73";
+import { packMgloBytes as packMgloBytes73 } from "src/backend/compile/73/pack";
 import { Compiler106 } from "src/backend/compile/106";
 import { packMgloBytes as packMgloBytes106 } from "src/backend/compile/106/pack";
 import { Compiler107 } from "src/backend/compile/107";
@@ -34,6 +38,10 @@ export const getCompilerForVersion = ({
     }
     case 106:
       return new Compiler106();
+    case 73:
+      return new Compiler73();
+    case 49:
+      return new Compiler49();
   }
 
   throw new Error(`Unsupported version: ${version}`);
@@ -52,7 +60,9 @@ export const packMgloBytesForVersion = (
         : packMgloBytes107(mgloBytes, fileType);
     case 106:
       return packMgloBytes106(mgloBytes, fileType);
-    default:
-      throw new Error(`Unsupported version: ${version.version}`);
+    case 73:
+      return packMgloBytes73(mgloBytes, fileType);
+    case 49:
+      return packMgloBytes49(mgloBytes, fileType);
   }
 };

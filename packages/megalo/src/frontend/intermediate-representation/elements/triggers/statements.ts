@@ -17,6 +17,7 @@ import { lowerConditionStatement } from "src/frontend/intermediate-representatio
 import {
   applySpecialTriggerIndex,
   makeTrigger,
+  recordTriggerExecutionModeLocation,
   resolveTriggerHeader,
 } from "src/frontend/intermediate-representation/elements/triggers/header";
 import {
@@ -251,7 +252,8 @@ const lowerForEach = (
     statement.target.location,
     scopeCtx.ctx.symbolTable,
     statement.target.symbolId,
-    true
+    true,
+    scopeCtx.ctx.frontend.megaloVersion
   );
 
   // Reserve nested trigger index before lowering its body.
@@ -264,7 +266,13 @@ const lowerForEach = (
       actionCount: 0,
     })
   );
-  applySpecialTriggerIndex(engine, header, triggerIndex);
+  applySpecialTriggerIndex(
+    engine,
+    header,
+    triggerIndex,
+    statement.target.location,
+    scopeCtx.ctx.ir.locations
+  );
 
   const nestedRoot = scopeCtx.appendTarget;
   const window = lowerActionScope(statement.statements, {
@@ -279,6 +287,11 @@ const lowerForEach = (
     firstAction: window.firstActionIndex,
     actionCount: window.actionCount,
   });
+  recordTriggerExecutionModeLocation(
+    engine.triggers[triggerIndex]!,
+    statement.target.location,
+    scopeCtx.ctx.ir.locations
+  );
 
   scopeCtx.appendTarget.appendAction({
     type: ActionType.for_each,

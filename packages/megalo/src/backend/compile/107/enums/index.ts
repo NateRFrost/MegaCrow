@@ -5,6 +5,7 @@ export { encodeBooleanTrait } from "src/backend/compile/107/enums/e_boolean_trai
 export { encodeConditionType } from "src/backend/compile/107/enums/e_condition_type";
 export { encodeCustomVariableType } from "src/backend/compile/107/enums/e_custom_variable_type";
 export { encodeDisposition } from "src/backend/compile/107/enums/e_disposition";
+export { encodeDoubleJumpSetting } from "src/backend/compile/107/enums/e_double_jump_setting";
 export { encodeEquipmentUsageSetting } from "src/backend/compile/107/enums/e_equipment_usage_setting";
 export { encodeExplicitObjectType } from "src/backend/compile/107/enums/e_explicit_object_type";
 export { encodeExplicitPlayerType } from "src/backend/compile/107/enums/e_explicit_player_type";

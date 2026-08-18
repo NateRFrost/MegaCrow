@@ -33,7 +33,7 @@ export const lowerPlayerSetObjectiveAllegianceIcon = (
   ).value;
   if (iconIndex !== -1 && (iconIndex < 0 || iconIndex >= 128)) {
     throw new LowerError(
-      diagnosticMessages.iconIndexOutOfRange(),
+      diagnosticMessages.outOfRange("icon index", 0, 127),
       parameters[1]?.location ?? location
     );
   }
