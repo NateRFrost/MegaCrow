@@ -527,23 +527,46 @@ export const withContinueCompletion = (
 
 /**
  * Expand a block opener so accepting it inserts a body line and matching `end`.
- * Cursor lands on the indented blank line (`$0`).
+ * Cursor lands on the indented blank line (`$1`, or `$2` when the header already
+ * uses tabstop 1). `$0` is Monaco's final tabstop and exits snippet mode
+ * immediately, which leaves the cursor on the header.
  *
  * @param headerSuffix optional snippet text after the label (e.g. tabstop(1, "general"))
  */
 export const withBlockEndSnippet = (
   entry: CompletionItem,
   headerSuffix = ""
-): CompletionItem => ({
-  ...entry,
-  insertText: `${entry.label}${headerSuffix}\n\t$0\nend`,
-  insertAsSnippet: true,
-  triggerSuggestAfterAccept: true,
-});
+): CompletionItem => {
+  const bodyTabstop = headerSuffix === "" ? 1 : 2;
+  return {
+    ...entry,
+    insertText: `${entry.label}${headerSuffix}\n\t$${bodyTabstop}\nend`,
+    insertAsSnippet: true,
+    triggerSuggestAfterAccept: true,
+  };
+};
 
 /** Build a snippet tabstop like ` ${1:name}` without tripping curly-in-string lint. */
-export const snippetTabstop = (index: number, placeholder: string): string =>
-  ` $${""}{${index}:${placeholder}}`;
+export const snippetTabstop = (index: number, placeholder = ""): string =>
+  placeholder === "" ? ` $${""}{${index}}` : ` $${""}{${index}:${placeholder}}`;
+
+/** True when the next non-empty line after `offset` is a block `end`. */
+export const followingLineClosesBlock = (
+  source: string,
+  offset: number
+): boolean => {
+  const newline = source.indexOf("\n", offset);
+  if (newline === -1) {
+    return false;
+  }
+  for (const line of source.slice(newline + 1).split("\n")) {
+    if (line.trim() === "") {
+      continue;
+    }
+    return line.trim() === "end";
+  }
+  return false;
+};
 
 export const suggestEnum = (
   ctx: SuggestCtx,

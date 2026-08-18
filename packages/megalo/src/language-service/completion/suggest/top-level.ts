@@ -32,12 +32,12 @@ export const TOP_LEVEL_KEYWORDS = [
   "trigger",
 ] as const;
 
-/** Directives that do not open an `end`-closed block. */
+/** Keywords that insert a trailing space and reopen suggest instead of `end`. */
 const TOP_LEVEL_WITHOUT_END = new Set(["base", "include", "localized_include"]);
 
 /** Block elements that take a required same-line name / scope before the body. */
 const TOP_LEVEL_NAMED_HEADER: Record<string, string> = {
-  trigger: snippetTabstop(1, "general"),
+  trigger: snippetTabstop(1),
   variables: snippetTabstop(1, "global"),
   loadout: snippetTabstop(1, "name"),
   loadout_palette: snippetTabstop(1, "name"),

@@ -9323,11 +9323,7 @@ var strings_default = [
 ];
 
 // ../megalo/src/object-lists/haloreach/alpha/default/vehicle_sets.ts
-var vehicle_sets_default = [
-  "mongoose_only",
-  "warthog_only",
-  "civilian"
-];
+var vehicle_sets_default = ["mongoose_only", "warthog_only", "civilian"];
 
 // ../megalo/src/object-lists/haloreach/alpha/default/vehicles.ts
 var vehicles_default = [
@@ -9352,12 +9348,7 @@ var vehicles_default = [
 ];
 
 // ../megalo/src/object-lists/haloreach/alpha/default/weapon_sets.ts
-var weapon_sets_default = [
-  "human",
-  "covenant",
-  "no_snipers",
-  "rockets_only"
-];
+var weapon_sets_default = ["human", "covenant", "no_snipers", "rockets_only"];
 
 // ../megalo/src/object-lists/haloreach/alpha/default/weapons.ts
 var weapons_default = [
@@ -9962,11 +9953,7 @@ var strings_default2 = [
 ];
 
 // ../megalo/src/object-lists/haloreach/beta/default/vehicle_sets.ts
-var vehicle_sets_default2 = [
-  "mongoose_only",
-  "warthog_only",
-  "civilian"
-];
+var vehicle_sets_default2 = ["mongoose_only", "warthog_only", "civilian"];
 
 // ../megalo/src/object-lists/haloreach/beta/default/vehicles.ts
 var vehicles_default2 = [
@@ -9991,12 +9978,7 @@ var vehicles_default2 = [
 ];
 
 // ../megalo/src/object-lists/haloreach/beta/default/weapon_sets.ts
-var weapon_sets_default2 = [
-  "human",
-  "covenant",
-  "no_snipers",
-  "rockets_only"
-];
+var weapon_sets_default2 = ["human", "covenant", "no_snipers", "rockets_only"];
 
 // ../megalo/src/object-lists/haloreach/beta/default/weapons.ts
 var weapons_default2 = [

@@ -1,6 +1,7 @@
 import { SymbolKind } from "src/frontend/symbol-table";
 import {
   filterByPrefix,
+  followingLineClosesBlock,
   suggestKeywords,
   suggestSymbolKind,
   withBlockEndSnippet,
@@ -13,18 +14,22 @@ import type {
 
 /**
  * Trigger / for_each header: execution kinds + declared map_object filters.
- * Accepting a name opens the block body and inserts a matching `end`.
+ * Accepting a name opens the block body and inserts a matching `end`, unless
+ * the opener already inserted one.
  */
 export const suggestTriggerName = (
   ctx: TriggerNameCompletionContext
 ): CompletionItem[] => {
+  const wrapEnd = !followingLineClosesBlock(ctx.snapshot.source, ctx.offset);
+  const maybeWrap = (entry: CompletionItem): CompletionItem =>
+    wrapEnd ? withBlockEndSnippet(entry) : entry;
   const kinds = suggestKeywords(
     ctx,
     suggestableTriggerExecutionKinds(ctx.snapshot.version),
     "enumMember"
-  ).map((entry) => withBlockEndSnippet(entry));
-  const filters = suggestSymbolKind(ctx, SymbolKind.ObjectFilter).map((entry) =>
-    withBlockEndSnippet(entry)
+  ).map(maybeWrap);
+  const filters = suggestSymbolKind(ctx, SymbolKind.ObjectFilter).map(
+    maybeWrap
   );
   const seen = new Set(kinds.map((entry) => entry.label));
   const merged = [...kinds];

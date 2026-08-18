@@ -14,7 +14,10 @@ const expectBlockSnippet = (
   headerSuffix = ""
 ) => {
   expect(item.insertAsSnippet).toBe(true);
-  expect(item.insertText).toBe(`${label}${headerSuffix}\n\t$0\nend`);
+  const bodyTabstop = headerSuffix === "" ? "$1" : "$2";
+  expect(item.insertText).toBe(
+    `${label}${headerSuffix}\n\t${bodyTabstop}\nend`
+  );
 };
 
 describe("block-end completion snippets", () => {
@@ -29,6 +32,18 @@ describe("block-end completion snippets", () => {
     expectBlockSnippet(item!, "pregame");
   });
 
+  it("does not wrap trigger kinds when end is already present", async () => {
+    const source = "trigger \n\t\nend\n";
+    const snapshot = await analyzeDocument(source, { version });
+    const item = completionsAtPosition(snapshot, {
+      line: 0,
+      character: "trigger ".length,
+    }).find((entry) => entry.label === "pregame");
+    expect(item).toBeDefined();
+    expect(item!.insertAsSnippet).toBeFalsy();
+    expect(item!.insertText ?? item!.label).toBe("pregame");
+  });
+
   it("wraps top-level block keywords", async () => {
     const source = "";
     const snapshot = await analyzeDocument(source, { version });
@@ -40,7 +55,7 @@ describe("block-end completion snippets", () => {
     expectBlockSnippet(item!, "game_options");
   });
 
-  it("wraps top-level trigger with name placeholder", async () => {
+  it("wraps top-level trigger with an empty type slot and end", async () => {
     const source = "";
     const snapshot = await analyzeDocument(source, { version });
     const item = completionsAtPosition(snapshot, {
@@ -48,7 +63,7 @@ describe("block-end completion snippets", () => {
       character: 0,
     }).find((entry) => entry.label === "trigger");
     expect(item).toBeDefined();
-    expectBlockSnippet(item!, "trigger", snippetTabstop(1, "general"));
+    expectBlockSnippet(item!, "trigger", snippetTabstop(1));
   });
 
   it("continues include directives with a trailing space", async () => {
@@ -78,7 +93,7 @@ end
     expect(begin).toBeDefined();
     expect(forEach).toBeDefined();
     expectBlockSnippet(begin!, "begin");
-    expectBlockSnippet(forEach!, "for_each", snippetTabstop(1, "general"));
+    expectBlockSnippet(forEach!, "for_each", snippetTabstop(1));
   });
 
   it("wraps nested game_options block keywords", async () => {

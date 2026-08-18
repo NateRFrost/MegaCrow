@@ -19,14 +19,30 @@ import { REGION_END, REGION_START } from "../lib/regionComments";
 import { applyEditorTheme } from "./theme";
 
 const MEGALO_LANGUAGE_ID = "megalo";
+type MegaloCodeEditor = ReturnType<Monaco["editor"]["getEditors"]>[number];
 let languageBasicsRegistered = false;
 let semanticTokensDisposable: { dispose(): void } | undefined;
 let hoverDisposable: { dispose(): void } | undefined;
 let definitionDisposable: { dispose(): void } | undefined;
 let completionDisposable: { dispose(): void } | undefined;
+let blockSnippetCommandDisposable: { dispose(): void } | undefined;
 let linkDisposable: { dispose(): void } | undefined;
 let linkOpenerDisposable: { dispose(): void } | undefined;
 let editorOpenerDisposable: { dispose(): void } | undefined;
+let activeMegaloEditor: MegaloCodeEditor | null = null;
+
+/** After a block insert, move onto the indented body and reopen suggest. */
+const BLOCK_SNIPPET_COMMAND = "megacrow.enterBlockBodyAndSuggest";
+
+export function setActiveMegaloEditor(editor: MegaloCodeEditor | null): void {
+  activeMegaloEditor = editor;
+}
+
+export function clearActiveMegaloEditor(editor: MegaloCodeEditor): void {
+  if (activeMegaloEditor === editor) {
+    activeMegaloEditor = null;
+  }
+}
 
 /** Custom scheme for Ctrl+Click include / base path links. */
 export const MEGACROW_PATH_SCHEME = "megacrow-path";
@@ -281,6 +297,61 @@ const monacoCompletionKind = (
   }
 };
 
+/**
+ * Hop onto the blank body line of a just-inserted `header / indent / end` block,
+ * whether the cursor stayed on the header or landed after `end`.
+ */
+const isBlankIndentLine = (text: string): boolean => /^\s*$/.test(text);
+
+const moveCursorIntoInsertedBlockBody = (editor: MegaloCodeEditor): void => {
+  const model = editor.getModel();
+  const pos = editor.getPosition();
+  if (!model) {
+    return;
+  }
+  if (!pos) {
+    return;
+  }
+  const line = pos.lineNumber;
+  const headerCandidates = [line, line - 2];
+  for (const headerLine of headerCandidates) {
+    if (headerLine < 1 || headerLine + 2 > model.getLineCount()) {
+      continue;
+    }
+    const body = model.getLineContent(headerLine + 1);
+    const closer = model.getLineContent(headerLine + 2);
+    if (!isBlankIndentLine(body) || closer.trim() !== "end") {
+      continue;
+    }
+    // `trigger` / `for_each` still need a type on the header; leave the cursor
+    // there so suggest can pick `general`, `player`, etc.
+    const header = model.getLineContent(headerLine);
+    if (/^\s*(trigger|for_each)\s*$/i.test(header)) {
+      continue;
+    }
+    editor.setPosition({
+      lineNumber: headerLine + 1,
+      column: body.length + 1,
+    });
+    return;
+  }
+};
+
+/** `${1:name}` / `$1` placeholders → the default text (or empty). */
+const stripSnippetPlaceholders = (text: string): string =>
+  text.replace(/\$\{\d+:([^}]*)\}/g, "$1").replace(/\$\d+/g, "");
+
+/** Prefix continuation lines so nested `end` matches the header indent. */
+const indentBlockInsert = (text: string, lineIndent: string): string => {
+  if (lineIndent === "") {
+    return text;
+  }
+  const lines = text.split("\n");
+  return lines
+    .map((line, index) => (index === 0 ? line : `${lineIndent}${line}`))
+    .join("\n");
+};
+
 /** Register language + theme before the editor mounts. */
 export function registerMegaloLanguage(monaco: Monaco): void {
   if (!languageBasicsRegistered) {
@@ -322,6 +393,27 @@ export function registerMegaloLanguage(monaco: Monaco): void {
   }
 
   // Re-bind feature providers on every call so HMR / late registration works.
+  if (!blockSnippetCommandDisposable) {
+    blockSnippetCommandDisposable = monaco.editor.registerCommand(
+      BLOCK_SNIPPET_COMMAND,
+      () => {
+        const editor =
+          activeMegaloEditor ??
+          monaco.editor.getEditors().find((item) => item.hasTextFocus()) ??
+          monaco.editor.getEditors().at(-1);
+        if (!editor) {
+          return;
+        }
+        window.setTimeout(() => {
+          moveCursorIntoInsertedBlockBody(editor);
+          editor.trigger("megacrow", "editor.action.triggerSuggest", {
+            auto: true,
+          });
+        }, 0);
+      }
+    );
+  }
+
   semanticTokensDisposable?.dispose();
   semanticTokensDisposable =
     monaco.languages.registerDocumentSemanticTokensProvider(
@@ -450,10 +542,41 @@ export function registerMegaloLanguage(monaco: Monaco): void {
             startColumn: pathSegStart + 2,
             endColumn: position.column,
           };
+          const lineIndent = /^[\t ]*/.exec(lineContent)?.[0] ?? "";
           const suggestions = items.map((item) => {
             const isPath =
               item.kind === 17 /* File */ || item.kind === 19 /* Folder */;
+            const rawInsert = item.insertText ?? item.label;
             const isSnippet = item.insertTextFormat === 2 /* Snippet */;
+            const hasNamedTabstop = /\$\{\d+/.test(rawInsert);
+            // Monaco does not reliably place `$1` on a new line. Insert the
+            // block as plain text and move the cursor in BLOCK_SNIPPET_COMMAND.
+            const insertText =
+              isSnippet && !hasNamedTabstop
+                ? indentBlockInsert(
+                    stripSnippetPlaceholders(rawInsert),
+                    lineIndent
+                  )
+                : rawInsert;
+            let command:
+              | {
+                  id: string;
+                  title: string;
+                  arguments?: unknown[];
+                }
+              | undefined;
+            if (isSnippet) {
+              command = {
+                id: BLOCK_SNIPPET_COMMAND,
+                title: "Move into block body",
+              };
+            } else if (item.command) {
+              command = {
+                id: item.command.command,
+                title: item.command.title,
+                arguments: item.command.arguments ?? [{ auto: true }],
+              };
+            }
             return {
               label: item.label,
               kind: monacoCompletionKind(monaco, item.kind),
@@ -462,25 +585,17 @@ export function registerMegaloLanguage(monaco: Monaco): void {
                 typeof item.documentation === "string"
                   ? item.documentation
                   : item.documentation?.value,
-              insertText: item.insertText ?? item.label,
+              insertText,
               filterText: item.filterText ?? item.label,
               range: isPath ? pathRange : defaultRange,
-              ...(isSnippet
+              ...(isSnippet && hasNamedTabstop
                 ? {
                     insertTextRules:
                       monaco.languages.CompletionItemInsertTextRule
                         .InsertAsSnippet,
                   }
                 : {}),
-              ...(item.command
-                ? {
-                    command: {
-                      id: item.command.command,
-                      title: item.command.title,
-                      arguments: item.command.arguments ?? [{ auto: true }],
-                    },
-                  }
-                : {}),
+              ...(command ? { command } : {}),
             };
           });
           // Empty results: don't keep the widget open / incomplete-loading.

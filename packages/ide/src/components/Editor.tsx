@@ -13,9 +13,11 @@ import {
 } from "../lib/sourceFileQuickOpen";
 import { useT } from "../localization";
 import {
+  clearActiveMegaloEditor,
   MEGALO_LANGUAGE_ID,
   type MegaloDiagnostic,
   registerMegaloLanguage,
+  setActiveMegaloEditor,
   setMegaloDiagnostics,
 } from "../monaco/megalo-language";
 import {
@@ -276,6 +278,12 @@ export const MegaloEditor = memo(function MegaloEditor({
       registerMegaloLanguage(monaco);
       editorRef.current = editor;
       monacoRef.current = monaco;
+      if (!plainTextRef.current) {
+        setActiveMegaloEditor(editor);
+      }
+      editor.onDidDispose(() => {
+        clearActiveMegaloEditor(editor);
+      });
       applyEditorTheme(monaco, editorThemeRef.current);
 
       // Ctrl/Cmd+P, Shift+P, and F1 are handled app-wide (printShortcut → IdePalette).
@@ -351,9 +359,14 @@ export const MegaloEditor = memo(function MegaloEditor({
           // Space-separated Megalo slots: reopen suggest after space / `.` / `_`,
           // and after backspace/delete when a non-whitespace prefix remains
           // (Monaco only auto-triggers on typed chars).
+          const hasMultilineInsert = event.changes.some(
+            (change: ModelContentChange) =>
+              change.text.includes("\n") || change.text.includes("\r")
+          );
           let deletionShouldRetrigger = false;
-          const shouldRetriggerSuggest = event.changes.some(
-            (change: ModelContentChange) => {
+          const shouldRetriggerSuggest =
+            !hasMultilineInsert &&
+            event.changes.some((change: ModelContentChange) => {
               if (
                 change.text === " " ||
                 change.text === "." ||
@@ -366,8 +379,7 @@ export const MegaloEditor = memo(function MegaloEditor({
                 return true;
               }
               return false;
-            }
-          );
+            });
           if (shouldRetriggerSuggest) {
             queueMicrotask(() => {
               if (editorRef.current !== editor) {

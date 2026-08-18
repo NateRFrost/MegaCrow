@@ -65,7 +65,7 @@ export const suggestActionNames = (
         return withBlockEndSnippet(entry);
       }
       if (label === "for_each") {
-        return withBlockEndSnippet(entry, snippetTabstop(1, "general"));
+        return withBlockEndSnippet(entry, snippetTabstop(1));
       }
       if (ACTIONS_WITHOUT_OPERANDS.has(label)) {
         return entry;
