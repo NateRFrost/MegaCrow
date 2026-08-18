@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { dismissIfBackdropMouseDown } from "../lib/dismissIfBackdrop";
 import { useT } from "../localization";
 
 interface Props {
@@ -40,11 +41,7 @@ export function ConfirmRegenerateObjectListsDialog({
   return createPortal(
     <div
       className="confirm-delete-backdrop"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) {
-          onCancel();
-        }
-      }}
+      onMouseDown={(event) => dismissIfBackdropMouseDown(event, onCancel)}
       role="presentation"
     >
       <div

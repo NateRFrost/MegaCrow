@@ -5,6 +5,7 @@ import {
   isMegaloVersionId,
   MEGALO_VERSIONS,
   type ObjectLists,
+  resolveGameBuildNumber,
   SourceLocationType,
   setLocale,
   summarizeIncludeDiagnostics,
@@ -41,6 +42,14 @@ function compileVersion() {
     return MEGALO_VERSIONS[id];
   }
   return MEGALO_VERSIONS["107-mcc"];
+}
+
+function compileBuildNumber(): number | undefined {
+  const id = _workspaceContext?.megaloVersion;
+  if (!(id && isMegaloVersionId(id))) {
+    return;
+  }
+  return resolveGameBuildNumber(id, _workspaceContext?.gameBuildNumber);
 }
 
 function compileResultToAnalysis(
@@ -89,6 +98,7 @@ async function compileToBytes(
   const started = performance.now();
   const result = await compileSource(source, {
     version: compileVersion(),
+    buildNumber: compileBuildNumber(),
     fileType: options?.fileType ?? "mglo",
     megacrowExtensions: _compilerSettings.megacrowExtensions,
     compilerSettings: {
@@ -347,4 +357,3 @@ async function handleMessage(message: MegaloWorkerRequest): Promise<void> {
 void originalBytes;
 void baseProgram;
 void baselineSource;
-void _workspaceContext;

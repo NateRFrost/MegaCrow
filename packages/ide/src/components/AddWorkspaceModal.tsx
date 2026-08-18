@@ -1,12 +1,17 @@
 import {
   getLabel,
+  hasMultipleKnownGameBuilds,
+  isMccMegaloVersion,
   isMegaloVersionId,
+  knownGameBuildsFor,
   MEGALO_VERSIONS,
   type MegaloVersionId,
+  resolveGameBuildNumber,
 } from "@megacrow/megalo";
 import { join } from "@tauri-apps/api/path";
 import { exists, readTextFile } from "@tauri-apps/plugin-fs";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { dismissIfBackdropMouseDown } from "../lib/dismissIfBackdrop";
 import type { StoredWorkspace } from "../lib/megacrowSettings";
 import { pickTauriFolder } from "../lib/tauriDisk";
 import {
@@ -14,14 +19,31 @@ import {
   guessOutputPathFromScripts,
   parseProjectXmlDisplayName,
 } from "../lib/workspacePaths";
-import { useT } from "../localization";
+import { type IdeMessageKey, useT } from "../localization";
 import { BROWSER_MEGALO_VERSIONS } from "./MegaloVersionMenu";
 
 /** Workspace versions with a real compile backend. */
 export const WORKSPACE_MEGALO_VERSIONS: readonly MegaloVersionId[] =
   BROWSER_MEGALO_VERSIONS;
 
+function gameBuildOptionLabel(
+  t: (key: IdeMessageKey) => string,
+  buildNumber: number
+): string {
+  const name =
+    buildNumber === 9449
+      ? t("workspace_modal_game_version_beta")
+      : buildNumber === 9664
+        ? t("workspace_modal_game_version_beta_tu1")
+        : buildNumber === 9730
+          ? t("workspace_modal_game_version_delta")
+          : String(buildNumber);
+  return `${name} (${buildNumber})`;
+}
+
 export interface WorkspaceDraft {
+  gameBuildNumber: number | null;
+  gameLaunchCommand: string;
   inputPath: string;
   megaloVersion: MegaloVersionId;
   name: string;
@@ -52,6 +74,8 @@ export function AddWorkspaceModal({
     useState<MegaloVersionId>("107-mcc");
   const [inputPath, setInputPath] = useState("");
   const [outputPath, setOutputPath] = useState("");
+  const [gameLaunchCommand, setGameLaunchCommand] = useState("");
+  const [gameBuildNumber, setGameBuildNumber] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const isEdit = !!initialWorkspace;
@@ -64,6 +88,13 @@ export function AddWorkspaceModal({
     setMegaloVersion(initialWorkspace?.megaloVersion ?? "107-mcc");
     setInputPath(initialWorkspace?.inputPath ?? "");
     setOutputPath(initialWorkspace?.outputPath ?? "");
+    setGameLaunchCommand(initialWorkspace?.gameLaunchCommand ?? "");
+    setGameBuildNumber(
+      resolveGameBuildNumber(
+        initialWorkspace?.megaloVersion ?? "107-mcc",
+        initialWorkspace?.gameBuildNumber
+      ) ?? null
+    );
     setError(null);
     setBusy(false);
     const frame = requestAnimationFrame(() => nameRef.current?.focus());
@@ -162,6 +193,11 @@ export function AddWorkspaceModal({
       megaloVersion,
       inputPath: trimmedInput,
       outputPath: outputPath.trim(),
+      gameLaunchCommand: isMccMegaloVersion(megaloVersion)
+        ? ""
+        : gameLaunchCommand.trim(),
+      gameBuildNumber:
+        resolveGameBuildNumber(megaloVersion, gameBuildNumber) ?? null,
     });
     setBusy(false);
   };
@@ -169,11 +205,7 @@ export function AddWorkspaceModal({
   return (
     <div
       className="workspace-modal-backdrop"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) {
-          dismiss();
-        }
-      }}
+      onMouseDown={(event) => dismissIfBackdropMouseDown(event, dismiss)}
       role="presentation"
     >
       <div
@@ -242,6 +274,9 @@ export function AddWorkspaceModal({
                 const value = event.target.value;
                 if (isMegaloVersionId(value)) {
                   setMegaloVersion(value);
+                  setGameBuildNumber(
+                    resolveGameBuildNumber(value, gameBuildNumber) ?? null
+                  );
                 }
               }}
               value={megaloVersion}
@@ -302,6 +337,54 @@ export function AddWorkspaceModal({
             </button>
           </div>
         </div>
+
+        {isMccMegaloVersion(megaloVersion) ? null : (
+          <section className="workspace-modal-advanced">
+            <h3 className="workspace-modal-advanced-title">
+              {t("workspace_modal_advanced")}
+            </h3>
+            <div className="workspace-modal-field">
+              <span>{t("workspace_modal_launch_command")}</span>
+              <input
+                onChange={(event) => setGameLaunchCommand(event.target.value)}
+                placeholder={t("workspace_modal_launch_command_placeholder")}
+                spellCheck={false}
+                type="text"
+                value={gameLaunchCommand}
+              />
+              <p className="workspace-modal-field-hint">
+                {t("workspace_modal_launch_command_hint")}
+              </p>
+            </div>
+            {hasMultipleKnownGameBuilds(megaloVersion) ? (
+              <label className="workspace-modal-field">
+                <span>{t("workspace_modal_game_version")}</span>
+                <select
+                  onChange={(event) => {
+                    const value = Number(event.target.value);
+                    setGameBuildNumber(
+                      resolveGameBuildNumber(megaloVersion, value) ?? null
+                    );
+                  }}
+                  value={
+                    resolveGameBuildNumber(megaloVersion, gameBuildNumber) ?? ""
+                  }
+                >
+                  {knownGameBuildsFor(megaloVersion).map(
+                    (buildNumber: number) => (
+                      <option key={buildNumber} value={buildNumber}>
+                        {gameBuildOptionLabel(t, buildNumber)}
+                      </option>
+                    )
+                  )}
+                </select>
+                <span className="workspace-modal-field-hint">
+                  {t("workspace_modal_game_version_hint")}
+                </span>
+              </label>
+            ) : null}
+          </section>
+        )}
 
         {error ? <p className="workspace-modal-error">{error}</p> : null}
 

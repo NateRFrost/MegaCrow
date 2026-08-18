@@ -43,8 +43,23 @@ export enum EngineIcon {
 export type CompiledMegaloFileType = "mglo" | "mpvr" | "gvar";
 
 export interface WriteMegaloFileOptions {
+  /**
+   * Halo engine build number stamped on the exported variant (`m_build_number`
+   * / CHDR). When omitted, the compiler uses its version default.
+   */
+  buildNumber?: number;
   /** Defaults to `mglo` (raw custom-variant bitstream). */
   fileType?: CompiledMegaloFileType;
+}
+
+export function applyWriteMegaloFileBuildNumber(
+  gametype: { m_build_number: number },
+  options?: WriteMegaloFileOptions
+): void {
+  const buildNumber = options?.buildNumber;
+  if (typeof buildNumber === "number" && buildNumber > 0) {
+    gametype.m_build_number = buildNumber;
+  }
 }
 
 export interface CompiledMegaloMetadata {

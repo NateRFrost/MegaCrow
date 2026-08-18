@@ -9,6 +9,10 @@ import { isTauriRuntime } from "./tauriRuntime";
 export type WorkspaceType = "opfs" | "tauri";
 
 export interface Workspace {
+  /** Halo engine build number for encodings with multiple known builds. */
+  gameBuildNumber: number | null;
+  /** Custom command that replaces Launch Halo for non-MCC workspaces. */
+  gameLaunchCommand: string | null;
   id: string;
   inputPath: string;
   megaloVersion: MegaloVersionId;
@@ -44,6 +48,8 @@ export function storedToWorkspace(
     type,
     name: stored.name,
     megaloVersion: stored.megaloVersion,
+    gameBuildNumber: stored.gameBuildNumber,
+    gameLaunchCommand: stored.gameLaunchCommand,
     inputPath: stored.inputPath,
     outputPath: stored.outputPath,
   };
@@ -67,6 +73,7 @@ export function resolveActiveWorkspace(
 }
 
 export interface WorkspaceContext {
+  gameBuildNumber: number | null;
   inputPath: string;
   megaloVersion: MegaloVersionId;
   outputPath: string | null;
@@ -77,6 +84,7 @@ export function workspaceContext(workspace: Workspace): WorkspaceContext {
   return {
     type: workspace.type,
     megaloVersion: workspace.megaloVersion,
+    gameBuildNumber: workspace.gameBuildNumber,
     inputPath: workspace.inputPath,
     outputPath: workspace.outputPath,
   };

@@ -1,8 +1,13 @@
+import { isMccMegaloVersion } from "@megacrow/megalo";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { type MouseEvent, useEffect, useState } from "react";
 import type { AppSettings } from "../lib/appSettings";
 import type { GametypeSaveFormat } from "../lib/gametypeSaveFormat";
-import { detectMccInstall, launchMcc } from "../lib/mccInstall";
+import {
+  detectMccInstall,
+  launchGameCommand,
+  launchMcc,
+} from "../lib/mccInstall";
 import { openDocs } from "../lib/openDocs";
 import { openExternalUrl } from "../lib/openExternalUrl";
 import { isTauriRuntime } from "../lib/tauriRuntime";
@@ -54,10 +59,15 @@ export function Toolbar({
   const frameless = isTauriRuntime();
   const [aboutOpen, setAboutOpen] = useState(false);
   const [mccInstalled, setMccInstalled] = useState(false);
-  const [launchingMcc, setLaunchingMcc] = useState(false);
+  const [launching, setLaunching] = useState(false);
 
-  const showMccLaunch =
-    frameless && (workspace === null || workspace.megaloVersion === "107-mcc");
+  const launchCommand = workspace?.gameLaunchCommand?.trim() ?? "";
+  const hasLaunchCommand = launchCommand.length > 0;
+  const isMccFlavour =
+    workspace === null || isMccMegaloVersion(workspace.megaloVersion);
+  const showCustomLaunch = frameless && hasLaunchCommand;
+  const showMccLaunch = frameless && isMccFlavour && !hasLaunchCommand;
+  const launchUnavailable = frameless && !isMccFlavour && !hasLaunchCommand;
 
   useEffect(() => {
     if (!showMccLaunch) {
@@ -77,18 +87,31 @@ export function Toolbar({
     };
   }, [showMccLaunch]);
 
-  const handleLaunchMcc = async () => {
-    if (!mccInstalled || launchingMcc) {
+  const handleLaunch = async () => {
+    if (launching || launchUnavailable) {
       return;
     }
-
-    setLaunchingMcc(true);
+    if (showCustomLaunch) {
+      setLaunching(true);
+      try {
+        await launchGameCommand(launchCommand);
+      } catch (error) {
+        console.error("Failed to launch game:", error);
+      } finally {
+        setLaunching(false);
+      }
+      return;
+    }
+    if (!mccInstalled) {
+      return;
+    }
+    setLaunching(true);
     try {
       await launchMcc();
     } catch (error) {
       console.error("Failed to launch Halo MCC:", error);
     } finally {
-      setLaunchingMcc(false);
+      setLaunching(false);
     }
   };
 
@@ -222,22 +245,35 @@ export function Toolbar({
             aria-label={t("toolbar_editor_actions")}
             className="toolbar-actions"
           >
-            {showMccLaunch ? (
-              <button
-                className="toolbar-btn toolbar-btn--launch"
-                disabled={!mccInstalled || launchingMcc}
-                onClick={() => void handleLaunchMcc()}
+            {frameless ? (
+              <span
                 title={
-                  mccInstalled
-                    ? t("toolbar_launch_halo_title")
-                    : t("toolbar_launch_halo_missing")
+                  showCustomLaunch
+                    ? t("toolbar_launch_halo_custom_title", {
+                        command: launchCommand,
+                      })
+                    : launchUnavailable
+                      ? t("toolbar_launch_halo_needs_command")
+                      : mccInstalled
+                        ? t("toolbar_launch_halo_title")
+                        : t("toolbar_launch_halo_missing")
                 }
-                type="button"
               >
-                {launchingMcc
-                  ? t("toolbar_launching")
-                  : t("toolbar_launch_halo")}
-              </button>
+                <button
+                  className="toolbar-btn toolbar-btn--launch"
+                  disabled={
+                    launching ||
+                    launchUnavailable ||
+                    (showMccLaunch && !mccInstalled)
+                  }
+                  onClick={() => void handleLaunch()}
+                  type="button"
+                >
+                  {launching
+                    ? t("toolbar_launching")
+                    : t("toolbar_launch_halo")}
+                </button>
+              </span>
             ) : null}
 
             {frameless && workspace?.outputPath?.trim() ? (

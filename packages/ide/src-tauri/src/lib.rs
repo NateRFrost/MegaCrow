@@ -6,6 +6,7 @@ mod cli;
 mod clipboard_files;
 mod discord_rpc;
 mod editing_kit;
+mod game_launch;
 mod mcc_install;
 mod settings;
 mod steam;
@@ -90,6 +91,11 @@ fn launch_mcc() -> Result<(), String> {
 }
 
 #[tauri::command]
+fn launch_game_command(command: String) -> Result<(), String> {
+  game_launch::launch_game_command(command)
+}
+
+#[tauri::command]
 fn load_megacrow_settings(app: AppHandle) -> Result<Option<MegacrowSettings>, String> {
   settings::load_settings(&app)
 }
@@ -150,6 +156,7 @@ pub fn run() {
       get_discord_username,
       detect_mcc_install,
       launch_mcc,
+      launch_game_command,
       load_megacrow_settings,
       save_megacrow_settings,
       discover_hrek_workspaces,

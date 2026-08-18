@@ -1,9 +1,11 @@
 import type { ObjectLists } from "@megacrow/megalo";
 import {
+  isMccMegaloVersion,
   MEGACROW_BUILD_STRING,
   MEGACROW_SHOW_WATERMARK,
   MEGALO_VERSIONS,
   type MegaloVersionId,
+  resolveGameBuildNumber,
   setLocale,
 } from "@megacrow/megalo";
 import {
@@ -15,7 +17,10 @@ import {
   useRef,
   useState,
 } from "react";
-import { AddWorkspaceModal } from "./components/AddWorkspaceModal";
+import {
+  AddWorkspaceModal,
+  type WorkspaceDraft,
+} from "./components/AddWorkspaceModal";
 import { DiagnosticsTray } from "./components/DiagnosticsTray";
 import { Editor } from "./components/Editor";
 import { EditorEmptyState } from "./components/EditorEmptyState";
@@ -670,14 +675,30 @@ export function App() {
       if (!activeWorkspace || activeWorkspace.megaloVersion === version) {
         return;
       }
-      const nextWorkspace = { ...activeWorkspace, megaloVersion: version };
+      const nextBuildNumber =
+        resolveGameBuildNumber(version, activeWorkspace.gameBuildNumber) ??
+        null;
+      const nextLaunchCommand = isMccMegaloVersion(version)
+        ? null
+        : activeWorkspace.gameLaunchCommand;
+      const nextWorkspace = {
+        ...activeWorkspace,
+        megaloVersion: version,
+        gameBuildNumber: nextBuildNumber,
+        gameLaunchCommand: nextLaunchCommand,
+      };
       applyWorkspace(nextWorkspace);
       if (megacrowSettings) {
         const next: MegacrowSettings = {
           ...megacrowSettings,
           workspaces: megacrowSettings.workspaces.map((workspace) =>
             workspace.id === activeWorkspace.id
-              ? { ...workspace, megaloVersion: version }
+              ? {
+                  ...workspace,
+                  megaloVersion: version,
+                  gameBuildNumber: nextBuildNumber,
+                  gameLaunchCommand: nextLaunchCommand,
+                }
               : workspace
           ),
         };
@@ -727,14 +748,11 @@ export function App() {
   );
 
   const handleSaveWorkspace = useCallback(
-    (draft: {
-      name: string;
-      inputPath: string;
-      outputPath: string;
-      megaloVersion: MegaloVersionId;
-    }) => {
+    (draft: WorkspaceDraft) => {
       const base = megacrowSettings ?? defaultMegacrowSettings();
       const nextOutputPath = draft.outputPath.trim() || null;
+      const nextLaunchCommand = draft.gameLaunchCommand.trim() || null;
+      const nextBuildNumber = draft.gameBuildNumber;
       const editingId = editingWorkspaceId;
 
       // Close immediately — don't wait on disk persist.
@@ -752,6 +770,8 @@ export function App() {
             ...workspace,
             name: draft.name,
             megaloVersion: draft.megaloVersion,
+            gameBuildNumber: nextBuildNumber,
+            gameLaunchCommand: nextLaunchCommand,
             inputPath: draft.inputPath,
             outputPath: nextOutputPath,
             lastOpenFilePath:
@@ -789,6 +809,8 @@ export function App() {
         id: createWorkspaceId(),
         name: draft.name,
         megaloVersion: draft.megaloVersion,
+        gameBuildNumber: nextBuildNumber,
+        gameLaunchCommand: nextLaunchCommand,
         inputPath: draft.inputPath,
         outputPath: nextOutputPath,
         lastOpenFilePath: null,

@@ -1,6 +1,7 @@
 import { MEGACROW_BUILD_STRING } from "@megacrow/megalo";
 import { type MouseEvent, useEffect, useRef } from "react";
 import blfPackageJson from "../../../../node_modules/@blamnetwork/blf/package.json";
+import { dismissIfBackdropMouseDown } from "../lib/dismissIfBackdrop";
 import { openExternalUrl } from "../lib/openExternalUrl";
 import { useT } from "../localization";
 
@@ -54,11 +55,7 @@ export function AboutDialog({ open, onClose, onVersionClick }: Props) {
   return (
     <div
       className="about-backdrop"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) {
-          onClose();
-        }
-      }}
+      onMouseDown={(event) => dismissIfBackdropMouseDown(event, onClose)}
       role="presentation"
     >
       <div

@@ -40,6 +40,10 @@ export function isMegaloVersionId(value: string): value is MegaloVersionId {
   return Object.hasOwn(MEGALO_VERSIONS, value);
 }
 
+export function isMccMegaloVersion(id: MegaloVersionId): boolean {
+  return MEGALO_VERSIONS[id].flavour === "mcc";
+}
+
 /** Game title for a Megalo version (e.g. Halo: Reach). */
 export function getGameName(_version: SupportedMegaloVersion): string {
   // All currently supported encodings are Halo: Reach builds.

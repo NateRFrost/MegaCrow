@@ -787,6 +787,26 @@ body {
   margin-bottom: 0;
 }
 
+.workspace-modal-advanced {
+  padding-top: 12px;
+  margin: 4px 0 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.workspace-modal-advanced-title {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.workspace-modal-field-hint {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
 .workspace-modal-field input,
 .workspace-modal-field select {
   box-sizing: border-box;

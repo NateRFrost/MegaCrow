@@ -1,3 +1,4 @@
+import { resolveGameBuildNumber } from "@megacrow/megalo";
 import { failedToCompileStatus, translate } from "../localization";
 import type {
   MegaloWorkerRequest,
@@ -19,6 +20,7 @@ import {
   formatMegaloCompileTiming,
   getCompileMegaloVersion,
   setCompileCreatorGamertag,
+  setCompileGameBuildNumber,
   setCompileMegacrowExtensions,
   setCompileMegaloVersion,
   setCompileStrictStringLiterals,
@@ -179,6 +181,14 @@ export function postMegaloWorker(message: MegaloWorkerRequest): boolean {
 
 export function syncMegaloWorkspace(workspace: Workspace | null): void {
   setCompileMegaloVersion(workspace?.megaloVersion ?? "107-mcc");
+  setCompileGameBuildNumber(
+    workspace
+      ? resolveGameBuildNumber(
+          workspace.megaloVersion,
+          workspace.gameBuildNumber
+        )
+      : undefined
+  );
   postMegaloWorker({
     kind: "setWorkspace",
     workspace: workspace ? workspaceContext(workspace) : null,

@@ -16,6 +16,7 @@ import { translate } from "../localization";
 const DEFAULT_COMPILE_VERSION_ID: MegaloVersionId = "107-mcc";
 
 let compileMegaloVersionId: MegaloVersionId = DEFAULT_COMPILE_VERSION_ID;
+let compileGameBuildNumber: number | undefined;
 let compileMegacrowExtensions: MegacrowExtensions = ALL_MEGACROW_EXTENSIONS;
 let compileStrictStringLiterals = false;
 let compileCreatorGamertag = "MegaCrow";
@@ -29,6 +30,15 @@ export function setCompileMegaloVersion(versionId: MegaloVersionId): void {
 
 export function getCompileMegaloVersion(): MegaloVersionId {
   return compileMegaloVersionId;
+}
+
+export function setCompileGameBuildNumber(
+  buildNumber: number | null | undefined
+): void {
+  compileGameBuildNumber =
+    typeof buildNumber === "number" && buildNumber > 0
+      ? buildNumber
+      : undefined;
 }
 
 function compileVersion() {
@@ -129,6 +139,7 @@ async function compileOrThrow(
 ): Promise<Uint8Array> {
   const result = await megaloCompileSource(source, {
     version: compileVersion(),
+    buildNumber: compileGameBuildNumber,
     megacrowExtensions: compileMegacrowExtensions,
     compilerSettings: {
       strictStringLiterals: compileStrictStringLiterals,

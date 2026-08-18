@@ -20,6 +20,7 @@ import { compileTeams } from "src/backend/compile/73/teams";
 import { compileTriggers } from "src/backend/compile/73/triggers";
 import { compileVariableMetadata } from "src/backend/compile/73/variableMetadata";
 import {
+  applyWriteMegaloFileBuildNumber,
   type CompiledMegaloMetadata,
   Compiler,
   EngineIcon,
@@ -355,6 +356,7 @@ export class Compiler73 extends Compiler {
         engineStats: collectCompiledEngineStats(gametype, ir, 0),
       };
     }
+    applyWriteMegaloFileBuildNumber(gametype, options);
     const packed = packCompiledVariant(gametype, options?.fileType ?? "mglo");
     return {
       data: packed.data,

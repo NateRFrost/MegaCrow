@@ -46,6 +46,11 @@ export type ResolveBaseFileFn = (
 export type CompileProgressFn = (message: string) => void;
 
 export interface CompileSourceOptions {
+  /**
+   * Halo engine build number stamped on the exported variant. When omitted,
+   * the compiler uses its version default.
+   */
+  buildNumber?: number;
   /** MegaloEdit-parity compiler knobs. */
   compilerSettings?: Partial<CompilerSettings>;
   /**
@@ -440,6 +445,7 @@ export const compileFromAst = async (
     try {
       ({ data, metadata, variantByteLength, engineStats } =
         compiler.writeMegaloFile(ir, diagnostics, {
+          buildNumber: options.buildNumber,
           fileType: options.fileType ?? "mglo",
         }));
     } catch (error) {

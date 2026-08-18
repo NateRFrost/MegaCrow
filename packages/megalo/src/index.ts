@@ -71,6 +71,12 @@ export {
   objectListSourceFile,
 } from "src/frontend/object-lists";
 export {
+  defaultGameBuildNumber,
+  hasMultipleKnownGameBuilds,
+  knownGameBuildsFor,
+  resolveGameBuildNumber,
+} from "src/game-builds";
+export {
   type AnalysisSnapshot,
   type AnalyzeDocumentOptions,
   type AnalyzeDocumentSyncOptions,
@@ -142,6 +148,7 @@ export {
   getGameName,
   getLabel,
   getShortDescription,
+  isMccMegaloVersion,
   isMegaloVersionId,
   MEGALO_VERSIONS,
   type MegaloVersionId,

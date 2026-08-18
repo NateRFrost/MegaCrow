@@ -1,4 +1,9 @@
-import { isMegaloVersionId, type MegaloVersionId } from "@megacrow/megalo";
+import {
+  isMccMegaloVersion,
+  isMegaloVersionId,
+  type MegaloVersionId,
+  resolveGameBuildNumber,
+} from "@megacrow/megalo";
 import { invoke } from "@tauri-apps/api/core";
 import { normalizeEditorThemeId } from "../monaco/theme";
 import {
@@ -23,6 +28,10 @@ export { isPathInWorkspaceInput } from "./workspacePaths";
 export const MEGACROW_SETTINGS_VERSION = 3;
 
 export interface StoredWorkspace {
+  /** Halo engine build number; `null` when the Megalo version has a single build. */
+  gameBuildNumber: number | null;
+  /** Custom launch command; `null` when Launch Halo uses MCC detection. */
+  gameLaunchCommand: string | null;
   id: string;
   inputPath: string;
   /** Absolute path of the last opened source file in this workspace. */
@@ -151,12 +160,34 @@ function normalizeStoredWorkspace(
     typeof raw.outputPath === "string" && raw.outputPath.trim().length > 0
       ? raw.outputPath.trim()
       : null;
+  const megaloVersion = isMegaloVersionId(String(raw.megaloVersion ?? ""))
+    ? (raw.megaloVersion as MegaloVersionId)
+    : "107-mcc";
+  const gameLaunchCommand =
+    !isMccMegaloVersion(megaloVersion) &&
+    typeof raw.gameLaunchCommand === "string" &&
+    raw.gameLaunchCommand.trim().length > 0
+      ? raw.gameLaunchCommand.trim()
+      : null;
+  const rawBuildNumber: unknown = (raw as Record<string, unknown>)
+    .gameBuildNumber;
+  const parsedBuildNumber =
+    typeof rawBuildNumber === "number"
+      ? rawBuildNumber
+      : typeof rawBuildNumber === "string" && rawBuildNumber.trim().length > 0
+        ? Number(rawBuildNumber)
+        : null;
+  const gameBuildNumber =
+    resolveGameBuildNumber(
+      megaloVersion,
+      Number.isFinite(parsedBuildNumber) ? parsedBuildNumber : null
+    ) ?? null;
   return {
     id: raw.id,
     name: raw.name,
-    megaloVersion: isMegaloVersionId(String(raw.megaloVersion ?? ""))
-      ? (raw.megaloVersion as MegaloVersionId)
-      : "107-mcc",
+    megaloVersion,
+    gameBuildNumber,
+    gameLaunchCommand,
     inputPath: raw.inputPath,
     outputPath,
     lastOpenFilePath:
@@ -263,6 +294,8 @@ export function discoveredToStored(
       id: createWorkspaceId(),
       name: entry.name,
       megaloVersion: isMegaloVersionId(version) ? version : "107-mcc",
+      gameBuildNumber: null,
+      gameLaunchCommand: null,
       inputPath: entry.inputPath,
       outputPath: entry.outputPath,
       lastOpenFilePath: null,
@@ -320,6 +353,8 @@ export function browserOpfsStoredWorkspace(): StoredWorkspace {
     id: "opfs",
     name: "Browser",
     megaloVersion: "107-mcc",
+    gameBuildNumber: null,
+    gameLaunchCommand: null,
     inputPath: workspaceInputPath(),
     outputPath: workspaceOutputPath(),
     lastOpenFilePath: null,

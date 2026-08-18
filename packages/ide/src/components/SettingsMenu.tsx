@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { AppSettings, CompilerProfile } from "../lib/appSettings";
+import { dismissIfBackdropMouseDown } from "../lib/dismissIfBackdrop";
 import { isTauriRuntime } from "../lib/tauriRuntime";
 import { useT } from "../localization";
 import { EDITOR_THEME_OPTIONS } from "../monaco/theme";
@@ -49,11 +50,9 @@ export function SettingsMenu({ settings, onChange }: Props) {
       {open ? (
         <div
           className="settings-modal-backdrop"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) {
-              setOpen(false);
-            }
-          }}
+          onMouseDown={(event) =>
+            dismissIfBackdropMouseDown(event, () => setOpen(false))
+          }
           role="presentation"
         >
           <div

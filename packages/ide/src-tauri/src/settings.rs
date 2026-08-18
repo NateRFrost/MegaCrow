@@ -17,6 +17,10 @@ pub struct StoredWorkspace {
   pub output_path: Option<String>,
   #[serde(default)]
   pub last_open_file_path: Option<String>,
+  #[serde(default)]
+  pub game_launch_command: Option<String>,
+  #[serde(default)]
+  pub game_build_number: Option<i32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -229,6 +233,57 @@ mod tests {
     }"#;
     let settings: MegacrowSettings = serde_json::from_str(raw).expect("deserialize");
     assert!(settings.workspaces[0].output_path.is_none());
+  }
+
+  #[test]
+  fn workspace_advanced_fields_default_missing() {
+    let raw = r#"{
+      "version": 3,
+      "activeWorkspaceId": "ws-1",
+      "workspaces": [{
+        "id": "ws-1",
+        "name": "HREK",
+        "megaloVersion": "73",
+        "inputPath": "C:/HREK/data/multiplayer/megalo"
+      }],
+      "discordRichPresence": true,
+      "gamertag": "",
+      "compilerStrictness": false,
+      "editorTheme": "megacrow-dark",
+      "skippedUpdateVersion": null
+    }"#;
+    let settings: MegacrowSettings = serde_json::from_str(raw).expect("deserialize");
+    assert!(settings.workspaces[0].game_launch_command.is_none());
+    assert!(settings.workspaces[0].game_build_number.is_none());
+  }
+
+  #[test]
+  fn deserializes_workspace_advanced_fields() {
+    let raw = r#"{
+      "version": 3,
+      "activeWorkspaceId": "ws-1",
+      "workspaces": [{
+        "id": "ws-1",
+        "name": "Beta",
+        "megaloVersion": "73",
+        "inputPath": "C:/scripts",
+        "outputPath": null,
+        "lastOpenFilePath": null,
+        "gameLaunchCommand": "xenia.exe halo3/default.xex",
+        "gameBuildNumber": 9449
+      }],
+      "discordRichPresence": true,
+      "gamertag": "",
+      "compilerStrictness": false,
+      "editorTheme": "megacrow-dark",
+      "skippedUpdateVersion": null
+    }"#;
+    let settings: MegacrowSettings = serde_json::from_str(raw).expect("deserialize");
+    assert_eq!(
+      settings.workspaces[0].game_launch_command.as_deref(),
+      Some("xenia.exe halo3/default.xex")
+    );
+    assert_eq!(settings.workspaces[0].game_build_number, Some(9449));
   }
 
   #[test]

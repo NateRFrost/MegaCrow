@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { dismissIfBackdropMouseDown } from "../lib/dismissIfBackdrop";
 import {
   getMonacoCommandPaletteEntries,
   getSourceFileQuickOpenEntries,
@@ -170,11 +171,7 @@ export function IdePalette({ open, mode, onClose }: Props) {
   return (
     <div
       className="ide-palette-backdrop"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          onClose();
-        }
-      }}
+      onMouseDown={(event) => dismissIfBackdropMouseDown(event, onClose)}
       role="presentation"
     >
       <div

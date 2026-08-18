@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { dismissIfBackdropMouseDown } from "../lib/dismissIfBackdrop";
 import { openExternalUrl } from "../lib/openExternalUrl";
 import type { GithubReleaseInfo } from "../lib/updateCheck";
 import { useT } from "../localization";
@@ -51,11 +52,7 @@ export function UpdateAvailableDialog({
   return (
     <div
       className="update-backdrop"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) {
-          onDismiss();
-        }
-      }}
+      onMouseDown={(event) => dismissIfBackdropMouseDown(event, onDismiss)}
       role="presentation"
     >
       <div

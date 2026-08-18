@@ -34,3 +34,11 @@ export async function launchMcc(): Promise<void> {
 
   await invoke("launch_mcc");
 }
+
+export async function launchGameCommand(command: string): Promise<void> {
+  if (!isTauriRuntime()) {
+    throw new Error("Launching the game is only available in the desktop app");
+  }
+
+  await invoke("launch_game_command", { command });
+}
