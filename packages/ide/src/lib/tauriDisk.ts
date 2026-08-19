@@ -13,6 +13,7 @@ import {
 } from "@tauri-apps/plugin-fs";
 import { decodeTextFile } from "./decodeTextFile";
 import type { LocalDiskNode } from "./localFolder";
+import { allocateNumberedName } from "./uniqueFileName";
 
 function sortNodes(nodes: LocalDiskNode[]): LocalDiskNode[] {
   return nodes.sort((a, b) => {
@@ -233,17 +234,26 @@ export async function renameTauriMegaloFile(
     );
   }
   const parent = fromSegments.slice(0, -1);
-  const toSegments = [...parent, normalized];
+  const parentPath =
+    parent.length === 0 ? rootPath : await join(rootPath, ...parent);
+  const samePath = (left: string, right: string): boolean =>
+    left.replace(/\\/g, "/").toLowerCase() ===
+    right.replace(/\\/g, "/").toLowerCase();
+  const uniqueName = await allocateNumberedName(
+    normalized,
+    async (name) => {
+      const candidate = await join(parentPath, name);
+      if (samePath(candidate, fromPath)) {
+        return false;
+      }
+      return exists(candidate);
+    },
+    { directory: info.isDirectory === true }
+  );
+  const toSegments = [...parent, uniqueName];
   const toPath = await join(rootPath, ...toSegments);
   if (fromPath === toPath) {
     return toSegments;
-  }
-  if (await exists(toPath)) {
-    throw new Error(
-      info.isDirectory
-        ? `A folder named "${normalized}" already exists`
-        : `A file named "${normalized}" already exists`
-    );
   }
   await rename(fromPath, toPath);
   return toSegments;

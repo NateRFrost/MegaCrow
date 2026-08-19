@@ -38,7 +38,8 @@ const TOP_LEVEL_WITHOUT_END = new Set(["base", "include", "localized_include"]);
 /** Block elements that take a required same-line name / scope before the body. */
 const TOP_LEVEL_NAMED_HEADER: Record<string, string> = {
   trigger: snippetTabstop(1),
-  variables: snippetTabstop(1, "global"),
+  // Trailing space + `end`; scope is chosen from suggest, not a `global` default.
+  variables: " ",
   loadout: snippetTabstop(1, "name"),
   loadout_palette: snippetTabstop(1, "name"),
   map_object: snippetTabstop(1, "name"),

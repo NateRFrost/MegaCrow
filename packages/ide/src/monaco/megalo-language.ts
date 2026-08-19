@@ -323,10 +323,10 @@ const moveCursorIntoInsertedBlockBody = (editor: MegaloCodeEditor): void => {
     if (!isBlankIndentLine(body) || closer.trim() !== "end") {
       continue;
     }
-    // `trigger` / `for_each` still need a type on the header; leave the cursor
-    // there so suggest can pick `general`, `player`, etc.
+    // `trigger` / `for_each` still need a type on the header; `variables`
+    // still needs a scope. Leave the cursor there so suggest can pick it.
     const header = model.getLineContent(headerLine);
-    if (/^\s*(trigger|for_each)\s*$/i.test(header)) {
+    if (/^\s*(trigger|for_each|variables)\s*$/i.test(header)) {
       continue;
     }
     editor.setPosition({

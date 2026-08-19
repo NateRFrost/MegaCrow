@@ -283,6 +283,39 @@ function dropParentForPaths(
   return result;
 }
 
+function findFilePathByDisplayName(
+  nodes: readonly LocalDiskNode[],
+  displayName: string
+): string[] | null {
+  for (const node of nodes) {
+    if (node.type === "file") {
+      const displayPath = formatLocalDiskPath(node.path);
+      if (
+        displayName.localeCompare(displayPath, undefined, {
+          sensitivity: "accent",
+        }) === 0
+      ) {
+        return node.path;
+      }
+    }
+    if (node.children && node.children.length > 0) {
+      const nested = findFilePathByDisplayName(node.children, displayName);
+      if (nested) {
+        return nested;
+      }
+    }
+  }
+  return null;
+}
+
+function ancestorPathKeys(path: string[]): string[] {
+  const keys: string[] = [];
+  for (let i = 1; i < path.length; i++) {
+    keys.push(pathKey(path.slice(0, i)));
+  }
+  return keys;
+}
+
 function flattenVisibleNodes(
   nodes: LocalDiskNode[],
   expandedPaths: Set<string>
@@ -620,6 +653,7 @@ export function LocalDiskTree({
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
   const selectedKeysRef = useRef(selectedKeys);
   selectedKeysRef.current = selectedKeys;
+  const lastSyncedActiveFileRef = useRef<string | null>(null);
   const pendingRef = useRef<{
     path: string[];
     paths: string[][];
@@ -630,6 +664,44 @@ export function LocalDiskTree({
   const dragOverKeyRef = useRef<string | null>(null);
   const suppressClickRef = useRef(false);
   const rootDropKey = "";
+
+  useEffect(() => {
+    if (!activeFileName) {
+      lastSyncedActiveFileRef.current = null;
+      return;
+    }
+    const path = findFilePathByDisplayName(nodes, activeFileName);
+    if (!path) {
+      if (lastSyncedActiveFileRef.current !== null) {
+        lastSyncedActiveFileRef.current = null;
+        setSelectedKeys(new Set());
+        setSelectionAnchorKey(null);
+      }
+      return;
+    }
+    if (lastSyncedActiveFileRef.current === activeFileName) {
+      return;
+    }
+    lastSyncedActiveFileRef.current = activeFileName;
+    const key = pathKey(path);
+    setSelectedKeys(new Set([key]));
+    setSelectionAnchorKey(key);
+    const ancestors = ancestorPathKeys(path);
+    if (ancestors.length === 0) {
+      return;
+    }
+    setExpandedPaths((current) => {
+      let changed = false;
+      const next = new Set(current);
+      for (const ancestor of ancestors) {
+        if (!next.has(ancestor)) {
+          next.add(ancestor);
+          changed = true;
+        }
+      }
+      return changed ? next : current;
+    });
+  }, [activeFileName, nodes]);
 
   useEffect(() => {
     if (ensureExpandedKeys.length === 0) {

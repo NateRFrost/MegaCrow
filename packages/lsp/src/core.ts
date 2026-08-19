@@ -622,6 +622,11 @@ const TRIGGER_SUGGEST_COMMAND = {
   arguments: [{ auto: true }],
 } as const;
 
+const ENTER_BLOCK_BODY_COMMAND = {
+  title: "Move into block body",
+  command: "megacrow.enterBlockBodyAndSuggest",
+} as const;
+
 const toLspCompletionItems = (
   items: MegaloCompletionItem[]
 ): CompletionItem[] =>
@@ -635,9 +640,11 @@ const toLspCompletionItems = (
     ...(entry.insertAsSnippet
       ? { insertTextFormat: InsertTextFormat.Snippet }
       : {}),
-    ...(entry.triggerSuggestAfterAccept
-      ? { command: TRIGGER_SUGGEST_COMMAND }
-      : {}),
+    ...(entry.enterBlockBodyAfterAccept
+      ? { command: ENTER_BLOCK_BODY_COMMAND }
+      : entry.triggerSuggestAfterAccept
+        ? { command: TRIGGER_SUGGEST_COMMAND }
+        : {}),
     ...(entry.documentation === undefined
       ? {}
       : {

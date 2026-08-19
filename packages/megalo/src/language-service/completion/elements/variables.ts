@@ -16,6 +16,7 @@ import {
   suggestKeywords,
   suggestTyped,
   withContinueCompletion,
+  withEnterBlockBody,
 } from "src/language-service/completion/helpers";
 import type {
   CompletionItem,
@@ -82,7 +83,9 @@ export const completeVariables = (
     isSameLineAs(ctx.snapshot, ctx.offset, element.keywordLocation) &&
     ctx.offset >= element.keywordLocation.end.localOffset
   ) {
-    return suggestKeywords(ctx, VARIABLE_SCOPE_NAMES, "keyword");
+    return suggestKeywords(ctx, VARIABLE_SCOPE_NAMES, "keyword").map(
+      withEnterBlockBody
+    );
   }
 
   for (const entry of element.entries) {

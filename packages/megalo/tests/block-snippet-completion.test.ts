@@ -42,6 +42,7 @@ describe("block-end completion snippets", () => {
     expect(item).toBeDefined();
     expect(item!.insertAsSnippet).toBeFalsy();
     expect(item!.insertText ?? item!.label).toBe("pregame");
+    expect(item!.enterBlockBodyAfterAccept).toBe(true);
   });
 
   it("wraps top-level block keywords", async () => {
@@ -55,15 +56,29 @@ describe("block-end completion snippets", () => {
     expectBlockSnippet(item!, "game_options");
   });
 
-  it("wraps top-level trigger with an empty type slot and end", async () => {
+  it("wraps top-level variables with a scope slot, end, and no global default", async () => {
     const source = "";
     const snapshot = await analyzeDocument(source, { version });
     const item = completionsAtPosition(snapshot, {
       line: 0,
       character: 0,
-    }).find((entry) => entry.label === "trigger");
+    }).find((entry) => entry.label === "variables");
     expect(item).toBeDefined();
-    expectBlockSnippet(item!, "trigger", snippetTabstop(1));
+    expectBlockSnippet(item!, "variables", " ");
+    expect(item!.insertText).not.toContain("global");
+  });
+
+  it("moves into the variables body after accepting a scope", async () => {
+    const source = "variables \n\t\nend\n";
+    const snapshot = await analyzeDocument(source, { version });
+    const item = completionsAtPosition(snapshot, {
+      line: 0,
+      character: "variables ".length,
+    }).find((entry) => entry.label === "global");
+    expect(item).toBeDefined();
+    expect(item!.enterBlockBodyAfterAccept).toBe(true);
+    expect(item!.insertAsSnippet).toBeFalsy();
+    expect(item!.insertText ?? item!.label).toBe("global");
   });
 
   it("continues include directives with a trailing space", async () => {

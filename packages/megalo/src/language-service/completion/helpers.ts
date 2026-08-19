@@ -508,6 +508,15 @@ export const suggestKeywords = (
 };
 
 /**
+ * Accepting this item should hop into the blank body of an already-inserted
+ * `header / indent / end` block (and reopen suggest there).
+ */
+export const withEnterBlockBody = (entry: CompletionItem): CompletionItem => ({
+  ...entry,
+  enterBlockBodyAfterAccept: true,
+});
+
+/**
  * Accepting this item leaves more to type on the statement: append a trailing
  * space (unless it is already a multi-line snippet) and reopen suggest.
  */

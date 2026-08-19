@@ -30,6 +30,12 @@ export interface CompletionItem {
    */
   documentation?: string;
   /**
+   * After accepting this item, move into the blank body of a just-opened
+   * `header / indent / end` block (e.g. after choosing a `variables` scope).
+   * Wired as Monaco `megacrow.enterBlockBodyAndSuggest`.
+   */
+  enterBlockBodyAfterAccept?: boolean;
+  /**
    * When set, editors filter/score on this instead of `label`. Use the current
    * prefix for every alternative when replacing a complete keyword so siblings
    * stay visible (e.g. all temporary storage types while on `player`).

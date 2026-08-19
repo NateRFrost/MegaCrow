@@ -188,6 +188,11 @@ export default defineConfig({
       "@tauri-apps/plugin-dialog",
       "@tauri-apps/plugin-fs",
       "@tauri-apps/plugin-opener",
+      // CJS; without this, excluding @blamnetwork/blf serves src/sha1.js raw
+      // and `import { sha1 } from "js-sha1"` fails in the browser.
+      "js-sha1",
+      "@blamnetwork/blf > js-sha1",
+      "@megacrow/megalo > @blamnetwork/blf > js-sha1",
     ],
     // Keep workspace/file: packages out of the dep optimizer so local blf
     // rebuilds are picked up without a stale .vite/deps snapshot.

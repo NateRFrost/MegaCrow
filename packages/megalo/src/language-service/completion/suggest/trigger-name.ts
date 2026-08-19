@@ -5,6 +5,7 @@ import {
   suggestKeywords,
   suggestSymbolKind,
   withBlockEndSnippet,
+  withEnterBlockBody,
 } from "src/language-service/completion/helpers";
 import { suggestableTriggerExecutionKinds } from "src/language-service/completion/suggest/trigger-kinds";
 import type {
@@ -22,7 +23,7 @@ export const suggestTriggerName = (
 ): CompletionItem[] => {
   const wrapEnd = !followingLineClosesBlock(ctx.snapshot.source, ctx.offset);
   const maybeWrap = (entry: CompletionItem): CompletionItem =>
-    wrapEnd ? withBlockEndSnippet(entry) : entry;
+    wrapEnd ? withBlockEndSnippet(entry) : withEnterBlockBody(entry);
   const kinds = suggestKeywords(
     ctx,
     suggestableTriggerExecutionKinds(ctx.snapshot.version),

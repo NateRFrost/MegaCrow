@@ -12265,7 +12265,7 @@ var GAME_OPTION_CUSTOM_VARIABLE_TYPE = {
 };
 
 // ../megalo/src/language-service/completion/helpers.ts
-var snippetTabstop = (index, placeholder) => ` $${""}{${index}:${placeholder}}`;
+var snippetTabstop = (index, placeholder = "") => placeholder === "" ? ` $${""}{${index}}` : ` $${""}{${index}:${placeholder}}`;
 
 // ../megalo/src/language-service/completion/actions/create_object.ts
 var OPTIONAL_KEYWORDS_FROM_73 = [
@@ -16922,7 +16922,7 @@ var Disposition = disposition.enum;
 
 // ../megalo/src/language-service/completion/suggest/top-level.ts
 var TOP_LEVEL_NAMED_HEADER = {
-  trigger: snippetTabstop(1, "general"),
+  trigger: snippetTabstop(1),
   variables: snippetTabstop(1, "global"),
   loadout: snippetTabstop(1, "name"),
   loadout_palette: snippetTabstop(1, "name"),

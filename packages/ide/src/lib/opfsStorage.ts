@@ -1,3 +1,5 @@
+import { allocateNumberedName } from "./uniqueFileName";
+
 const GAMETYPES_DIR = "gametypes";
 const WORKSPACE_ROOT = "workspace";
 /** Primary Megalo source extension for browser OPFS files. */
@@ -303,20 +305,21 @@ export async function renameOpfsGametype(
     return fromName;
   }
   const dir = await getGametypesDirectory();
-  if (await fileExistsInDir(dir, safeTo)) {
-    throw new Error(`A file named "${safeTo}" already exists`);
-  }
-  await renameEntryInDir(dir, fromName, safeTo);
+  const uniqueTo = await allocateNumberedName(
+    safeTo,
+    async (name) => name !== fromName && fileExistsInDir(dir, name)
+  );
+  await renameEntryInDir(dir, fromName, uniqueTo);
 
   const fromBin = siblingBinName(fromName);
-  const toBin = siblingBinName(safeTo);
+  const toBin = siblingBinName(uniqueTo);
   if (fromBin && toBin && (await fileExistsInDir(dir, fromBin))) {
     if (await fileExistsInDir(dir, toBin)) {
       await dir.removeEntry(toBin);
     }
     await renameEntryInDir(dir, fromBin, toBin);
   }
-  return safeTo;
+  return uniqueTo;
 }
 
 /** Create an empty Megalo `.txt` and return its name. */
